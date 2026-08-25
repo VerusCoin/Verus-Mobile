@@ -7,8 +7,8 @@
   login, creates a new update heartbeat interval.
 */
 
-import React, {useEffect, useRef} from 'react';
-import {View, Dimensions, SafeAreaView} from 'react-native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {Alert, View, Dimensions, SafeAreaView} from 'react-native';
 import {Text} from 'react-native-paper';
 import Styles from '../../styles/index';
 import Colors from '../../globals/colors';
@@ -25,6 +25,10 @@ import SignedOutDropdown from '../SignedOutDropdown/SignedOutDropdown';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
 import { selectHasAuthenticatedSession } from '../../selectors/authentication';
 import {readDeeplinkFromNfc} from '../../actions/actionDispatchers';
+import {
+  clearPendingDeeplinkRequests,
+  getPendingDeeplinkRequestCount,
+} from '../../utils/deeplink/pendingDeeplinkStorage';
 
 const {height} = Dimensions.get('window');
 
@@ -41,6 +45,7 @@ const Login = props => {
   
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const hasAuthenticatedSession = useSelector(selectHasAuthenticatedSession);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
   const autoOpenTimeoutRef = useRef(null);
 
   const openAuthModal = ignoreDefault => {
@@ -101,9 +106,52 @@ const Login = props => {
     props.navigation.navigate('RecoverSeeds');
   };
 
-  const handleProvisioningRequests = () => {
+  const handlePendingRequests = () => {
     props.navigation.navigate('ProvisioningDeeplinks');
   };
+
+  const handleClearPendingRequests = () => {
+    Alert.alert(
+      'Clear pending requests?',
+      'This will remove saved pending deeplink requests from this device.',
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearPendingDeeplinkRequests();
+              setPendingRequestCount(0);
+            } catch (e) {
+              console.warn('Unable to clear pending deeplink requests', e);
+            }
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+  };
+
+  const loadPendingRequestCount = useCallback(async () => {
+    try {
+      setPendingRequestCount(await getPendingDeeplinkRequestCount());
+    } catch (e) {
+      console.warn('Unable to load pending deeplink request count', e);
+      setPendingRequestCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPendingRequestCount();
+
+    const unsubscribe = props.navigation.addListener(
+      'focus',
+      loadPendingRequestCount,
+    );
+
+    return unsubscribe;
+  }, [loadPendingRequestCount, props.navigation]);
 
   return (
     <SafeAreaView
@@ -123,8 +171,10 @@ const Login = props => {
         {!modalVisible && <SignedOutDropdown
           handleRecoverSeed={() => handleRecoverSeed()}
           handleRevokeRecover={() => handleRevokeRecover()}
-          handleProvisioningRequests={() => handleProvisioningRequests()}
+          handlePendingRequests={() => handlePendingRequests()}
+          handleClearPendingRequests={() => handleClearPendingRequests()}
           handleReadDeeplinkFromNfc={readDeeplinkFromNfc}
+          pendingRequestCount={pendingRequestCount}
           hasAccount={true}
         />}
       </View>

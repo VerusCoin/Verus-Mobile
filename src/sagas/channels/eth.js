@@ -1,8 +1,9 @@
-import { all, takeEvery, put } from "redux-saga/effects";
+import { all, takeEvery, put, select } from "redux-saga/effects";
 import {
   INIT_ETH_CHANNEL_START,
   INIT_ETH_CHANNEL_FINISH,
 } from "../../utils/constants/storeType";
+import {sessionActionIsCurrent} from '../../actions/actions/updates/sessionRequests';
 
 export default function * ethSaga() {
   yield all([
@@ -11,5 +12,6 @@ export default function * ethSaga() {
 }
 
 function * handleFinishEthInit(action) {
-  yield put({type: INIT_ETH_CHANNEL_FINISH, payload: action.payload})
+  if (!sessionActionIsCurrent(yield select(), action)) return;
+  yield put({type: INIT_ETH_CHANNEL_FINISH, payload: action.payload, meta: action.meta})
 }

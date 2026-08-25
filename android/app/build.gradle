@@ -200,6 +200,10 @@ dependencies {
 
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.0.0")
 
+    // VerusBiometricEnrollmentModule binds every vault-key read to its own
+    // BiometricPrompt CryptoObject instead of relying on a time-based auth window.
+    implementation("androidx.biometric:biometric:1.1.0")
+
     implementation 'com.google.mlkit:barcode-scanning:17.2.0'
 
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")

@@ -31,6 +31,7 @@ export const authentication = (
   state = {
     accounts: [],
     sessionKey: null, // The session key should be set every time a user logs in
+    sessionEpoch: 0, // Invalidates asynchronous work from older login sessions
     instanceKey: null, // The instance key should be set once per app instance and never changed until app restart
     activeAccount: {
       id: null,
@@ -78,13 +79,24 @@ export const authentication = (
     case AUTHENTICATE_USER:
       return {
         ...state,
-        activeAccount: action.activeAccount,
-        sessionKey: action.sessionKey
+        activeAccount: {
+          ...action.activeAccount,
+          // Navigation may still hold the pre-login account object. Persisted
+          // account metadata is canonical for the biometric setting.
+          biometry:
+            state.accounts.find(
+              account =>
+                account.accountHash === action.activeAccount.accountHash,
+            )?.biometry ?? action.activeAccount.biometry,
+        },
+        sessionKey: action.sessionKey,
+        sessionEpoch: (state.sessionEpoch || 0) + 1,
       };
     case UPDATE_SESSION_KEY:
       return {
         ...state,
-        sessionKey: action.sessionKey
+        sessionKey: action.sessionKey,
+        sessionEpoch: (state.sessionEpoch || 0) + 1,
       };
     case SIGN_IN_USER:
       return {
@@ -134,11 +146,16 @@ export const authentication = (
       return {
         ...state,
         signedIn: false,
+        sessionKey: null,
+        sessionEpoch: (state.sessionEpoch || 0) + 1,
       };
     case BIOMETRIC_AUTH:
       return {
         ...state,
-        activeAccount: { ...state.activeAccount, biometry: action.payload.biometry },
+        activeAccount:
+          state.activeAccount?.accountHash === action.payload.accountHash
+            ? {...state.activeAccount, biometry: action.payload.biometry}
+            : state.activeAccount,
         accounts: action.payload.accounts
       };
     case HIDE_SEED_WARNINGS:

@@ -1,4 +1,5 @@
 import store from '../../../../store';
+import {captureSessionScope} from '../../updates/sessionRequests';
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import {
   CONVERSION_SEND_MODAL,
@@ -27,6 +28,7 @@ import {
   SEND_MODAL_EXPORTTO_FIELD,
   SEND_MODAL_VIA_FIELD,
   SEND_MODAL_IS_PRECONVERT,
+  SEND_MODAL_IS_BURN_CHANGE_PRICE,
   SEND_MODAL_SHOW_CONVERTTO_FIELD,
   SEND_MODAL_SHOW_EXPORTTO_FIELD,
   SEND_MODAL_SHOW_VIA_FIELD,
@@ -52,6 +54,8 @@ import {
   SET_SEND_COIN_MODAL_VISIBLE,
 } from '../../../../utils/constants/storeType';
 
+let sendModalRequestSequence = 0;
+
 export const openSendModal = (
   title,
   coinObj,
@@ -61,6 +65,7 @@ export const openSendModal = (
   helpText,
   initialRouteName
 ) => {
+  const state = store.getState();
   store.dispatch({
     type: OPEN_SEND_COIN_MODAL,
     payload: {
@@ -70,7 +75,9 @@ export const openSendModal = (
       data,
       type,
       helpText,
-      initialRouteName
+      initialRouteName,
+      requestId: `send-modal-${Date.now()}-${++sendModalRequestSequence}`,
+      sessionScope: captureSessionScope(state),
     },
   });
 };
@@ -93,8 +100,11 @@ export const openTraditionalCryptoSendModal = (coinObj, subWallet, data) => {
 };
 
 export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
+  const isBurnChangePrice =
+    data != null && data[SEND_MODAL_IS_BURN_CHANGE_PRICE] === true;
+
   openSendModal(
-    `Send ${coinObj.display_ticker}`,
+    `${isBurnChangePrice ? 'Burn' : 'Send'} ${coinObj.display_ticker}`,
     coinObj,
     subWallet,
     data == null
@@ -107,6 +117,7 @@ export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
           [SEND_MODAL_VIA_FIELD]: '',
           [SEND_MODAL_PRICE_ESTIMATE]: null,
           [SEND_MODAL_IS_PRECONVERT]: false,
+          [SEND_MODAL_IS_BURN_CHANGE_PRICE]: false,
           [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
           [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
           [SEND_MODAL_SHOW_VIA_FIELD]: true,
@@ -117,7 +128,9 @@ export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
         }
       : data,
     CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
-    'To convert your funds to a different currency, or send them to a different network, fill in the corresponding fields. Conversions and cross-chain transactions may take a few minutes to complete, even once your funds are confirmed as sent.',
+    isBurnChangePrice
+      ? 'This payment permanently removes the selected currency from circulation, reducing its total supply. The amount is not transferred to the burn output address, and the transaction cannot be reversed.'
+      : 'To convert your funds to a different currency, or send them to a different network, fill in the corresponding fields. Conversions and cross-chain transactions may take a few minutes to complete, even once your funds are confirmed as sent.',
   );
 };
 

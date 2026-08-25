@@ -308,27 +308,34 @@ const InvoiceInfo = props => {
   const isAnyAmount = details.acceptsAnyAmount() || amountDisplay == null;
   const heroAmount = isAnyAmount ? "Any Amount" : amountDisplay;
   const heroCurrency = fullyqualifiedname;
+  const isBurnChangePrice = details.isBurnChangePrice();
 
-  const destinationLabel = details.acceptsAnyDestination() || !destinationDisplay
-    ? 'Any destination'
-    : destinationDisplay;
+  const destinationLabel = isBurnChangePrice && details.acceptsAnyDestination()
+    ? 'Your own address'
+    : details.acceptsAnyDestination() || !destinationDisplay
+      ? 'Any destination'
+      : destinationDisplay;
 
   const detailRows = [];
   detailRows.push({
     key: 'destination',
     title: destinationLabel,
-    subtitle: 'Destination',
+    subtitle: isBurnChangePrice
+      ? 'Burn output address (does not receive the amount)'
+      : 'Destination',
     onPress: details.acceptsAnyDestination()
       ? null
       : () =>
           copyToClipboard(destinationDisplay, {
-            title: 'Destination copied',
+            title: isBurnChangePrice
+              ? 'Burn output address copied'
+              : 'Destination copied',
             message: `${destinationDisplay} copied to clipboard.`,
           }),
     rightIcon: details.acceptsAnyDestination() ? null : 'content-copy',
   });
 
-  if (details.acceptsConversion()) {
+  if (details.acceptsConversion() && !isBurnChangePrice) {
     detailRows.push({
       key: 'conversion',
       title: 'Conversion supported',
@@ -355,7 +362,9 @@ const InvoiceInfo = props => {
     detailRows.push({
       key: 'networks',
       title: acceptedSystemsLabel,
-      subtitle: 'Supported payment networks',
+      subtitle: isBurnChangePrice
+        ? 'Supported burn networks'
+        : 'Supported payment networks',
       onPress: () => openListSelectionModal(),
       rightIcon: 'information-outline',
     });
@@ -396,7 +405,11 @@ const InvoiceInfo = props => {
             searchPlaceholder="Search networks"
             onSelect={handleSupportedNetworkSelect}
             cancel={() => setIsListSelectionModalVisible(false)}
-            title="Supported Payment Networks"
+            title={
+              isBurnChangePrice
+                ? "Supported Burn Networks"
+                : "Supported Payment Networks"
+            }
             flexHeight={1}
           />
         )}
@@ -407,7 +420,9 @@ const InvoiceInfo = props => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.mainTitle}>VerusPay invoice</Text>
+          <Text style={styles.mainTitle}>
+            {isBurnChangePrice ? 'VerusPay burn request' : 'VerusPay invoice'}
+          </Text>
         </View>
 
         {isSigned ? (
@@ -468,6 +483,27 @@ const InvoiceInfo = props => {
           <Text style={styles.heroCurrency}>{heroCurrency}</Text>
         </View>
 
+        {isBurnChangePrice ? (
+          <View style={styles.burnInfoCard}>
+            <View style={styles.burnInfoIconContainer}>
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={26}
+                color={Colors.verusGreenColor}
+              />
+            </View>
+            <View style={styles.burnInfoTextContainer}>
+              <Text style={styles.burnInfoTitle}>Burn payment</Text>
+              <Text style={styles.burnInfoSubtitle}>
+                Burning completes this payment by permanently removing the
+                selected currency from circulation, reducing total supply and
+                increasing scarcity for holders. The burn output address does
+                not receive the amount, and the transaction cannot be reversed.
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionHeaderLeft}>
@@ -514,7 +550,7 @@ const InvoiceInfo = props => {
         </View>
         <View style={styles.ctaCol}>
           <GradientButton onPress={() => handleContinue()} style={styles.primaryCta}>
-            Continue
+            {isBurnChangePrice ? 'Review burn' : 'Continue'}
           </GradientButton>
         </View>
       </View>

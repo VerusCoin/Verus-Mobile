@@ -1,7 +1,6 @@
-import { toIAddress } from "verus-typescript-primitives";
-import { CoinDirectory } from "../../../../CoinData/CoinDirectory";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { IS_PBAAS } from "../../../../constants/intervalConstants";
+import { validateLookupBinding } from "./lookupBinding";
 
 export const getIdentity = async (systemId, iAddressOrName, height, txproof, txproofheight) => {
   const res = await VrpcProvider.getEndpoint(systemId).getIdentity(
@@ -15,21 +14,13 @@ export const getIdentity = async (systemId, iAddressOrName, height, txproof, txp
   else {
     try {
       const identityDefinition = res.result.identity;
-      const identityFqn = res.result.fullyqualifiedname;
-      
-      const calculatedIAddr = toIAddress(identityFqn);
-    
-      if (
-        calculatedIAddr !== identityDefinition.identityaddress
-      ) {
-        return {
-          id: 0,
-          error: {
-            message: 'Unable to parse response identityaddress.',
-            code: -1,
-          },
-        };
-      }
+      validateLookupBinding(
+        systemId,
+        iAddressOrName,
+        identityDefinition.identityaddress,
+        res.result.fullyqualifiedname,
+        "identity",
+      );
     } catch(e) {
       return {
         id: 0,

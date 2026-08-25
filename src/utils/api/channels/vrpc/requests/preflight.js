@@ -10,13 +10,27 @@ import { getAddressUtxos, getSpendableUtxos } from "./getAddressUtxos";
 import { getCurrency, getIdentity } from "../../verusid/callCreators";
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData";
 import { estimateConversion } from "./estimateConversion";
-import { IS_FRACTIONAL_FLAG } from "../../../../constants/currencies";
+import {
+  IS_FRACTIONAL_FLAG,
+  IS_GATEWAY_FLAG,
+  IS_TOKEN_FLAG,
+} from "../../../../constants/currencies";
 import { unpackOutput } from "@bitgo/utxo-lib/dist/src/smart_transactions";
 import { coinsList } from "../../../../CoinData/CoinsList";
 import { getSendCurrencyTransaction } from "./getSendCurrencyTransaction";
 import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../constants/constants";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { Alert } from "react-native";
+import { getSingleSendCurrencyOutput } from "./sendCurrencyOutputValidation";
+import {
+  BURN_CHANGE_PRICE_PARENT_TRANSACTION_FEE,
+  calculateBurnChangePriceTransferFeeSatoshis,
+  createUnfundedBurnChangePriceTransaction,
+  validateBurnChangePriceTransferOutput,
+} from "./createBurnChangePriceTransaction";
+import {
+  validateCurrencyTransferSpendDeltas,
+} from "./validateCurrencyTransferSpend";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
@@ -183,6 +197,8 @@ export const validateCurrencyTransferOutputParams = obj => {
     }
   }
 
+  validateBurnChangePriceTransferOutput(obj);
+
   // If we made it here, the object is valid
   return true;
 };
@@ -285,8 +301,16 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const isConversionOrExport = exportto != null || convertto != null;
     const isNativeSend = currency === systemId;
     const isBasicNativeSend = !isConversionOrExport && currency === systemId;
-    const _feecurrency = feecurrency == null && isConversionOrExport ? systemId : feecurrency;
-    const parentTransactionFee = isConversionOrExport || isBasicNativeSend ? 0.0001 : 0.0002;
+    const _feecurrency =
+      feecurrency == null && (isConversionOrExport || output.burn === true)
+        ? systemId
+        : feecurrency;
+    const parentTransactionFee =
+      output.burn === true
+        ? BURN_CHANGE_PRICE_PARENT_TRANSACTION_FEE
+        : isConversionOrExport || isBasicNativeSend
+          ? 0.0001
+          : 0.0002;
 
     const useSendCurrencyOutput =
       address.isETHAccount() ||
@@ -302,11 +326,34 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     
     const sourceDefinition = currencyDefs.get(currency);
 
+    if (output.burn === true) {
+      if (
+        (Number(sourceDefinition.options) & IS_TOKEN_FLAG) !== IS_TOKEN_FLAG
+      ) {
+        throw new Error("Only token currencies can be burned.");
+      }
+
+      if (
+        (Number(sourceDefinition.options) & IS_GATEWAY_FLAG) ===
+        IS_GATEWAY_FLAG
+      ) {
+        throw new Error("Gateway currencies cannot be burned.");
+      }
+
+      if (sourceDefinition.systemid !== systemId) {
+        throw new Error(
+          "Currency burns must be created on the currency's native system.",
+        );
+      }
+    }
+
     if ((sourceDefinition.options & IS_FRACTIONAL_FLAG) == IS_FRACTIONAL_FLAG) {
       importToSource = convertto != null && via == null && sourceDefinition.currencies.includes(convertto);
     }
 
-    if (_feeamount == null && isConversionOrExport) {
+    if (_feeamount == null && output.burn === true) {
+      _feeamount = calculateBurnChangePriceTransferFeeSatoshis(address);
+    } else if (_feeamount == null && isConversionOrExport) {
       _feeamount = await calculateCurrencyTransferFee(
         systemId,
         currency,
@@ -402,7 +449,10 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       
       const unfundedTxObj = Transaction.fromHex(sendCurrencyHex, networks.verus);
 
-      const outputInfo = unpackOutput(unfundedTxObj.outs[0], systemId);
+      const outputInfo = unpackOutput(
+        getSingleSendCurrencyOutput(unfundedTxObj),
+        systemId,
+      );
 
       /**
        * @type {ReserveTransfer}
@@ -445,25 +495,41 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
 
       unfundedTxHex = sendCurrencyRes.result.hextx;
     } else {
-      unfundedTxHex = createUnfundedCurrencyTransfer(
-        systemId,
-        [
+      const expiryHeight = Number(
+        BigNumber(infoRes.result.longestchain).plus(BigNumber(100)).toString(),
+      );
+
+      if (output.burn === true) {
+        // The legacy builder used by other send paths does not count `burn`
+        // alone as a reserve transfer and would emit an ordinary output.
+        unfundedTxHex = createUnfundedBurnChangePriceTransaction(
+          systemId,
           {
             ...output,
             feesatoshis: _feeamount,
             feecurrency: _feecurrency,
-            importtosource: importToSource,
-            bridgeid,
-            vdxftag
           },
-        ],
-        networks.verus,
-        Number(
-          BigNumber(infoRes.result.longestchain).plus(BigNumber(100)).toString(),
-        ),
-        4,
-        0x892f2085,
-      );
+          expiryHeight,
+        );
+      } else {
+        unfundedTxHex = createUnfundedCurrencyTransfer(
+          systemId,
+          [
+            {
+              ...output,
+              feesatoshis: _feeamount,
+              feecurrency: _feecurrency,
+              importtosource: importToSource,
+              bridgeid,
+              vdxftag
+            },
+          ],
+          networks.verus,
+          expiryHeight,
+          4,
+          0x892f2085,
+        );
+      }
     }
 
     const utxoList = await getSpendableUtxos(systemId, currency, [source]);
@@ -507,11 +573,12 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       }
     };
 
-    deltas.forEach((value, key) => {
-      if (key !== currency && key !== feecurrency && value.isGreaterThan(0)) {
-        throw new Error("Can only spend either fee currency or sent currency.")
-      } 
-    })
+    validateCurrencyTransferSpendDeltas({
+      currency,
+      deltas,
+      feeCurrency: feecurrency,
+      systemId,
+    });
 
     Object.keys(validation.fees).forEach((key) => {
       const value = BigNumber(validation.fees[key]);

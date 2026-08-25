@@ -11,8 +11,8 @@ import {
   AppEncryptionRequestOrdinalVDXFObject,
   AppEncryptionResponseOrdinalVDXFObject,
   SaplingPaymentAddress,
-  DataDescriptor,
-  DataDescriptorOrdinalVDXFObject,
+  DataResponseDetails,
+  DataResponseOrdinalVDXFObject,
   GenericRequest,
   GenericResponse,
   IdentityID,
@@ -157,6 +157,16 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
 // Processing Function - Called after user approval
 // ============================================================================
 
+export const buildEncryptedAppEncryptionResponseDetail = (
+  encryptionRequest,
+  encryptedDescriptor,
+) => new DataResponseOrdinalVDXFObject({
+  data: new DataResponseDetails({
+    requestID: encryptionRequest.hasRequestID() ? encryptionRequest.requestID : undefined,
+    data: encryptedDescriptor,
+  })
+});
+
 /**
  * Derives keys and builds the response object.
  * Called by AppEncryptionRequestInfo after user approval.
@@ -165,7 +175,7 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
  * @param {GenericRequest} params.request - The parent GenericRequest
  * @param {number} params.detailIndex - Index of the encryption request detail
  * @param {string} params.responseSignerID - The user's signing identity i-address
- * @returns {Promise<AppEncryptionResponseOrdinalVDXFObject|DataDescriptorOrdinalVDXFObject>}
+ * @returns {Promise<AppEncryptionResponseOrdinalVDXFObject|DataResponseOrdinalVDXFObject>}
  * @throws {Error} If processing fails
  */
 export const processAppEncryptionRequest = async ({
@@ -199,14 +209,20 @@ export const processAppEncryptionRequest = async ({
     throw new Error("Unsupported system: " + systemID);
   }
 
+  // Check if spending key requested via flags
+  const returnESK = encryptionRequest.returnESK();
+
+  if (returnESK && !encryptionRequest.hasEncryptResponseToAddress()) {
+    throw new Error(
+      "Extended spending keys can only be returned in an encrypted response.",
+    );
+  }
+
   // Get extended spending key for derivation
   const keyMaterial = await getKeyMaterial(coinObj.id);
 
   // Use appOrDelegatedID if present, otherwise use requestSignerID
   const appID = appOrDelegatedID || requestSignerID;
-
-  // Check if spending key requested via flags
-  const returnESK = encryptionRequest.returnESK();
 
   // Determine toId: the derivationID from the encryption request is the
   // identity we derive a shared key with (matches daemon's "toid").
@@ -284,6 +300,12 @@ export const processAppEncryptionRequest = async ({
     : null;
 
   if (!encryptTo) {
+    if (returnESK) {
+      throw new Error(
+        "Extended spending keys can only be returned in an encrypted response.",
+      );
+    }
+
     // Return unencrypted response
     return {
       responseDetail: new AppEncryptionResponseOrdinalVDXFObject({
@@ -298,14 +320,16 @@ export const processAppEncryptionRequest = async ({
     await encryptDataBufferToDescriptor(encryptTo, responseDetails.toBuffer());
 
   return {
-    responseDetail: new DataDescriptorOrdinalVDXFObject({
-      data: encryptedDescriptor
-    }),
+    responseDetail: buildEncryptedAppEncryptionResponseDetail(
+      encryptionRequest,
+      encryptedDescriptor,
+    ),
     encryptedDescriptorJson,
   };
 };
 
 export default {
   handleAppEncryptionRequestVDXFObject,
+  buildEncryptedAppEncryptionResponseDetail,
   processAppEncryptionRequest
 };

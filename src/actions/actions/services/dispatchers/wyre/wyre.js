@@ -2,17 +2,52 @@ import store from "../../../../../store"
 import { requestServiceStoredData } from "../../../../../utils/auth/authBox"
 import { WYRE_SERVICE_ID } from "../../../../../utils/constants/services"
 import { modifyServiceStoredDataForUser } from "../services"
+import {
+  captureSessionScope,
+  sessionScopeIsCurrent,
+} from "../../../updates/sessionRequests"
 
-export const mapWyreDocumentIds = async (fieldId, documentIds, uris, hashes) => {
-  const state = store.getState()
+const getSessionScope = requestContext =>
+  requestContext?.sessionScope ||
+  (requestContext?.sessionScoped ? requestContext : null) ||
+  captureSessionScope(store.getState())
 
-  if (state.authentication.activeAccount == null) {
+const assertSessionCurrent = (sessionScope, requestContext) => {
+  if (
+    requestContext?.signal?.aborted === true ||
+    !sessionScopeIsCurrent(store.getState(), sessionScope)
+  ) {
+    const error = new Error(
+      "Account changed while Wyre document data was being updated."
+    )
+    error.code = "SESSION_CHANGED"
+    throw error
+  }
+}
+
+export const mapWyreDocumentIds = async (
+  fieldId,
+  documentIds,
+  uris,
+  hashes,
+  requestContext
+) => {
+  const sessionScope = getSessionScope(requestContext)
+  const scopedRequestContext = {
+    ...(requestContext || {}),
+    sessionScope,
+  }
+
+  assertSessionCurrent(sessionScope, scopedRequestContext)
+
+  if (sessionScope.accountHash == null) {
     throw new Error(
       "You must be signed in to map a wyre document id"
     );
   }
 
   const serviceData = await requestServiceStoredData(WYRE_SERVICE_ID)
+  assertSessionCurrent(sessionScope, scopedRequestContext)
   const currentDocumentIds =
     serviceData.document_ids == null ? {} : serviceData.document_ids;
   const currentFieldDocumentMap =
@@ -42,6 +77,7 @@ export const mapWyreDocumentIds = async (fieldId, documentIds, uris, hashes) => 
       }
     },
     WYRE_SERVICE_ID,
-    state.authentication.activeAccount.accountHash
+    sessionScope.accountHash,
+    scopedRequestContext
   );
 }

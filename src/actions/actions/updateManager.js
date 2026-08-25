@@ -12,6 +12,8 @@ import {
   ENABLE_COIN_API_CALL,
   DISABLE_COIN_API_CALL,
   OCCUPY_SERVICE_API_CALL,
+  RELEASE_COIN_API_CALL,
+  RELEASE_SERVICE_API_CALL,
   SET_SERVICE_EXPIRE_ID,
   CLEAR_SERVICE_EXPIRE_ID,
   SET_SERVICE_UPDATE_EXPIRED_ID,
@@ -144,7 +146,7 @@ export const renewServiceData = (dataType) => {
   }
 }
 
-export const occupyCoinApiCall = (chainTicker, channels, dataType) => {
+export const occupyCoinApiCall = (chainTicker, channels, dataType, requestId) => {
   let busyChannels = {}
   channels.map(channel => {
     busyChannels[channel] = true
@@ -155,10 +157,16 @@ export const occupyCoinApiCall = (chainTicker, channels, dataType) => {
     payload: {
       chainTicker,
       dataType,
-      channels: busyChannels
+      channels: busyChannels,
+      requestId,
     }
   }
 }
+
+export const releaseCoinApiCall = (chainTicker, channels, dataType, requestId) => ({
+  type: RELEASE_COIN_API_CALL,
+  payload: {chainTicker, channels, dataType, requestId},
+});
 
 export const enableCoinApiCall = (chainTicker, dataType) => {
   return {
@@ -210,12 +218,22 @@ export const clearCoinUpdateExpiredIntervalId = (chainTicker, dataType) => {
   }
 }
 
-export const occupyServiceApiCall = (dataType) => {
+export const occupyServiceApiCall = (channels, dataType, requestId) => {
+  const busyChannels = {};
+  channels.forEach(channel => {
+    busyChannels[channel] = true;
+  });
+
   return {
     type: OCCUPY_SERVICE_API_CALL,
-    dataType
+    payload: {channels: busyChannels, dataType, requestId},
   }
 }
+
+export const releaseServiceApiCall = (channels, dataType, requestId) => ({
+  type: RELEASE_SERVICE_API_CALL,
+  payload: {channels, dataType, requestId},
+});
 
 export const setServiceExpireTimeoutId = (dataType, timeoutId) => {
   return {

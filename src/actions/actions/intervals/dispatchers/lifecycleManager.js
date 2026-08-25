@@ -10,6 +10,7 @@ import {
 import { setCoinStatus } from '../../../actionCreators'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData';
 import {
+  captureLifecycleIntervalIds,
   clearAllCoinIntervals,
   clearAllServiceIntervals,
   refreshServiceIntervals,
@@ -54,16 +55,23 @@ export const refreshActiveChainLifecycles = (activeCoinsForUser) => {
   }
 }
 
-export const clearChainLifecycle = (chainTicker) => {
-  clearAllCoinIntervals(chainTicker)
+export const captureLifecycleTimers = state =>
+  captureLifecycleIntervalIds(state);
+
+export const clearChainLifecycle = (
+  chainTicker,
+  capturedIntervalData,
+  sessionScope,
+) => {
+  clearAllCoinIntervals(chainTicker, capturedIntervalData, sessionScope)
 }
 
 export const activateServiceLifecycle = () => {  
   refreshServiceIntervals()
 }
 
-export const clearServiceIntervals = () => {
-  clearAllServiceIntervals()
+export const clearServiceIntervals = (capturedIntervalData, sessionScope) => {
+  clearAllServiceIntervals(capturedIntervalData, sessionScope)
 }
 
 export const getInfoOnComplete = (state, dispatch, chainTicker) => {

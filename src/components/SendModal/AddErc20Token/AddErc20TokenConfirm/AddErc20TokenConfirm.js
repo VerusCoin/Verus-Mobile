@@ -14,6 +14,7 @@ import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import { ERC20 } from '../../../../utils/constants/intervalConstants';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
+import {scopeSessionAction} from '../../../../actions/actions/updates/sessionRequests';
 
 const AddErc20TokenConfirm = props => {
   const [contract, setCurrency] = useState(props.route.params.contract);
@@ -25,6 +26,9 @@ const AddErc20TokenConfirm = props => {
   );
   const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
   const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser);
+  const sessionEpoch = useObjectSelector(
+    state => state.authentication.sessionEpoch,
+  );
   
   const testAccount = useSelector(state => (Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0))
 
@@ -34,6 +38,12 @@ const AddErc20TokenConfirm = props => {
   }, [props]);
 
   const submitData = useCallback(async () => {
+    const sessionScope = {
+      sessionScoped: true,
+      accountHash: activeAccount.accountHash,
+      sessionEpoch,
+    };
+    const requestContext = {sessionScope};
     await props.setLoading(true);
     await props.setPreventExit(true);
 
@@ -69,6 +79,7 @@ const AddErc20TokenConfirm = props => {
           activeAccount.keyDerivationVersion == null
             ? 0
             : activeAccount.keyDerivationVersion,
+          requestContext,
         ),
       );
   
@@ -77,16 +88,17 @@ const AddErc20TokenConfirm = props => {
         activeCoinList,
         activeAccount.id,
         fullCoinData.compatible_channels,
+        requestContext,
       );
   
       if (addCoinAction) {
         dispatch(addCoinAction);
   
         const setUserCoinsAction = setUserCoins(
-          activeCoinList,
+          addCoinAction.activeCoinList,
           activeAccount.id,
         );
-        dispatch(setUserCoinsAction);
+        dispatch(scopeSessionAction(setUserCoinsAction, sessionScope));
   
         refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
       } else {
@@ -107,6 +119,7 @@ const AddErc20TokenConfirm = props => {
     sendModal,
     activeAccount,
     activeCoinList,
+    sessionEpoch,
     dispatch,
     props,
   ]);

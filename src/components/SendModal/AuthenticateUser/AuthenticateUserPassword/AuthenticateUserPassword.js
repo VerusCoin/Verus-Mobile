@@ -2,18 +2,45 @@ import React from 'react';
 import { useEffect, useState } from "react"
 import { Keyboard, ScrollView, TouchableWithoutFeedback, View } from "react-native";
 import { Button, Checkbox, TextInput } from "react-native-paper";
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { initializeAccountData } from "../../../../actions/actionDispatchers";
+import {setBiometry} from '../../../../actions/actionCreators';
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import Colors from '../../../../globals/colors';
 import styles from "../../../../styles";
 import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_USER_TO_AUTHENTICATE } from "../../../../utils/constants/sendModal";
 import { getSupportedBiometryType } from '../../../../utils/keychain/keychain';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
-import { getBiometricPassword } from '../../../../utils/keychain/biometrics';
+import {
+  getBiometricPassword,
+  isBiometricPasswordUnavailableError,
+} from '../../../../utils/keychain/biometrics';
 import AnimatedActivityIndicatorBox from '../../../AnimatedActivityIndicatorBox';
 
+export const disableBiometryForUnavailableLogin = async (
+  error,
+  accountHash,
+  dispatch,
+) => {
+  if (!isBiometricPasswordUnavailableError(error)) return false;
+
+  dispatch(await setBiometry(accountHash, false));
+  return true;
+};
+
+export const resolveAuthenticationAccount = (
+  accounts,
+  routeAccount,
+  requestedAccountHash,
+) => {
+  const accountHash = routeAccount?.accountHash || requestedAccountHash;
+  return (
+    accounts.find(account => account.accountHash === accountHash) || routeAccount
+  );
+};
+
 const AuthenticateUserPassword = props => {
+  const dispatch = useDispatch();
   const [password, setPassword] = useState("")
   const defaultAccount = useSelector(
     state => state.settings.generalWalletSettings.defaultAccount,
@@ -23,12 +50,11 @@ const AuthenticateUserPassword = props => {
   const activeAccount = useObjectSelector(state => state.authentication.activeAccount)
   const data = useObjectSelector(state => state.sendModal.data)
   
-  const account =
-    props.route.params == null || props.route.params.account == null
-      ? accounts.find(
-          x => x.accountHash === data[SEND_MODAL_USER_TO_AUTHENTICATE],
-        )
-      : props.route.params.account;
+  const account = resolveAuthenticationAccount(
+    accounts,
+    props.route.params?.account,
+    data[SEND_MODAL_USER_TO_AUTHENTICATE],
+  );
   const defaultAccountSelected = account != null && defaultAccount === account.accountHash
   const [makeDefaultAccount, setMakeDefaultAccount] = useState(defaultAccountSelected)
 
@@ -76,7 +102,17 @@ const AuthenticateUserPassword = props => {
           await tryUnlockAccount(password);
         }
       } catch (e) {
-        console.error(e);
+        let disabled = false;
+        try {
+          disabled = await disableBiometryForUnavailableLogin(
+            e,
+            account.accountHash,
+            dispatch,
+          );
+        } catch (disableError) {
+          console.error(disableError);
+        }
+        if (!disabled) console.error(e);
       }
     }
   }

@@ -1,0 +1,57 @@
+diff --git a/node_modules/react-native-randombytes/RNRandomBytes.m b/node_modules/react-native-randombytes/RNRandomBytes.m
+index adef2e7..9e3bcf8 100644
+--- a/node_modules/react-native-randombytes/RNRandomBytes.m
++++ b/node_modules/react-native-randombytes/RNRandomBytes.m
+@@ -24,20 +24,48 @@ @implementation RNRandomBytes
+ RCT_EXPORT_METHOD(randomBytes:(NSUInteger)length
+                   callback:(RCTResponseSenderBlock)callback)
+ {
+-    callback(@[[NSNull null], [self randomBytes:length]]);
++    int status = errSecSuccess;
++    NSString *bytes = [self randomBytes:length status:&status];
++
++    if (status != errSecSuccess || bytes == nil) {
++        callback(@[@{
++            @"code": @"E_SEC_RANDOM_FAILURE",
++            @"message": [NSString stringWithFormat:@"SecRandomCopyBytes failed with status %d", status],
++            @"nativeStatus": @(status)
++        }, [NSNull null]]);
++        return;
++    }
++
++    callback(@[[NSNull null], bytes]);
+ }
+ 
+-- (NSString *) randomBytes:(NSUInteger)length
++- (NSString *) randomBytes:(NSUInteger)length status:(int *)status
+ {
+     NSMutableData* bytes = [NSMutableData dataWithLength:length];
+-    SecRandomCopyBytes(kSecRandomDefault, length, [bytes mutableBytes]);
++    int randomStatus = SecRandomCopyBytes(kSecRandomDefault, length, [bytes mutableBytes]);
++
++    if (status != NULL) {
++        *status = randomStatus;
++    }
++
++    if (randomStatus != errSecSuccess) {
++        return nil;
++    }
++
+     return [bytes base64EncodedStringWithOptions:0];
+ }
+ 
+ - (NSDictionary *)constantsToExport
+ {
++    int status = errSecSuccess;
++    NSString *seed = [self randomBytes:4096 status:&status];
++
++    if (status != errSecSuccess || seed == nil) {
++        return @{};
++    }
++
+     return @{
+-        @"seed": [self randomBytes:4096]
++        @"seed": seed
+     };
+ };
+ 

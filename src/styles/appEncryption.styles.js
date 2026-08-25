@@ -144,6 +144,22 @@ export default styles = StyleSheet.create({
     color: '#C62828',
     lineHeight: 18,
   },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EAF4FF',
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.primaryColor,
+    lineHeight: 18,
+  },
   footer: {
     backgroundColor: 'white',
     width: '100%',

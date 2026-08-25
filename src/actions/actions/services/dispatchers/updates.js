@@ -11,6 +11,7 @@ import {
 } from '../../../../utils/constants/intervalConstants'
 import {
   occupyServiceApiCall,
+  releaseServiceApiCall,
   renewServiceData,
 } from "../../../actionCreators";
 import { createServiceExpireTimeout } from '../../../actionDispatchers'
@@ -19,6 +20,12 @@ import { updateServicePaymentMethods } from './UpdateServicePaymentMethods';
 import { updateServiceRates } from './UpdateServiceRates';
 import { updateServiceTransfers } from './UpdateServiceTransfers';
 import { updateServiceNotifications } from './UpdateServiceNotifications';
+import Store from '../../../../store';
+import {
+  captureSessionScope,
+  scopeSessionAction,
+  sessionScopeIsCurrent,
+} from '../../updates/sessionRequests';
 
 export const serviceUpdates = {
   [API_GET_SERVICE_ACCOUNT]: updateServiceAccount,
@@ -27,6 +34,8 @@ export const serviceUpdates = {
   [API_GET_SERVICE_RATES]: updateServiceRates,
   [API_GET_SERVICE_NOTIFICATIONS]: updateServiceNotifications
 }
+
+let serviceRefreshSequence = 0;
 
 /**
  * Calls the specified API update function and renews (un-expires) the data in the 
@@ -38,23 +47,49 @@ export const serviceUpdates = {
  * @param {Function} onExpire (Optional) Function to execute on data expiry
  */
 export const updateServiceData = async (state, dispatch, channels, updateId, onExpire) => {  
-  dispatch(occupyServiceApiCall(channels, updateId))
+  const sessionScope = captureSessionScope(state)
+  const requestId = `service-refresh:${Date.now()}:${++serviceRefreshSequence}`;
+  dispatch(
+    scopeSessionAction(
+      occupyServiceApiCall(channels, updateId, requestId),
+      sessionScope,
+    ),
+  )
   let noError = false
 
   try {
     if(await serviceUpdates[updateId](state, dispatch, channels)) {
+      if (!sessionScopeIsCurrent(Store.getState(), sessionScope)) return false
+
       if (state.updates.serviceUpdateIntervals[updateId].expire_timeout !== ALWAYS_ACTIVATED) {        
-        dispatch(renewServiceData(updateId))
+        dispatch(
+          scopeSessionAction(
+            renewServiceData(updateId),
+            sessionScope,
+          ),
+        )
       }
 
       if (state.updates.serviceUpdateIntervals[updateId].expire_id) {
         clearTimeout(state.updates.serviceUpdateIntervals[updateId].expire_id)
       }
-      createServiceExpireTimeout(state.updates.serviceUpdateIntervals[updateId].expire_timeout, updateId, onExpire)
+      createServiceExpireTimeout(
+        state.updates.serviceUpdateIntervals[updateId].expire_timeout,
+        updateId,
+        onExpire,
+        sessionScope,
+      )
       noError = true
     }
   } catch (e) {
     console.warn(e)
+  } finally {
+    dispatch(
+      scopeSessionAction(
+        releaseServiceApiCall(channels, updateId, requestId),
+        sessionScope,
+      ),
+    )
   }
   
   return noError

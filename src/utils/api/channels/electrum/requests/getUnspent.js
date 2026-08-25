@@ -1,13 +1,12 @@
 import { electrumRequest, getMerkleRoot, getBlockInfo } from '../callCreators'
 import { getOneTransaction } from './getTransaction'
 import { TxDecoder } from '../../../../crypto/txDecoder'
-import { hashRawTx, hexHashToDecimal } from '../../../../crypto/hash'
-import { arraysEqual } from '../../../../objectManip'
 import { resolveSequentially } from '../../../../promises'
 import { networks } from 'bitgo-utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../../../math'
 import { ELECTRUM } from '../../../../constants/intervalConstants'
 import BigNumber from 'bignumber.js'
+import { parseAndVerifyRawTransaction } from '../transactionId'
 
 export const getUnspent = (coinObj, activeUser) => {
   const callType = 'listunspent'
@@ -86,6 +85,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
             address:
               activeUser.keys[coinObj.id][ELECTRUM].addresses[0],
             amountSats: _utxoItem.value,
+            reportedValueSats: _utxoItem.value,
             blockHeight: _utxoItem.height,
             interestSats: 0,
             confirmed: Number(_utxoItem.height) === 0 ? false : true,
@@ -113,12 +113,32 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
 
       formattedUtxos.forEach((formattedUtxo, index) => {
         if (getTxsRes[index]) {
-          if (!arraysEqual(hashRawTx(getTxsRes[index].result, network), hexHashToDecimal(formattedUtxo.txid))) {
-            throw new Error(
-              'Mismatch error! At least one transaction ID provided by server ' + JSON.stringify(firstServer) + 
-              ' does not appear to match the values of the transaction that it represents.')
-          } 
+          // Parse the complete legacy transaction before accepting its ID or
+          // referenced output value as authoritative.
+          const previousTransaction = parseAndVerifyRawTransaction(
+            getTxsRes[index].result,
+            formattedUtxo.txid,
+            network,
+          );
           formattedUtxos[index].verifiedTxid = true
+          const previousOutput = previousTransaction.outs[formattedUtxo.vout];
+
+          if (
+            previousOutput == null ||
+            !Number.isSafeInteger(previousOutput.value) ||
+            previousOutput.value < 0
+          ) {
+            throw new Error(
+              "Mismatch error! Unable to verify the referenced previous transaction output value.",
+            );
+          }
+
+          formattedUtxos[index].verifiedValueSats = previousOutput.value;
+          // The raw previous transaction is cryptographically tied to the
+          // txid. Once it has been verified, its output value is authoritative.
+          // Keep the server-reported value separately so signing can fail
+          // closed if the two sources disagree.
+          formattedUtxos[index].amountSats = previousOutput.value;
 
           //Calculate interest to claim when transaction is sent
           if (coinObj.id === 'KMD') {
@@ -128,13 +148,13 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
 
             if (
               satsToCoins(
-                BigNumber(formattedUtxo.amountSats)
+                BigNumber(previousOutput.value)
               ).isGreaterThanOrEqualTo(BigNumber(10)) &&
               decodedTx.format.locktime > 0
             ) {
-              interest = kmdCalcInterest(
+              const interest = kmdCalcInterest(
                 decodedTx.format.locktime,
-                formattedUtxo.amountSats,
+                previousOutput.value,
                 formattedUtxo.blockHeight
               );
               formattedUtxos[index].interestSats = coinsToSats(

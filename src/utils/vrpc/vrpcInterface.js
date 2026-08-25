@@ -8,32 +8,28 @@ import {
 } from "../constants/storeType";
 import { hashAccountId } from '../crypto/hash';
 import { getCachedVrpcResponse, getVrpcResponseCacheKey, setCachedVrpcResponse } from '../asyncStore/asyncStore';
-import { ApiRequest } from 'verus-typescript-primitives';
+import {
+  ApiRequest,
+  GetBlockHashRequest,
+} from 'verus-typescript-primitives';
 import { coinsList } from '../CoinData/CoinsList';
 import { Alert } from 'react-native';
 import { CoinDirectory } from '../CoinData/CoinDirectory';
 import { VRPC_API_KEYS, VRPC_API_APP_ID } from '../../../env/index';
 import { getUrlKey } from '../url';
+import {
+  CACHED_VRPC_REQUESTS,
+  DEFAULT_VRPC_CACHE_MAX_AGE_MS,
+  VRPC_CACHE_MAX_AGE_MS,
+  isVrpcResponseCacheable,
+  shouldUseCachedVrpcResponse,
+} from './vrpcCachePolicy';
 
 class CachedVerusdRpcInterface extends VerusdRpcInterface {
-  static CACHED_REQUESTS = [
-    'getaddressbalance',
-    'getaddressdeltas',
-    'getaddressmempool',
-    'getcurrency',
-    'listcurrencies',
-    'getidentity',
-    'getinfo'
-  ];
+  static CACHED_REQUESTS = CACHED_VRPC_REQUESTS;
 
-  static DEFAULT_MS_BEFORE_UPDATE = 60000;
-  static MS_BEFORE_UPDATE = {
-    getaddressbalance: 5000,
-    getaddressdeltas: 10000,
-    getaddressmempool: 10000,
-    listcurrencies: 600000,
-    getinfo: 1000
-  };
+  static DEFAULT_MS_BEFORE_UPDATE = DEFAULT_VRPC_CACHE_MAX_AGE_MS;
+  static MS_BEFORE_UPDATE = VRPC_CACHE_MAX_AGE_MS;
 
   static CALL_DELAY_MS = 500;
 
@@ -44,11 +40,17 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
   /**
    * @param {string} systemId 
    * @param {string} endpoint
-   * @param {(id: string, time: number) => void} setLastTime 
-   * @param {(id: string) => number} getLastTime 
+   * @param {(id: string, time: number) => void} setLastNetworkResponseTime
+   * @param {(id: string) => number} getLastNetworkResponseTime
    * @param {import('verusd-rpc-ts-client/lib/VerusdRpcInterface').APIAuthData} APIAuth
    */
-  constructor(systemId, endpoint, setLastTime, getLastTime, APIAuth) {
+  constructor(
+    systemId,
+    endpoint,
+    setLastNetworkResponseTime,
+    getLastNetworkResponseTime,
+    APIAuth,
+  ) {
     if (APIAuth) {
       super(systemId, endpoint, undefined, undefined, APIAuth)
     } else {
@@ -58,8 +60,8 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
     this.endpoint = endpoint;
     this.lastheight = 0;
     this.lasttime = 0;
-    this.setLastTime = setLastTime;
-    this.getLastTime = getLastTime;
+    this.setLastNetworkResponseTime = setLastNetworkResponseTime;
+    this.getLastNetworkResponseTime = getLastNetworkResponseTime;
   }
 
   registerCallStart(cacheId) {
@@ -76,6 +78,10 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
   registerCallComplete(cacheId) {
     this.callswaiting[cacheId] = this.callswaiting[cacheId] - 1;
     if (this.callswaiting[cacheId] == 0) delete this.callswaiting[cacheId];
+  }
+
+  getBlockHash(height) {
+    return this.request(new GetBlockHashRequest(this.chain, height));
   }
 
   /**
@@ -96,18 +102,12 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
     return new Promise((resolve, reject) => {
       setTimeout(async () => {
         try {
-          const lasttime = this.getLastTime(cacheId)
-          this.setLastTime(cacheId, Date.now())
-      
           const cmd = req.cmd;
-          const saveToCache = CachedVerusdRpcInterface.CACHED_REQUESTS.includes(cmd);
-          const elapsed = this.getLastTime(cacheId) - lasttime;
-          const getFromCache =
-            saveToCache &&
-            elapsed <
-              (CachedVerusdRpcInterface.MS_BEFORE_UPDATE[cmd]
-                ? CachedVerusdRpcInterface.MS_BEFORE_UPDATE[cmd]
-                : CachedVerusdRpcInterface.DEFAULT_MS_BEFORE_UPDATE);
+          const saveToCache = isVrpcResponseCacheable(cmd);
+          const getFromCache = shouldUseCachedVrpcResponse({
+            command: cmd,
+            lastNetworkResponseAt: this.getLastNetworkResponseTime(cacheId),
+          });
     
           if (getFromCache) {
             try {
@@ -129,6 +129,7 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
           if (saveToCache && res.error == null) {
             try {
               await setCachedVrpcResponse(this.chain, this.endpoint, req, res);
+              this.setLastNetworkResponseTime(cacheId, Date.now());
             } catch(e) {
               console.log("Failed to save cached response:")
               console.log(e.message)
@@ -153,28 +154,30 @@ class VrpcInterface {
 
   cacheInterfaces = {};
 
-  lastRequestTimes = new Map();
+  lastNetworkResponseTimes = new Map();
 
   static getEndpointId(systemId, endpoint) {
     return hashAccountId(`${systemId}:${endpoint}`).toString('hex');
   }
 
   /**
-   * Sets the last called time for a specified call id
+   * Sets the last successful cached network response time for a call id.
    * @param {string} id 
    * @param {number} time 
    */
-  setLastTime(id, time) {
-    this.lastRequestTimes.set(id, time)
+  setLastNetworkResponseTime(id, time) {
+    this.lastNetworkResponseTimes.set(id, time)
   }
 
   /**
-   * Gets the last called time for a specified call id
+   * Gets the last successful cached network response time for a call id.
    * @param {string} id 
    * @returns number
    */
-  getLastTIme(id) {
-    return this.lastRequestTimes.has(id) ? this.lastRequestTimes.get(id) : 0
+  getLastNetworkResponseTime(id) {
+    return this.lastNetworkResponseTimes.has(id)
+      ? this.lastNetworkResponseTimes.get(id)
+      : 0
   }
 
   isSystemIdActivated(systemId) {
@@ -204,8 +207,8 @@ class VrpcInterface {
         this.cacheInterfaces[id] = new CachedVerusdRpcInterface(
           systemId,
           endpoint,
-          (...params) => this.setLastTime(...params),
-          (...params) => this.getLastTIme(...params),
+          (...params) => this.setLastNetworkResponseTime(...params),
+          (...params) => this.getLastNetworkResponseTime(...params),
           {
             id: VRPC_API_APP_ID,
             key: VRPC_API_KEYS[urlKey]
@@ -215,8 +218,8 @@ class VrpcInterface {
         this.cacheInterfaces[id] = new CachedVerusdRpcInterface(
           systemId,
           endpoint,
-          (...params) => this.setLastTime(...params),
-          (...params) => this.getLastTIme(...params)
+          (...params) => this.setLastNetworkResponseTime(...params),
+          (...params) => this.getLastNetworkResponseTime(...params)
         )
       }
     }
@@ -226,7 +229,6 @@ class VrpcInterface {
 
   getEndpointAddressForChain(systemId) {
     if (this.systemEndpointIds[systemId] == null) this.systemEndpointIds[systemId] = [];
-    const endpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
     const overrideEndpoints =
       CoinDirectory.vrpcOverrides && CoinDirectory.vrpcOverrides[systemId]
         ? CoinDirectory.vrpcOverrides[systemId]
@@ -237,9 +239,11 @@ class VrpcInterface {
         this.initEndpoint(systemId, endpoint);
       }
 
+      const newEndpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
+
       const allowed = new Set(overrideEndpoints);
       this.systemEndpointIds[systemId] = this.systemEndpointIds[systemId].filter(
-        id => endpoints[id] && allowed.has(endpoints[id][1]),
+        id => newEndpoints[id] && allowed.has(newEndpoints[id][1]),
       );
     }
 
@@ -252,7 +256,7 @@ class VrpcInterface {
         Math.floor(Math.random() * this.systemEndpointIds[systemId].length)
       ];
 
-    return endpoints[randomId][1];
+    return Store.getState().channelStore_vrpc.vrpcEndpoints[randomId][1];
   }
 
   recordEndpointConnection(id) {
@@ -322,6 +326,7 @@ class VrpcInterface {
   deleteAllEndpoints = () => {
     Store.dispatch({type: CLEAR_VRPC_ENDPOINTS});
     this.systemEndpointIds = {};
+    this.endpointConnections = {};
     this.cacheInterfaces = {};
   };
 

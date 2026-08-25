@@ -9,6 +9,7 @@ export * from './requests/sendRawTransaction';
 export * from './requests/verifyMessage';
 export * from './requests/signMessage';
 export * from './requests/getBlock';
+export * from './requests/getBlockHash';
 export * from './requests/getTransaction';
 export * from './requests/getCurrencyConversionPaths';
 export * from './requests/fundRawTransaction';

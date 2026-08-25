@@ -206,6 +206,11 @@ class ProfileSettings extends Component {
   }
 
   setUserKeyDerivationVersion = async (keyDerivationVersion) => {
+    const sessionScope = {
+      sessionScoped: true,
+      accountHash: this.props.activeAccount?.accountHash || null,
+      sessionEpoch: this.props.sessionEpoch,
+    };
     if (
       keyDerivationVersion !== this.props.activeAccount.keyDerivationVersion &&
       (await this.canSetUserKeyDerivationVersion())
@@ -225,7 +230,7 @@ class ProfileSettings extends Component {
             // TODO: Find a more elegant solution
             return new Promise((resolve, reject) => {
               setTimeout(() => {
-                this.props.dispatch(signOut());
+                this.props.dispatch(signOut(sessionScope));
                 resolve();
               }, 1000);
             });
@@ -701,6 +706,7 @@ const mapStateToProps = state => {
   return {
     testAccount: Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0,
     activeAccount: state.authentication.activeAccount,
+    sessionEpoch: state.authentication.sessionEpoch,
     showHideSeedCorruptionSetting: state.authentication.showHideSeedCorruptionSetting,
     wyreEnabled:
       state.authentication.activeAccount != null &&

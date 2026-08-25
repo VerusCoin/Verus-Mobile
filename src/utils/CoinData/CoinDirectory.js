@@ -162,11 +162,13 @@ class _CoinDirectory {
     const coinObj = this.findSimpleCoinObj(key, userName, useSystemId);
     
     if (coinObj.proto === 'vrsc' && (coinObj.compatible_channels.includes(VRPC) || coinObj.compatible_channels.includes(VERUSID))) {
+      const users = coinObj.users;
       const systemObj = this.findSystemCoinObj(coinObj.id);
 
       coinObj.system_options = systemObj.pbaas_options;
       coinObj.vrpc_endpoints = systemObj.vrpc_endpoints;
       coinObj.seconds_per_block = systemObj.seconds_per_block;
+      coinObj.users = users;
     }
 
     return coinObj;

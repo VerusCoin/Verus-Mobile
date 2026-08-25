@@ -28,6 +28,7 @@ import Styles from '../../styles/index'
 import { refreshActiveChainLifecycles } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import Colors from "../../globals/colors";
 import { CoinLogos, getCoinLogo } from "../../utils/CoinData/CoinData";
+import {scopeSessionAction} from '../../actions/actions/updates/sessionRequests';
 
 class CoinDetails extends Component {
   constructor(props) {
@@ -64,33 +65,44 @@ class CoinDetails extends Component {
 
   _handleAddCoin = async () => {
     this.setState({ loading: true });
+    const activeAccount = this.props.activeAccount;
+    const sessionScope = {
+      sessionScoped: true,
+      accountHash: activeAccount.accountHash,
+      sessionEpoch: this.props.sessionEpoch,
+    };
+    const requestContext = {sessionScope};
 
     try {
       this.props.dispatch(
         await addKeypairs(
           this.state.fullCoinData,
-          this.props.activeAccount.keys,
-          this.props.activeAccount.keyDerivationVersion == null
+          activeAccount.keys,
+          activeAccount.keyDerivationVersion == null
             ? 0
-            : this.props.activeAccount.keyDerivationVersion
+            : activeAccount.keyDerivationVersion,
+          requestContext,
         )
       );
 
       const addCoinAction = await addCoin(
         this.state.fullCoinData,
         this.props.activeCoinList,
-        this.props.activeAccount.id,
-        this.state.fullCoinData.compatible_channels
+        activeAccount.id,
+        this.state.fullCoinData.compatible_channels,
+        requestContext,
       )
 
       if (addCoinAction) {
         this.props.dispatch(addCoinAction);
 
         const setUserCoinsAction = setUserCoins(
-          this.props.activeCoinList,
-          this.props.activeAccount.id
+          addCoinAction.activeCoinList,
+          activeAccount.id,
         )
-        this.props.dispatch(setUserCoinsAction);
+        this.props.dispatch(
+          scopeSessionAction(setUserCoinsAction, sessionScope),
+        );
 
         refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
 
@@ -160,11 +172,10 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
-    coinSettings: state.settings.coinSettings
+    coinSettings: state.settings.coinSettings,
+    sessionEpoch: state.authentication.sessionEpoch,
     //needsUpdate: state.ledger.needsUpdate
   }
 };
 
 export default connect(mapStateToProps)(CoinDetails);
-
-

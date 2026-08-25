@@ -6,14 +6,14 @@ import {
   import { updateServiceDataValue } from "./UpdateServiceDataValue";
 
   import { checkVerusIdNotificationsForUpdates } from "./verusid/verusid";
-  
+
   const fetchChannels = () => {
     return {
-      [VERUSID]: (channelStore) =>
-        checkVerusIdNotificationsForUpdates(channelStore),
+      [VERUSID]: (channelStore, requestContext) =>
+        checkVerusIdNotificationsForUpdates(requestContext),
     };
   };
-  
+
   export const updateServiceNotifications = (state, dispatch, channels) =>
     updateServiceDataValue(
       state,
@@ -23,4 +23,3 @@ import {
       ERROR_SERVICE_NOTIFICATIONS,
       fetchChannels
     );
-  

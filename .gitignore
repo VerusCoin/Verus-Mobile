@@ -56,6 +56,11 @@ keystore.properties
 
 # Bundle artifact
 *.jsbundle
+/android/app/src/main/assets/index.android.bundle
+
+# Local package/cache and dependency-inspection artifacts
+/.pnpm-store/
+/androidx/
 
 # CocoaPods
 /ios/Pods/
