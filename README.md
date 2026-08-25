@@ -11,7 +11,7 @@ Welcome to the Verus Mobile multi-currency crypto wallet test release! This mobi
 
 •The ability to create VerusPay invoices compatible with the Verus Mobile app
 
-Feel free to report any discovered bugs, issues, or suggestions by either publicly asking for community support on one of our mobile channels at https://discord.gg/VRKMP2S, or, for more discretion, emailing development@veruscoin.io.
+Feel free to report any discovered bugs, issues, or suggestions by either publicly asking for community support on one of our mobile channels at https://discord.com/invite/Mur4c8dgxD, or, for more discretion, emailing development@veruscoin.io.
 
 # Privacy Statement
 No personal data is stored or collected by the Verus Mobile application, except as necessary for authentication. All authentication data is stored locally.
