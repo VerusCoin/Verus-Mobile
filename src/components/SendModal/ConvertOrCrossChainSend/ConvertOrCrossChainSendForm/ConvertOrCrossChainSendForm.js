@@ -55,6 +55,7 @@ import { selectAddressBlocklist } from "../../../../selectors/settings";
 import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../utils/constants/constants";
 import { getWeb3ProviderForNetwork } from "../../../../utils/web3/provider";
 import { useObjectSelector } from "../../../../hooks/useObjectSelector";
+import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const { height } = Dimensions.get('window');
@@ -1039,7 +1040,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
       navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, { preflight: res.result, balances: localBalances });
     } catch (e) {
-      Alert.alert("Error", e.message);
+      if (!showFundRawTransactionErrorAlert(e)) {
+        Alert.alert("Error", e.message);
+      }
     }
 
     setLoading(false);

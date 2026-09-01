@@ -50,6 +50,7 @@ import {CoinDirectory} from '../../../utils/CoinData/CoinDirectory';
 import {getCurrency} from '../../../utils/api/channels/verusid/callCreators';
 import {openUrl} from '../../../utils/linking';
 import {copyToClipboard} from '../../../utils/clipboard/clipboard';
+import {showFundRawTransactionErrorAlert} from '../../../utils/vrpc/fundRawTransactionError';
 import {
   getPendingDeeplinkRequest,
   savePendingDeeplinkRequest,
@@ -1188,6 +1189,8 @@ const SpendableKeyRequestInfo = props => {
             retry: 'claim',
           });
           setStatus('error');
+        } else if (showFundRawTransactionErrorAlert(e)) {
+          setStatus('review');
         } else if (isNetworkError(e)) {
           setRequestError(getClaimNetworkError(e));
           setStatus('error');

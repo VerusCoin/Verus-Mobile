@@ -53,6 +53,7 @@ import { updateVerusIdWallet } from '../../../../../actions/actions/channels/ver
 import { clearChainLifecycle, refreshActiveChainLifecycles } from '../../../../../actions/actions/intervals/dispatchers/lifecycleManager';
 import { setUserCoins } from '../../../../../actions/actionCreators';
 import { useObjectSelector } from '../../../../../hooks/useObjectSelector';
+import {showFundRawTransactionErrorAlert} from '../../../../../utils/vrpc/fundRawTransactionError';
 
 const STEP_MODE = 0;
 const STEP_FUNDS = 1;
@@ -537,7 +538,9 @@ const GiftCardFund = props => {
       setPreflightPlan(plan);
     } catch (e) {
       console.error(e);
-      Alert.alert('Error', e.message);
+      if (!showFundRawTransactionErrorAlert(e)) {
+        Alert.alert('Error', e.message);
+      }
     } finally {
       setLoading(false);
       setLoadingText(null);

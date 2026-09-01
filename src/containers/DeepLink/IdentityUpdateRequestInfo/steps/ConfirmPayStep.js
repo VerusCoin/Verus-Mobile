@@ -37,6 +37,7 @@ import {
 import { processEncryptedKeys } from '../../../../utils/crypto/encryptCredentials';
 import { confirmPayStepStyles as localStyles } from '../../../../styles';
 import {ensureGenericResponseSigner} from '../../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
+import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
 
 const ConfirmPayStep = ({
   details,
@@ -206,7 +207,9 @@ const ConfirmPayStep = ({
       setUtxos(updateIdentityTx.utxos);
     } catch (e) {
       setSelectedSource(null);
-      Alert.alert('Error', e.message || 'Failed to calculate fee');
+      if (!showFundRawTransactionErrorAlert(e)) {
+        Alert.alert('Error', e.message || 'Failed to calculate fee');
+      }
     }
 
     setCalculating(false);

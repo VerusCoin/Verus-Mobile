@@ -27,6 +27,7 @@ import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import { decryptkey } from '../../../../utils/seedCrypt';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
+import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
 
 const RecoverIdentityForm = (props) => {
   const { height } = Dimensions.get("window");
@@ -230,7 +231,9 @@ const RecoverIdentityForm = (props) => {
         privateAddr
       })
     } catch (e) {
-      Alert.alert('Error', e.message);
+      if (!showFundRawTransactionErrorAlert(e)) {
+        Alert.alert('Error', e.message);
+      }
     }
 
     props.setLoading(false)
