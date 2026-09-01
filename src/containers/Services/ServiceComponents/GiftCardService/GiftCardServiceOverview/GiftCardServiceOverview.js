@@ -26,17 +26,19 @@ import {GIFT_CARD_SERVICE_ID} from '../../../../../utils/constants/services';
 import {
   buildGiftCardNfcDeeplinkUri,
   canDeleteGiftCard,
+  canStartGiftCardFunding,
   getGiftCardClaimInfo,
   getGiftCardIdentityLookupErrors,
   getGiftCardPendingFundings,
   getRetryableGiftCardFunding,
   hasGiftCardBeenShared,
   hasGiftCardClaims,
+  hasGiftCardMempoolTransactions,
   hasPendingGiftCardFunding,
   markGiftCardShared,
   normalizeGiftCardServiceData,
   refreshGiftCardStatus,
-  removeGiftCard,
+  removeGiftCardIfUnchangedAndDeletable,
   upsertGiftCard,
   upsertGiftCardIfUnchanged,
 } from '../../../../../utils/giftCard/giftCard';
@@ -95,6 +97,15 @@ const getSystemRows = card => {
   });
 };
 
+const needsUnfundedShareWarning = card => {
+  return (
+    card != null &&
+    !hasGiftCardClaims(card) &&
+    card.status?.state !== 'redeemed' &&
+    !card.status?.redeemed
+  );
+};
+
 const getClaimedByLabel = claimInfo => {
   const addresses = claimInfo?.claimedByAddresses || [];
 
@@ -119,6 +130,8 @@ const getRefreshComparableCard = card => {
 };
 
 const ShareGiftCardDialog = ({card, onCancel, onCopy, onNfc, onQr}) => {
+  const unfunded = needsUnfundedShareWarning(card);
+
   return (
     <Portal>
       <Dialog visible={card != null} onDismiss={onCancel}>
@@ -130,9 +143,39 @@ const ShareGiftCardDialog = ({card, onCancel, onCopy, onNfc, onQr}) => {
                 color: Colors.verusDarkGray,
                 marginBottom: 12,
               }}>
-              Sharing exposes the spendable gift-card key. This card cannot be
-              funded again after sharing.
+              Sharing exposes the spendable gift-card key. Anyone with this key
+              can spend the card.
             </Text>
+            {unfunded && (
+              <View
+                style={{
+                  backgroundColor: '#FFF4E8',
+                  borderColor: Colors.infoButtonColor,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  marginBottom: 12,
+                  padding: 10,
+                }}>
+                <View style={{alignItems: 'center', flexDirection: 'row'}}>
+                  <MaterialCommunityIcons
+                    name="alert-outline"
+                    color={Colors.infoButtonColor}
+                    size={20}
+                    style={{marginRight: 6}}
+                  />
+                  <Text style={{fontWeight: 'bold'}}>Unfunded gift card</Text>
+                </View>
+                <Text
+                  style={{
+                    color: Colors.verusDarkGray,
+                    fontSize: 12,
+                    marginTop: 6,
+                  }}>
+                  Anyone who gets the key can spend funds as soon as they arrive.
+                  Treat this card as single-use and fund it only once.
+                </Text>
+              </View>
+            )}
             <Button
               mode="contained"
               icon="qrcode"
@@ -310,14 +353,6 @@ const GiftCardServiceOverview = ({
   );
 
   const fundCard = async card => {
-    if (hasGiftCardBeenShared(card)) {
-      Alert.alert(
-        'Already Shared',
-        'Shared gift cards cannot be funded. Create a new gift card instead.',
-      );
-      return;
-    }
-
     if (hasPendingGiftCardFunding(card)) {
       const retryableFunding = getRetryableGiftCardFunding(card);
 
@@ -340,16 +375,16 @@ const GiftCardServiceOverview = ({
       return;
     }
 
+    if (hasGiftCardBeenShared(card) && !canStartGiftCardFunding(card)) {
+      Alert.alert(
+        'Single-use Gift Card',
+        'This shared gift card already has funds or a recorded funding attempt. Create a new gift card instead of funding it again.',
+      );
+      return;
+    }
+
     try {
       const refreshed = await refreshCard(card);
-
-      if (hasGiftCardBeenShared(refreshed)) {
-        Alert.alert(
-          'Already Shared',
-          'Shared gift cards cannot be funded. Create a new gift card instead.',
-        );
-        return;
-      }
 
       if (hasPendingGiftCardFunding(refreshed)) {
         const retryableFunding = getRetryableGiftCardFunding(refreshed);
@@ -370,6 +405,17 @@ const GiftCardServiceOverview = ({
 
       if (refreshed.status?.state === 'redeemed' || refreshed.status?.redeemed) {
         Alert.alert('Redeemed', 'Redeemed gift cards cannot be funded.');
+        return;
+      }
+
+      if (
+        hasGiftCardBeenShared(refreshed) &&
+        !canStartGiftCardFunding(refreshed)
+      ) {
+        Alert.alert(
+          'Single-use Gift Card',
+          'This shared gift card already has funds or a recorded funding attempt. Create a new gift card instead of funding it again.',
+        );
         return;
       }
 
@@ -454,12 +500,31 @@ const GiftCardServiceOverview = ({
         return;
       }
 
-      await saveServiceData(currentData =>
-        removeGiftCard(currentData, card.id),
+      if (await hasGiftCardMempoolTransactions(refreshed)) {
+        await saveCard(refreshed, card);
+        Alert.alert(
+          'Cannot Delete',
+          'This gift card has a pending transaction in the mempool. Wait for it to confirm, then refresh the card before deleting it.',
+        );
+        return;
+      }
+
+      const savedData = await saveServiceData(currentData =>
+        removeGiftCardIfUnchangedAndDeletable(currentData, card),
       );
+
+      if (savedData.cards?.[card.id] != null) {
+        Alert.alert(
+          'Cannot Delete',
+          'This gift card changed while deletion checks were running. Refresh it and try again.',
+        );
+      }
     } catch (e) {
       console.error(e);
-      Alert.alert('Error', e.message);
+      Alert.alert(
+        'Unable to Delete',
+        e.message || 'Unable to verify that this gift card can be deleted.',
+      );
     } finally {
       setBusyCardId(null);
     }
@@ -468,9 +533,15 @@ const GiftCardServiceOverview = ({
   const confirmDeleteCard = card => {
     if (!canDeleteGiftCard(card)) return;
 
+    const hasBeenClaimed =
+      card.status?.state === 'redeemed' || card.status?.redeemed;
+    const message = hasBeenClaimed
+      ? 'Are you sure you want to delete this gift card from this device?'
+      : 'Are you sure you want to delete this gift card from this device? If there are any pending funds coming to the card, they will be permanently lost if the card is deleted.';
+
     Alert.alert(
       'Delete Gift Card',
-      'Are you sure you want to delete this gift card from this device?',
+      message,
       [
         {text: 'Cancel', style: 'cancel'},
         {
@@ -523,45 +594,8 @@ const GiftCardServiceOverview = ({
     }
   };
 
-  const shareCard = async card => {
-    if (hasGiftCardBeenShared(card)) {
-      setShareCardTarget(card);
-      return;
-    }
-
-    setBusyCardId(card.id);
-
-    try {
-      const refreshed = await refreshGiftCardStatus({
-        card,
-        activeCoinsForUser,
-      });
-      const savedRefreshed = await saveCard(refreshed, card);
-      const latestCard = savedRefreshed || refreshed;
-
-      if (hasPendingGiftCardFunding(latestCard)) {
-        Alert.alert(
-          'Pending Funding',
-          'Wait for funding transactions to confirm before sharing this gift card.',
-        );
-        return;
-      }
-
-      if (!hasGiftCardClaims(latestCard)) {
-        Alert.alert(
-          'Fund Before Sharing',
-          'Fund this gift card and wait for confirmation before sharing it.',
-        );
-        return;
-      }
-
-      setShareCardTarget(latestCard);
-    } catch (e) {
-      console.error(e);
-      Alert.alert('Unable to Share', e.message || 'Unable to prepare gift card.');
-    } finally {
-      setBusyCardId(null);
-    }
+  const shareCard = card => {
+    setShareCardTarget(card);
   };
 
   const markCardSharedForAction = async card => {
@@ -573,18 +607,6 @@ const GiftCardServiceOverview = ({
 
       if (currentCard == null) {
         throw new Error('Gift card is no longer available.');
-      }
-
-      if (hasPendingGiftCardFunding(currentCard)) {
-        throw new Error(
-          'Wait for funding transactions to confirm before sharing this gift card.',
-        );
-      }
-
-      if (!hasGiftCardClaims(currentCard)) {
-        throw new Error(
-          'Fund this gift card and wait for confirmation before sharing it.',
-        );
       }
 
       return upsertGiftCard(
@@ -649,6 +671,7 @@ const GiftCardServiceOverview = ({
     const claimInfo = getGiftCardClaimInfo(card);
     const claimedAt = formatCardDateTime(claimInfo?.claimedAt);
     const identityLookupErrors = getGiftCardIdentityLookupErrors(card);
+    const unfundedShareWarning = needsUnfundedShareWarning(card);
 
     return (
       <Card key={card.id} style={{marginBottom: 12, borderRadius: 8}}>

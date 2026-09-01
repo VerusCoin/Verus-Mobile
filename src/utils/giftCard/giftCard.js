@@ -38,6 +38,7 @@ import {
   fundRawTransaction,
   getBlock,
   getBlockHash,
+  getAddressMempool,
   getAddressUtxos,
   getInfo,
   getSpendableUtxos,
@@ -742,6 +743,22 @@ export const hasGiftCardBeenShared = card => {
   return Number.isFinite(sharedAt) && sharedAt > 0;
 };
 
+export const canStartGiftCardFunding = card => {
+  if (
+    card?.status?.state === GIFT_CARD_STATUS_REDEEMED ||
+    card?.status?.redeemed
+  ) {
+    return false;
+  }
+
+  if (!hasGiftCardBeenShared(card)) return true;
+
+  return (
+    !hasGiftCardClaims(card) &&
+    (card?.fundingHistory || []).length === 0
+  );
+};
+
 export const markGiftCardShared = (card, sharedAt = Date.now()) => {
   if (hasGiftCardBeenShared(card)) return card;
 
@@ -1394,6 +1411,38 @@ export const canDeleteGiftCard = card => {
     !hasGiftCardClaims(card) &&
     getGiftCardIdentityLookupErrors(card).length === 0
   );
+};
+
+export const hasGiftCardMempoolTransactions = async card => {
+  const addresses = Object.entries(card?.addressesBySystem || {}).filter(
+    ([systemId, address]) =>
+      typeof systemId === 'string' &&
+      systemId.length > 0 &&
+      typeof address === 'string' &&
+      address.length > 0,
+  );
+  const results = await Promise.all(
+    addresses.map(async ([systemId, address]) => {
+      const response = await getAddressMempool(systemId, [address], true, 1);
+
+      if (response?.error) {
+        throw new Error(
+          response.error.message ||
+            `Unable to check pending transactions on ${systemId}.`,
+        );
+      }
+
+      if (!Array.isArray(response?.result)) {
+        throw new Error(
+          `Unable to check pending transactions on ${systemId}.`,
+        );
+      }
+
+      return response.result;
+    }),
+  );
+
+  return results.some(entries => entries.length > 0);
 };
 
 const getActiveVrpcCoinForSystem = (systemId, activeCoinsForUser, activeAccount) => {
@@ -2098,9 +2147,9 @@ export const preflightGiftCardFunding = async ({
   activeCoinsForUser,
   activeAccount,
 }) => {
-  if (hasGiftCardBeenShared(card)) {
+  if (!canStartGiftCardFunding(card) && hasGiftCardBeenShared(card)) {
     throw new Error(
-      'Shared gift cards cannot be funded. Create a new gift card instead.',
+      'Shared gift cards are single-use and cannot be funded after funds or a funding attempt have been recorded. Create a new gift card instead.',
     );
   }
 
@@ -2414,4 +2463,24 @@ export const removeGiftCard = (serviceData, cardId) => {
     ...normalized,
     cards,
   };
+};
+
+export const removeGiftCardIfUnchangedAndDeletable = (
+  serviceData,
+  expectedCard,
+) => {
+  const normalized = normalizeGiftCardServiceData(serviceData);
+  const currentCard = normalized.cards?.[expectedCard?.id];
+
+  if (currentCard == null) return normalized;
+
+  if (
+    JSON.stringify(getGiftCardPersistenceSnapshot(currentCard)) !==
+      JSON.stringify(getGiftCardPersistenceSnapshot(expectedCard)) ||
+    !canDeleteGiftCard(currentCard)
+  ) {
+    return normalized;
+  }
+
+  return removeGiftCard(normalized, expectedCard.id);
 };

@@ -11,7 +11,19 @@ import { validateVerusPayBurnChangePrice } from "../verusPayBurnChangePrice";
  * @param {number} detailIndex
  */
 export const validateVerusPayInvoiceVDXFObject = (request, detailIndex) => {
-  return validateVerusPayInvoiceDetails(request.getDetails(detailIndex).data);
+  const details = request.getDetails(detailIndex).data;
+
+  if (details.isTestnet() !== request.isTestnet()) {
+    throw new Error(
+      `Invoice details are for ${
+        details.isTestnet() ? "testnet" : "mainnet"
+      }, but the enclosing request is for ${
+        request.isTestnet() ? "testnet" : "mainnet"
+      }.`
+    );
+  }
+
+  return validateVerusPayInvoiceDetails(details);
 }
 
 /**
