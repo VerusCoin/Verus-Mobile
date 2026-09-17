@@ -31,6 +31,7 @@ const {
   DataDescriptorOrdinalVDXFObject,
   DataPacketRequestDetails,
   DataPacketRequestOrdinalVDXFObject,
+  DataResponseDetails,
   DataResponseOrdinalVDXFObject,
   GenericRequest,
   GenericResponse,
@@ -94,6 +95,33 @@ describe('generic data request response builders', () => {
     });
 
     expect(buildUserDataResponse({userDataDetail: requestDetail, credentials: []})).toBeNull();
+  });
+
+  it('preserves response boundaries when empty descriptor fields normalize away', () => {
+    // Response flags 0; descriptor version 1, label/MIME flags, data aa,
+    // and explicitly present empty label and MIME strings.
+    const payload = Buffer.from('00016001aa0000', 'hex');
+    const prefix = Buffer.from('deadbeef', 'hex');
+    const suffix = Buffer.from('123456', 'hex');
+    const details = new DataResponseDetails();
+
+    expect(details.fromBuffer(Buffer.concat([prefix, payload, suffix]), prefix.length))
+      .toBe(prefix.length + payload.length);
+    expect(details.data.label).toBe('');
+    expect(details.data.mimeType).toBe('');
+    expect(details.getByteLength()).toBeLessThan(payload.length);
+
+    // Envelope version 1/flags 0; data-response ordinal 11/version 1.
+    const responseBytes = Buffer.concat([
+      Buffer.from([1, 0, 11, 1, payload.length]),
+      payload,
+    ]);
+    const response = new GenericResponse();
+
+    expect(response.fromBuffer(Buffer.concat([prefix, responseBytes, suffix]), prefix.length))
+      .toBe(prefix.length + responseBytes.length);
+    expect(response.getDetails(0)).toBeInstanceOf(DataResponseOrdinalVDXFObject);
+    expect(response.getDetails(0).data.data.objectdata.toString('hex')).toBe('aa');
   });
 
   it('packages data packet signatures in a DataResponseDetails ordinal', async () => {

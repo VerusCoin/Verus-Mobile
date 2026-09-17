@@ -330,7 +330,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         type: DEST_ETH.xor(FLAG_DEST_GATEWAY).xor(FLAG_DEST_AUX),
         destinationBytes: destAddrBytes,
         gatewayID: vEthIAddress,
-        gatewayCode: toBase58Check(Buffer.from(NULL_ETH_ADDRESS, 'hex'), 102),
+        gatewayCode: toBase58Check(Buffer.from(NULL_ETH_ADDRESS.slice(2), 'hex'), 102),
         fees: new BN(importGasFeeSatsString),
         auxDests: [
           new TransferDestination({
