@@ -1,5 +1,6 @@
 const mockRequestPrivKey = jest.fn();
 const mockInitEndpoint = jest.fn();
+const mockGetCurrentHeight = jest.fn();
 const mockSignHash = jest.fn();
 const mockEncryptData = jest.fn();
 
@@ -12,6 +13,7 @@ jest.mock('../../vrpc/vrpcInterface', () => ({
   default: {
     initEndpoint: mockInitEndpoint,
     getVerusIdInterface: () => ({
+      getCurrentHeight: mockGetCurrentHeight,
       signHash: mockSignHash,
     }),
   },
@@ -35,24 +37,29 @@ const {
   DataResponseOrdinalVDXFObject,
   GenericRequest,
   GenericResponse,
+  SignatureData,
   SignatureDataKey,
   UserDataRequestDetails,
   VdxfUniValue,
 } = require('verus-typescript-primitives');
 const createHash = require('create-hash');
+const {ECPair, IdentitySignature, networks} = require('@bitgo/utxo-lib');
+const {VerusIdInterface} = require('verusid-ts-client');
 const {buildUserDataResponse} = require('../../deeplink/userData/buildUserDataResponse');
-const {buildDataPacketResponse} = require('../../deeplink/dataPacket/signDataPacket');
+const {buildDataPacketResponse, signDataPacketObject} = require('../../deeplink/dataPacket/signDataPacket');
 const {prepareGenericResponseForSigning} = require('../../deeplink/genericResponse/prepareGenericResponseForSigning');
 const {encryptGenericResponseDetails} = require('../../deeplink/genericResponse/encryptGenericResponseDetails');
 
 const SYSTEM_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
 const IDENTITY_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
 const SEARCH_DATA_HASH = Buffer.alloc(32, 1);
+const SIGNATURE_HEIGHT = 123456;
 
 describe('generic data request response builders', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRequestPrivKey.mockResolvedValue('primary-wif');
+    mockGetCurrentHeight.mockResolvedValue(SIGNATURE_HEIGHT);
     mockSignHash.mockResolvedValue(Buffer.from('signature').toString('base64'));
     mockEncryptData.mockResolvedValue({
       encryptedData: 'abcd',
@@ -146,19 +153,96 @@ describe('generic data request response builders', () => {
     });
 
     expect(mockRequestPrivKey).toHaveBeenCalledTimes(3);
+    expect(mockGetCurrentHeight).toHaveBeenCalledTimes(3);
     expect(mockSignHash).toHaveBeenCalledTimes(3);
-    expect(mockSignHash.mock.calls[1][1].toString('hex')).toBe(
-      createHash('sha256').update(descriptor.toBuffer()).digest('hex'),
-    );
-    expect(mockSignHash.mock.calls[2][1].toString('hex')).toBe(
-      createHash('sha256').update(Buffer.from('I agree to the statement', 'utf8')).digest('hex'),
-    );
     expect(response).toBeInstanceOf(DataResponseOrdinalVDXFObject);
+    expect(response.data.requestID.toIAddress()).toBe(IDENTITY_ID);
 
     const value = new VdxfUniValue();
     value.fromBuffer(response.data.data.objectdata);
     expect(value.values).toHaveLength(3);
-    expect(value.values[0][SignatureDataKey.vdxfid]).toBeTruthy();
+    const payloads = [
+      Buffer.from('message', 'utf8'),
+      descriptor.toBuffer(),
+      Buffer.from('I agree to the statement', 'utf8'),
+    ];
+
+    value.values.forEach((entry, index) => {
+      const signatureData = entry[SignatureDataKey.vdxfid];
+      expect(signatureData).toBeInstanceOf(SignatureData);
+      expect(signatureData.signatureHash).toEqual(
+        createHash('sha256').update(payloads[index]).digest(),
+      );
+      expect(signatureData.signatureAsVch).toEqual(Buffer.from('signature'));
+      expect(mockSignHash).toHaveBeenNthCalledWith(
+        index + 1,
+        IDENTITY_ID,
+        signatureData.getIdentityHash({version: 2, hash_type: 5, height: SIGNATURE_HEIGHT}),
+        'primary-wif',
+        undefined,
+        SIGNATURE_HEIGHT,
+        SYSTEM_ID,
+      );
+    });
+  });
+
+  it.each([
+    ['VRSC', SYSTEM_ID],
+    ['VRSCTEST', 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq'],
+  ])('creates a verifiable %s data signature bound to its identity context', async (id, systemID) => {
+    const identityID = 'iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj';
+    const key = ECPair.fromPrivateKeyBuffer(Buffer.alloc(32, 1), networks.verus);
+    const client = new VerusIdInterface(systemID, 'https://example.invalid');
+    client.interface.getIdentity = jest.fn().mockResolvedValue({
+      result: {status: 'active', identity: {identityaddress: identityID}},
+    });
+    client.getCurrentHeight = jest.fn().mockRejectedValue(new Error('Height must be supplied'));
+    mockRequestPrivKey.mockResolvedValueOnce(key.toWIF());
+    mockSignHash.mockImplementationOnce(client.signHash.bind(client));
+
+    const result = await signDataPacketObject({
+      coinObj: {id, system_id: systemID, vrpc_endpoints: ['https://example.invalid']},
+      identityAddress: identityID,
+      signableObject: 'message',
+    });
+    const signatureData = new SignatureData();
+    signatureData.fromBuffer(result.toBuffer());
+    const signature = new IdentitySignature(networks.verus);
+    signature.fromBuffer(signatureData.signatureAsVch, 0, systemID, identityID);
+    const context = {version: signature.version, hash_type: signature.hashType, height: signature.blockHeight};
+
+    expect(context).toEqual({version: 2, hash_type: 5, height: SIGNATURE_HEIGHT});
+    expect(signatureData.signatureHash).toEqual(createHash('sha256').update('message').digest());
+    expect(mockGetCurrentHeight).toHaveBeenCalledTimes(1);
+    expect(client.getCurrentHeight).not.toHaveBeenCalled();
+    expect(signature.verifyHashOffline(signatureData.getIdentityHash(context), key.getAddress()))
+      .toEqual([true]);
+
+    const changedFields = [
+      {systemid: identityID},
+      {identityid: systemID},
+      {signaturehash: createHash('sha256').update('different message').digest('hex')},
+    ];
+    const invalidHashes = [
+      signatureData.signatureHash,
+      signatureData.getIdentityHash({...context, height: SIGNATURE_HEIGHT + 1}),
+      ...changedFields.map(fields => SignatureData.fromJson({...signatureData.toJson(), ...fields})
+        .getIdentityHash(context)),
+    ];
+    invalidHashes.forEach(hash => {
+      expect(signature.verifyHashOffline(hash, key.getAddress())).toEqual([false]);
+    });
+  });
+
+  it('does not sign a data packet object when fetching its height fails', async () => {
+    mockGetCurrentHeight.mockRejectedValueOnce(new Error('Height unavailable'));
+
+    await expect(signDataPacketObject({
+      coinObj: {id: 'VRSC', system_id: SYSTEM_ID, vrpc_endpoints: ['https://example.invalid']},
+      identityAddress: IDENTITY_ID,
+      signableObject: 'message',
+    })).rejects.toThrow('Height unavailable');
+    expect(mockSignHash).not.toHaveBeenCalled();
   });
 
   it('encrypts complete generic response details when requested', async () => {
