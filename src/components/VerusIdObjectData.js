@@ -46,7 +46,6 @@ import {
 import { getCmmDataLabel } from '../utils/vdxf/cmmDataLabel';
 import { getVDXFKeyLabel } from '../utils/vdxf/vdxfTypeLabels';
 import { capitalizeString } from '../utils/stringUtils';
-import { ContentMultiMapRemoveKey } from 'verus-typescript-primitives';
 
 const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5, marginBottom: 1, alignSelf: 'flex-end', }} />);
 
@@ -106,22 +105,9 @@ export default function VerusIdObjectData(props) {
     return formatValue(data);
   };
 
-  const isContentMultiMapRemove = (rawData) => {
-    const isRemoveObj = (obj) => {
-      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
-      const keys = Object.keys(obj);
-      if (keys.length !== 1) return false;
-      return keys[0] === ContentMultiMapRemoveKey.vdxfid;
-    };
-
-    if (isRemoveObj(rawData)) return true;
-    if (Array.isArray(rawData)) return rawData.length > 0 && rawData.every(isRemoveObj);
-    return false;
-  };
-
   const getCmmChangeType = (hasExisting, updateEntry) => {
     if (!updateEntry) return null;
-    if (isContentMultiMapRemove(updateEntry.rawData)) return 'removed';
+    if (updateEntry.removeMeta) return 'removed';
     if (!hasExisting) return 'added';
     return 'appended';
   };
@@ -214,7 +200,7 @@ export default function VerusIdObjectData(props) {
     if (action === 4) return 'All current content keys and values';
     if (action === 3) return `All current values under ${entryLabel || 'selected key'}`;
     if (action === 2) return `All current matching values under ${entryLabel || 'selected key'}${valueHashText}`;
-    if (action === 1) return `One current value under ${entryLabel || 'selected key'}${valueHashText}`;
+    if (action === 1) return `One current matching value under ${entryLabel || 'selected key'}${valueHashText}`;
 
     return 'Selected content';
   };
@@ -236,7 +222,7 @@ export default function VerusIdObjectData(props) {
 
         return (
           <>
-            {item.data != null && !item.hideOldData && renderCmmDescBlock('Current', item.data, '#CCC', true)}
+            {item.data != null && !item.hideOldData && renderCmmDescBlock('Current', item.data, '#CCC', item.removeMeta.action === 3)}
             {renderCmmDescBlock(actionLabel, removeActionDescription || 'Selected content', Colors.warningButtonColor)}
           </>
         );
@@ -546,13 +532,18 @@ export default function VerusIdObjectData(props) {
           const iAddr = key.split(':')[1];
           const updateEntry = displayUpdates[VERUSID_CMM_INFO.key][key];
           const shortIAddr = updateEntry && updateEntry.displayTitle ? updateEntry.displayTitle : getCmmDataKey(iAddr);
-          const changeType = getCmmChangeType(false, updateEntry);
+          const removedKey = updateEntry?.removeMeta?.action !== 4
+            ? updateEntry?.removeMeta?.entryKey
+            : null;
+          const currentValues = removedKey ? verusId.identity.contentmultimap?.[removedKey] : null;
+          const hasCurrentValues = currentValues != null && (!Array.isArray(currentValues) || currentValues.length > 0);
+          const changeType = getCmmChangeType(hasCurrentValues, updateEntry);
           
           contentMultiMapInfo[key] = {
             key,
             title: shortIAddr,
-            data: updateEntry ? updateEntry.data : null,
-            hideOldData: true,
+            data: hasCurrentValues ? getCmmDataLabel(currentValues) : updateEntry ? updateEntry.data : null,
+            hideOldData: !hasCurrentValues,
             dataInDescription: true,
             changeType,
             isEncrypted: Boolean(updateEntry && updateEntry.isEncrypted),
@@ -595,7 +586,7 @@ export default function VerusIdObjectData(props) {
         setExpandedAccordions(initialExpandedState);
       }
     }
-  }, [verusId, friendlyNames, updates, cmmDataKeys, chainInfo, coinObj, hideUnchanged, hideDataOnLoad]);
+  }, [verusId, friendlyNames, displayUpdates, cmmDataKeys, chainInfo, coinObj, hideUnchanged, hideDataOnLoad]);
 
   copyDataToClipboard = (data, name) => {
     Clipboard.setString(data);

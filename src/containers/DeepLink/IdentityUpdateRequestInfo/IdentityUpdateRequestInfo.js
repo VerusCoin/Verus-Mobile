@@ -82,6 +82,7 @@ import HighRiskStep from './steps/HighRiskStep';
 import ConfirmPayStep from './steps/ConfirmPayStep';
 import {classifyChanges} from './utils/classifyChanges';
 import {buildContentMultiMapRemoveUi} from './utils/contentMultiMapRemoveUi';
+import {extractContentMultiMapRemoveMeta, splitContentMultiMapUpdates} from './utils/contentMultiMapUpdates';
 import {buildIdentityStateChange} from './utils/buildIdentityStateChange';
 import {identityUpdateRequestInfoStyles as styles} from '../../../styles';
 
@@ -215,9 +216,10 @@ const IdentityUpdateRequestInfo = props => {
   const toCmmModalObjects = (updates, fallbackKey = null) => {
     const normalizedUpdates = normalizeCmmUpdates(updates);
     return normalizedUpdates.map((entry, index) => {
-      if (entry != null && typeof entry === 'object' && !Array.isArray(entry)) {
-        const keys = Object.keys(entry);
-        const removeMeta = extractContentMultiMapRemoveMeta(entry);
+      const removeMeta = extractContentMultiMapRemoveMeta(entry, fallbackKey);
+      const value = removeMeta && Array.isArray(entry) ? entry[0] : entry;
+      if (value != null && typeof value === 'object' && !Array.isArray(value)) {
+        const keys = Object.keys(value);
 
         if (removeMeta && keys.length > 0) {
           const key = keys[0];
@@ -234,18 +236,20 @@ const IdentityUpdateRequestInfo = props => {
           return {
             kind: removeMeta ? 'content-remove' : 'vdxf-value',
             key,
-            data: entry[key],
+            data: value[key],
             rawData: entry,
             meta: detailUi,
           };
         }
 
-        if (keys.length === 1) {
+        // A remove-shaped value under an ordinary key is data, not an action.
+        // Keep its inspector raw so it cannot show the removal-action modal.
+        if (keys.length === 1 && keys[0] !== ContentMultiMapRemoveKey.vdxfid) {
           const key = keys[0];
           return {
             kind: 'vdxf-value',
             key,
-            data: entry[key],
+            data: value[key],
             rawData: entry,
           };
         }
@@ -266,35 +270,6 @@ const IdentityUpdateRequestInfo = props => {
     data: signData,
     rawData: getSignDataRawValue(signData),
   });
-
-  const extractContentMultiMapRemoveMeta = value => {
-    if (value == null || typeof value !== 'object' || Array.isArray(value))
-      return null;
-
-    const topLevel = value[ContentMultiMapRemoveKey.vdxfid];
-    if (
-      topLevel == null ||
-      typeof topLevel !== 'object' ||
-      Array.isArray(topLevel)
-    )
-      return null;
-
-    const nested = topLevel[ContentMultiMapRemoveKey.vdxfid];
-    const payload =
-      nested != null && typeof nested === 'object' && !Array.isArray(nested)
-        ? nested
-        : topLevel;
-
-    const parsedAction = Number(payload.action);
-    if (!Number.isFinite(parsedAction)) return null;
-
-    return {
-      action: parsedAction,
-      entryKey: typeof payload.entrykey === 'string' ? payload.entrykey : null,
-      valueHash:
-        typeof payload.valuehash === 'string' ? payload.valuehash : null,
-    };
-  };
 
   // --- Display updates ---
   const getDisplayUpdates = () => {
@@ -396,17 +371,7 @@ const IdentityUpdateRequestInfo = props => {
               ),
           };
         } else {
-          const normalizedUpdates = normalizeCmmUpdates(updates);
-          const removeEntries = normalizedUpdates
-            .map((update, index) => ({
-              update,
-              index,
-              removeMeta: extractContentMultiMapRemoveMeta(update),
-            }))
-            .filter(entry => entry.removeMeta != null);
-          const nonRemoveUpdates = normalizedUpdates.filter(
-            update => extractContentMultiMapRemoveMeta(update) == null,
-          );
+          const {removeEntries, nonRemoveUpdates} = splitContentMultiMapUpdates(key, updates);
 
           if (removeEntries.length > 0) {
             removeEntries.forEach(({update, removeMeta, index}) => {
@@ -417,15 +382,13 @@ const IdentityUpdateRequestInfo = props => {
                 getKeyLabel: getCmmDataKey,
                 definedKeyVdxfId: DATA_TYPE_DEFINEDKEY.vdxfid,
               });
+              if (!removeUi) return;
               const targetKey =
                 removeMeta.action === 4
                   ? CMM_CLEAR_MAP_SENTINEL
                   : removeMeta.entryKey || key;
-              const baseUpdateKey = `${VERUSID_CMM_DATA.key}:${targetKey}`;
-              const updateKey =
-                displayUpdates[VERUSID_CMM_INFO.key][baseUpdateKey] == null
-                  ? baseUpdateKey
-                  : `${baseUpdateKey}:remove:${index}`;
+              // Keep every removal separate from additions to the same key.
+              const updateKey = `${VERUSID_CMM_DATA.key}:${targetKey}:remove:${index}`;
 
               // derive remove-action copy from the current identity state, not from chain permanence.
               displayUpdates[VERUSID_CMM_INFO.key][updateKey] = {
