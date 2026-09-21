@@ -23,10 +23,12 @@ import Colors from '../../../../globals/colors';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { VERUSID_REVOCATION_AUTH, VERUSID_RECOVERY_AUTH } from '../../../../utils/constants/verusidObjectData';
 import AuthorityInfoSheet from '../components/AuthorityInfoSheet';
+import IdentityStateChangeCard from '../components/IdentityStateChangeCard';
 import { highRiskStepStyles as localStyles } from '../../../../styles';
 
 const HighRiskStep = ({
   highRiskChanges,
+  identityStateChange,
   primaryAddressAfterUpdateInfo,
   acknowledged,
   onToggle,
@@ -116,17 +118,19 @@ const HighRiskStep = ({
 
   /* Build a compact, plain-language summary of what's changing */
   const changeSummaryLines = useMemo(() => {
-    return (highRiskChanges || []).map(change => {
-      const isExternal = change?.type === 'primary-add' && change?.walletMatch === false;
-      return {
-        key: change.key,
-        title: change.title,
-        isExternal,
-        type: change.type,
-        data: change.data,
-        valueLabel: change.valueLabel,
-      };
-    });
+    return (highRiskChanges || [])
+      .filter(change => change.highRiskType !== 'identity-state')
+      .map(change => {
+        const isExternal = change?.type === 'primary-add' && change?.walletMatch === false;
+        return {
+          key: change.key,
+          title: change.title,
+          isExternal,
+          type: change.type,
+          data: change.data,
+          valueLabel: change.valueLabel,
+        };
+      });
   }, [highRiskChanges]);
 
   const renderOutlinedBadge = ({ icon, label, color, style, size }) => {
@@ -172,9 +176,13 @@ const HighRiskStep = ({
           <Text style={parentStyles.subtitle}>
             {isContentClearOnly
               ? 'This clears current identity content.'
+              : identityStateChange
+              ? 'These changes can affect identity access and when its funds can be spent.'
               : 'These changes can affect who controls this identity.'}
           </Text>
         </View>
+
+        <IdentityStateChangeCard change={identityStateChange} detailed />
 
         {/* Authority-only card — vertical connector from current -> new */}
         {isAuthorityOnly && (
@@ -272,7 +280,7 @@ const HighRiskStep = ({
         )}
 
         {/* Generic outcome card — for primary address or other non-authority changes */}
-        {!isAuthorityOnly && (
+        {!isAuthorityOnly && changeSummaryLines.length > 0 && (
           <>
             <View style={localStyles.outcomeCard}>
               <View style={localStyles.outcomeHeaderRow}>
@@ -434,6 +442,9 @@ const HighRiskStep = ({
             </Text>
             {hasUnownedPrimaryAddress && (
               <Text style={localStyles.ackSubtitle}>Includes an external primary address.</Text>
+            )}
+            {identityStateChange && (
+              <Text style={localStyles.ackSubtitle}>Includes the identity status and timelock changes shown above.</Text>
             )}
           </View>
         </TouchableOpacity>

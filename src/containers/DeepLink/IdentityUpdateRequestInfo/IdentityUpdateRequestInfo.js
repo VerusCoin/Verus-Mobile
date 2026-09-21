@@ -26,7 +26,6 @@
 */
 import React, {useMemo, useState, useEffect, useCallback} from 'react';
 import {Platform, SafeAreaView, View} from 'react-native';
-import {primitives} from 'verusid-ts-client';
 import {Button, Portal, Text} from 'react-native-paper';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import {
@@ -52,7 +51,6 @@ import {CoinDirectory} from '../../../utils/CoinData/CoinDirectory';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
 import {copyToClipboard} from '../../../utils/clipboard/clipboard';
 import {useObjectSelector} from '../../../hooks/useObjectSelector';
-import {getVerusIdStatus} from '../../../utils/verusid/getVerusIdStatus';
 import {
   VERUSID_AUTH_INFO,
   VERUSID_BASE_INFO,
@@ -63,7 +61,6 @@ import {
   VERUSID_PRIVATE_INFO,
   VERUSID_RECOVERY_AUTH,
   VERUSID_REVOCATION_AUTH,
-  VERUSID_STATUS,
 } from '../../../utils/constants/verusidObjectData';
 import {getCmmDataLabel} from '../../../utils/vdxf/cmmDataLabel';
 import VdxfUniValueModal from '../../../components/VdxfUniValueModal/VdxfUniValueModal';
@@ -85,6 +82,7 @@ import HighRiskStep from './steps/HighRiskStep';
 import ConfirmPayStep from './steps/ConfirmPayStep';
 import {classifyChanges} from './utils/classifyChanges';
 import {buildContentMultiMapRemoveUi} from './utils/contentMultiMapRemoveUi';
+import {buildIdentityStateChange} from './utils/buildIdentityStateChange';
 import {identityUpdateRequestInfoStyles as styles} from '../../../styles';
 
 // Step identifiers
@@ -127,9 +125,6 @@ const IdentityUpdateRequestInfo = props => {
   const {fullyqualifiedname, identity} = subjectIdentity;
 
   // --- Core state ---
-  const [subject, setSubject] = useState(
-    primitives.Identity.fromJson(subjectIdentity),
-  );
   const [details, setDetails] = useState(new IdentityUpdateRequestDetails());
   const [stepIndex, setStepIndex] = useState(STEP_REVIEW);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -377,14 +372,6 @@ const IdentityUpdateRequestInfo = props => {
             copyToClipboard(identityUpdates.primaryaddresses[i], {
               message: `${identityUpdates.primaryaddresses[i]} copied to clipboard.`,
             }),
-        };
-      }
-    }
-
-    if (details.identity && identityUpdates.flags && identityUpdates.flags !== identity.flags) {
-      if (subject.isRevoked() !== details.identity.isRevoked()) {
-        displayUpdates[VERUSID_BASE_INFO.key][VERUSID_STATUS.key] = {
-          data: getVerusIdStatus(identityUpdates, chainInfo, coinObj),
         };
       }
     }
@@ -671,9 +658,25 @@ const IdentityUpdateRequestInfo = props => {
     [baseHighRiskChanges],
   );
 
+  const identityStateChange = useMemo(
+    () =>
+      buildIdentityStateChange({
+        currentIdentity: identity,
+        updatedIdentity: identityUpdates,
+        chainHeight: chainInfo?.longestchain,
+        secondsPerBlock: coinObj.seconds_per_block,
+        prepared: Boolean(updateIdTxHex),
+      }),
+    [identity, identityUpdates, chainInfo?.longestchain, coinObj.seconds_per_block, updateIdTxHex],
+  );
+
   const highRiskChanges = useMemo(
-    () => [...primaryAddressChanges, ...nonPrimaryHighRiskChanges],
-    [primaryAddressChanges, nonPrimaryHighRiskChanges],
+    () => [
+      ...primaryAddressChanges,
+      ...nonPrimaryHighRiskChanges,
+      ...(identityStateChange ? [identityStateChange] : []),
+    ],
+    [primaryAddressChanges, nonPrimaryHighRiskChanges, identityStateChange],
   );
 
   const hasHighRisk = highRiskChanges.length > 0;
@@ -695,7 +698,10 @@ const IdentityUpdateRequestInfo = props => {
     setAcknowledged(prev => !prev);
   }, []);
 
-  const hasContent = contentChanges.length > 0 || highRiskChanges.length > 0;
+  // Match the groups rendered by ContentStep, including high-risk content removal.
+  const hasContent = [VERUSID_CMM_INFO.key, VERUSID_PRIVATE_INFO.key].some(
+    groupKey => Object.values(displayUpdates[groupKey] || {}).some(Boolean),
+  );
 
   // --- Stepper navigation ---
   // Build the ordered list of steps (skip content/high-risk if none)
@@ -888,6 +894,7 @@ const IdentityUpdateRequestInfo = props => {
       {/* Step content */}
       {currentStepId === STEP_REVIEW && (
         <ReviewStep
+          identityStateChange={identityStateChange}
           signerFqn={signerFqn}
           canOpenSignerModal={canOpenSignerModal}
           chainId={chainId}
@@ -917,6 +924,7 @@ const IdentityUpdateRequestInfo = props => {
 
       {currentStepId === STEP_HIGH_RISK && (
         <HighRiskStep
+          identityStateChange={identityStateChange}
           highRiskChanges={highRiskChanges}
           primaryAddressAfterUpdateInfo={
             primaryAddressChanges.length > 0
@@ -940,6 +948,8 @@ const IdentityUpdateRequestInfo = props => {
 
       {currentStepId === STEP_CONFIRM_PAY && (
         <ConfirmPayStep
+          identityStateChange={identityStateChange}
+          chainHeight={chainInfo?.longestchain}
           details={details}
           requestIsTestnet={requestIsTestnet}
           subjectIdentity={subjectIdentity}
