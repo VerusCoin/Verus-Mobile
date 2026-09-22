@@ -105,7 +105,7 @@ importers:
     dependencies:
       '@bitgo/utxo-lib':
         specifier: github:VerusCoin/BitGoJS#utxo-lib-verus
-        version: https://codeload.github.com/VerusCoin/BitGoJS/tar.gz/3797a98f9652b43a34812e687d4a918f87e68843
+        version: https://codeload.github.com/VerusCoin/BitGoJS/tar.gz/2d3240429b7664fb01ca3f0f9e1c2b6da803f68d
       '@noble/curves':
         specifier: 1.9.7
         version: 1.9.7
@@ -417,7 +417,7 @@ importers:
         version: https://codeload.github.com/VerusCoin/verusd-rpc-ts-client/tar.gz/e8ea8c21f8a3d845e20189440dcd820d16f00891
       verusid-ts-client:
         specifier: github:VerusCoin/verusid-ts-client
-        version: https://codeload.github.com/VerusCoin/verusid-ts-client/tar.gz/42ab8fa07861b1d473cf325f9f3a0d66906274ce
+        version: https://codeload.github.com/VerusCoin/verusid-ts-client/tar.gz/933e8f8da1a51b99ba7533701dddb9914b7a06b7
       vm-browserify:
         specifier: 0.0.4
         version: 0.0.4
@@ -1089,8 +1089,8 @@ packages:
   '@bitgo/blake2b@3.0.1':
     resolution: {integrity: sha512-+Neg+nsqUhYOPlvyITHXYzKUTJofyxYdLQTzNjufamifBzxLGTpgn2KKUfvGNsGovlUYzlyPZj+CB6je2D7mhw==}
 
-  '@bitgo/utxo-lib@https://codeload.github.com/VerusCoin/BitGoJS/tar.gz/3797a98f9652b43a34812e687d4a918f87e68843':
-    resolution: {gitHosted: true, integrity: sha512-8Q88iZlieuLQuVX6QGrUvoexGfLRMTSOKHXxqt5c+SRp7H2FMh0xBu14Aw7KpoGvXzp9bkzB8+dPY2ZlqdGlrQ==, tarball: https://codeload.github.com/VerusCoin/BitGoJS/tar.gz/3797a98f9652b43a34812e687d4a918f87e68843}
+  '@bitgo/utxo-lib@https://codeload.github.com/VerusCoin/BitGoJS/tar.gz/2d3240429b7664fb01ca3f0f9e1c2b6da803f68d':
+    resolution: {gitHosted: true, integrity: sha512-g1oZqcaxWz208pX35sVT9qJ9WxzVv0XMgoyv0yrbW2lgVvGf5Z9Uy2nz+QEkwVpjY2mR8Sm7O+bSB5+X2bIj8w==, tarball: https://codeload.github.com/VerusCoin/BitGoJS/tar.gz/2d3240429b7664fb01ca3f0f9e1c2b6da803f68d}
     version: 1.9.6
     engines: {node: '>=10.22.0', npm: '>=3.10.10'}
 
@@ -5479,8 +5479,8 @@ packages:
     resolution: {gitHosted: true, integrity: sha512-SZXCoYv7W2H/8m4d+PKDYadvnGOSMRHxQhf9SpQKXIyhnj6Uik3EuT9DxkbBa5h4XjWrj4r3g/XRJHZSforN2Q==, tarball: https://codeload.github.com/VerusCoin/verusd-rpc-ts-client/tar.gz/e8ea8c21f8a3d845e20189440dcd820d16f00891}
     version: 0.1.0
 
-  verusid-ts-client@https://codeload.github.com/VerusCoin/verusid-ts-client/tar.gz/42ab8fa07861b1d473cf325f9f3a0d66906274ce:
-    resolution: {gitHosted: true, integrity: sha512-14vnJlvlsnYOvYydVXPPQ0Mz/GtOlXHnw8FwK/2a+lylfPMgQFRfnhYiO43eIoK0QAYzwoPY2gS3YftgR6pkww==, tarball: https://codeload.github.com/VerusCoin/verusid-ts-client/tar.gz/42ab8fa07861b1d473cf325f9f3a0d66906274ce}
+  verusid-ts-client@https://codeload.github.com/VerusCoin/verusid-ts-client/tar.gz/933e8f8da1a51b99ba7533701dddb9914b7a06b7:
+    resolution: {gitHosted: true, integrity: sha512-XT3b5pS6EKzvIxlq/6JnK2wX9xS6kXkQWKWekH88GimHK+7zr7DSn4nkekCsm59PNX/wy96/VYDxTN225zV0UA==, tarball: https://codeload.github.com/VerusCoin/verusid-ts-client/tar.gz/933e8f8da1a51b99ba7533701dddb9914b7a06b7}
     version: 0.1.0
 
   vlq@1.0.1:
@@ -6360,7 +6360,7 @@ snapshots:
       '@bitgo/blake2b-wasm': blake2b-wasm@https://codeload.github.com/VerusCoin/blake2b-wasm/tar.gz/a16070b30bb8d8aee670f0c69b642913eca79998
       nanoassert: 2.0.0
 
-  '@bitgo/utxo-lib@https://codeload.github.com/VerusCoin/BitGoJS/tar.gz/3797a98f9652b43a34812e687d4a918f87e68843':
+  '@bitgo/utxo-lib@https://codeload.github.com/VerusCoin/BitGoJS/tar.gz/2d3240429b7664fb01ca3f0f9e1c2b6da803f68d':
     dependencies:
       '@bitgo/blake2b': 3.0.1
       '@noble/curves': 1.9.7
@@ -12045,9 +12045,9 @@ snapshots:
       - debug
       - supports-color
 
-  verusid-ts-client@https://codeload.github.com/VerusCoin/verusid-ts-client/tar.gz/42ab8fa07861b1d473cf325f9f3a0d66906274ce:
+  verusid-ts-client@https://codeload.github.com/VerusCoin/verusid-ts-client/tar.gz/933e8f8da1a51b99ba7533701dddb9914b7a06b7:
     dependencies:
-      '@bitgo/utxo-lib': https://codeload.github.com/VerusCoin/BitGoJS/tar.gz/3797a98f9652b43a34812e687d4a918f87e68843
+      '@bitgo/utxo-lib': https://codeload.github.com/VerusCoin/BitGoJS/tar.gz/2d3240429b7664fb01ca3f0f9e1c2b6da803f68d
       axios: 1.18.0
       bignumber.js: 9.1.0
       bn.js: 4.12.3
