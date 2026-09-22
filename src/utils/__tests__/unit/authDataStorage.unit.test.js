@@ -1,13 +1,15 @@
 jest.setTimeout(60000)
 
 import {
-  MOCK_USER_OBJ, MOCK_PIN, MOCK_PIN_TWO
+  MOCK_USER_OBJ, MOCK_PIN, MOCK_PIN_TWO, MOCK_SEED, MOCK_LEGACY_ENCRYPTEDKEY
 } from '../../../tests/helpers/MockAuthData'
 
 import { storeUser, getUsers, checkPinForUser, resetUserPwd, deleteUser } from '../../asyncStore/asyncStore'
 import { decryptkey } from '../../seedCrypt'
 import store from '../../../store'
 import {AUTHENTICATE_USER} from '../../constants/storeType'
+import {SecureStorage} from '../../keychain/secureStore'
+import {USER_DATA_STORAGE_INTERNAL_KEY} from '../../../../env/index'
 
 describe('Authentication data storage and retrieval', () => {
   it('can store user with both dlight and electrum seeds', () => {
@@ -99,5 +101,31 @@ describe('Authentication data storage and retrieval', () => {
     .then(res => {
       expect(res.length).toBe(0)
     })
+  })
+})
+
+describe('Non-destructive legacy password checks', () => {
+  it.each([MOCK_PIN, '13252'])('preserves the original seed ciphertext when checking PIN %s', async pin => {
+    const stored = JSON.stringify({users: [{
+      id: MOCK_USER_OBJ.id,
+      accountHash: MOCK_USER_OBJ.accountHash,
+      encryptedKeys: {
+        electrum: MOCK_LEGACY_ENCRYPTEDKEY,
+        dlight_private: null,
+        wyre_service: null,
+      },
+    }]})
+    await SecureStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, stored)
+
+    // This wrong PIN decrypts the public CTR fixture to plausible text. It
+    // must never destroy the only ciphertext of the original seed.
+    expect(decryptkey(pin, MOCK_LEGACY_ENCRYPTEDKEY)).toBe(
+      pin === MOCK_PIN ? MOCK_SEED : 'AeWYmPL',
+    )
+    await checkPinForUser(pin, MOCK_USER_OBJ.id, false)
+
+    expect(await SecureStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)).toBe(stored)
+    expect((await checkPinForUser(MOCK_PIN, MOCK_USER_OBJ.id, false)).electrum).toBe(MOCK_SEED)
+    expect(await SecureStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)).toBe(stored)
   })
 })
