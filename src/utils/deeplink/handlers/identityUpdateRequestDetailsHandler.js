@@ -62,10 +62,14 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
   const subjectIdentityRes = await getIdentity(coinObj.system_id, identityAddress);
   if (subjectIdentityRes.error) throw new Error(subjectIdentityRes.error.message);
 
-  const subjectIdentity = subjectIdentityRes.result;
-  const updatableIdentity = await getUpdatableIdentity(coinObj.system_id, subjectIdentity);
+  const updatableIdentity = await getUpdatableIdentity(coinObj.system_id, subjectIdentityRes.result);
   const subjectIdClass = updatableIdentity.identity;
   const subjectIdTxHex = updatableIdentity.tx;
+  // Review control changes against the same identity used to prepare the update.
+  const subjectIdentity = {
+    ...subjectIdentityRes.result,
+    identity: subjectIdClass.toJson(),
+  };
 
   if (requestDetails.identity.containsFlags && requestDetails.identity.containsFlags()) {
     if (subjectIdClass.hasActiveCurrency() !== requestDetails.identity.hasActiveCurrency()) {

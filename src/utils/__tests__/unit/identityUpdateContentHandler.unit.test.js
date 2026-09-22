@@ -50,11 +50,12 @@ const newContent = {[KEY]: [{[KEY]: 'new value'}]};
 let subjectIdentity;
 let historyResponse;
 
-const makeRequest = contentmultimap => {
+const makeRequest = (contentmultimap, updates = {}) => {
   const details = IdentityUpdateRequestDetails.fromCLIJson({
     name: 'cmm-subject',
     parent: SYSTEM_ID,
     ...(contentmultimap === undefined ? {} : {contentmultimap}),
+    ...updates,
   });
   return {
     isTestnet: () => false,
@@ -116,6 +117,50 @@ beforeEach(() => {
 });
 
 describe('identity update content history for review', () => {
+  it.each([
+    ['without content changes', undefined],
+    ['with accumulated content', newContent],
+  ])('reviews transaction-decoded controls despite a forged RPC threshold %s', async (_, content) => {
+    const decodedIdentity = Identity.fromJson({
+      ...subjectIdentity.identity,
+      primaryaddresses: [
+        ...subjectIdentity.identity.primaryaddresses,
+        'RWCqoWfSKaDoGeiwD6ZxX2dwkMx2oHJM56',
+      ],
+      contentmultimap: {},
+    });
+    const decodedJson = decodedIdentity.toJson();
+    subjectIdentity.identity = {...decodedJson, minimumsignatures: 2};
+    getUpdatableIdentity.mockResolvedValue({identity: decodedIdentity, tx: 'canonical-identity-hex'});
+    historyResponse.result.identity = {
+      ...decodedJson,
+      minimumsignatures: 99,
+      flags: 32768,
+      contentmultimap: oldContent,
+    };
+    createUpdateIdentityTx.mockResolvedValue({
+      identity: Identity.fromJson({...decodedJson, minimumsignatures: 2, contentmultimap: content || {}}),
+      hex: 'prepared-update-hex',
+    });
+
+    const {displayProps} = await handleRequest(makeRequest(content, {minimumsignatures: 2}));
+
+    expect(displayProps.subjectIdentity).toEqual({
+      ...subjectIdentity,
+      identity: {...decodedJson, contentmultimap: content ? oldContent : {}},
+    });
+    expect(displayProps.subjectIdentity.identity.minimumsignatures).toBe(1);
+    expect(displayProps.identityUpdates.minimumsignatures).toBe(2);
+    expect(displayProps.identityUpdates.contentmultimap).toEqual(content || {});
+    expect(getUpdatableIdentity).toHaveBeenCalledWith(SYSTEM_ID, subjectIdentity);
+    expect(subjectIdentity.identity.minimumsignatures).toBe(2);
+    if (content) {
+      expect(getIdentityContent).toHaveBeenCalledWith(SYSTEM_ID, SUBJECT_ID, 0, 42);
+    } else {
+      expect(getIdentityContent.mock.calls).toEqual([[SYSTEM_ID, SIGNER_ID]]);
+    }
+  });
+
   it.each([
     ['omitted content', undefined],
     ['empty content map', {}],
