@@ -228,6 +228,43 @@ it.each([false, true])('retains contract token-list mapping when mapto is omitte
   });
 });
 
+it.each([
+  ['a different ERC20', 'DAI.vETH', true, 'MKR.vETH', '0x9f8F72aA9304c8B593d555F12ef6589cC3A579A2'],
+  ['an ERC20 when sending ETH', VETH, false, 'DAI.vETH', DAI_CONTRACT_ADDRESS],
+  ['native ETH when sending an ERC20', 'DAI.vETH', true, VETH, ETH_CONTRACT_ADDRESS],
+  ['an unregistered currency', 'DAI.vETH', true, 'Other', null],
+])('rejects an explicit mapping to %s before gas or simulation', async (_, source, erc20, mapto, mappedToken) => {
+  const {prepare, id, delegatorContract, tokenContract, getFeeData} = setup({source, erc20});
+  const registered = await delegatorContract.getTokenList.staticCall();
+  delegatorContract.getTokenList.staticCall.mockResolvedValue([
+    ...registered,
+    ...(mappedToken == null ? [] : [[asHex(id(mapto)), mappedToken, 0, 0]]),
+  ]);
+
+  const response = await prepare({mapto});
+
+  expect(response).toEqual({err: true, result: expect.stringContaining('mapping does not match the currency being sent')});
+  expect(getFeeData).not.toHaveBeenCalled();
+  expect(delegatorContract.sendTransfer.estimateGas).not.toHaveBeenCalled();
+  expect(delegatorContract.sendTransfer.staticCall).not.toHaveBeenCalled();
+  expect(tokenContract.approve.estimateGas).not.toHaveBeenCalled();
+});
+
+it.each(['VRSC', 'VRSCTEST'])('allows an alternate explicit %s mapping to the same token contract', async systemName => {
+  const {prepare, id, delegatorContract} = setup({source: 'DAI.vETH', erc20: true, systemName});
+  delegatorContract.getTokenList.staticCall.mockResolvedValue([
+    [asHex(id('DAI.vETH')), DAI_CONTRACT_ADDRESS, 0, 0],
+    [asHex(id('Other')).toUpperCase(), DAI_CONTRACT_ADDRESS.toUpperCase(), 0, 0],
+  ]);
+
+  const response = await prepare({mapto: id('Other')});
+
+  expect(response.err).toBe(false);
+  expect(delegatorContract.getTokenList.staticCall).toHaveBeenCalledWith(0, 0);
+  expect(response.result.transferparams[0].currencyvalue.currency).toBe(asHex(id('Other')));
+  expect(response.result.validation.sent[DAI_CONTRACT_ADDRESS]).toBe('1000000');
+});
+
 it('retains mapped non-conversion transfers before launch', async () => {
   const {prepare, systemId} = setup({pastPrelaunch: false});
   const response = await prepare({});

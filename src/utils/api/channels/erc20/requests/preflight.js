@@ -203,6 +203,15 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
           throw new Error("Currency definition does not match the requested mapping.");
         }
 
+        const tokenList = await delegatorContract.getTokenList.staticCall(0, 0);
+        const mappedCurrencyHex = "0x" + fromBase58Check(mappedCurrencyRes.result.currencyid).hash.toString('hex');
+        if (!tokenList.some(([iAddr, contractAddr]) =>
+          iAddr.toLowerCase() === mappedCurrencyHex &&
+          contractAddr.toLowerCase() === tokenContract.toLowerCase()
+        )) {
+          throw new Error("Selected bridge mapping does not match the currency being sent.");
+        }
+
         mappedCurrencyIAddress = mappedCurrencyRes.result.currencyid;
         isBridge = mappedCurrencyIAddress === bridgeIAddress;
       }
