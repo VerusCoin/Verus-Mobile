@@ -46,6 +46,7 @@ const HighRiskStep = ({
 
   const walletCount = primaryAddressAfterUpdateInfo?.walletCount ?? 0;
   const externalCount = primaryAddressAfterUpdateInfo?.externalCount ?? 0;
+  const minimumSignatures = primaryAddressAfterUpdateInfo?.minimumSignatures ?? 1;
 
   // Extract authority changes for the dedicated authority card
   const authorityChanges = useMemo(() => {
@@ -54,7 +55,8 @@ const HighRiskStep = ({
     return { revocation, recovery };
   }, [highRiskChanges]);
 
-  const isAuthorityOnly = !hasPrimaryInfo && (authorityChanges.revocation || authorityChanges.recovery);
+  const isAuthorityOnly = !hasPrimaryInfo && (authorityChanges.revocation || authorityChanges.recovery) &&
+    !(highRiskChanges || []).some(change => change.highRiskType === 'signature-threshold');
   const isContentClearOnly =
     !hasPrimaryInfo &&
     !authorityChanges.revocation &&
@@ -72,12 +74,12 @@ const HighRiskStep = ({
   const outcome = useMemo(() => {
     // Primary address change outcomes
     if (hasPrimaryInfo) {
-      if (walletCount === 0) {
+      if (walletCount < minimumSignatures) {
         return {
           icon: 'shield-alert-outline',
           color: Colors.warningButtonColor,
-          title: 'You will lose control of this ID',
-          description: 'None of the primary addresses will be in your wallet.',
+          title: 'Your idenitty will need additional signatures after this update',
+          description: `After this update, your identity will have ${walletCount} primary ${walletCount === 1 ? 'address' : 'addresses'}, but ${minimumSignatures} signatures will be required to spend/sign from this ID.`,
         };
       }
 
@@ -86,7 +88,7 @@ const HighRiskStep = ({
           icon: 'shield-alert-outline',
           color: Colors.infoButtonColor,
           title: 'You will share control',
-          description: 'An external address will also control this identity.',
+          description: `After this update, your wallet will have enough primary addresses to meet the ${minimumSignatures}-signature requirement. External addresses can also participate in signing.`,
         };
       }
 
@@ -94,7 +96,7 @@ const HighRiskStep = ({
         icon: 'shield-check-outline',
         color: Colors.primaryColor,
         title: 'You will still control this ID',
-        description: 'All primary addresses are in your wallet.',
+        description: `After this update, all primary addresses will be in your wallet. ${minimumSignatures} ${minimumSignatures === 1 ? 'signature will' : 'signatures will'} be required.`,
       };
     }
 
@@ -114,7 +116,7 @@ const HighRiskStep = ({
       title: 'Review required',
       description: 'These changes can affect who controls this identity.',
     };
-  }, [hasPrimaryInfo, walletCount, externalCount, isContentClearOnly]);
+  }, [hasPrimaryInfo, walletCount, externalCount, minimumSignatures, isContentClearOnly]);
 
   /* Build a compact, plain-language summary of what's changing */
   const changeSummaryLines = useMemo(() => {
@@ -125,6 +127,7 @@ const HighRiskStep = ({
         return {
           key: change.key,
           title: change.title,
+          warning: change.highRiskType === 'signature-threshold' ? change.warning : null,
           isExternal,
           type: change.type,
           data: change.data,
@@ -328,7 +331,10 @@ const HighRiskStep = ({
                       color={line.type === 'primary-add' ? Colors.infoButtonColor : Colors.warningButtonColor}
                       style={{ marginRight: 10 }}
                     />
-                    <Text style={localStyles.summaryText}>{line.title}</Text>
+                    <View style={{flex: 1}}>
+                      <Text style={[localStyles.summaryText, {flex: 0}]}>{line.title}</Text>
+                      {line.warning && <Text style={localStyles.outcomeDesc}>{line.warning}</Text>}
+                    </View>
                     {line.isExternal && renderOwnershipBadge({ inWallet: false, style: { marginLeft: 8 } })}
                   </View>
                 ))}

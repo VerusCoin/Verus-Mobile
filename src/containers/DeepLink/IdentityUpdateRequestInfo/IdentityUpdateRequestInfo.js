@@ -334,6 +334,21 @@ const IdentityUpdateRequestInfo = props => {
     };
 
     if (
+      identityUpdates.minimumsignatures != null &&
+      identityUpdates.minimumsignatures !== identity.minimumsignatures
+    ) {
+      const before = identity.minimumsignatures;
+      const after = identityUpdates.minimumsignatures;
+      const primaryAddresses = identityUpdates.primaryaddresses || identity.primaryaddresses;
+      displayUpdates[VERUSID_AUTH_INFO.key].minimumsignatures = {
+        highRisk: true,
+        highRiskType: 'signature-threshold',
+        highRiskTitle: `Required signatures: ${before} of ${identity.primaryaddresses.length} → ${after} of ${primaryAddresses.length}`,
+        highRiskWarning: `Spending, signing, and ordinary identity updates will require signatures from ${after} of the ${primaryAddresses.length} primary addresses.${after < before ? ' Fewer signatures will be needed to authorize this identity.' : ' Additional signatures will be needed to authorize this identity.'}`,
+      };
+    }
+
+    if (
       identityUpdates.primaryaddresses &&
       identityUpdates.primaryaddresses.join(',') !==
         identity.primaryaddresses.join(',')
@@ -534,9 +549,8 @@ const IdentityUpdateRequestInfo = props => {
   }, [activeAccount, coinObj]);
 
   const primaryAddressAfterUpdateInfo = useMemo(() => {
-    if (!Array.isArray(identityUpdates?.primaryaddresses)) return null;
-
-    const updated = identityUpdates.primaryaddresses;
+    const updated = identityUpdates?.primaryaddresses || identity?.primaryaddresses;
+    if (!Array.isArray(updated)) return null;
     const walletSet = new Set(walletAddresses);
 
     const addresses = updated.map(addr => ({
@@ -553,8 +567,9 @@ const IdentityUpdateRequestInfo = props => {
       addresses,
       walletCount,
       externalCount: addresses.length - walletCount,
+      minimumSignatures: identityUpdates?.minimumsignatures ?? identity.minimumsignatures,
     };
-  }, [identityUpdates, walletAddresses, friendlyNames]);
+  }, [identity, identityUpdates, walletAddresses, friendlyNames]);
 
   // --- Classify changes ---
   const {highRiskChanges: baseHighRiskChanges, contentChanges} = useMemo(
@@ -577,9 +592,8 @@ const IdentityUpdateRequestInfo = props => {
     if (added.length === 0 && removed.length === 0) return [];
 
     const walletSet = new Set(walletAddresses);
-    const hasWalletPrimaryAfterUpdate = updated.some(addr =>
-      walletSet.has(addr),
-    );
+    const walletPrimaryCount = updated.filter(addr => walletSet.has(addr)).length;
+    const minimumSignatures = identityUpdates.minimumsignatures ?? identity.minimumsignatures;
     const changes = [];
 
     added.forEach(addr => {
@@ -589,9 +603,9 @@ const IdentityUpdateRequestInfo = props => {
         title: 'Add primary address',
         warning: inWallet
           ? 'Adding a primary address makes this ID multisig.'
-          : hasWalletPrimaryAfterUpdate
-          ? 'This address is not in your wallet. Adding it shares control of this ID with someone else. Your wallet will still control this ID.'
-          : 'This address is not in your wallet. After this update, none of the primary addresses are in your wallet. You will lose control of this ID.',
+          : walletPrimaryCount >= minimumSignatures
+          ? 'This address is not in your wallet. Your wallet will still have enough primary addresses to meet the signature requirement.'
+          : 'This address is not in your wallet. Your wallet will not have enough primary addresses to meet the signature requirement on its own.',
         data: displayIdentityAddress(addr),
         valueLabel: 'New value',
         type: 'primary-add',
@@ -890,7 +904,8 @@ const IdentityUpdateRequestInfo = props => {
           identityStateChange={identityStateChange}
           highRiskChanges={highRiskChanges}
           primaryAddressAfterUpdateInfo={
-            primaryAddressChanges.length > 0
+            primaryAddressChanges.length > 0 ||
+            highRiskChanges.some(change => change.highRiskType === 'signature-threshold')
               ? primaryAddressAfterUpdateInfo
               : null
           }
