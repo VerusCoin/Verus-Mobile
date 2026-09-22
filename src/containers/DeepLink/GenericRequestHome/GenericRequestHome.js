@@ -198,6 +198,7 @@ const GenericRequestHome = props => {
    * @param {Array<number>} handledIndices
    */
   const next = async (response, handledIndices) => {
+    if (request.isTestnet()) response.setIsTestnet();
     let newDetailsProcessed = detailsProcessed;
 
     for (const handledIndex of handledIndices) {
@@ -268,6 +269,7 @@ const GenericRequestHome = props => {
       const req = new primitives.GenericRequest();
       req.fromBuffer(Buffer.from(deeplinkData, 'hex'));
 
+      if (req.isTestnet()) response.setIsTestnet();
       setRequest(req);
       setDetailsProcessed(0);
     }

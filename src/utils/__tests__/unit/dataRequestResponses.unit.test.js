@@ -25,6 +25,7 @@ jest.mock('../../api/channels/dlight/requests/encrypt', () => ({
 
 const {
   CompactAddressObject,
+  CompactIAddressObject,
   Credential,
   CredentialKey,
   DATA_TYPE_OBJECT_CREDENTIAL,
@@ -48,6 +49,7 @@ const {VerusIdInterface} = require('verusid-ts-client');
 const {buildUserDataResponse} = require('../../deeplink/userData/buildUserDataResponse');
 const {buildDataPacketResponse, signDataPacketObject} = require('../../deeplink/dataPacket/signDataPacket');
 const {prepareGenericResponseForSigning} = require('../../deeplink/genericResponse/prepareGenericResponseForSigning');
+const {ensureGenericResponseSigner} = require('../../deeplink/genericResponse/ensureGenericResponseSigner');
 const {encryptGenericResponseDetails} = require('../../deeplink/genericResponse/encryptGenericResponseDetails');
 
 const SYSTEM_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
@@ -327,5 +329,41 @@ describe('generic data request response builders', () => {
     expect(response.createdAt.toString()).toBe('100');
     expect(response.handledBy).toBe(123);
     expect(response.hasRequestHash()).toBe(true);
+  });
+
+  it.each([false, true])('preserves network context through response signing and serialization (testnet: %s)', async testnet => {
+    const rootSystemName = testnet ? 'VRSCTEST' : 'VRSC';
+    const systemID = testnet ? 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq' : SYSTEM_ID;
+    const request = new GenericRequest({
+      requestID: CompactIAddressObject.fromFQN('response-test@', rootSystemName),
+      details: [new DataPacketRequestOrdinalVDXFObject({
+        data: new DataPacketRequestDetails({signableObjects: ['message']}),
+      })],
+    });
+    if (testnet) request.setIsTestnet();
+    const response = new GenericResponse({details: [new DataResponseOrdinalVDXFObject({
+      data: new DataResponseDetails({data: new DataDescriptor({objectdata: Buffer.from('result')})}),
+    })]});
+    ensureGenericResponseSigner({response, systemID, identityID: IDENTITY_ID});
+    prepareGenericResponseForSigning({request, response, handledBy: 123, createdAtSeconds: '100'});
+
+    const client = new VerusIdInterface(systemID, 'https://example.invalid');
+    client.signHash = jest.fn(async () => Buffer.from('signature').toString('base64'));
+    await client.signGenericResponse(response, 'unused', undefined, SIGNATURE_HEIGHT);
+    const parsed = new GenericResponse();
+    const bytes = response.toBuffer();
+    expect(parsed.fromBuffer(bytes)).toBe(bytes.length);
+
+    expect(response.isTestnet()).toBe(testnet);
+    expect(parsed.isTestnet()).toBe(testnet);
+    expect(parsed.requestID.rootSystemName).toBe(rootSystemName);
+    expect(parsed.requestID.toIAddress()).toBe(request.requestID.toIAddress());
+    expect(parsed.signature.isTestnet).toBe(testnet);
+    expect(parsed.signature.systemID.toIAddress()).toBe(systemID);
+    expect(parsed.signature.identityID.toIAddress()).toBe(IDENTITY_ID);
+    expect(parsed.requestHash.equals(request.getRawDataSha256())).toBe(true);
+    expect(parsed.getDetailsIdentitySignatureHash(SIGNATURE_HEIGHT))
+      .toEqual(response.getDetailsIdentitySignatureHash(SIGNATURE_HEIGHT));
+    expect(parsed.toBuffer()).toEqual(bytes);
   });
 });
