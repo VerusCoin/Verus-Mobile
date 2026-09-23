@@ -98,9 +98,17 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
       throw new Error("Current gas price exceeds maximum confirmed value, try re-entering form data and sending again.")
     }
 
+    // Use fresh pending balances, bypassing ethers' short getBalance cache.
+    let getBalance = async () => BigInt(await Web3Provider.InfuraProvider.send(
+      'eth_getBalance', [signer.address, 'pending'],
+    ));
+
     if (coinObj.currency_id !== ETH_CONTRACT_ADDRESS) {
       const [delegatorAddress, approvalAmount, approvalOptions] = approvalParams
       const contract = Web3Provider.getContract(coinObj.currency_id, null, Web3Provider.InfuraProvider).connect(signer);
+      getBalance = () => contract.balanceOf.staticCall(
+        signer.address, { blockTag: 'pending' },
+      );
 
       // Some tokens require approval amount to be zero before approval is allowed
       if (BRIDGE_APPROVAL_ZERO_OUT_TOKENS.some(x => (x.toLowerCase() === coinObj.currency_id.toLowerCase()))) {
@@ -120,9 +128,9 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
       }
     }
 
-    const response = await delegatorContract.sendTransfer(
-      reserveTransfer,
-      transferOptions
+    const response = await sendWithBalanceCheck(
+      () => delegatorContract.sendTransfer(reserveTransfer, transferOptions),
+      getBalance,
     );
     
     return {
@@ -132,6 +140,8 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
       },
     };
   } catch(e) {
+    if (e.ambiguousBroadcast === true) throw e;
+
     return {
       err: true,
       result: cleanEthersErrorMessage(e.message)
