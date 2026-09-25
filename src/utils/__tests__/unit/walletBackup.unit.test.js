@@ -19,6 +19,20 @@ describe('wallet backup payloads', () => {
     expect(isValid24WordBip39Mnemonic('not a valid mnemonic')).toBe(false);
   });
 
+  it.each([
+    ['leading space', ` ${MNEMONIC}`],
+    ['trailing space', `${MNEMONIC} `],
+    ['doubled space', MNEMONIC.replace(' ', '  ')],
+    ['tab', MNEMONIC.replace(' ', '\t')],
+    ['newline', MNEMONIC.replace(' ', '\n')],
+  ])('rejects backups that would change a seed containing a %s', async (_, mnemonic) => {
+    for (const password of [undefined, 'backup password']) {
+      await expect(
+        buildWalletBackupOrdinal({mnemonic, password}),
+      ).rejects.toThrow('cannot preserve your exact wallet seed');
+    }
+  });
+
   it('builds an unencrypted BIP39 entropy backup', async () => {
     const backupOrdinal = await buildWalletBackupOrdinal({mnemonic: MNEMONIC});
     const backup = backupOrdinal.data;

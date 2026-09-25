@@ -745,24 +745,13 @@ export const checkPinForUser = (pin, userName, alertOnFail = true, alertOnCorrup
             ) {
               let seedPotentiallyCorrupted = false;
 
+              // Legacy decryption is unauthenticated; password checks must not rewrite seeds.
               for (const channel in _decryptedSeeds) {
                 if (_decryptedSeeds[channel]) {
                   try {
                     if (alertOnCorruptedSeed) {
                       seedPotentiallyCorrupted = (SUSPICIOUS_UNICODE_CHARACTER_TEST).test(_decryptedSeeds[channel])
                     }
-
-                    store.dispatch(
-                      setAccounts(
-                        await addEncryptedKeyToUserUnlocked(
-                          hashAccountId(userName),
-                          channel,
-                          _decryptedSeeds[channel],
-                          pin,
-                          true
-                        )
-                      )
-                    );
                   } catch (e) {
                     Alert.alert("Authentication Error", "Internal authentication error.");
                   }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react';
+import {Alert} from 'react-native';
 import {
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_IDENTITY_UPDATE_ID_BLOCKHEIGHT,
@@ -13,6 +14,8 @@ import { IdentityUpdateRequestDetails } from 'verus-typescript-primitives';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 import { satsToCoins } from '../../../../utils/math';
 import BigNumber from 'bignumber.js';
+import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
+import {closeSendModal} from '../../../../actions/actions/sendModal/dispatchers/sendModal';
 
 const UpdateIdentityForm = (props) => {
   const sendModal = useObjectSelector(state => state.sendModal);
@@ -23,40 +26,47 @@ const UpdateIdentityForm = (props) => {
   }, [])
 
   const submitData = useCallback(async () => {
-    const [channelName, address, systemId] = subWallet.channel.split('.');
+    try {
+      const [, address, systemId] = subWallet.channel.split('.');
 
-    const detailsHex = data[SEND_MODAL_IDENTITY_UPDATE_DETAILS_HEX];
-    const isTestnet = data[SEND_MODAL_IDENTITY_UPDATE_IS_TESTNET];
-    const rawIdHex = data[SEND_MODAL_IDENTITY_UPDATE_ID_RAW_TX_HEX];
-    const idHeight = data[SEND_MODAL_IDENTITY_UPDATE_ID_BLOCKHEIGHT];
-    const updateIdTxHex = data[SEND_MODAL_IDENTITY_UPDATE_TX_HEX];
+      const detailsHex = data[SEND_MODAL_IDENTITY_UPDATE_DETAILS_HEX];
+      const isTestnet = data[SEND_MODAL_IDENTITY_UPDATE_IS_TESTNET];
+      const rawIdHex = data[SEND_MODAL_IDENTITY_UPDATE_ID_RAW_TX_HEX];
+      const idHeight = data[SEND_MODAL_IDENTITY_UPDATE_ID_BLOCKHEIGHT];
+      const updateIdTxHex = data[SEND_MODAL_IDENTITY_UPDATE_TX_HEX];
 
-    const details = new IdentityUpdateRequestDetails();
-    details.fromBuffer(Buffer.from(detailsHex, 'hex'));
+      const details = new IdentityUpdateRequestDetails();
+      details.fromBuffer(Buffer.from(detailsHex, 'hex'));
 
-    const updateIdentityTx = await createUpdateIdentityTx(
-      systemId,
-      details,
-      address,
-      rawIdHex,
-      idHeight,
-      true,
-      updateIdTxHex,
-      isTestnet
-    );
-    
-    if (updateIdentityTx.deltas.size !== 1) throw new Error("Unknown fees");
+      const updateIdentityTx = await createUpdateIdentityTx(
+        systemId,
+        details,
+        address,
+        rawIdHex,
+        idHeight,
+        true,
+        updateIdTxHex,
+        isTestnet
+      );
 
-    const feeObj = Object.fromEntries(updateIdentityTx.deltas.entries());
-    const feeCurrency = Object.keys(feeObj)[0];
+      if (updateIdentityTx.deltas.size !== 1) throw new Error("Unknown fees");
 
-    props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
-      fee: satsToCoins(BigNumber(updateIdentityTx.deltas.get(feeCurrency).abs().toString())).toString(),
-      feeCurrency,
-      txHex: updateIdentityTx.hex,
-      utxos: updateIdentityTx.utxos,
-      identity: details.identity.toJson()
-    });
+      const feeObj = Object.fromEntries(updateIdentityTx.deltas.entries());
+      const feeCurrency = Object.keys(feeObj)[0];
+
+      props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
+        fee: satsToCoins(BigNumber(updateIdentityTx.deltas.get(feeCurrency).abs().toString())).toString(),
+        feeCurrency,
+        txHex: updateIdentityTx.hex,
+        utxos: updateIdentityTx.utxos,
+        identity: details.identity.toJson()
+      });
+    } catch (e) {
+      if (!showFundRawTransactionErrorAlert(e)) {
+        Alert.alert('Error', e.message);
+      }
+      closeSendModal();
+    }
   }, [props]);
 
   return UpdateIdentityFormRender();

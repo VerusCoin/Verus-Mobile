@@ -54,6 +54,7 @@ import { BN } from "bn.js";
 import { getStandardEthBalance } from "../../eth/callCreator";
 import { ECPair, networks } from "@bitgo/utxo-lib";
 import { cleanEthersErrorMessage } from "../../../../errors";
+import { I_ADDRESS_VERSION } from "../../../../constants/constants";
 import store from "../../../../../store";
 
 // TODO: Add balance recalculation with eth gas
@@ -170,6 +171,25 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     let isBridge = false;
     const vEthIAddress = toIAddress(VETH, systemName);
     const bridgeIAddress = toIAddress(ETH_BRIDGE_NAME, systemName);
+    const currencyId = (nameOrId) => {
+      try {
+        if (fromBase58Check(nameOrId).version === I_ADDRESS_VERSION) return nameOrId;
+      } catch (_) {} // Otherwise resolve the name on the bridge's Verus system.
+      return toIAddress(nameOrId, systemName);
+    };
+
+    if (preconvert || output.burn || output.burnweight || output.mintnew) {
+      throw new Error("Preconversions, burns and minting are not supported across the Ethereum bridge.");
+    }
+    if (via != null && (!isConversion || currencyId(via) !== bridgeIAddress)) {
+      throw new Error("Ethereum bridge conversions must use Bridge.vETH as the converter.");
+    }
+    if (exportto != null && ![systemId, bridgeIAddress].includes(currencyId(exportto))) {
+      throw new Error(`Ethereum bridge transfers only support exports to ${systemName} or Bridge.vETH.`);
+    }
+    if (isConversion && !pastPrelaunch) {
+      throw new Error("Cannot make conversions while bridge is in pre-launch phase.");
+    }
 
     // Find the i address of the currency mapped to the erc20 you're sending as
     if (mapto != null) {
@@ -179,17 +199,23 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
       if (mappedCurrencyRes.error) throw new Error(mappedCurrencyRes.error.message);
       else {
-        if (mappedCurrencyRes.result.fullyqualifiedname === ETH_BRIDGE_NAME) {
-          isBridge = true;
+        if (mappedCurrencyRes.result.currencyid !== currencyId(mapto)) {
+          throw new Error("Currency definition does not match the requested mapping.");
+        }
+
+        const tokenList = await delegatorContract.getTokenList.staticCall(0, 0);
+        const mappedCurrencyHex = "0x" + fromBase58Check(mappedCurrencyRes.result.currencyid).hash.toString('hex');
+        if (!tokenList.some(([iAddr, contractAddr]) =>
+          iAddr.toLowerCase() === mappedCurrencyHex &&
+          contractAddr.toLowerCase() === tokenContract.toLowerCase()
+        )) {
+          throw new Error("Selected bridge mapping does not match the currency being sent.");
         }
 
         mappedCurrencyIAddress = mappedCurrencyRes.result.currencyid;
+        isBridge = mappedCurrencyIAddress === bridgeIAddress;
       }
     } else if (isConversion) {
-      if (!pastPrelaunch) {
-        throw new Error("Cannot make conversions while bridge is in pre-launch phase.")
-      }
-
       // If mapto is undefined, assume conversion and look for which convertable
       // currency is mapped to the current erc20 address
       const convertableCurrencies = coinObj.testnet ? [
@@ -271,6 +297,25 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
       if (convertToRes.error) throw new Error(convertToRes.error.message);
       else {
         const converterDefinition = convertToRes.result;
+        const targetCurrency = converterDefinition.currencyid;
+        if (targetCurrency !== currencyId(convertto)) {
+          throw new Error("Currency definition does not match the requested conversion.");
+        }
+        const bridgeRes = targetCurrency === bridgeIAddress ? convertToRes : await getCurrency(systemId, bridgeIAddress);
+        if (bridgeRes.error) throw new Error(bridgeRes.error.message);
+        if (bridgeRes.result.currencyid !== bridgeIAddress || !Array.isArray(bridgeRes.result.currencies)) {
+          throw new Error("Invalid Bridge.vETH currency definition.");
+        }
+        const reserves = bridgeRes.result.currencies;
+        // Verus conversions are fractional/reserve, or two distinct reserves via a fractional.
+        const supported = via != null
+          ? !isBridge && reserves.includes(mappedCurrencyIAddress) &&
+            reserves.includes(targetCurrency) && targetCurrency !== mappedCurrencyIAddress
+          : isBridge ? reserves.includes(targetCurrency)
+            : reserves.includes(mappedCurrencyIAddress) && targetCurrency === bridgeIAddress;
+        if (!supported) {
+          throw new Error("Unsupported Ethereum bridge conversion. Convert between Bridge.vETH and a reserve, or between distinct reserves via Bridge.vETH.");
+        }
         const finalDestinationCurrencyAddress = toEthAddress(converterDefinition.currencyid);
 
         if (via != null) {
@@ -330,7 +375,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         type: DEST_ETH.xor(FLAG_DEST_GATEWAY).xor(FLAG_DEST_AUX),
         destinationBytes: destAddrBytes,
         gatewayID: vEthIAddress,
-        gatewayCode: toBase58Check(Buffer.from(NULL_ETH_ADDRESS, 'hex'), 102),
+        gatewayCode: toBase58Check(Buffer.from(NULL_ETH_ADDRESS.slice(2), 'hex'), 102),
         fees: new BN(importGasFeeSatsString),
         auxDests: [
           new TransferDestination({

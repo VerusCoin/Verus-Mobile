@@ -23,6 +23,7 @@ import {
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_TO_CURRENCY_FIELD,
 } from "../../../../utils/constants/sendModal";
+import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
 import { WithdrawSendFormRender } from "./WithdrawSendForm.render"
 
 class WithdrawSendForm extends Component {
@@ -273,7 +274,9 @@ class WithdrawSendForm extends Component {
         destination: data[SEND_MODAL_DESTINATION_FIELD]
       });
     } catch (e) {
-      Alert.alert("Error", e.message);
+      if (!showFundRawTransactionErrorAlert(e)) {
+        Alert.alert("Error", e.message);
+      }
     }
 
     this.props.setLoading(false);

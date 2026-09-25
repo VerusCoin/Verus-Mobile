@@ -23,10 +23,12 @@ import Colors from '../../../../globals/colors';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { VERUSID_REVOCATION_AUTH, VERUSID_RECOVERY_AUTH } from '../../../../utils/constants/verusidObjectData';
 import AuthorityInfoSheet from '../components/AuthorityInfoSheet';
+import IdentityStateChangeCard from '../components/IdentityStateChangeCard';
 import { highRiskStepStyles as localStyles } from '../../../../styles';
 
 const HighRiskStep = ({
   highRiskChanges,
+  identityStateChange,
   primaryAddressAfterUpdateInfo,
   acknowledged,
   onToggle,
@@ -44,6 +46,7 @@ const HighRiskStep = ({
 
   const walletCount = primaryAddressAfterUpdateInfo?.walletCount ?? 0;
   const externalCount = primaryAddressAfterUpdateInfo?.externalCount ?? 0;
+  const minimumSignatures = primaryAddressAfterUpdateInfo?.minimumSignatures ?? 1;
 
   // Extract authority changes for the dedicated authority card
   const authorityChanges = useMemo(() => {
@@ -52,7 +55,8 @@ const HighRiskStep = ({
     return { revocation, recovery };
   }, [highRiskChanges]);
 
-  const isAuthorityOnly = !hasPrimaryInfo && (authorityChanges.revocation || authorityChanges.recovery);
+  const isAuthorityOnly = !hasPrimaryInfo && (authorityChanges.revocation || authorityChanges.recovery) &&
+    !(highRiskChanges || []).some(change => change.highRiskType === 'signature-threshold');
   const isContentClearOnly =
     !hasPrimaryInfo &&
     !authorityChanges.revocation &&
@@ -70,12 +74,12 @@ const HighRiskStep = ({
   const outcome = useMemo(() => {
     // Primary address change outcomes
     if (hasPrimaryInfo) {
-      if (walletCount === 0) {
+      if (walletCount < minimumSignatures) {
         return {
           icon: 'shield-alert-outline',
           color: Colors.warningButtonColor,
-          title: 'You will lose control of this ID',
-          description: 'None of the primary addresses will be in your wallet.',
+          title: 'Your idenitty will need additional signatures after this update',
+          description: `After this update, your identity will have ${walletCount} primary ${walletCount === 1 ? 'address' : 'addresses'}, but ${minimumSignatures} signatures will be required to spend/sign from this ID.`,
         };
       }
 
@@ -84,7 +88,7 @@ const HighRiskStep = ({
           icon: 'shield-alert-outline',
           color: Colors.infoButtonColor,
           title: 'You will share control',
-          description: 'An external address will also control this identity.',
+          description: `After this update, your wallet will have enough primary addresses to meet the ${minimumSignatures}-signature requirement. External addresses can also participate in signing.`,
         };
       }
 
@@ -92,7 +96,7 @@ const HighRiskStep = ({
         icon: 'shield-check-outline',
         color: Colors.primaryColor,
         title: 'You will still control this ID',
-        description: 'All primary addresses are in your wallet.',
+        description: `After this update, all primary addresses will be in your wallet. ${minimumSignatures} ${minimumSignatures === 1 ? 'signature will' : 'signatures will'} be required.`,
       };
     }
 
@@ -112,21 +116,24 @@ const HighRiskStep = ({
       title: 'Review required',
       description: 'These changes can affect who controls this identity.',
     };
-  }, [hasPrimaryInfo, walletCount, externalCount, isContentClearOnly]);
+  }, [hasPrimaryInfo, walletCount, externalCount, minimumSignatures, isContentClearOnly]);
 
   /* Build a compact, plain-language summary of what's changing */
   const changeSummaryLines = useMemo(() => {
-    return (highRiskChanges || []).map(change => {
-      const isExternal = change?.type === 'primary-add' && change?.walletMatch === false;
-      return {
-        key: change.key,
-        title: change.title,
-        isExternal,
-        type: change.type,
-        data: change.data,
-        valueLabel: change.valueLabel,
-      };
-    });
+    return (highRiskChanges || [])
+      .filter(change => change.highRiskType !== 'identity-state')
+      .map(change => {
+        const isExternal = change?.type === 'primary-add' && change?.walletMatch === false;
+        return {
+          key: change.key,
+          title: change.title,
+          warning: change.highRiskType === 'signature-threshold' ? change.warning : null,
+          isExternal,
+          type: change.type,
+          data: change.data,
+          valueLabel: change.valueLabel,
+        };
+      });
   }, [highRiskChanges]);
 
   const renderOutlinedBadge = ({ icon, label, color, style, size }) => {
@@ -172,9 +179,13 @@ const HighRiskStep = ({
           <Text style={parentStyles.subtitle}>
             {isContentClearOnly
               ? 'This clears current identity content.'
+              : identityStateChange
+              ? 'These changes can affect identity access and when its funds can be spent.'
               : 'These changes can affect who controls this identity.'}
           </Text>
         </View>
+
+        <IdentityStateChangeCard change={identityStateChange} detailed />
 
         {/* Authority-only card — vertical connector from current -> new */}
         {isAuthorityOnly && (
@@ -272,7 +283,7 @@ const HighRiskStep = ({
         )}
 
         {/* Generic outcome card — for primary address or other non-authority changes */}
-        {!isAuthorityOnly && (
+        {!isAuthorityOnly && changeSummaryLines.length > 0 && (
           <>
             <View style={localStyles.outcomeCard}>
               <View style={localStyles.outcomeHeaderRow}>
@@ -320,7 +331,10 @@ const HighRiskStep = ({
                       color={line.type === 'primary-add' ? Colors.infoButtonColor : Colors.warningButtonColor}
                       style={{ marginRight: 10 }}
                     />
-                    <Text style={localStyles.summaryText}>{line.title}</Text>
+                    <View style={{flex: 1}}>
+                      <Text style={[localStyles.summaryText, {flex: 0}]}>{line.title}</Text>
+                      {line.warning && <Text style={localStyles.outcomeDesc}>{line.warning}</Text>}
+                    </View>
                     {line.isExternal && renderOwnershipBadge({ inWallet: false, style: { marginLeft: 8 } })}
                   </View>
                 ))}
@@ -434,6 +448,9 @@ const HighRiskStep = ({
             </Text>
             {hasUnownedPrimaryAddress && (
               <Text style={localStyles.ackSubtitle}>Includes an external primary address.</Text>
+            )}
+            {identityStateChange && (
+              <Text style={localStyles.ackSubtitle}>Includes the identity status and timelock changes shown above.</Text>
             )}
           </View>
         </TouchableOpacity>

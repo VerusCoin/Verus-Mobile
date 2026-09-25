@@ -6,6 +6,7 @@ import { ETH_HOMESTEAD } from '../../../../../../env/index'
 import { scientificToDecimal } from "../../../../math"
 import { requestPrivKey } from "../../../../auth/authBox"
 import { cleanEthersErrorMessage } from "../../../../errors"
+import { sendWithBalanceCheck } from "../../../../web3/sendWithBalanceCheck"
 
 export const send = async (coinObj, activeUser, address, amount, passthrough) => {
   try {
@@ -33,7 +34,13 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
       maxFeePerGas
     })
 
-    const response = await signer.sendTransaction(transaction);
+    const response = await sendWithBalanceCheck(
+      () => signer.sendTransaction(transaction),
+      // Bypass ethers' short getBalance cache for the immediate follow-up read.
+      async () => BigInt(await Web3Provider.InfuraProvider.send(
+        'eth_getBalance', [fromAddress, 'pending'],
+      )),
+    );
     
     return {
       err: false,
@@ -53,6 +60,8 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
       },
     };
   } catch(e) {
+    if (e.ambiguousBroadcast === true) throw e;
+
     return {
       err: true,
       result: cleanEthersErrorMessage(e.message, e.body)

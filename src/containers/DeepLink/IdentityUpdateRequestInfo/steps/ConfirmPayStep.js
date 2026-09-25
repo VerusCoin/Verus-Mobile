@@ -37,6 +37,9 @@ import {
 import { processEncryptedKeys } from '../../../../utils/crypto/encryptCredentials';
 import { confirmPayStepStyles as localStyles } from '../../../../styles';
 import {ensureGenericResponseSigner} from '../../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
+import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
+import IdentityStateChangeCard from '../components/IdentityStateChangeCard';
+import {buildIdentityStateChange} from '../utils/buildIdentityStateChange';
 
 const ConfirmPayStep = ({
   details,
@@ -54,6 +57,8 @@ const ConfirmPayStep = ({
   highRiskCount,
   contentCount,
   hasEncryptedKeys,
+  identityStateChange,
+  chainHeight,
   styles: parentStyles,
 }) => {
   const [selectedSource, setSelectedSource] = useState(null);
@@ -64,6 +69,7 @@ const ConfirmPayStep = ({
   const [calculating, setCalculating] = useState(false);
   const [broadcasting, setBroadcasting] = useState(false);
   const [sourceSheetVisible, setSourceSheetVisible] = useState(false);
+  const [preparedStateChange, setPreparedStateChange] = useState(null);
 
   const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser);
   const allSubWallets = useObjectSelector(state => state.coinMenus.allSubWallets);
@@ -165,6 +171,7 @@ const ConfirmPayStep = ({
     setCalculating(true);
     setFee(null);
     setFeeCurrency(null);
+    setPreparedStateChange(null);
 
     try {
       const [, address, systemId] = source.wallet.channel.split('.');
@@ -200,17 +207,27 @@ const ConfirmPayStep = ({
         throw new Error('Unexpected fee currency');
       }
 
+      // The funded transaction can have a later expiry (and therefore unlock
+      // height) than the preview. Display the identity verified from this tx.
+      setPreparedStateChange(buildIdentityStateChange({
+        currentIdentity: subjectIdentity.identity,
+        updatedIdentity: updateIdentityTx.identity.toJson(),
+        chainHeight,
+        secondsPerBlock: coinObj.seconds_per_block,
+      }));
       setFee(satsToCoins(BigNumber(updateIdentityTx.deltas.get(currency).abs().toString())).toString());
       setFeeCurrency(currency);
       setTxHex(updateIdentityTx.hex);
       setUtxos(updateIdentityTx.utxos);
     } catch (e) {
       setSelectedSource(null);
-      Alert.alert('Error', e.message || 'Failed to calculate fee');
+      if (!showFundRawTransactionErrorAlert(e)) {
+        Alert.alert('Error', e.message || 'Failed to calculate fee');
+      }
     }
 
     setCalculating(false);
-  }, [details, subjectIdTxHex, subjectIdentity, updateIdTxHex, requestIsTestnet]);
+  }, [details, subjectIdTxHex, subjectIdentity, updateIdTxHex, requestIsTestnet, hasEncryptedKeys, coinObj, chainHeight, requestedCurrency]);
 
   const handleUpdate = useCallback(async () => {
     setBroadcasting(true);
@@ -298,6 +315,8 @@ const ConfirmPayStep = ({
           <Text style={parentStyles.mainTitle}>Confirm update</Text>
           <Text style={parentStyles.subtitle}>Select a payment source and confirm the identity update</Text>
         </View>
+
+        <IdentityStateChangeCard change={hasFee ? preparedStateChange : identityStateChange} />
 
         {/* Payment source card -- tappable to open sheet */}
         <TouchableOpacity
