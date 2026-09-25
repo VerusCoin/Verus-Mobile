@@ -26,6 +26,7 @@ const mockGetEndpoint = jest.fn(() => ({
 }));
 const mockGetBlock = jest.fn();
 const mockGetBlockHash = jest.fn();
+const mockGetAddressMempool = jest.fn();
 const mockGetAddressUtxos = jest.fn();
 const mockGetAddressDeltas = jest.fn();
 const mockGetIdentity = jest.fn();
@@ -95,6 +96,7 @@ jest.mock('../../api/channels/vrpc/callCreators', () => ({
   fundRawTransaction: mockFundRawTransaction,
   getBlock: mockGetBlock,
   getBlockHash: mockGetBlockHash,
+  getAddressMempool: mockGetAddressMempool,
   getAddressDeltas: mockGetAddressDeltas,
   getAddressUtxos: mockGetAddressUtxos,
   getInfo: mockGetInfo,
@@ -170,6 +172,7 @@ const {
   broadcastGiftCardFunding,
   buildGiftCardNfcDeeplinkUri,
   canDeleteGiftCard,
+  canStartGiftCardFunding,
   createGiftCard,
   discoverGiftCardIdentityFunds,
   getGiftCardClaimInfo,
@@ -179,12 +182,14 @@ const {
   getGiftCardMnemonic,
   getSubmittedGiftCardFundingIdentities,
   hasGiftCardBeenShared,
+  hasGiftCardMempoolTransactions,
   hasPendingGiftCardFunding,
   markGiftCardShared,
   normalizeGiftCardServiceData,
   parseGiftCardRequest,
   preflightGiftCardFunding,
   removeGiftCard,
+  removeGiftCardIfUnchangedAndDeletable,
   refreshGiftCardStatus,
   unlinkGiftCardFundingIdentitiesFromVerusIdData,
   upsertGiftCard,
@@ -202,6 +207,7 @@ describe('gift card helpers', () => {
     }));
     mockGetAddressUtxos.mockResolvedValue({result: []});
     mockGetAddressDeltas.mockResolvedValue({result: []});
+    mockGetAddressMempool.mockResolvedValue({result: []});
     mockGetBlockHash.mockResolvedValue({result: 'block-hash'});
     mockGetBlock.mockResolvedValue({result: {time: 1710000000}});
     mockFundRawTransaction.mockResolvedValue({result: {hex: 'funded-gift'}});
@@ -348,6 +354,101 @@ describe('gift card helpers', () => {
     ).toBe(firstSharedAt);
   });
 
+  it('allows only the first funding attempt after an unfunded card is shared', () => {
+    const sharedCard = {
+      id: 'shared-card',
+      sharedAt: 1710000000000,
+      fundingHistory: [],
+      status: {
+        state: 'new',
+        redeemed: false,
+        hasClaims: false,
+        systems: [],
+      },
+    };
+
+    expect(canStartGiftCardFunding(sharedCard)).toBe(true);
+    expect(
+      canStartGiftCardFunding({
+        ...sharedCard,
+        fundingHistory: [{status: 'pending'}],
+      }),
+    ).toBe(false);
+    expect(
+      canStartGiftCardFunding({
+        ...sharedCard,
+        status: {
+          ...sharedCard.status,
+          state: GIFT_CARD_STATUS_FUNDED,
+          hasClaims: true,
+        },
+      }),
+    ).toBe(false);
+    expect(
+      canStartGiftCardFunding({
+        ...sharedCard,
+        status: {
+          ...sharedCard.status,
+          state: GIFT_CARD_STATUS_REDEEMED,
+          redeemed: true,
+        },
+      }),
+    ).toBe(false);
+  });
+
+  it('checks every gift card address for mempool transactions', async () => {
+    mockGetAddressMempool
+      .mockResolvedValueOnce({result: []})
+      .mockResolvedValueOnce({result: [{txid: 'pending-txid'}]});
+
+    await expect(
+      hasGiftCardMempoolTransactions({
+        addressesBySystem: {
+          [mockRootCoin.system_id]: 'R-root-card',
+          [mockTestCoin.system_id]: 'R-test-card',
+        },
+      }),
+    ).resolves.toBe(true);
+    expect(mockGetAddressMempool).toHaveBeenCalledWith(
+      mockRootCoin.system_id,
+      ['R-root-card'],
+      true,
+      1,
+    );
+    expect(mockGetAddressMempool).toHaveBeenCalledWith(
+      mockTestCoin.system_id,
+      ['R-test-card'],
+      true,
+      1,
+    );
+  });
+
+  it('allows deletion checks when every gift card mempool is empty', async () => {
+    await expect(
+      hasGiftCardMempoolTransactions({
+        addressesBySystem: {
+          [mockRootCoin.system_id]: 'R-root-card',
+          [mockTestCoin.system_id]: 'R-test-card',
+        },
+      }),
+    ).resolves.toBe(false);
+    expect(mockGetAddressMempool).toHaveBeenCalledTimes(2);
+  });
+
+  it('fails closed when a gift card mempool cannot be checked', async () => {
+    mockGetAddressMempool.mockResolvedValue({
+      error: {message: 'mempool unavailable'},
+    });
+
+    await expect(
+      hasGiftCardMempoolTransactions({
+        addressesBySystem: {
+          [mockRootCoin.system_id]: 'R-root-card',
+        },
+      }),
+    ).rejects.toThrow('mempool unavailable');
+  });
+
   it('does not overwrite a card changed after a status refresh began', () => {
     const sourceCard = {
       id: 'card-id',
@@ -380,6 +481,60 @@ describe('gift card helpers', () => {
         refreshedCard,
       ).cards[sourceCard.id],
     ).toEqual(currentCard);
+  });
+
+  it('removes a deletable gift card only when its stored snapshot is unchanged', () => {
+    const expectedCard = {
+      id: 'card-id',
+      label: 'Gift',
+      sharedAt: null,
+      updatedAt: 1,
+      status: {state: 'new', hasClaims: false, systems: []},
+      fundingHistory: [],
+    };
+    const unchangedData = {
+      cards: {
+        [expectedCard.id]: expectedCard,
+      },
+    };
+    const changedCard = {
+      ...expectedCard,
+      updatedAt: 2,
+    };
+    const changedData = {
+      cards: {
+        [expectedCard.id]: changedCard,
+      },
+    };
+
+    expect(
+      removeGiftCardIfUnchangedAndDeletable(unchangedData, expectedCard).cards[
+        expectedCard.id
+      ],
+    ).toBeUndefined();
+    expect(
+      removeGiftCardIfUnchangedAndDeletable(changedData, expectedCard).cards[
+        expectedCard.id
+      ],
+    ).toEqual(changedCard);
+  });
+
+  it('does not remove an unchanged gift card that is no longer deletable', () => {
+    const card = {
+      id: 'card-id',
+      sharedAt: null,
+      status: {state: 'funded', hasClaims: true, systems: []},
+      fundingHistory: [],
+    };
+    const serviceData = {
+      cards: {
+        [card.id]: card,
+      },
+    };
+
+    expect(
+      removeGiftCardIfUnchangedAndDeletable(serviceData, card).cards[card.id],
+    ).toEqual(card);
   });
 
   it('creates encrypted gift cards that require the claim password', async () => {
@@ -608,19 +763,40 @@ describe('gift card helpers', () => {
     );
   });
 
-  it('rejects funding after a gift card has been shared', async () => {
+  it('allows an unfunded shared card through the funding preflight gate', async () => {
+    const card = markGiftCardShared(
+      await createGiftCard({
+        requestIsTestnet: false,
+        activeCoinsForUser: [],
+      }),
+      1710000000000,
+    );
+
+    await expect(
+      preflightGiftCardFunding({
+        card,
+        selections: {
+          funds: [],
+          identities: [],
+        },
+      }),
+    ).rejects.toThrow('Select funds, a VerusID, or both');
+  });
+
+  it('rejects another funding attempt after a shared card records one', async () => {
     await expect(
       preflightGiftCardFunding({
         card: {
           id: 'shared-card',
           sharedAt: 1710000000000,
+          fundingHistory: [{status: 'pending'}],
         },
         selections: {
           funds: [],
           identities: [],
         },
       }),
-    ).rejects.toThrow('Shared gift cards cannot be funded');
+    ).rejects.toThrow('Shared gift cards are single-use');
   });
 
   it('rejects gift card funding transactions that exceed the planned fee', async () => {

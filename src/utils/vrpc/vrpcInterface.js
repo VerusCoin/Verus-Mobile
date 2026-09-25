@@ -24,6 +24,7 @@ import {
   isVrpcResponseCacheable,
   shouldUseCachedVrpcResponse,
 } from './vrpcCachePolicy';
+import {getManyUtxoFundRawTransactionError} from './fundRawTransactionError';
 
 class CachedVerusdRpcInterface extends VerusdRpcInterface {
   static CACHED_REQUESTS = CACHED_VRPC_REQUESTS;
@@ -125,6 +126,12 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
           }
           
           const res = await super.request(req);
+          const fundingError =
+            req.cmd === 'fundrawtransaction'
+              ? getManyUtxoFundRawTransactionError(res.error, req.utxos)
+              : null;
+
+          if (fundingError) throw fundingError;
       
           if (saveToCache && res.error == null) {
             try {
@@ -139,9 +146,15 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
           this.registerCallComplete(cacheId);
           resolve(res);
         } catch(e) {
-          console.error(e)
+          const fundingError =
+            req.cmd === 'fundrawtransaction'
+              ? getManyUtxoFundRawTransactionError(e, req.utxos)
+              : null;
+          const requestError = fundingError || e;
+
+          console.error(requestError)
           this.registerCallComplete(cacheId);
-          reject(e)
+          reject(requestError)
         }
       }, callDelay)
     })
@@ -356,14 +369,23 @@ class VrpcInterface {
 
     const urlKey = getUrlKey(endpoint);
 
+    let verusIdInterface;
+
     if (VRPC_API_KEYS[urlKey]) {
-      return new VerusIdInterface(systemId, endpoint, undefined, undefined, {
+      verusIdInterface = new VerusIdInterface(systemId, endpoint, undefined, undefined, {
         id: VRPC_API_APP_ID,
         key: VRPC_API_KEYS[urlKey]
       });
     } else {
-      return new VerusIdInterface(systemId, endpoint)
+      verusIdInterface = new VerusIdInterface(systemId, endpoint)
     }
+
+    // Preserve fundrawtransaction errors raised while the VerusID client builds
+    // identity transactions instead of letting the client replace the RPC detail.
+    verusIdInterface.interface.fundRawTransaction =
+      this.cacheInterfaces[id].fundRawTransaction.bind(this.cacheInterfaces[id]);
+
+    return verusIdInterface;
   }
 
   addDefaultEndpoints = () => {

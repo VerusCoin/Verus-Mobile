@@ -490,6 +490,52 @@ describe('wallet backup NFC writer', () => {
     expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
   });
 
+  it.each(['Ndef', 'NdefFormatable'])(
+    'checks the backup account after waiting for an NFC %s card',
+    async technology => {
+      let accountChanged = false;
+      mockNfcManager.requestTechnology.mockImplementationOnce(async () => {
+        accountChanged = true;
+        return technology;
+      });
+      const beforeWrite = jest.fn(() => {
+        if (accountChanged) throw new Error('Account changed before backup write.');
+      });
+
+      await expect(writeWalletBackupToNfc(walletBackupOrdinal, {beforeWrite}))
+        .rejects.toThrow('Account changed before backup write.');
+
+      expect(beforeWrite).toHaveBeenCalledTimes(1);
+      expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
+      expect(mockNfcManager.ndefFormatableHandlerAndroid.formatNdef).not.toHaveBeenCalled();
+      expect(mockNfcManager.cancelTechnologyRequest).toHaveBeenCalled();
+    },
+  );
+
+  it('checks the backup account after asynchronous NFC overwrite checks', async () => {
+    let accountChanged = false;
+    const spendableKeyTag = createSpendableKeyTag();
+    mockNfcManager.ndefHandler.getNdefMessage.mockResolvedValue(spendableKeyTag.tag);
+    mockDiscoverSpendableKeyClaims.mockImplementationOnce(async () => {
+      accountChanged = true;
+      return {
+        hasClaims: false,
+        scanUniverseComplete: true,
+        systems: [{identityLookupError: null}],
+      };
+    });
+    const beforeWrite = jest.fn(() => {
+      if (accountChanged) throw new Error('Account changed before backup write.');
+    });
+
+    await expect(writeWalletBackupToNfc(walletBackupOrdinal, {beforeWrite}))
+      .rejects.toThrow('Account changed before backup write.');
+
+    expect(beforeWrite).toHaveBeenCalledTimes(1);
+    expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
+    expect(mockNfcManager.cancelTechnologyRequest).toHaveBeenCalled();
+  });
+
   it('writes gift card deeplink URI records to blank writable NFC cards', async () => {
     const tag = {
       ndefMessage: [],

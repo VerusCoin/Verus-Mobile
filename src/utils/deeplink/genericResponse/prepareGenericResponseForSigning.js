@@ -9,6 +9,7 @@ export const prepareGenericResponseForSigning = ({
   handledBy,
   createdAtSeconds = (Date.now() / 1000).toFixed(0),
 }) => {
+  if (request.isTestnet()) response.setIsTestnet();
   response.requestID = request.requestID;
   response.requestHash = request.getRawDataSha256();
   response.requestHashType = new BigNumber(EHashTypes.HASH_SHA256);

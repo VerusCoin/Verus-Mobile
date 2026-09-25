@@ -75,7 +75,29 @@ export const createUpdateIdentityTx = async (systemId, identity, changeAaddr, ra
   const verusid = VrpcProvider.getVerusIdInterface(systemId);
   const utxos = fundTransaction ? await getSpendableUtxos(systemId, systemId, [changeAaddr]) : undefined;
 
-  return verusid.createUpdateIdentityTransaction(identity, changeAaddr, rawIdTx, idHeight, utxos, undefined, undefined, undefined, undefined, updateIdentityTransactionHex, true, isTestnet);
+  let identityForUpdate = identity;
+  if (identity instanceof IdentityUpdateRequestDetails && identity.identity.containsContentMultiMap()) {
+    const entries = [...identity.identity.contentMultiMap.kvContent.entries()];
+    const sortedEntries = [...entries].sort(([a], [b]) => Buffer.compare(
+      fromBase58Check(a.toIAddress()).hash, fromBase58Check(b.toIAddress()).hash,
+    ));
+
+    if (sortedEntries.some(([key, values], index) => key !== entries[index][0] || values.length === 0)) {
+      // The daemon sorts outer keys by their raw uint160 bytes and omits empty
+      // arrays. Normalize a copy for the client's byte comparison, preserving
+      // the signed request, CMM presence, and value order within each key.
+      identityForUpdate = new IdentityUpdateRequestDetails();
+      identityForUpdate.fromBuffer(identity.toBuffer(), 0, true, isTestnet ? 'VRSCTEST' : 'VRSC');
+      const content = identityForUpdate.identity.contentMultiMap.kvContent;
+      for (const [key] of sortedEntries) {
+        const values = content.get(key);
+        content.delete(key);
+        if (values.length > 0) content.set(key, values);
+      }
+    }
+  }
+
+  return verusid.createUpdateIdentityTransaction(identityForUpdate, changeAaddr, rawIdTx, idHeight, utxos, undefined, undefined, undefined, undefined, updateIdentityTransactionHex, true, isTestnet);
 }
 
 export const createUpdateIdentityTxWithUtxos = async ({

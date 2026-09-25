@@ -19,6 +19,7 @@ import {
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_FROM_CURRENCY_FIELD,
 } from "../../../../utils/constants/sendModal";
+import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
 import { DepositSendFormRender } from "./DepositSendForm.render"
 
 class DepositSendForm extends Component {
@@ -270,7 +271,9 @@ class DepositSendForm extends Component {
         source: data[SEND_MODAL_SOURCE_FIELD]
       });
     } catch (e) {
-      Alert.alert("Error", e.message);
+      if (!showFundRawTransactionErrorAlert(e)) {
+        Alert.alert("Error", e.message);
+      }
     }
 
     this.props.setLoading(false);
