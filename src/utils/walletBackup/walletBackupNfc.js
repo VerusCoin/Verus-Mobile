@@ -506,6 +506,8 @@ export const writeWalletBackupToNfc = async (
     onStatus,
     timeoutMs = NFC_REQUEST_TIMEOUT_MS,
     sessionPreRegistered = false,
+    // Synchronous guard after NFC awaits, immediately before writing the card.
+    beforeWrite,
   } = {},
 ) => {
   const supported = await NfcManager.isSupported();
@@ -546,11 +548,13 @@ export const writeWalletBackupToNfc = async (
       await assertNfcTagCanBeOverwritten(existingTag);
 
       onStatus && onStatus('Writing wallet backup...');
+      beforeWrite && beforeWrite();
       await NfcManager.ndefHandler.writeNdefMessage(backupBytes, {
         reconnectAfterWrite: true,
       });
     } else if (connectedTech === NfcTech.NdefFormatable) {
       onStatus && onStatus('Formatting and writing wallet backup...');
+      beforeWrite && beforeWrite();
       await NfcManager.ndefFormatableHandlerAndroid.formatNdef(backupBytes);
     }
     backupWriteCompleted = true;

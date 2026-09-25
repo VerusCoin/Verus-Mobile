@@ -19,6 +19,11 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useDispatch, useSelector} from 'react-redux';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import store from '../../../store';
+import {
+  captureSessionScope,
+  sessionScopeIsCurrent,
+} from '../../../actions/actions/updates/sessionRequests';
 import {
   closeLoadingModal,
   openLoadingModal,
@@ -314,12 +319,14 @@ const WalletBackupRequestInfo = props => {
     return requestPassword();
   };
 
-  const getWalletBackupForWrite = async () => {
+  const getWalletBackupForWrite = async assertAccountCurrent => {
+    assertAccountCurrent();
     const backupEncryptionPassword = encryptBackup
       ? useProfilePasswordForBackup
         ? await getProfilePasswordForBackup()
         : backupPassword
       : null;
+    assertAccountCurrent();
     const effectiveKdfIters = encryptBackup ? backupKdfIters : 0;
     const cachedWalletBackup = walletBackupCacheRef.current;
 
@@ -332,6 +339,7 @@ const WalletBackupRequestInfo = props => {
     ) {
       setNfcStatus('Using prepared wallet backup. Wait for the NFC tap prompt.');
       await waitForSpinnerFrame();
+      assertAccountCurrent();
 
       return cachedWalletBackup.walletBackup;
     }
@@ -344,7 +352,9 @@ const WalletBackupRequestInfo = props => {
     await waitForSpinnerFrame();
 
     return withKeepAwake(async () => {
+      assertAccountCurrent();
       const seeds = await requestSeeds();
+      assertAccountCurrent();
       const mnemonic = seeds[ELECTRUM];
 
       if (!isValid24WordBip39Mnemonic(mnemonic)) {
@@ -356,6 +366,7 @@ const WalletBackupRequestInfo = props => {
         password: backupEncryptionPassword,
         kdfIters: effectiveKdfIters,
       });
+      assertAccountCurrent();
 
       walletBackupCacheRef.current = {
         accountHash: activeAccountHash,
@@ -389,6 +400,17 @@ const WalletBackupRequestInfo = props => {
       }
     }
 
+    const sessionScope = captureSessionScope(store.getState(), activeAccountHash);
+    const assertAccountCurrent = () => {
+      const state = store.getState();
+      if (!sessionScope.accountHash || !state.authentication.signedIn ||
+        !sessionScopeIsCurrent(state, sessionScope)) {
+        const error = new Error('Account changed before the backup was written. Please start the backup again.');
+        error.code = 'SESSION_CHANGED';
+        throw error;
+      }
+    };
+
     if (!(await confirmUnencryptedBackup())) return;
 
     setLoading(true);
@@ -397,16 +419,20 @@ const WalletBackupRequestInfo = props => {
     let nfcWriterStarted = false;
 
     try {
+      assertAccountCurrent();
       nfcSessionPreRegistered = await beginWalletBackupNfcSession({
         onStatus: setNfcStatus,
       });
+      assertAccountCurrent();
 
-      const walletBackup = await getWalletBackupForWrite();
+      const walletBackup = await getWalletBackupForWrite(assertAccountCurrent);
+      assertAccountCurrent();
 
       nfcWriterStarted = true;
       await writeWalletBackupToNfc(walletBackup, {
         onStatus: setNfcStatus,
         sessionPreRegistered: nfcSessionPreRegistered,
+        beforeWrite: assertAccountCurrent,
       });
 
       const completionKey =

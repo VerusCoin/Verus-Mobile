@@ -26,7 +26,6 @@
 */
 import React, {useMemo, useState, useEffect, useCallback} from 'react';
 import {Platform, SafeAreaView, View} from 'react-native';
-import {primitives} from 'verusid-ts-client';
 import {Button, Portal, Text} from 'react-native-paper';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import {
@@ -52,7 +51,6 @@ import {CoinDirectory} from '../../../utils/CoinData/CoinDirectory';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
 import {copyToClipboard} from '../../../utils/clipboard/clipboard';
 import {useObjectSelector} from '../../../hooks/useObjectSelector';
-import {getVerusIdStatus} from '../../../utils/verusid/getVerusIdStatus';
 import {
   VERUSID_AUTH_INFO,
   VERUSID_BASE_INFO,
@@ -63,7 +61,6 @@ import {
   VERUSID_PRIVATE_INFO,
   VERUSID_RECOVERY_AUTH,
   VERUSID_REVOCATION_AUTH,
-  VERUSID_STATUS,
 } from '../../../utils/constants/verusidObjectData';
 import {getCmmDataLabel} from '../../../utils/vdxf/cmmDataLabel';
 import VdxfUniValueModal from '../../../components/VdxfUniValueModal/VdxfUniValueModal';
@@ -85,6 +82,8 @@ import HighRiskStep from './steps/HighRiskStep';
 import ConfirmPayStep from './steps/ConfirmPayStep';
 import {classifyChanges} from './utils/classifyChanges';
 import {buildContentMultiMapRemoveUi} from './utils/contentMultiMapRemoveUi';
+import {extractContentMultiMapRemoveMeta, splitContentMultiMapUpdates} from './utils/contentMultiMapUpdates';
+import {buildIdentityStateChange} from './utils/buildIdentityStateChange';
 import {identityUpdateRequestInfoStyles as styles} from '../../../styles';
 
 // Step identifiers
@@ -127,9 +126,6 @@ const IdentityUpdateRequestInfo = props => {
   const {fullyqualifiedname, identity} = subjectIdentity;
 
   // --- Core state ---
-  const [subject, setSubject] = useState(
-    primitives.Identity.fromJson(subjectIdentity),
-  );
   const [details, setDetails] = useState(new IdentityUpdateRequestDetails());
   const [stepIndex, setStepIndex] = useState(STEP_REVIEW);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -220,9 +216,10 @@ const IdentityUpdateRequestInfo = props => {
   const toCmmModalObjects = (updates, fallbackKey = null) => {
     const normalizedUpdates = normalizeCmmUpdates(updates);
     return normalizedUpdates.map((entry, index) => {
-      if (entry != null && typeof entry === 'object' && !Array.isArray(entry)) {
-        const keys = Object.keys(entry);
-        const removeMeta = extractContentMultiMapRemoveMeta(entry);
+      const removeMeta = extractContentMultiMapRemoveMeta(entry, fallbackKey);
+      const value = removeMeta && Array.isArray(entry) ? entry[0] : entry;
+      if (value != null && typeof value === 'object' && !Array.isArray(value)) {
+        const keys = Object.keys(value);
 
         if (removeMeta && keys.length > 0) {
           const key = keys[0];
@@ -239,18 +236,20 @@ const IdentityUpdateRequestInfo = props => {
           return {
             kind: removeMeta ? 'content-remove' : 'vdxf-value',
             key,
-            data: entry[key],
+            data: value[key],
             rawData: entry,
             meta: detailUi,
           };
         }
 
-        if (keys.length === 1) {
+        // A remove-shaped value under an ordinary key is data, not an action.
+        // Keep its inspector raw so it cannot show the removal-action modal.
+        if (keys.length === 1 && keys[0] !== ContentMultiMapRemoveKey.vdxfid) {
           const key = keys[0];
           return {
             kind: 'vdxf-value',
             key,
-            data: entry[key],
+            data: value[key],
             rawData: entry,
           };
         }
@@ -271,35 +270,6 @@ const IdentityUpdateRequestInfo = props => {
     data: signData,
     rawData: getSignDataRawValue(signData),
   });
-
-  const extractContentMultiMapRemoveMeta = value => {
-    if (value == null || typeof value !== 'object' || Array.isArray(value))
-      return null;
-
-    const topLevel = value[ContentMultiMapRemoveKey.vdxfid];
-    if (
-      topLevel == null ||
-      typeof topLevel !== 'object' ||
-      Array.isArray(topLevel)
-    )
-      return null;
-
-    const nested = topLevel[ContentMultiMapRemoveKey.vdxfid];
-    const payload =
-      nested != null && typeof nested === 'object' && !Array.isArray(nested)
-        ? nested
-        : topLevel;
-
-    const parsedAction = Number(payload.action);
-    if (!Number.isFinite(parsedAction)) return null;
-
-    return {
-      action: parsedAction,
-      entryKey: typeof payload.entrykey === 'string' ? payload.entrykey : null,
-      valueHash:
-        typeof payload.valuehash === 'string' ? payload.valuehash : null,
-    };
-  };
 
   // --- Display updates ---
   const getDisplayUpdates = () => {
@@ -364,6 +334,21 @@ const IdentityUpdateRequestInfo = props => {
     };
 
     if (
+      identityUpdates.minimumsignatures != null &&
+      identityUpdates.minimumsignatures !== identity.minimumsignatures
+    ) {
+      const before = identity.minimumsignatures;
+      const after = identityUpdates.minimumsignatures;
+      const primaryAddresses = identityUpdates.primaryaddresses || identity.primaryaddresses;
+      displayUpdates[VERUSID_AUTH_INFO.key].minimumsignatures = {
+        highRisk: true,
+        highRiskType: 'signature-threshold',
+        highRiskTitle: `Required signatures: ${before} of ${identity.primaryaddresses.length} → ${after} of ${primaryAddresses.length}`,
+        highRiskWarning: `Spending, signing, and ordinary identity updates will require signatures from ${after} of the ${primaryAddresses.length} primary addresses.${after < before ? ' Fewer signatures will be needed to authorize this identity.' : ' Additional signatures will be needed to authorize this identity.'}`,
+      };
+    }
+
+    if (
       identityUpdates.primaryaddresses &&
       identityUpdates.primaryaddresses.join(',') !==
         identity.primaryaddresses.join(',')
@@ -377,14 +362,6 @@ const IdentityUpdateRequestInfo = props => {
             copyToClipboard(identityUpdates.primaryaddresses[i], {
               message: `${identityUpdates.primaryaddresses[i]} copied to clipboard.`,
             }),
-        };
-      }
-    }
-
-    if (details.identity && identityUpdates.flags && identityUpdates.flags !== identity.flags) {
-      if (subject.isRevoked() !== details.identity.isRevoked()) {
-        displayUpdates[VERUSID_BASE_INFO.key][VERUSID_STATUS.key] = {
-          data: getVerusIdStatus(identityUpdates, chainInfo, coinObj),
         };
       }
     }
@@ -409,17 +386,7 @@ const IdentityUpdateRequestInfo = props => {
               ),
           };
         } else {
-          const normalizedUpdates = normalizeCmmUpdates(updates);
-          const removeEntries = normalizedUpdates
-            .map((update, index) => ({
-              update,
-              index,
-              removeMeta: extractContentMultiMapRemoveMeta(update),
-            }))
-            .filter(entry => entry.removeMeta != null);
-          const nonRemoveUpdates = normalizedUpdates.filter(
-            update => extractContentMultiMapRemoveMeta(update) == null,
-          );
+          const {removeEntries, nonRemoveUpdates} = splitContentMultiMapUpdates(key, updates);
 
           if (removeEntries.length > 0) {
             removeEntries.forEach(({update, removeMeta, index}) => {
@@ -430,15 +397,13 @@ const IdentityUpdateRequestInfo = props => {
                 getKeyLabel: getCmmDataKey,
                 definedKeyVdxfId: DATA_TYPE_DEFINEDKEY.vdxfid,
               });
+              if (!removeUi) return;
               const targetKey =
                 removeMeta.action === 4
                   ? CMM_CLEAR_MAP_SENTINEL
                   : removeMeta.entryKey || key;
-              const baseUpdateKey = `${VERUSID_CMM_DATA.key}:${targetKey}`;
-              const updateKey =
-                displayUpdates[VERUSID_CMM_INFO.key][baseUpdateKey] == null
-                  ? baseUpdateKey
-                  : `${baseUpdateKey}:remove:${index}`;
+              // Keep every removal separate from additions to the same key.
+              const updateKey = `${VERUSID_CMM_DATA.key}:${targetKey}:remove:${index}`;
 
               // derive remove-action copy from the current identity state, not from chain permanence.
               displayUpdates[VERUSID_CMM_INFO.key][updateKey] = {
@@ -584,9 +549,8 @@ const IdentityUpdateRequestInfo = props => {
   }, [activeAccount, coinObj]);
 
   const primaryAddressAfterUpdateInfo = useMemo(() => {
-    if (!Array.isArray(identityUpdates?.primaryaddresses)) return null;
-
-    const updated = identityUpdates.primaryaddresses;
+    const updated = identityUpdates?.primaryaddresses || identity?.primaryaddresses;
+    if (!Array.isArray(updated)) return null;
     const walletSet = new Set(walletAddresses);
 
     const addresses = updated.map(addr => ({
@@ -603,8 +567,9 @@ const IdentityUpdateRequestInfo = props => {
       addresses,
       walletCount,
       externalCount: addresses.length - walletCount,
+      minimumSignatures: identityUpdates?.minimumsignatures ?? identity.minimumsignatures,
     };
-  }, [identityUpdates, walletAddresses, friendlyNames]);
+  }, [identity, identityUpdates, walletAddresses, friendlyNames]);
 
   // --- Classify changes ---
   const {highRiskChanges: baseHighRiskChanges, contentChanges} = useMemo(
@@ -627,9 +592,8 @@ const IdentityUpdateRequestInfo = props => {
     if (added.length === 0 && removed.length === 0) return [];
 
     const walletSet = new Set(walletAddresses);
-    const hasWalletPrimaryAfterUpdate = updated.some(addr =>
-      walletSet.has(addr),
-    );
+    const walletPrimaryCount = updated.filter(addr => walletSet.has(addr)).length;
+    const minimumSignatures = identityUpdates.minimumsignatures ?? identity.minimumsignatures;
     const changes = [];
 
     added.forEach(addr => {
@@ -639,9 +603,9 @@ const IdentityUpdateRequestInfo = props => {
         title: 'Add primary address',
         warning: inWallet
           ? 'Adding a primary address makes this ID multisig.'
-          : hasWalletPrimaryAfterUpdate
-          ? 'This address is not in your wallet. Adding it shares control of this ID with someone else. Your wallet will still control this ID.'
-          : 'This address is not in your wallet. After this update, none of the primary addresses are in your wallet. You will lose control of this ID.',
+          : walletPrimaryCount >= minimumSignatures
+          ? 'This address is not in your wallet. Your wallet will still have enough primary addresses to meet the signature requirement.'
+          : 'This address is not in your wallet. Your wallet will not have enough primary addresses to meet the signature requirement on its own.',
         data: displayIdentityAddress(addr),
         valueLabel: 'New value',
         type: 'primary-add',
@@ -671,9 +635,25 @@ const IdentityUpdateRequestInfo = props => {
     [baseHighRiskChanges],
   );
 
+  const identityStateChange = useMemo(
+    () =>
+      buildIdentityStateChange({
+        currentIdentity: identity,
+        updatedIdentity: identityUpdates,
+        chainHeight: chainInfo?.longestchain,
+        secondsPerBlock: coinObj.seconds_per_block,
+        prepared: Boolean(updateIdTxHex),
+      }),
+    [identity, identityUpdates, chainInfo?.longestchain, coinObj.seconds_per_block, updateIdTxHex],
+  );
+
   const highRiskChanges = useMemo(
-    () => [...primaryAddressChanges, ...nonPrimaryHighRiskChanges],
-    [primaryAddressChanges, nonPrimaryHighRiskChanges],
+    () => [
+      ...primaryAddressChanges,
+      ...nonPrimaryHighRiskChanges,
+      ...(identityStateChange ? [identityStateChange] : []),
+    ],
+    [primaryAddressChanges, nonPrimaryHighRiskChanges, identityStateChange],
   );
 
   const hasHighRisk = highRiskChanges.length > 0;
@@ -695,7 +675,10 @@ const IdentityUpdateRequestInfo = props => {
     setAcknowledged(prev => !prev);
   }, []);
 
-  const hasContent = contentChanges.length > 0 || highRiskChanges.length > 0;
+  // Match the groups rendered by ContentStep, including high-risk content removal.
+  const hasContent = [VERUSID_CMM_INFO.key, VERUSID_PRIVATE_INFO.key].some(
+    groupKey => Object.values(displayUpdates[groupKey] || {}).some(Boolean),
+  );
 
   // --- Stepper navigation ---
   // Build the ordered list of steps (skip content/high-risk if none)
@@ -888,6 +871,7 @@ const IdentityUpdateRequestInfo = props => {
       {/* Step content */}
       {currentStepId === STEP_REVIEW && (
         <ReviewStep
+          identityStateChange={identityStateChange}
           signerFqn={signerFqn}
           canOpenSignerModal={canOpenSignerModal}
           chainId={chainId}
@@ -917,9 +901,11 @@ const IdentityUpdateRequestInfo = props => {
 
       {currentStepId === STEP_HIGH_RISK && (
         <HighRiskStep
+          identityStateChange={identityStateChange}
           highRiskChanges={highRiskChanges}
           primaryAddressAfterUpdateInfo={
-            primaryAddressChanges.length > 0
+            primaryAddressChanges.length > 0 ||
+            highRiskChanges.some(change => change.highRiskType === 'signature-threshold')
               ? primaryAddressAfterUpdateInfo
               : null
           }
@@ -940,6 +926,8 @@ const IdentityUpdateRequestInfo = props => {
 
       {currentStepId === STEP_CONFIRM_PAY && (
         <ConfirmPayStep
+          identityStateChange={identityStateChange}
+          chainHeight={chainInfo?.longestchain}
           details={details}
           requestIsTestnet={requestIsTestnet}
           subjectIdentity={subjectIdentity}

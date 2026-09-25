@@ -10,7 +10,8 @@ export const getSendCurrencyTransaction = async (
   feecurrency,
   via,
   source = '*',
-  vdxftag
+  vdxftag,
+  { preconvert, refundto } = {}
 ) => {
   const params = {
     currency,
@@ -23,6 +24,8 @@ export const getSendCurrencyTransaction = async (
   };
 
   if (feecurrency != null) params.feecurrency = feecurrency;
+  if (preconvert != null) params.preconvert = preconvert;
+  if (refundto != null) params.refundto = refundto;
 
   return await VrpcProvider.getEndpoint(systemId).sendCurrency(
     source,

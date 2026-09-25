@@ -9,7 +9,7 @@ import { unixToDate } from '../../../utils/math';
 import { useDispatch, useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
 import { VerusIdLogo } from '../../../images/customIcons';
-import { closeSendModal, openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
+import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
@@ -99,21 +99,20 @@ const LoginRequestInfo = props => {
   }
 
   useEffect(() => {
-    if (signedIn && waitingForSignin) {
-      closeSendModal()
-      handleContinue()
-    }
-  }, [signedIn, waitingForSignin]);
+    const rootSystemJustAdded = prevRootSystemAdded === false && rootSystemAdded === true;
+    setPrevRootSystemAdded(rootSystemAdded);
 
-  useEffect(() => {
+    // Profile initialization loads coins before sign-in finishes. Resume once,
+    // after the authentication dialog has completed and closed.
     if (
-      prevRootSystemAdded != rootSystemAdded &&
-      prevRootSystemAdded === false &&
-      rootSystemAdded === true
+      signedIn &&
+      sendModalType !== AUTHENTICATE_USER_SEND_MODAL &&
+      (waitingForSignin || rootSystemJustAdded)
     ) {
+      setWaitingForSignin(false);
       handleContinue()
     }
-  }, [rootSystemAdded]);
+  }, [signedIn, waitingForSignin, rootSystemAdded, prevRootSystemAdded, sendModalType]);
 
   useEffect(() => {
     setReq(new primitives.LoginConsentRequest(deeplinkData))

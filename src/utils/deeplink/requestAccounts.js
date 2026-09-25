@@ -9,3 +9,22 @@ export const getMatchingRequestAccounts = (accounts, requestIsTestnet) => {
     account => isTestProfile(account) === requestIsTestnet,
   );
 };
+
+export const assertRequestNetworkMatchesAccount = (
+  account,
+  requestIsTestnet,
+) => {
+  if (account == null) return;
+
+  const accountIsTestnet = isTestProfile(account);
+
+  if (accountIsTestnet !== requestIsTestnet) {
+    throw new Error(
+      `This request was created for ${
+        requestIsTestnet ? 'testnet' : 'mainnet'
+      }, but the active profile uses ${
+        accountIsTestnet ? 'testnet' : 'mainnet'
+      }. Switch profiles and scan the request again.`,
+    );
+  }
+};

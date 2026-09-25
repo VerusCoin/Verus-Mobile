@@ -50,7 +50,16 @@ export const getMnemonicEntropyBuffer = mnemonic => {
     throw new Error('Wallet seed must be a valid 24 word BIP39 mnemonic.');
   }
 
-  return Buffer.from(mnemonicToEntropy(normalized), 'hex');
+  const entropy = mnemonicToEntropy(normalized);
+
+  // Wallet keys depend on the exact seed text, including whitespace.
+  if (entropyToMnemonic(entropy) !== mnemonic) {
+    throw new Error(
+      'This backup cannot preserve your exact wallet seed. Restoring it would create a different wallet.',
+    );
+  }
+
+  return Buffer.from(entropy, 'hex');
 };
 
 export const entropyBufferToMnemonic = entropy => {

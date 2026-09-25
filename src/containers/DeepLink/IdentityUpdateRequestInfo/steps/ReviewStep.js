@@ -13,6 +13,7 @@ import Colors from '../../../../globals/colors';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import VerusIdAtIcon from '../../../../images/customIcons/verusid-at-icon.svg';
 import { reviewStepStyles } from '../../../../styles';
+import IdentityStateChangeCard from '../components/IdentityStateChangeCard';
 
 const Connector = () => (
   <View style={reviewStepStyles.connectorContainer}>
@@ -31,6 +32,7 @@ const ReviewStep = ({
   fullyqualifiedname,
   highRiskCount,
   contentCount,
+  identityStateChange,
   openVerusIdDetailsModal,
   signerIdentityID,
   styles,
@@ -109,6 +111,8 @@ const ReviewStep = ({
           </View>
         </View>
       </View>
+
+      <IdentityStateChangeCard change={identityStateChange} />
 
       {/* Summary Card -- split into high-risk vs content */}
       <View style={styles.summaryCard}>

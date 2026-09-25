@@ -5,6 +5,7 @@ import { scientificToDecimal } from "../../../../math"
 import { requestPrivKey } from "../../../../auth/authBox"
 import { BRIDGE_APPROVAL_ZERO_OUT_TOKENS, ETHERS, ETH_CONTRACT_ADDRESS } from "../../../../constants/web3Constants"
 import { cleanEthersErrorMessage } from "../../../../errors"
+import { sendWithBalanceCheck } from "../../../../web3/sendWithBalanceCheck"
 
 export const send = async (coinObj, activeUser, address, amount, passthrough) => {
   try {
@@ -36,10 +37,15 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
       throw new Error("Estimated fee exceeds maximum fee calculated in confirm step. Try sending again to recalculate fee.")
     }
 
-    const response = await signableContract.transfer(
-      address,
-      amountBn,
-      { gasLimit: gasLimit, maxFeePerGas: maxFeePerGas }
+    const response = await sendWithBalanceCheck(
+      () => signableContract.transfer(
+        address,
+        amountBn,
+        { gasLimit: gasLimit, maxFeePerGas: maxFeePerGas }
+      ),
+      () => signableContract.balanceOf.staticCall(
+        signableContract.runner.address, { blockTag: 'pending' },
+      ),
     );
     
     return {
@@ -64,6 +70,8 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
       },
     };
   } catch(e) {
+    if (e.ambiguousBroadcast === true) throw e;
+
     return {
       err: true,
       result: cleanEthersErrorMessage(e.message, e.body)
@@ -90,9 +98,17 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
       throw new Error("Current gas price exceeds maximum confirmed value, try re-entering form data and sending again.")
     }
 
+    // Use fresh pending balances, bypassing ethers' short getBalance cache.
+    let getBalance = async () => BigInt(await Web3Provider.InfuraProvider.send(
+      'eth_getBalance', [signer.address, 'pending'],
+    ));
+
     if (coinObj.currency_id !== ETH_CONTRACT_ADDRESS) {
       const [delegatorAddress, approvalAmount, approvalOptions] = approvalParams
       const contract = Web3Provider.getContract(coinObj.currency_id, null, Web3Provider.InfuraProvider).connect(signer);
+      getBalance = () => contract.balanceOf.staticCall(
+        signer.address, { blockTag: 'pending' },
+      );
 
       // Some tokens require approval amount to be zero before approval is allowed
       if (BRIDGE_APPROVAL_ZERO_OUT_TOKENS.some(x => (x.toLowerCase() === coinObj.currency_id.toLowerCase()))) {
@@ -112,9 +128,9 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
       }
     }
 
-    const response = await delegatorContract.sendTransfer(
-      reserveTransfer,
-      transferOptions
+    const response = await sendWithBalanceCheck(
+      () => delegatorContract.sendTransfer(reserveTransfer, transferOptions),
+      getBalance,
     );
     
     return {
@@ -124,6 +140,8 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
       },
     };
   } catch(e) {
+    if (e.ambiguousBroadcast === true) throw e;
+
     return {
       err: true,
       result: cleanEthersErrorMessage(e.message)

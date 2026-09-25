@@ -37,16 +37,24 @@ export const signDataPacketObject = async ({
 
   VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
 
-  const signature = await VrpcProvider
-    .getVerusIdInterface(coinObj.system_id)
-    .signHash(identityAddress, signatureHash, privKey, undefined, undefined, coinObj.system_id);
+  const verusIdInterface = VrpcProvider.getVerusIdInterface(coinObj.system_id);
+  const height = await verusIdInterface.getCurrentHeight();
 
   const verifiableSignature = new VerifiableSignatureData({
     version: VerifiableSignatureData.TYPE_VERUSID_DEFAULT,
     systemID: CompactAddressObject.fromIAddress(coinObj.system_id),
     identityID: CompactAddressObject.fromIAddress(identityAddress),
-    signatureAsVch: Buffer.from(signature, "base64"),
   });
+
+  const signature = await verusIdInterface.signHash(
+    identityAddress,
+    verifiableSignature.getIdentityHash(height, signatureHash),
+    privKey,
+    undefined,
+    height,
+    coinObj.system_id,
+  );
+  verifiableSignature.signatureAsVch = Buffer.from(signature, "base64");
 
   return verifiableSignature.toSignatureData(signatureHash);
 };
