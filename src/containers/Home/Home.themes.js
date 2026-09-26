@@ -1,4 +1,4 @@
-import { DefaultTheme } from 'react-native-paper';
+import { MD2LightTheme as DefaultTheme } from 'react-native-paper';
 
 export const HomeListItemThemeDark = {
   ...DefaultTheme,

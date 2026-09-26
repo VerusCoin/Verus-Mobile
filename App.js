@@ -91,7 +91,7 @@ const theme = {
     primary: Colors.primaryColor,
     accent: Colors.verusGreenColor,
   },
-  fonts: configureFonts(fontConfig),
+  fonts: configureFonts({ config: fontConfig.default, isV3: false }),
   version: 2
 };
 
