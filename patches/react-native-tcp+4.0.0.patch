@@ -1,0 +1,39 @@
+diff --git a/node_modules/react-native-tcp/android/build.gradle b/node_modules/react-native-tcp/android/build.gradle
+--- a/node_modules/react-native-tcp/android/build.gradle
++++ b/node_modules/react-native-tcp/android/build.gradle
+@@ -5,7 +5,7 @@
+ buildscript {
+     repositories {
+         google()
+-        jcenter()
++        mavenCentral()
+     }
+ 
+     dependencies {
+@@ -16,6 +16,7 @@
+ apply plugin: 'com.android.library'
+ 
+ android {
++    namespace "com.peel.react"
+     
+     compileSdkVersion safeExtGet('compileSdkVersion', 29)
+     buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
+@@ -44,7 +45,7 @@
+ 
+ repositories {
+     google()
+-    jcenter()
++    mavenCentral()
+ }
+ 
+ dependencies {
+diff --git a/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml b/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
+--- a/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
++++ b/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
+@@ -1,5 +1,4 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-    package="com.peel.react" >
++<manifest xmlns:android="http://schemas.android.com/apk/res/android" >
+     <uses-permission android:name="android.permission.INTERNET"/>
+ </manifest>

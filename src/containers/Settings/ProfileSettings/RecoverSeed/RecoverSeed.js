@@ -125,6 +125,7 @@ class RecoverSeed extends Component {
               autoCorrect={false}
               secureTextEntry={true}
               shake={this.state.errors.password}
+              renderErrorMessage={false}
               errorMessage={
                 this.state.errors.password ? 
                   this.state.errors.password

@@ -100,10 +100,11 @@ const RequestAttestation = (props) => {
                   onPress={() => openRequestDialog(identities.getIn([identity, 'name'], ''))}
                   key={identities.getIn([identity, 'id'], '')}
                 >
-                  <ListItem
-                    title={identities.getIn([identity, 'name'], '')}
-                    bottomDivider
-                  />
+                  <ListItem bottomDivider>
+                    <ListItem.Content>
+                      <ListItem.Title>{identities.getIn([identity, 'name'], '')}</ListItem.Title>
+                    </ListItem.Content>
+                  </ListItem>
                 </TouchableOpacity>
               ))}
             </View>

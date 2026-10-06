@@ -198,13 +198,16 @@ const PersonalInfo = (props) => {
           {categories.keySeq().map((item) => (
             <ListItem
               key={categories.getIn([item, 'id'], '')}
-              title={categories.getIn([item, 'displayName'], '')}
               onPress={() => goToClaims(categories.get(item, IMap()))}
-              rightElement={handleClaimCountBadge(categories.getIn([item, 'id'], ''))}
-              rightIcon={handleDeleteCategoryIcon(categories.getIn([item, 'id'], ''))}
               bottomDivider
-              chevron
-            />
+            >
+              <ListItem.Content>
+                <ListItem.Title>{categories.getIn([item, 'displayName'], '')}</ListItem.Title>
+              </ListItem.Content>
+              {handleClaimCountBadge(categories.getIn([item, 'id'], ''))}
+              {handleDeleteCategoryIcon(categories.getIn([item, 'id'], ''))}
+              <ListItem.Chevron />
+            </ListItem>
           ))}
         </View>
       </ScrollView>

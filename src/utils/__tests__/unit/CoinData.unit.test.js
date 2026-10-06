@@ -35,7 +35,7 @@ describe('Main coin data functions', () => {
     expect(coinObj.system_id).toBe('iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq')
     expect(coinObj.display_name).toBe('service')
     expect(coinObj.display_ticker).toBe('service')
-    expect(coinObj.vrpc_endpoints).toContain('https://api.verustest.net')
+    expect(coinObj.vrpc_endpoints).toContain('https://v2api.verustest.net')
     expect(coinObj.seconds_per_block).toBe(60)
 
     expect(systemObj).toBeDefined()
@@ -44,7 +44,7 @@ describe('Main coin data functions', () => {
     expect(systemObj.system_id).toBe('iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq')
     expect(systemObj.display_name).toBe('Verus Testnet')
     expect(systemObj.display_ticker).toBe('VRSCTEST')
-    expect(systemObj.vrpc_endpoints).toContain('https://api.verustest.net')
+    expect(systemObj.vrpc_endpoints).toContain('https://v2api.verustest.net')
     expect(systemObj.seconds_per_block).toBe(60)
   })
 
@@ -59,7 +59,7 @@ describe('Main coin data functions', () => {
     expect(coinObj.system_id).toBe('iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu')
     expect(coinObj.display_name).toBe('Andromeda')
     expect(coinObj.display_ticker).toBe('Andromeda')
-    expect(coinObj.vrpc_endpoints).toContain('https://api.verustest.net:10004')
+    expect(coinObj.vrpc_endpoints).toContain('https://v2api.verustest.net:10004')
     expect(coinObj.seconds_per_block).toBe(60)
 
     expect(systemObj).toBeDefined()
@@ -68,7 +68,7 @@ describe('Main coin data functions', () => {
     expect(systemObj.system_id).toBe('iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu')
     expect(systemObj.display_name).toBe('Andromeda')
     expect(systemObj.display_ticker).toBe('Andromeda')
-    expect(systemObj.vrpc_endpoints).toContain('https://api.verustest.net:10004')
+    expect(systemObj.vrpc_endpoints).toContain('https://v2api.verustest.net:10004')
     expect(systemObj.seconds_per_block).toBe(60)
   })
 
@@ -84,7 +84,7 @@ describe('Main coin data functions', () => {
     expect(coinObj.system_id).toBe('iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu')
     expect(coinObj.display_name).toBe('QG.Andromeda')
     expect(coinObj.display_ticker).toBe('QG.Andromeda')
-    expect(coinObj.vrpc_endpoints).toContain('https://api.verustest.net:10004')
+    expect(coinObj.vrpc_endpoints).toContain('https://v2api.verustest.net:10004')
     expect(coinObj.seconds_per_block).toBe(60)
 
     expect(systemObj).toBeDefined()
@@ -93,7 +93,7 @@ describe('Main coin data functions', () => {
     expect(systemObj.system_id).toBe('iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu')
     expect(systemObj.display_name).toBe('Andromeda')
     expect(systemObj.display_ticker).toBe('Andromeda')
-    expect(systemObj.vrpc_endpoints).toContain('https://api.verustest.net:10004')
+    expect(systemObj.vrpc_endpoints).toContain('https://v2api.verustest.net:10004')
     expect(systemObj.seconds_per_block).toBe(60)
   })
 })

@@ -196,7 +196,7 @@ jest.mock('@react-native-community/netinfo', () => {
     },
   };
 });
-jest.mock('ethers', () => require('ethers/dist/ethers.umd'));
+jest.mock('ethers', () => require('../node_modules/ethers/dist/ethers.umd.js'));
 jest.mock('react-native-url-polyfill', () => require('url'));
 
 global.fetch = require('../__mocks__/react-native-fetch/fetch');

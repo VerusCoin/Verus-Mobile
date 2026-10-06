@@ -25,10 +25,13 @@ const MoveIntoCategory = (props) => {
         {categories.keySeq().map((category) => (
           <ListItem
             key={categories.getIn([category, 'id'], '')}
-            title={categories.getIn([category, 'displayName'], '')}
             onPress={() => moveIntoCategory(categories.get(category, IMap()))}
             bottomDivider
-          />
+          >
+            <ListItem.Content>
+              <ListItem.Title>{categories.getIn([category, 'displayName'], '')}</ListItem.Title>
+            </ListItem.Content>
+          </ListItem>
         ))}
       </ScrollView>
     </View>
