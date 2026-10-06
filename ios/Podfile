@@ -146,6 +146,10 @@ target 'verusmobile' do
       :mac_catalyst_enabled => false
     )
 
+    installer.pods_project.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
+    end
+
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
 
@@ -155,6 +159,12 @@ target 'verusmobile' do
         end
 
         config.build_settings['ENABLE_BITCODE'] = 'NO'
+
+        # Some pods still declare older minimums that Xcode 27 rejects.
+        deployment_target = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if deployment_target.nil? || Gem::Version.new(deployment_target) < Gem::Version.new(min_ios_version_supported)
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
+        end
       end
     end
   end
