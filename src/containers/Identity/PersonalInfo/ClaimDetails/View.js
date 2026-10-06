@@ -103,11 +103,14 @@ const ClaimDetails = (props) => {
           {attestations.keySeq().map((attestation) => (
             <ListItem
               key={attestations.getIn([attestation, 'uid'], '')}
-              title={attestations.getIn([attestation, 'identityAttested'], '')}
               onPress={() => goToAttestationDetails(attestations.get(attestation, IMap()))}
               bottomDivider
-              chevron
-            />
+            >
+              <ListItem.Content>
+                <ListItem.Title>{attestations.getIn([attestation, 'identityAttested'], '')}</ListItem.Title>
+              </ListItem.Content>
+              <ListItem.Chevron />
+            </ListItem>
           ))}
         </View>
         <Button

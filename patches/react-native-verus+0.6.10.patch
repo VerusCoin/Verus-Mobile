@@ -13,3 +13,31 @@ index 3cd63d0..75d30d0 100644
    "files": [
      "/android/build.gradle",
      "/android/src/",
+diff --git a/node_modules/react-native-verus/scripts/prepack.ts b/node_modules/react-native-verus/scripts/prepack.ts
+--- a/node_modules/react-native-verus/scripts/prepack.ts
++++ b/node_modules/react-native-verus/scripts/prepack.ts
+@@ -10,7 +10,7 @@
+ //
+ // RNV_BUILD_IOS=0 always skips; RNV_BUILD_IOS=1 rebuilds even if present.
+ 
+-import { execSync } from 'child_process'
++import { execFileSync, execSync } from 'child_process'
+ import { createHash, Hash } from 'crypto'
+ import {
+   existsSync,
+@@ -131,7 +131,14 @@
+   // Drop the stamp first, so an interrupted build leaves the artifacts marked
+   // unusable rather than passing for the ones the current scripts describe:
+   rmSync(stampFile, { force: true })
+-  execSync('npm run update-sources', { cwd: root, stdio: 'inherit' })
++  const compiledUpdater = join(__dirname, 'updateSources.js')
++  if (existsSync(compiledUpdater)) {
++    // CocoaPods runs this compiled copy inside node_modules, which Sucrase's
++    // require hook deliberately ignores. Run its compiled sibling as well.
++    execFileSync(process.execPath, [compiledUpdater], { cwd: root, stdio: 'inherit' })
++  } else {
++    execSync('npm run update-sources', { cwd: root, stdio: 'inherit' })
++  }
+   writeFileSync(stampFile, hash)
+ }
+ 

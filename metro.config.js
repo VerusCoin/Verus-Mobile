@@ -1,13 +1,12 @@
-const { getDefaultConfig } = require("metro-config");
+const {getDefaultConfig, mergeConfig} = require("@react-native/metro-config");
 
 module.exports = (async () => {
-  const {
-    resolver: { sourceExts, assetExts },
-  } = await getDefaultConfig();
+  const defaults = getDefaultConfig(__dirname);
+  const {resolver: {sourceExts, assetExts}} = defaults;
 
-  return {
+  return mergeConfig(defaults, {
     transformer: {
-      babelTransformerPath: require.resolve('react-native-svg-transformer'),
+      babelTransformerPath: require.resolve('react-native-svg-transformer/react-native'),
       minifierPath: require("path").resolve("./dummy-minifier"),
       minifierConfig: {
         mangle: {
@@ -35,5 +34,5 @@ module.exports = (async () => {
         return context.resolveRequest(context, moduleName, platform);
       }
     },
-  };
+  });
 })();

@@ -1,0 +1,18 @@
+{
+  "aar_sha256": "9888b240e6ab982d74e04740fe4ad93e51bb9fe961d104c5fda5e14c46f9e24b",
+  "android_api": 24,
+  "artifact": "com.github.VerusCoin:verus-android-backend:2.1.2-16k.1",
+  "base_aar_sha256": "136a8760e6e8d30151db344671da9d1503cea6d737d3ac6205e95c2322335770",
+  "base_pom_sha256": "713f1f18a0ef025b609a5f6a6b904da865ad248b63514713fc03c418df98198e",
+  "cargo_lock_sha256": "16956a7a196c6628ac56d050f0b7fe4777906781bcb95bde981a75a99e861adb",
+  "native_sha256": {
+    "jni/arm64-v8a/libzcashwalletsdk.so": "909c59e5b4ba72024d8a60db5a21f170f8c8c241235d9b81a59999e2d3245ee8",
+    "jni/armeabi-v7a/libzcashwalletsdk.so": "b3fefa4ac817aaf9b0e27f4b1fca9b53f7f128b6934a9338dc9223d3b30084e2",
+    "jni/x86/libzcashwalletsdk.so": "7b0137f370cc38c3d880eb93e9e55cbd629eac749d11713eb8268b50312a5402",
+    "jni/x86_64/libzcashwalletsdk.so": "b3fbf514e597c2180ab9a934e13e0f131e1dd213a771558464d84de8f7bf6ae5"
+  },
+  "ndk": "27.0.12077973",
+  "patch_sha256": "1ccc2cfdba1967e7612d4cf30aecaac514c25ef832fcc004c4e6900718e6b4df",
+  "rust": "1.81.0",
+  "sdk_commit": "f725d03c1ab93f00491bc6753848b245c7612b56"
+}
