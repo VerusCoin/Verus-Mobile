@@ -483,11 +483,13 @@ const DynamicHeader = ({ switchTab }) => {
     <GestureDetector
       gesture={Gesture.Fling()
         .direction(Directions.LEFT)
+        .runOnJS(true)
         .onEnd(handleLeftSwipe)}
     >
       <GestureDetector
         gesture={Gesture.Fling()
           .direction(Directions.RIGHT)
+          .runOnJS(true)
           .onEnd(handleRightSwipe)}
       >
         <View
