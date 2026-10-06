@@ -3,10 +3,10 @@
 buildscript {
     ext {
         // buildTools redundant, and may cause problems (according to online sources)
-        //buildToolsVersion = "35.0.0"
+        //buildToolsVersion = "36.0.0"
         minSdkVersion = 24
-        compileSdkVersion = 35
-        targetSdkVersion = 35
+        compileSdkVersion = 36
+        targetSdkVersion = 36
         ndkVersion = "27.0.12077973"
         kotlinVersion = "2.0.21"
     }
