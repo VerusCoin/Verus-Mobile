@@ -909,6 +909,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     try {
       const selectData = (data) => data == null || data.length == 0 ? undefined : data;
       const channel = sendModal.subWallet.api_channels[API_SEND];
+      const parentChannel = channel.split('.')[0];
 
       const selectAddress = async (addr) => {
         let keyhash;
@@ -953,7 +954,10 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
       let output = {
         currency: coinObj.currency_id,
-        mapto: selectData(data[SEND_MODAL_MAPPING_FIELD]),
+        // Receive-as labels are display-only for Verus-origin transfers.
+        mapto: parentChannel === ETH || parentChannel === ERC20
+          ? selectData(data[SEND_MODAL_MAPPING_FIELD])
+          : undefined,
         convertto: selectData(data[SEND_MODAL_CONVERTTO_FIELD]),
         exportto: selectData(data[SEND_MODAL_EXPORTTO_FIELD]),
         via: selectData(data[SEND_MODAL_VIA_FIELD]),
@@ -1057,7 +1061,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   };
 
   const handleSelfPressed = () => {
-    if (allSubWallets[coinsList.VRSC.id]) {
+    if (allSubWallets[coinsList.VRSC.id] || allSubWallets[coinsList.VRSCTEST.id]) {
       handleFieldFocus(SEND_MODAL_TO_ADDRESS_FIELD);
     } else {
       const addr = addresses.results[0]

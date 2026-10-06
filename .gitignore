@@ -20,7 +20,14 @@ DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
+IDEWorkspaceChecks.plist
 project.xcworkspace
+.xcode.env.local
+__pycache__/
+
+# Local Bundler configuration and installed gems
+/.bundle/
+/vendor/bundle/
 
 # Android/IntelliJ
 #
@@ -29,6 +36,12 @@ build/
 .gradle
 local.properties
 *.iml
+*.hprof
+
+# Eclipse / Java language server metadata
+.project
+.classpath
+.settings/
 
 # node.js
 #
@@ -100,8 +113,6 @@ android/java_pid17246.hprof
 android/java_pid22456.hprof
 android/app/debug.keystore
 android/keystores/debug.keystore
-ios/verusMobile.xcodeproj/project.pbxproj
-ios/verusMobile.xcodeproj/project.pbxproj
 android/app/src/main/res/mipmap-hdpi/ic_launcher_background.png
 android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
 android/app/src/main/res/mipmap-hdpi/ic_launcher_monochrome.png

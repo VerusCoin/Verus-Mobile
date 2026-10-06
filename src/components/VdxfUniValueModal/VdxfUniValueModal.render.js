@@ -40,7 +40,9 @@ export const VdxfUniValueModalRender = (props) => {
           }}
         >
           <SafeAreaView style={{ flex: 1 }}>
+            {/* Native modal windows cannot host Android screen fragments. */}
             <Root.Navigator
+              detachInactiveScreens={false}
               screenOptions={{
                 headerShown: false,
               }}

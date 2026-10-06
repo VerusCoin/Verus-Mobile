@@ -70,7 +70,9 @@ const ConvertCardModal = ({
         >
           {loading ? <AnimatedActivityIndicatorBox /> : 
             <SafeAreaView style={{ flex: 1 }}>
+              {/* Native modal windows cannot host Android screen fragments. */}
               <Root.Navigator
+                detachInactiveScreens={false}
                 screenOptions={{
                   header: () => (
                     <View style={{ 

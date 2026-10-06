@@ -78,8 +78,8 @@ const HighRiskStep = ({
         return {
           icon: 'shield-alert-outline',
           color: Colors.warningButtonColor,
-          title: 'Your idenitty will need additional signatures after this update',
-          description: `After this update, your identity will have ${walletCount} primary ${walletCount === 1 ? 'address' : 'addresses'}, but ${minimumSignatures} signatures will be required to spend/sign from this ID.`,
+          title: 'Your wallet will need additional signatures after this update',
+          description: `After this update, your wallet will have ${walletCount} primary ${walletCount === 1 ? 'address' : 'addresses'}, but ${minimumSignatures} signatures will be required to authorize this ID.`,
         };
       }
 

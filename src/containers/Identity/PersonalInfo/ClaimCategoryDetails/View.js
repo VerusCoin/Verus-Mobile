@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Map as IMap } from 'immutable';
 import { View, Platform, Text, ScrollView } from 'react-native';
-import { ListItem, CheckBox, SearchBar } from 'react-native-elements';
+import { ListItem, CheckBox, SearchBar, Badge } from 'react-native-elements';
 import AlphabeticalSort from '../AlphaSort/AlphabeticalSort';
 import Styles from '../../../../styles';
 import Colors from '../../../../globals/colors';
@@ -87,12 +87,15 @@ const ClaimCategoryDetails = (props) => {
         {claims.keySeq().map((claim) => (
           <ListItem
             key={claims.getIn([claim, 'uid'], '')}
-            title={claims.getIn([claim, 'displayName'], '')}
             onPress={() => goToClaimDetails(claims.get(claim, IMap()))}
-            badge={handleBadge(claims.getIn([claim, 'id']))}
             bottomDivider
-            chevron
-          />
+          >
+            <ListItem.Content>
+              <ListItem.Title>{claims.getIn([claim, 'displayName'], '')}</ListItem.Title>
+            </ListItem.Content>
+            <Badge {...handleBadge(claims.getIn([claim, 'id']))} />
+            <ListItem.Chevron />
+          </ListItem>
         ))}
       </ScrollView>
     </View>

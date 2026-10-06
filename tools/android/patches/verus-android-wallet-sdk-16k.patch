@@ -1,0 +1,17 @@
+diff --git a/backend-lib/build.rs b/backend-lib/build.rs
+--- a/backend-lib/build.rs
++++ b/backend-lib/build.rs
+@@ -8,6 +8,13 @@ const ANDROID_NDK_CLANG_VERSION: &str = "17";
+ 
+ fn main() {
+     setup_x86_64_android_workaround();
++
++    if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("android") {
++        // NDK r27 needs both flags for 16 KB LOAD and GNU_RELRO alignment.
++        // Scope them to this JNI cdylib, preserving host tools and static archives.
++        println!("cargo:rustc-link-arg-cdylib=-Wl,-z,max-page-size=16384");
++        println!("cargo:rustc-link-arg-cdylib=-Wl,-z,common-page-size=16384");
++    }
+ }
+ 
+ /// Adds a temporary workaround for [an issue] with the Rust compiler and Android when

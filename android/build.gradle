@@ -3,19 +3,19 @@
 buildscript {
     ext {
         // buildTools redundant, and may cause problems (according to online sources)
-        //buildToolsVersion = "35.0.0"
+        //buildToolsVersion = "36.0.0"
         minSdkVersion = 24
-        compileSdkVersion = 35
-        targetSdkVersion = 35
+        compileSdkVersion = 36
+        targetSdkVersion = 36
         ndkVersion = "27.0.12077973"
-        kotlinVersion = "1.9.0"
+        kotlinVersion = "2.0.21"
     }
     repositories {
         mavenCentral()
         google()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.4.2")
+        classpath("com.android.tools.build:gradle:8.7.2")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("de.undercouch:gradle-download-task:4.1.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
@@ -26,6 +26,13 @@ buildscript {
 }
 
 subprojects {
+  plugins.withId("com.android.library") {
+    androidComponents.finalizeDsl { androidDsl ->
+      androidDsl.compileSdk = rootProject.ext.compileSdkVersion
+      androidDsl.defaultConfig.externalNativeBuild.cmake.arguments.add("-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON")
+    }
+  }
+
   project.afterEvaluate {
     if (project.name == "react-native-nfc-manager" && project.hasProperty("android")) {
       project.android {
@@ -39,6 +46,16 @@ subprojects {
 
   project.configurations.all {
      resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'com.github.VerusCoin' && details.requested.name == 'verus-android-backend') {
+            details.useVersion '2.1.2-16k.1'
+            details.because 'Pinned wallet backend rebuilt with 16 KB ELF page alignment; JNI API unchanged'
+        }
+
+        if (details.requested.group == 'com.facebook.conceal' && details.requested.name == 'conceal') {
+            details.useVersion '1.1.3-16k.1'
+            details.because 'Preserve legacy keychain credentials with 16 KB aligned native encryption libraries'
+        }
+
         if (details.requested.group == 'com.android.support'
               && !details.requested.name.contains('multidex') ) {
            details.useVersion "26.1.0"
@@ -114,6 +131,17 @@ subprojects {
 
 allprojects {
     repositories {
+        exclusiveContent {
+            forRepository {
+                maven { url = uri("$rootDir/local-maven") }
+            }
+            filter {
+                includeModule('com.github.VerusCoin', 'verus-android-backend')
+                includeModule('com.facebook.conceal', 'conceal')
+            }
+        }
         mavenLocal()
     }
 }
+
+apply plugin: "com.facebook.react.rootproject"
