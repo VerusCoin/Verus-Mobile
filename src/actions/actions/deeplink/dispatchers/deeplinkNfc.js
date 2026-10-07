@@ -11,15 +11,20 @@ import {
 } from '../../../../utils/walletBackup/walletBackupNfc';
 import {setDeeplinkUrl} from '../creators/deeplink';
 
-export const readDeeplinkFromNfc = async ({
+let pendingRead = null;
+
+const performDeeplinkRead = async ({
   onWalletBackupDetected,
 } = {}) => {
   let cancelled = false;
+  let finished = false;
+  let cancellation;
 
   const cancelScan = () => {
+    if (cancelled || finished) return;
     cancelled = true;
     closeLoadingModal();
-    cancelWalletBackupNfcRequest();
+    cancellation = cancelWalletBackupNfcRequest();
   };
 
   try {
@@ -42,7 +47,7 @@ export const readDeeplinkFromNfc = async ({
       e.code === NFC_DEEPLINK_WALLET_BACKUP_DETECTED &&
       onWalletBackupDetected != null
     ) {
-      createAlert(
+      const shouldContinue = await createAlert(
         'Wallet Backup Detected',
         'This NFC card contains a wallet backup, not a verus:// deeplink.\n\nContinue profile creation, then choose Import using NFC when you are asked how to set up your wallet seed.',
         [
@@ -52,19 +57,34 @@ export const readDeeplinkFromNfc = async ({
           },
           {
             text: 'Continue',
-            onPress: () => {
-              resolveAlert(true);
-              onWalletBackupDetected();
-            },
+            onPress: () => resolveAlert(true),
           },
         ],
       );
+      if (shouldContinue) onWalletBackupDetected();
       return;
     }
 
-    createAlert(
+    await createAlert(
       'NFC Deeplink Failed',
       e.message || 'Unable to read a Verus deeplink from this NFC card.',
     );
+  } finally {
+    finished = true;
+    await cancellation;
   }
+};
+
+export const readDeeplinkFromNfc = (options = {}) => {
+  if (pendingRead != null) return pendingRead;
+
+  // Acquire before any native request or status callback can run. Duplicates
+  // share the first caller's scan, including its prompt and session cleanup.
+  const operation = Promise.resolve().then(() => performDeeplinkRead(options));
+  pendingRead = operation;
+  const release = () => {
+    if (pendingRead === operation) pendingRead = null;
+  };
+  operation.then(release, release);
+  return operation;
 };
