@@ -53,7 +53,7 @@ overrides:
   plist: "3.0.5"
   ramda: "0.27.2"
   shelljs: "0.8.5"
-  shell-quote: "1.10.0"
+  'shell-quote': '1.11.0'
   unset-value: "2.0.1"
   terser: "4.8.1"
   got: "11.8.5"
