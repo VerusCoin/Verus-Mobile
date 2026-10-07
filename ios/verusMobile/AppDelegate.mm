@@ -29,6 +29,11 @@
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};
+  self.initialLaunchOptions = launchOptions;
+  // SceneDelegate creates the iOS window once UIKit connects its scene.
+  // Keep the legacy startup path for targets without a scene manifest (tvOS).
+  self.automaticallyLoadReactNativeWindow =
+      [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UIApplicationSceneManifest"] == nil;
 
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
