@@ -1,0 +1,40 @@
+diff --git a/node_modules/react-native-os/android/build.gradle b/node_modules/react-native-os/android/build.gradle
+--- a/node_modules/react-native-os/android/build.gradle
++++ b/node_modules/react-native-os/android/build.gradle
+@@ -5,7 +5,7 @@
+ buildscript {
+     repositories {
+         google()
+-        jcenter()
++        mavenCentral()
+     }
+ 
+     dependencies {
+@@ -16,6 +16,7 @@
+ apply plugin: 'com.android.library'
+ 
+ android {
++    namespace "com.peel.react.rnos"
+ 
+     compileSdkVersion safeExtGet('compileSdkVersion', 29)
+     buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
+@@ -43,7 +44,7 @@
+ 
+ repositories {
+     google()
+-    jcenter()
++    mavenCentral()
+ }
+ 
+ dependencies {
+diff --git a/node_modules/react-native-os/android/src/main/AndroidManifest.xml b/node_modules/react-native-os/android/src/main/AndroidManifest.xml
+--- a/node_modules/react-native-os/android/src/main/AndroidManifest.xml
++++ b/node_modules/react-native-os/android/src/main/AndroidManifest.xml
+@@ -1,6 +1,5 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-    package="com.peel.react.rnos" >
++<manifest xmlns:android="http://schemas.android.com/apk/res/android" >
+     <uses-permission android:name="android.permission.INTERNET"/>
+     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>

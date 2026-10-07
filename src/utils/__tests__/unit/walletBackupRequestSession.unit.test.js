@@ -7,6 +7,8 @@ const mockBeginNfc = jest.fn();
 const mockEndNfc = jest.fn();
 const mockWriteBackup = jest.fn();
 const mockMarkComplete = jest.fn();
+const mockGetKey = jest.fn();
+const mockCreateProfile = jest.fn();
 
 jest.mock('../../../store', () => ({
   __esModule: true,
@@ -27,7 +29,10 @@ jest.mock('react-native-paper', () => ({
   Checkbox: {Item: 'CheckboxItem'},
   Menu: Object.assign(({children}) => children, {Item: 'MenuItem'}),
   Text: 'Text',
-  TextInput: Object.assign(({children}) => children, {Icon: 'TextInputIcon'}),
+  TextInput: Object.assign(
+    props => require('react').createElement('TextInput', props),
+    {Icon: 'TextInputIcon', Affix: 'TextInputAffix'},
+  ),
 }));
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
 jest.mock('react-redux', () => ({
@@ -65,12 +70,14 @@ jest.mock('../../auth/authBox', () => ({
   requestPassword: mockRequestPassword,
   requestSeeds: mockRequestSeeds,
 }));
-jest.mock('../../keyGenerator/keyGenerator', () => ({}));
+jest.mock('../../keyGenerator/keyGenerator', () => ({getKey: mockGetKey}));
 jest.mock('../../keepAwake/keepAwake', () => ({withKeepAwake: fn => fn()}));
 jest.mock('../../keychain/keychain', () => ({
   getSupportedBiometryType: async () => ({biometry: false}),
 }));
-jest.mock('../../profile/createProfileFromSeed', () => ({}));
+jest.mock('../../profile/createProfileFromSeed', () => ({
+  createProfileFromSeed: mockCreateProfile,
+}));
 jest.mock('../../walletBackup/walletBackup', () => ({
   WALLET_BACKUP_ENCRYPTION_ITERATION_OPTIONS: [
     {label: 'Medium', iterations: 300000},
@@ -131,6 +138,8 @@ describe('wallet backup account isolation', () => {
       return {written: true};
     });
     mockMarkComplete.mockResolvedValue();
+    mockGetKey.mockResolvedValue('generated seed');
+    mockCreateProfile.mockResolvedValue();
     props = {
       request: {isTestnet: () => false},
       detailIndex: 0,
@@ -146,8 +155,9 @@ describe('wallet backup account isolation', () => {
     consoleError.mockRestore();
   });
 
-  const writeBackup = () => renderer.root.findAllByType('Button')
-    .find(button => button.props.children === 'Write NFC Backup').props.onPress();
+  const writeBackupButton = () => renderer.root.findAllByType('Button')
+    .find(button => button.props.children === 'Write NFC Backup');
+  const writeBackup = () => writeBackupButton().props.onPress();
 
   const switchAccount = name => {
     mockState = {
@@ -172,6 +182,68 @@ describe('wallet backup account isolation', () => {
     expect(mockEndNfc).toHaveBeenCalled();
   };
 
+  const showProfileForm = () => {
+    mockState = {
+      ...mockState,
+      authentication: {...mockState.authentication, signedIn: false, activeAccount: null},
+    };
+    act(() => renderer.update(React.createElement(WalletBackupRequestInfo, props)));
+    const createProfileChoice = renderer.root.findAllByType('Button')
+      .find(button => button.props.children === 'Create New Profile');
+    act(() => createProfileChoice.props.onPress());
+    act(() => {
+      const inputs = renderer.root.findAllByType('TextInput');
+      inputs.find(input => input.props.label === 'Profile name').props.onChangeText('New profile');
+      inputs.find(input => input.props.label === 'Profile password').props.onChangeText('password');
+      inputs.find(input => input.props.label === 'Confirm profile password').props.onChangeText('password');
+    });
+    return () => renderer.root.findAllByType('Button')
+      .find(button => button.props.children === 'Create Profile');
+  };
+
+  it('blocks repeated profile creation through seed generation and account setup', async () => {
+    const button = showProfileForm();
+    const seed = deferred();
+    const created = deferred();
+    mockGetKey.mockReturnValueOnce(seed.promise);
+    mockCreateProfile.mockReturnValueOnce(created.promise);
+    const submit = button().props.onPress;
+    let pending;
+
+    await act(async () => {
+      pending = submit();
+      await submit();
+    });
+    expect(mockGetKey).toHaveBeenCalledTimes(1);
+    expect(button().props.disabled).toBe(true);
+
+    await act(async () => {seed.resolve('generated seed');});
+    await act(async () => {await submit();});
+    expect(mockCreateProfile).toHaveBeenCalledTimes(1);
+    expect(mockGetKey).toHaveBeenCalledTimes(1);
+    expect(button().props.disabled).toBe(true);
+
+    await act(async () => {created.resolve(); await pending;});
+    await act(async () => {await submit();});
+    expect(mockGetKey).toHaveBeenCalledTimes(1);
+    expect(mockCreateProfile).toHaveBeenCalledTimes(1);
+    expect(button().props.disabled).toBe(true);
+  });
+
+  it.each(['seed generation', 'account setup'])('allows profile creation retry after %s fails', async stage => {
+    const button = showProfileForm();
+    const operation = stage === 'seed generation' ? mockGetKey : mockCreateProfile;
+    operation.mockRejectedValueOnce(new Error('setup failed'));
+
+    await act(async () => {await button().props.onPress();});
+    expect(mockAlert).toHaveBeenCalledWith('Error', 'setup failed');
+    expect(button().props.disabled).toBe(false);
+
+    await act(async () => {await button().props.onPress();});
+    expect(operation).toHaveBeenCalledTimes(2);
+    expect(mockCreateProfile).toHaveBeenLastCalledWith(expect.objectContaining({seed: 'generated seed'}));
+  });
+
   it('writes and completes a backup for the unchanged approving account', async () => {
     await act(async () => {await writeBackup();});
 
@@ -182,6 +254,119 @@ describe('wallet backup account isolation', () => {
     expect(mockMarkComplete).toHaveBeenCalledWith('A');
     expect(props.next).toHaveBeenCalledTimes(1);
     expect(mockAlert).not.toHaveBeenCalled();
+  });
+
+  it('shows one unencrypted confirmation for repeated taps and allows retry after cancellation', async () => {
+    act(() => renderer.root.findAllByType('CheckboxItem')
+      .find(item => item.props.label === 'Encrypt backup with password').props.onPress());
+    const confirmation = deferred();
+    mockAlert.mockReturnValueOnce(confirmation.promise);
+    const submit = writeBackupButton().props.onPress;
+    let pending;
+
+    await act(async () => {
+      pending = submit();
+      await submit();
+    });
+    expect(mockAlert).toHaveBeenCalledTimes(1);
+    expect(mockAlert.mock.calls[0][0]).toBe('Unencrypted Backup');
+    expect(mockBeginNfc).not.toHaveBeenCalled();
+    expect(mockEndNfc).not.toHaveBeenCalled();
+
+    await act(async () => {confirmation.resolve(false); await pending;});
+    expect(mockWriteBackup).not.toHaveBeenCalled();
+    expect(props.next).not.toHaveBeenCalled();
+
+    await act(async () => {await writeBackup();});
+    expect(mockAlert).toHaveBeenCalledTimes(2);
+    expect(mockBeginNfc).toHaveBeenCalledTimes(1);
+    expect(mockWriteBackup).toHaveBeenCalledTimes(1);
+    expect(props.next).toHaveBeenCalledTimes(1);
+  });
+
+  it('writes and completes once through NFC setup, writing, navigation, and late repeat callbacks', async () => {
+    const session = deferred();
+    const writing = deferred();
+    const writeStarted = deferred();
+    const navigation = deferred();
+    const navigationStarted = deferred();
+    mockBeginNfc.mockReturnValueOnce(session.promise);
+    mockWriteBackup.mockImplementationOnce((_backup, {beforeWrite}) => {
+      beforeWrite();
+      writeStarted.resolve();
+      return writing.promise;
+    });
+    props.next.mockImplementationOnce(() => {
+      navigationStarted.resolve();
+      return navigation.promise;
+    });
+    const submit = writeBackupButton().props.onPress;
+    let pending;
+
+    await act(async () => {
+      pending = submit();
+      await submit();
+    });
+    expect(mockBeginNfc).toHaveBeenCalledTimes(1);
+    expect(mockRequestPassword).not.toHaveBeenCalled();
+    expect(mockEndNfc).not.toHaveBeenCalled();
+
+    await act(async () => {session.resolve(true); await writeStarted.promise;});
+    await act(async () => {await submit();});
+    expect(mockBeginNfc).toHaveBeenCalledTimes(1);
+    expect(mockWriteBackup).toHaveBeenCalledTimes(1);
+    expect(mockMarkComplete).not.toHaveBeenCalled();
+    expect(mockEndNfc).not.toHaveBeenCalled();
+
+    await act(async () => {writing.resolve({written: true}); await navigationStarted.promise;});
+    await act(async () => {await submit();});
+    expect(mockMarkComplete).toHaveBeenCalledTimes(1);
+    expect(props.next).toHaveBeenCalledTimes(1);
+
+    await act(async () => {navigation.resolve(); await pending;});
+    await act(async () => {await submit();});
+    expect(mockBeginNfc).toHaveBeenCalledTimes(1);
+    expect(mockWriteBackup).toHaveBeenCalledTimes(1);
+    expect(props.next).toHaveBeenCalledTimes(1);
+    expect(mockAlert).not.toHaveBeenCalled();
+  });
+
+  it('holds the write guard through failed preparation cleanup, then allows a retry', async () => {
+    const cleanup = deferred();
+    const cleanupStarted = deferred();
+    mockRequestPassword.mockRejectedValueOnce(new Error('Password cancelled'));
+    mockEndNfc.mockImplementationOnce(() => {
+      cleanupStarted.resolve();
+      return cleanup.promise;
+    });
+    const submit = writeBackupButton().props.onPress;
+    let pending;
+
+    await act(async () => {pending = submit(); await cleanupStarted.promise;});
+    await act(async () => {await submit();});
+    expect(mockBeginNfc).toHaveBeenCalledTimes(1);
+    expect(mockEndNfc).toHaveBeenCalledTimes(1);
+    expect(mockWriteBackup).not.toHaveBeenCalled();
+    expect(mockAlert).toHaveBeenCalledTimes(1);
+    expect(props.next).not.toHaveBeenCalled();
+
+    await act(async () => {cleanup.resolve(); await pending;});
+    await act(async () => {await writeBackup();});
+    expect(mockBeginNfc).toHaveBeenCalledTimes(2);
+    expect(mockEndNfc).toHaveBeenCalledTimes(1);
+    expect(mockWriteBackup).toHaveBeenCalledTimes(1);
+    expect(props.next).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows retry if completion navigation fails instead of permanently latching the screen', async () => {
+    props.next.mockRejectedValueOnce(new Error('Could not complete request'));
+    await act(async () => {await writeBackup();});
+    expect(mockAlert).toHaveBeenCalledWith('Backup Failed', expect.stringContaining('Could not complete request'));
+
+    await act(async () => {await writeBackup();});
+    expect(mockBeginNfc).toHaveBeenCalledTimes(2);
+    expect(mockWriteBackup).toHaveBeenCalledTimes(2);
+    expect(props.next).toHaveBeenCalledTimes(2);
   });
 
   it('rejects an account change while preparing the NFC session', async () => {

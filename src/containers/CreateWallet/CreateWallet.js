@@ -11,7 +11,7 @@ export default function CreateWalletStackScreens({ navigation, createProfile }) 
   const [importedSeed, setImportedSeed] = useState(null)
 
   const completeSeedSetup = (asNew, useSeedAsZ, importedSeedOverride) => {
-    createProfile(
+    return createProfile(
       asNew
         ? newSeed
         : (importedSeedOverride != null ? importedSeedOverride : importedSeed),

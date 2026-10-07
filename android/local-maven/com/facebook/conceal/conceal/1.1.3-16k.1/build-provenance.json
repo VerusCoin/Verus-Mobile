@@ -1,0 +1,60 @@
+{
+  "aar_sha256": "bf3c588f721d0e1d320c6ca0b96315662f0cfdb32790ad5ba97329f64434d47c",
+  "android_api": 24,
+  "artifact": "com.facebook.conceal:conceal:1.1.3-16k.1",
+  "compile_flags": [
+    "-shared",
+    "-fPIC",
+    "-fvisibility=hidden",
+    "-Os",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fstack-protector-strong",
+    "-D_FORTIFY_SOURCE=2",
+    "-include",
+    "string.h",
+    "-Wno-pointer-sign"
+  ],
+  "inputs": {
+    "conceal-1.1.3.aar": {
+      "sha256": "81f64b8a0faac6722106e5d5d9f289bb40a02bfd9793376571d4d7e571fc36cd",
+      "url": "https://repo.maven.apache.org/maven2/com/facebook/conceal/conceal/1.1.3/conceal-1.1.3.aar"
+    },
+    "conceal-1.1.3.pom": {
+      "sha256": "77044a1403b732fc9810bdb23b2356aece9a881f3acbd036d4a891b9c3aaae72",
+      "url": "https://repo.maven.apache.org/maven2/com/facebook/conceal/conceal/1.1.3/conceal-1.1.3.pom"
+    },
+    "conceal-source.tar.gz": {
+      "sha256": "4a6aa6e07f0a42119b851f5914c1c6ab0ab7d394395d5e04a5aeccaa789d140a",
+      "url": "https://codeload.github.com/facebookarchive/conceal/tar.gz/c8a2841bd8996faa088040ef286b03328750389e"
+    }
+  },
+  "link_flags": [
+    "-llog",
+    "-Wl,--gc-sections",
+    "-Wl,--exclude-libs,ALL",
+    "-Wl,-z,max-page-size=16384",
+    "-Wl,-z,common-page-size=16384",
+    "-Wl,-z,relro",
+    "-Wl,-z,now",
+    "-Wl,-soname,libconceal.so",
+    "-Wl,--no-undefined"
+  ],
+  "native_sha256": {
+    "jni/arm64-v8a/libconceal.so": "222f1db2a731c27c5d806b5b28ec0e53e9e67e8be749981f7a57a9669452365b",
+    "jni/armeabi-v7a/libconceal.so": "5daabc5382deb13169324e7fcdc0ab3800cbd3dccce4ad1be6badf27e93e8d88",
+    "jni/x86/libconceal.so": "1d5c1ae7351ca821dae486e345afb42bb6bcaefe7100e95e35c39b5134fc8390",
+    "jni/x86_64/libconceal.so": "243188d6b5688879fbee84a624edebffb434bed4c43fde2bb8b07ab9211e11f3"
+  },
+  "ndk": "27.0.12077973",
+  "omitted_abis": [
+    "armeabi"
+  ],
+  "openssl_static_sha256": {
+    "arm64-v8a": "d532e4083362e3f99ba301fd880a05e8f8f2c88fd0e1886591bcd5f092014c21",
+    "armeabi-v7a": "a4bcd526eeb50e1a720445b05a4ff5cadf92d1b9e0565489b485cbbb443bbaa1",
+    "x86": "f8236d2dd22182adefb37489cc1c4e32c84b42439c7d76eda8304f73d96b621b",
+    "x86_64": "884b4c07eda6ea47cfafc349d4772cd7f1637427d2a3ac581c4e96cfbe70997e"
+  },
+  "source_commit": "c8a2841bd8996faa088040ef286b03328750389e"
+}

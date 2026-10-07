@@ -1,6 +1,13 @@
 stages:
   - build
 
+default:
+  before_script:
+    # The Mobile runner supplies Android SDK/NDK, Java 17, Python 3 and Node 22.
+    - >-
+      node -e 'const [major, minor] = process.versions.node.split(".").map(Number); if (major !== 22 || minor < 13) { console.error("CI requires Node 22.13+ in the Node 22 release line; provision the version in .nvmrc."); process.exit(1); }'
+    - test "$(corepack pnpm --version)" = "11.5.2"
+
 variables:
   VERSION: 0.3.0-30
   POST_MESSAGE: "Pipeline Trigger: ${CI_PIPELINE_SOURCE}\n
@@ -17,13 +24,17 @@ Android:debug:
   script:
     - sed -i -e "s/PUT_KEY_HERE/${ETHERSCAN_API_KEY}/g" env/main.android.json
     - sed -i -e "s/PUT_ID_HERE/${INFURA_PROJECT_ID}/g" env/main.android.json
-    - yarn install
-    - yarn run bundle-android
+    - corepack pnpm install --frozen-lockfile
+    - corepack pnpm run bundle-android
     - cd android && ./gradlew assembleDebug
+    - |
+      for apk in app/build/outputs/apk/debug/*.apk; do
+        python3 ../tools/android/check-16k.py "$apk" || exit 1
+      done
   artifacts:
     paths:
       - android/app/build
-      - yarn-lock.json
+      - pnpm-lock.yaml
 
 
 Android:release:
@@ -37,11 +48,15 @@ Android:release:
   script:
     - sed -i -e "s/PUT_KEY_HERE/${ETHERSCAN_API_KEY}/g" env/main.android.json
     - sed -i -e "s/PUT_ID_HERE/${INFURA_PROJECT_ID}/g" env/main.android.json
-    - yarn install
+    - corepack pnpm install --frozen-lockfile
     - cd android
     - echo ${KEYSTORE}  | xxd -r -p - > app/${MYAPP_RELEASE_STORE_FILE}
     - ./gradlew assembleRelease
     - rm app/${MYAPP_RELEASE_STORE_FILE}
+    - |
+      for apk in app/build/outputs/apk/release/*.apk; do
+        python3 ../tools/android/check-16k.py "$apk" || exit 1
+      done
   after_script:
     - curl -F file=@"android/app/build/outputs/apk/release/VerusMobile-${VERSION}.apk"
       -F channels="${CHANNEL}"
