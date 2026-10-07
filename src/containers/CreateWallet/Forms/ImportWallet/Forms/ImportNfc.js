@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {
   Keyboard,
   SafeAreaView,
@@ -37,14 +37,15 @@ export default function ImportNfc({
   const [backupPassword, setBackupPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [decrypting, setDecrypting] = useState(false);
+  const importInProgressRef = useRef(false);
 
   const waitForSpinnerFrame = () => {
     return new Promise(resolve => setTimeout(resolve, 0));
   };
 
-  const finishImport = mnemonic => {
+  const finishImport = async mnemonic => {
     setImportedSeed(mnemonic);
-    onComplete(mnemonic, {
+    await onComplete(mnemonic, {
       useSeedAsZ: isValid24WordBip39Mnemonic(mnemonic),
     });
   };
@@ -59,7 +60,6 @@ export default function ImportNfc({
       await waitForSpinnerFrame();
     }
 
-    let didFinishImport = false;
     let keepAwakeActive = false;
 
     try {
@@ -73,12 +73,7 @@ export default function ImportNfc({
         password,
       });
 
-      if (showDecrypting) {
-        setDecrypting(false);
-      }
-
-      didFinishImport = true;
-      finishImport(mnemonic);
+      await finishImport(mnemonic);
     } catch (e) {
       createAlert('Error', e.message || 'Unable to import NFC wallet backup.');
     } finally {
@@ -86,22 +81,24 @@ export default function ImportNfc({
         deactivateKeepAwake();
       }
 
-      if (showDecrypting && !didFinishImport) {
+      if (showDecrypting) {
         setDecrypting(false);
       }
     }
   };
 
   const scanCard = async () => {
-    Keyboard.dismiss();
-    setLoading(true);
-    setNfcStatus('Preparing NFC scanner. Do not tap the card yet.');
+    if (importInProgressRef.current) return;
+    importInProgressRef.current = true;
 
     let nfcSessionPreRegistered = false;
     let nfcReaderStarted = false;
     let scannedBackupOrdinal = null;
 
     try {
+      Keyboard.dismiss();
+      setLoading(true);
+      setNfcStatus('Preparing NFC scanner. Do not tap the card yet.');
       nfcSessionPreRegistered = await beginWalletBackupNfcSession({
         onStatus: setNfcStatus,
       });
@@ -111,6 +108,16 @@ export default function ImportNfc({
         onStatus: setNfcStatus,
         sessionPreRegistered: nfcSessionPreRegistered,
       });
+
+      if (scannedBackupOrdinal == null) return;
+
+      if (walletBackupRequiresPassword(scannedBackupOrdinal)) {
+        setWalletBackupOrdinal(scannedBackupOrdinal);
+        setBackupPassword('');
+        return;
+      }
+
+      await importWalletBackup(scannedBackupOrdinal, null);
     } catch (e) {
       console.error(e);
       createAlert(
@@ -118,28 +125,28 @@ export default function ImportNfc({
         e.message || 'Unable to read wallet backup from NFC card.',
       );
     } finally {
-      if (nfcSessionPreRegistered && !nfcReaderStarted) {
-        await endWalletBackupNfcSession();
+      try {
+        if (nfcSessionPreRegistered && !nfcReaderStarted) {
+          await endWalletBackupNfcSession();
+        }
+      } finally {
+        setNfcStatus(null);
+        setLoading(false);
+        importInProgressRef.current = false;
       }
-
-      setNfcStatus(null);
-      setLoading(false);
     }
-
-    if (scannedBackupOrdinal == null) return;
-
-    if (walletBackupRequiresPassword(scannedBackupOrdinal)) {
-      setWalletBackupOrdinal(scannedBackupOrdinal);
-      setBackupPassword('');
-      return;
-    }
-
-    await importWalletBackup(scannedBackupOrdinal, null);
   };
 
   const importEncryptedBackup = async () => {
-    Keyboard.dismiss();
-    await importWalletBackup(walletBackupOrdinal, backupPassword, true);
+    if (importInProgressRef.current) return;
+    importInProgressRef.current = true;
+
+    try {
+      Keyboard.dismiss();
+      await importWalletBackup(walletBackupOrdinal, backupPassword, true);
+    } finally {
+      importInProgressRef.current = false;
+    }
   };
 
   if (loading) {

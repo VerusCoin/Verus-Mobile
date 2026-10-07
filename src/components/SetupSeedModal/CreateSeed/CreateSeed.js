@@ -59,28 +59,22 @@ class CreateSeed extends Component {
   }
 
   verifySeed = () => {
+    const submission = this.props.beginSeedSubmission();
+    if (submission == null) return;
     const { wordGuesses, newSeedWords, randomIndices } = this.state
+    const guessErrors = wordGuesses.map(
+      (wordGuess, index) => wordGuess !== newSeedWords[randomIndices[index]]
+    );
+    this.setState({ guessErrors });
 
-    this.setState({ guessErrors: [false, false, false] }, () => {
-      let errors = false
-      let guessErrors = [false, false, false]
-
-      wordGuesses.map((wordGuess, index) => {
-        if (wordGuess !== newSeedWords[randomIndices[index]]) {
-          errors = true
-          guessErrors[index] = true
-        }
-      })
-
-      if (errors) Alert.alert("Incorrect", "One or more words do not match.")
-
-      this.setState({ guessErrors })
-
-      if (!errors) {
-        this.props.setSeed(this.state.newSeed, this.props.channel)
-        this.props.cancel()
+    if (guessErrors.some(Boolean)) {
+      if (this.props.failSeedSubmission(submission)) {
+        Alert.alert("Incorrect", "One or more words do not match.");
       }
-    })
+      return;
+    }
+
+    this.props.completeSeedSubmission(submission, this.state.newSeed);
   }
 
   render() {
@@ -200,7 +194,7 @@ class CreateSeed extends Component {
             >
               {formStep === 0 ? "Cancel" : "Back"}
             </Button>
-            <Button textColor={Colors.primaryColor} onPress={isAtEnd ? this.verifySeed : this.next}>
+            <Button textColor={Colors.primaryColor} disabled={this.props.submittingSeed} onPress={isAtEnd ? this.verifySeed : this.next}>
               {isAtEnd ? "Done" : "Next"}
             </Button>
           </View>

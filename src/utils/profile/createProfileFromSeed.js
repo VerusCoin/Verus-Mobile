@@ -1,4 +1,4 @@
-import {addCoin, addUser} from '../../actions/actionCreators';
+import {addCoin, addUser, setBiometry} from '../../actions/actionCreators';
 import {initializeAccountData} from '../../actions/actionDispatchers';
 import {KEY_DERIVATION_VERSION, SERVICES_DISABLED_DEFAULT} from '../../../env/index';
 import {CoinDirectory} from '../CoinData/CoinDirectory';
@@ -75,24 +75,13 @@ export const createProfileFromSeed = async ({
     throw new Error('Cannot create duplicate account.');
   }
 
-  let biometry = false;
-
-  if (useBiometrics) {
-    try {
-      await storeBiometricPassword(accountHash, password);
-      biometry = true;
-    } catch (e) {
-      console.warn(e);
-    }
-  }
-
   const overrides = testProfile ? TEST_PROFILE_OVERRIDES : undefined;
   const action = await addUser(
     profileName,
     arrayToObject(CHANNELS, (acc, channel) => seeds[channel], true),
     password,
     accounts,
-    biometry,
+    false,
     KEY_DERIVATION_VERSION,
     SERVICES_DISABLED_DEFAULT,
     overrides,
@@ -106,12 +95,28 @@ export const createProfileFromSeed = async ({
     testnetOverrides: overrides,
   });
 
-  const newAccount = action.payload.accounts.find(
+  let newAccount = action.payload.accounts.find(
     x => x.accountHash === accountHash,
   );
 
   if (!newAccount) {
     throw new Error('Failed to create new account');
+  }
+
+  // Claim the profile in durable storage before touching its biometric
+  // credential. A rejected duplicate must never replace an existing password.
+  if (useBiometrics) {
+    try {
+      await storeBiometricPassword(accountHash, password);
+      const biometricAction = await setBiometry(accountHash, true);
+      dispatch(biometricAction);
+      newAccount = biometricAction.payload.accounts.find(
+        account => account.accountHash === accountHash,
+      );
+    } catch (e) {
+      // Password login remains available when biometric setup cannot finish.
+      console.warn(e);
+    }
   }
 
   await initializeAccountData(newAccount, password);
