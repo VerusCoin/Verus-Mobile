@@ -12,4 +12,6 @@
 
 @interface AppDelegate : RCTAppDelegate
 
+@property (nonatomic, copy, nullable) NSDictionary *initialLaunchOptions;
+
 @end
