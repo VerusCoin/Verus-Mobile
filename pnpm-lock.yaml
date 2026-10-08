@@ -52,7 +52,7 @@ overrides:
   plist: 3.0.5
   ramda: 0.27.2
   shelljs: 0.8.5
-  shell-quote: 1.10.0
+  shell-quote: 1.11.0
   unset-value: 2.0.1
   terser: 4.8.1
   got: 11.8.5
@@ -2060,7 +2060,7 @@ packages:
     engines: {node: '>=6.0.0'}
 
   bip39@https://codeload.github.com/VerusCoin/bip39/tar.gz/17d3bbefc80d243903eabd60e0ed64f20aa2bf31:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/bip39/tar.gz/17d3bbefc80d243903eabd60e0ed64f20aa2bf31}
+    resolution: {gitHosted: true, integrity: sha512-GOs7fBZ5eCDGiIFsEjd9pAXhk8025Nf70U5HunC9WQehQEizOs9fFiQPJ0GYwP5IOl0PWVJYnuB0wsrKmIsDPg==, tarball: https://codeload.github.com/VerusCoin/bip39/tar.gz/17d3bbefc80d243903eabd60e0ed64f20aa2bf31}
     version: 3.0.3
 
   bip66@1.1.0:
@@ -2073,11 +2073,11 @@ packages:
     resolution: {integrity: sha512-pef6gxZFztEhaE9RY9HmWVmiIHqCb2OyS4HPKkpc6CIiiOa3Qmuoylxc5P2EkU3w+5eTSifI9SEZC88idAIGow==}
 
   bitcoin-ops@https://codeload.github.com/VerusCoin/bitcoin-ops/tar.gz/a5f8f56e658301bc39881d41740b3a0010530efd:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/bitcoin-ops/tar.gz/a5f8f56e658301bc39881d41740b3a0010530efd}
+    resolution: {gitHosted: true, integrity: sha512-+3LLV17SuOeTYf0ENXqE/O/9/5e10badygAMVCTKrkAwUDHVb9wGz+b7lTi3ORluN0MgzfHwt8Y26xOz9AoG8g==, tarball: https://codeload.github.com/VerusCoin/bitcoin-ops/tar.gz/a5f8f56e658301bc39881d41740b3a0010530efd}
     version: 1.4.1
 
   bitgo-utxo-lib@https://codeload.github.com/VerusCoin/bitgo-utxo-lib/tar.gz/5765ef99b05b345d6e7db6d9b8cd5a7de0f56d18:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/bitgo-utxo-lib/tar.gz/5765ef99b05b345d6e7db6d9b8cd5a7de0f56d18}
+    resolution: {gitHosted: true, integrity: sha512-CxAY/1z4MwqLLP0y6QEMp6uMqneFR38lYx6M4UQnc/AESlYMKDsO4za1+iU5LZ0QUpBZ0BAbyo9OgBfQ7lNOvg==, tarball: https://codeload.github.com/VerusCoin/bitgo-utxo-lib/tar.gz/5765ef99b05b345d6e7db6d9b8cd5a7de0f56d18}
     version: 1.2.1
     engines: {node: '>=4.0.0'}
 
@@ -2089,11 +2089,11 @@ packages:
     version: 2.0.0
 
   blake2b@https://codeload.github.com/VerusCoin/blake2b/tar.gz/578dc12b7b68a3ce76d1e1add1402b28a5890a6b:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/blake2b/tar.gz/578dc12b7b68a3ce76d1e1add1402b28a5890a6b}
+    resolution: {gitHosted: true, integrity: sha512-GEeL7g7d9GL3IQLvW48tQDB6tab1oLevNYhKrVRmM9IMRhHTC3E42IqX0oiFu8GOfqZ16YERHCOmCR95QFKHfQ==, tarball: https://codeload.github.com/VerusCoin/blake2b/tar.gz/578dc12b7b68a3ce76d1e1add1402b28a5890a6b}
     version: 2.1.4
 
   blake2b@https://codeload.github.com/michaeltout/blake2b/tar.gz/777f844b986173d08fc27fe9547c6f6320a82d62:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/michaeltout/blake2b/tar.gz/777f844b986173d08fc27fe9547c6f6320a82d62}
+    resolution: {gitHosted: true, integrity: sha512-fRPKx31yPzR3BZGOSyN5F8crUHfFGyrpSp9b7S7Yk7DdW9r3umPhIggMSSPuz6LXKcdWBXvk/l5V122Oj/8IdA==, tarball: https://codeload.github.com/michaeltout/blake2b/tar.gz/777f844b986173d08fc27fe9547c6f6320a82d62}
     version: 2.1.3
 
   bn.js@4.12.3:
@@ -2890,7 +2890,7 @@ packages:
     resolution: {integrity: sha512-E3yKUyl0Fs95nvTFQZe/ZSNcofhDzUsDlA5y2uoRmf1+Ec7gpGhNCsgKkZBRh7Br5op8mJcYF/jFbmjj909+nQ==}
 
   ethers@https://codeload.github.com/VerusCoin/ethers.js/tar.gz/9fd9d41d017a5e3b329aca47c79786e69cd40b99:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/ethers.js/tar.gz/9fd9d41d017a5e3b329aca47c79786e69cd40b99}
+    resolution: {gitHosted: true, integrity: sha512-wUKV1MojBKdyPXdgQxxo4M1Q10WNa0fZEfHsZG4Te0QsWYgb678V/liGGabzpDl78iNKXKHtOZQzlu4ceYerLQ==, tarball: https://codeload.github.com/VerusCoin/ethers.js/tar.gz/9fd9d41d017a5e3b329aca47c79786e69cd40b99}
     version: 6.15.0
     engines: {node: '>=14.0.0'}
 
@@ -4402,7 +4402,7 @@ packages:
     resolution: {integrity: sha512-Jh3mEs/xUBs/z9mKkj2mM07MMQ2SdtW9mU4FOo5DQyA2kDte6lW87vIYFkWw1nxpzc7sy28ahMsgId8LTtKZsg==}
 
   react-native-cache@https://codeload.github.com/VerusCoin/react-native-cache/tar.gz/f8c1a72b50177aa93de5e8c329b1523409505dd6:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/react-native-cache/tar.gz/f8c1a72b50177aa93de5e8c329b1523409505dd6}
+    resolution: {gitHosted: true, integrity: sha512-8hD21lyPg8pRJqnndKpdQO9jIzJpEQDE1MRoDWT1Oq5yZVqWNxeF8Q6Y/lBhS0mpOM6rZ/CLObnrUvjl0ApCVQ==, tarball: https://codeload.github.com/VerusCoin/react-native-cache/tar.gz/f8c1a72b50177aa93de5e8c329b1523409505dd6}
     version: 1.1.7
 
   react-native-crypto@2.2.1:
@@ -4422,7 +4422,7 @@ packages:
       react-native-vector-icons: '>7.0.0'
 
   react-native-format-currency@https://codeload.github.com/VerusCoin/react-native-format-currency/tar.gz/7002ee86a689ea52f1ff1e7fb71e216f282fad35:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/react-native-format-currency/tar.gz/7002ee86a689ea52f1ff1e7fb71e216f282fad35}
+    resolution: {gitHosted: true, integrity: sha512-sZ84Z9Yad29dRTa92AdDXa+znWgOY1gtRWroy3N+xj+K+SIF8VZkrxl7aBhWfsxFWPlAY/ooTHYyOotS3u/Sww==, tarball: https://codeload.github.com/VerusCoin/react-native-format-currency/tar.gz/7002ee86a689ea52f1ff1e7fb71e216f282fad35}
     version: 0.0.3
 
   react-native-fs@2.18.0:
@@ -4485,7 +4485,7 @@ packages:
       react-native: 0.77.3
 
   react-native-nfc-manager@https://codeload.github.com/VerusCoin/react-native-nfc-manager/tar.gz/63ad94f236a945e382190bf71206675eb6cb455c:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/react-native-nfc-manager/tar.gz/63ad94f236a945e382190bf71206675eb6cb455c}
+    resolution: {gitHosted: true, integrity: sha512-6H6DVoreczoHoEXpX7scRtVs8DPQ9iB4LGJ+vmj5Ak2LDZgEcesw9tpseu4htYNJzldLcjRXgSk+lXoDpSTWZg==, tarball: https://codeload.github.com/VerusCoin/react-native-nfc-manager/tar.gz/63ad94f236a945e382190bf71206675eb6cb455c}
     version: 3.17.2
     peerDependencies:
       '@expo/config-plugins': '*'
@@ -4494,7 +4494,7 @@ packages:
         optional: true
 
   react-native-os@https://codeload.github.com/VerusCoin/react-native-os/tar.gz/1f79a5ae777ff296bd4911e2eb37e1de6f711d12:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/react-native-os/tar.gz/1f79a5ae777ff296bd4911e2eb37e1de6f711d12}
+    resolution: {gitHosted: true, integrity: sha512-yubA/TdMEo3+9iTQuV/EOpVrK7mArmLjz2SOrXcjsvYgpnNU2fvn/A4Uidd2pc7sak2Ah+5UVXTbDZfitToNww==, tarball: https://codeload.github.com/VerusCoin/react-native-os/tar.gz/1f79a5ae777ff296bd4911e2eb37e1de6f711d12}
     version: 1.2.7
 
   react-native-pager-view@6.7.1:
@@ -4582,7 +4582,7 @@ packages:
       react-native-pager-view: '*'
 
   react-native-tcp@https://codeload.github.com/VerusCoin/react-native-tcp/tar.gz/be5f656ffd3aa4559270e8472ee24a1c36029cf1:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/react-native-tcp/tar.gz/be5f656ffd3aa4559270e8472ee24a1c36029cf1}
+    resolution: {gitHosted: true, integrity: sha512-8zyxiFgux3PYbd5Lreo6FbkwdPInVDDAEbxItl9Gu2lFePGb4BkN435OYbw9j9n+qOsHGibozKbQ7gbbU3V9mA==, tarball: https://codeload.github.com/VerusCoin/react-native-tcp/tar.gz/be5f656ffd3aa4559270e8472ee24a1c36029cf1}
     version: 4.0.0
     peerDependencies:
       react-native: 0.77.3
@@ -4919,8 +4919,8 @@ packages:
     resolution: {integrity: sha512-wpoSFAxys6b2a2wHZ1XpDSgD7N9iVjg29Ph9uV/uaP9Ex/KXlkTZTeddxDPSYQpgvzKLGJke2UU0AzoGCjNIvQ==}
     engines: {node: '>=0.10.0'}
 
-  shell-quote@1.10.0:
-    resolution: {integrity: sha512-w1aiOKwKuRgtwAReIIj89puqg+I7GvX4IbLrvmhXbzQsj1+Zwi4VO3+fa6ZF91TWSjIxoEkKnMeHcLEODK5ZXA==}
+  shell-quote@1.11.0:
+    resolution: {integrity: sha512-JdxDPD0DBTyu08pq0kPC0xSNet/qsU07qT6IsX1AS8oO2ICNRY4ldNa8OAI6PuwAH8tG3lxEhbqmyp4Dw4036g==}
     engines: {node: '>= 0.4'}
 
   side-channel@1.0.4:
@@ -5368,7 +5368,7 @@ packages:
     resolution: {integrity: sha512-a9YzbQmnPZ3GhnE/LCxyRhL+xCP7SrYN+XAMCszRpwp8WRR89Jp8+1tw1InkBuZ+6jWKxGe+cr6SJpdP8RShtw==}
 
   verus-pay-utils@https://codeload.github.com/VerusCoin/verus-pay-utils/tar.gz/cc34a4cae48f30714200742eca3d43ee42e13290:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/VerusCoin/verus-pay-utils/tar.gz/cc34a4cae48f30714200742eca3d43ee42e13290}
+    resolution: {gitHosted: true, integrity: sha512-CFDUPUQbM9uZ8rScxbYVMiQqway81P4D3MsKW/XRAWFgQUL4G7DnoQHskpdfTwuznC+VIPGv11mFdiD8HQCNag==, tarball: https://codeload.github.com/VerusCoin/verus-pay-utils/tar.gz/cc34a4cae48f30714200742eca3d43ee42e13290}
     version: 2.0.0
 
   verus-typescript-primitives@https://codeload.github.com/VerusCoin/verus-typescript-primitives/tar.gz/3ffa9d77a3dd98c23fe4f66cf4368946906de780:
@@ -6725,7 +6725,7 @@ snapshots:
       ora: 5.4.1
       prompts: 2.4.2
       semver: 6.3.1
-      shell-quote: 1.10.0
+      shell-quote: 1.11.0
       sudo-prompt: 9.2.1
 
   '@react-native-community/cli-types@15.0.1':
@@ -10437,7 +10437,7 @@ snapshots:
 
   react-devtools-core@6.1.5:
     dependencies:
-      shell-quote: 1.10.0
+      shell-quote: 1.11.0
       ws: 7.5.11
     transitivePeerDependencies:
       - bufferutil
@@ -11112,7 +11112,7 @@ snapshots:
 
   shebang-regex@1.0.0: {}
 
-  shell-quote@1.10.0: {}
+  shell-quote@1.11.0: {}
 
   side-channel@1.0.4:
     dependencies:
