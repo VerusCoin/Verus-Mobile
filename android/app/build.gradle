@@ -116,7 +116,7 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace "org.autonomoussoftwarefoundation.verusmobile.android"
+    namespace "com.verusmobile"
     compileOptions {
         coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17

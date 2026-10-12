@@ -1,4 +1,4 @@
-package org.autonomoussoftwarefoundation.verusmobile.android;
+package com.verusmobile;
 
 import android.app.Application;
 import com.facebook.react.PackageList;

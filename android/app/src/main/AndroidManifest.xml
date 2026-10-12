@@ -16,12 +16,14 @@
         <data android:scheme="verus0"/>
       </intent-filter>
     </activity>
-    <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@style/SplashTheme" android:label="@string/app_name">
+    <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@style/SplashTheme" android:label="@string/app_name"/>
+    <!-- Launcher entry keeps the pre-1.1 component name so pinned shortcuts on installed ASF builds keep resolving. -->
+    <activity-alias android:name="org.autonomoussoftwarefoundation.verusmobile.android.SplashActivity" android:targetActivity=".SplashActivity" android:exported="true" android:label="@string/app_name">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
-    </activity>
+    </activity-alias>
   </application>
   <queries>
     <intent>
