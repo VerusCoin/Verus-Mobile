@@ -6,6 +6,10 @@ blockExoticSubdeps: false
 autoInstallPeers: false
 
 overrides:
+  "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#2d3240429b7664fb01ca3f0f9e1c2b6da803f68d"
+  verus-typescript-primitives: "github:VerusCoin/verus-typescript-primitives#36cf60817a8ff983b3f8b30f43b3f467fc064ccc"
+  verusd-rpc-ts-client: "github:VerusCoin/verusd-rpc-ts-client#5d7155a10671415a7fd3054984b4591f5309fcf3"
+  verusid-ts-client: "github:VerusCoin/verusid-ts-client#afd8121e103d965660c8024f0c5dff1378d5ad15"
   word-wrap: "1.2.4"
   bs58check: "2.1.2"
   braces: "3.0.3"
@@ -90,6 +94,8 @@ overrides:
   cross-spawn: "6.0.6"
   axios: "1.18.0"
   bn.js: "4.12.3"
+  "verus-typescript-primitives>bn.js": "5.2.3"
+  "verusid-ts-client>bn.js": "5.2.3"
   immutable: "4.3.9"
   joi: "17.13.4"
   picomatch: "2.3.2"

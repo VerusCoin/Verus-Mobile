@@ -8,6 +8,7 @@ import WyreServiceAddPaymentMethod from '../../Services/ServiceComponents/WyreSe
 import WyreServiceEditPaymentMethod from '../../Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceEditPaymentMethod/WyreServiceEditPaymentMethod';
 import GiftCardCreate from '../../Services/ServiceComponents/GiftCardService/GiftCardCreate/GiftCardCreate';
 import GiftCardFund from '../../Services/ServiceComponents/GiftCardService/GiftCardFund/GiftCardFund';
+import IdentityRegistrationNavigator from '../../Services/ServiceComponents/VerusIdService/IdentityRegistration/IdentityRegistrationNavigator';
 
 const ServicesStack = createStackNavigator();
 
@@ -26,6 +27,11 @@ const ServicesStackScreens = props => {
       <ServicesStack.Screen
         name="Service"
         component={Service}
+      />
+      <ServicesStack.Screen
+        name="IdentityRegistration"
+        component={IdentityRegistrationNavigator}
+        options={{headerShown: false}}
       />
       <ServicesStack.Screen
         name="WyreServiceAccountData"

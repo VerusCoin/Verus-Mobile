@@ -25,6 +25,15 @@ export const VerusIdServiceOverviewRender = function () {
 
   return (
     <ScrollView style={{...styles.fullWidth, ...styles.backgroundColorWhite}}>
+      <List.Item
+        title="Identity registrations"
+        description="Create a VerusID or continue a registration."
+        descriptionNumberOfLines={3}
+        left={props => <List.Icon {...props} icon="account-plus-outline" />}
+        right={props => <List.Icon {...props} icon="chevron-right" />}
+        onPress={() => this.props.navigation.navigate('IdentityRegistration', {screen: 'IdentityRegistrationStart'})}
+      />
+      <Divider />
       <Portal>
         {this.state.verusIdDetailsModalProps != null && (
           <VerusIdDetailsModal
@@ -67,7 +76,7 @@ export const VerusIdServiceOverviewRender = function () {
                   <Divider />
                   <List.Item
                     title={linkedIds[chainId][iAddr]}
-                    description={iAddr}
+                    titleNumberOfLines={3}
                     left={props => <List.Icon {...props} icon={'account'} />}
                     onPress={() => this.openVerusIdDetailsModal(chainId, iAddr)}
                   />

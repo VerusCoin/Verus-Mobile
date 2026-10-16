@@ -8,6 +8,7 @@ import {
   SET_PENDING_VERUSIDS,
 } from "../../../../../utils/constants/storeType";
 import { clearOldPendingVerusIds } from '../../../services/dispatchers/verusid/verusid';
+import {publishRegistrationJobs, refreshRegistrationJobs} from '../../../services/dispatchers/verusid/registration';
 import {
   captureSessionScope,
   getContextActionScope,
@@ -54,11 +55,15 @@ export const initVerusIdWallet = async (coinObj, requestedContext) => {
     },
   }, sessionScope));
 
+  await publishRegistrationJobs(requestContext);
+  assertSessionCurrent(sessionScope, requestContext);
+
   return
 }
 
 export const updateVerusIdWallet = async requestContext => {
   const sessionScope = getSessionScope(requestContext);
+  requestContext = {...(requestContext || {}), sessionScope};
   assertSessionCurrent(sessionScope, requestContext);
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
   assertSessionCurrent(sessionScope, requestContext);
@@ -71,6 +76,9 @@ export const updateVerusIdWallet = async requestContext => {
         : {},    
     },
   }, sessionScope));
+
+  await refreshRegistrationJobs(requestContext);
+  assertSessionCurrent(sessionScope, requestContext);
 
   return;
 };

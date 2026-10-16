@@ -9,6 +9,7 @@
 */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import {AppState} from 'react-native';
 import {
   setActiveCoin,
   setActiveApp,
@@ -58,6 +59,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import store from '../../store';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
+import {refreshRegistrationJobs} from '../../actions/actions/services/dispatchers/verusid/registration';
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -209,7 +211,17 @@ const Home = () => {
   useFocusEffect(
     useCallback(() => {
       refresh(false);
-      return () => {};
+      const resumeRegistrations = () => {
+        if (!store.getState().authentication.activeAccount) return;
+        // A suspended app may miss polling intervals. Reconcile protected jobs
+        // when Home is shown again; failed lookups retain their durable state.
+        refreshRegistrationJobs().catch(() => {});
+      };
+      resumeRegistrations();
+      const subscription = AppState.addEventListener('change', state => {
+        if (state === 'active') resumeRegistrations();
+      });
+      return () => subscription.remove();
     }, []),
   );
 

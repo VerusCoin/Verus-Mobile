@@ -22,7 +22,7 @@
     "update-verus-libs": "pnpm remove verus-typescript-primitives && pnpm add 'git+https://github.com/VerusCoin/verus-typescript-primitives.git' && pnpm remove @bitgo/utxo-lib && pnpm add 'git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus' && pnpm remove verusd-rpc-ts-client && pnpm add 'git+https://github.com/VerusCoin/verusd-rpc-ts-client.git' && pnpm remove verusid-ts-client && pnpm add 'git+https://github.com/VerusCoin/verusid-ts-client.git'"
   },
   "dependencies": {
-    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#utxo-lib-verus",
+    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#2d3240429b7664fb01ca3f0f9e1c2b6da803f68d",
     "@noble/curves": "1.9.7",
     "@noble/hashes": "1.8.0",
     "@react-native-async-storage/async-storage": "2.1.2",
@@ -31,6 +31,7 @@
     "@react-native-community/netinfo": "11.4.1",
     "@react-navigation/compat": "5.3.20",
     "@react-navigation/drawer": "6.5.0",
+    "@react-navigation/elements": "1.3.17",
     "@react-navigation/material-bottom-tabs": "6.2.4",
     "@react-navigation/material-top-tabs": "6.3.0",
     "@react-navigation/native": "6.0.13",
@@ -122,10 +123,10 @@
     "varuint-bitcoin": "1.0.4",
     "version_compare": "0.0.3",
     "verus-pay-utils": "git+https://github.com/VerusCoin/verus-pay-utils.git",
-    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives",
+    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#36cf60817a8ff983b3f8b30f43b3f467fc064ccc",
     "verus-zkedid-utils": "git+https://github.com/VerusCoin/verus-zkedid-utils.git",
-    "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client",
-    "verusid-ts-client": "github:VerusCoin/verusid-ts-client",
+    "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#5d7155a10671415a7fd3054984b4591f5309fcf3",
+    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#afd8121e103d965660c8024f0c5dff1378d5ad15",
     "vm-browserify": "0.0.4",
     "wif": "2.0.6",
     "react-native-pager-view": "6.7.1"
@@ -251,7 +252,13 @@
     "picomatch": "2.3.2",
     "sjcl": "1.0.9",
     "ws@6": "6.2.4",
-    "ws@7": "7.5.11"
+    "ws@7": "7.5.11",
+    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#36cf60817a8ff983b3f8b30f43b3f467fc064ccc",
+    "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#5d7155a10671415a7fd3054984b4591f5309fcf3",
+    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#afd8121e103d965660c8024f0c5dff1378d5ad15",
+    "verus-typescript-primitives/bn.js": "5.2.3",
+    "verusid-ts-client/bn.js": "5.2.3",
+    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#2d3240429b7664fb01ca3f0f9e1c2b6da803f68d"
   },
   "jest": {
     "preset": "react-native",
