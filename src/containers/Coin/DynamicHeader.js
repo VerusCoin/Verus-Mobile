@@ -15,7 +15,8 @@ import {
   ERC20,
 } from '../../utils/constants/intervalConstants';
 import Colors from '../../globals/colors';
-import { Card, Paragraph, Text, IconButton, Button } from 'react-native-paper';
+import { Card, Paragraph, Text, IconButton } from 'react-native-paper';
+import Button from '../../components/Button';
 import BigNumber from 'bignumber.js';
 import {
   extractErrorData,

@@ -12,7 +12,8 @@
 */
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Platform, SafeAreaView, View, TouchableOpacity, Clipboard } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import Button from '../../../components/Button';
 import { CommonActions } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

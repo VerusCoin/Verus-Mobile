@@ -22,7 +22,8 @@ import {
   SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES,
 } from '../../../../utils/constants/currencies';
 import NumberPadModal from '../../../../components/NumberPadModal/NumberPadModal';
-import {Divider, List, Portal, Text, Button, Switch} from 'react-native-paper';
+import {Divider, List, Portal, Text, Switch} from 'react-native-paper';
+import Button from '../../../../components/Button';
 import ListSelectionModal from '../../../../components/ListSelectionModal/ListSelectionModal';
 import {saveGeneralSettings} from '../../../../actions/actionCreators';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';

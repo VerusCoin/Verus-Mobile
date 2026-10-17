@@ -13,7 +13,8 @@
 */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, TouchableOpacity, View } from 'react-native';
-import { Button, Portal, Text } from 'react-native-paper';
+import { Portal, Text } from 'react-native-paper';
+import Button from '../../../../components/Button';
 import { useSelector } from 'react-redux';
 import { formatCurrency } from 'react-native-format-currency';
 import Colors from '../../../../globals/colors';

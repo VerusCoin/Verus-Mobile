@@ -6,7 +6,8 @@ import {
   View,
   KeyboardAvoidingView
 } from "react-native";
-import { Text, Button } from 'react-native-paper'
+import { Text } from 'react-native-paper'
+import Button from '../../../../../components/Button'
 import { openLinkIdentityModal } from "../../../../../actions/actions/sendModal/dispatchers/sendModal";
 import ServiceLogos from '../../../../../images/servicelogo/index'
 import { VERUSID_SERVICE_ID } from "../../../../../utils/constants/services";
@@ -49,7 +50,7 @@ class VerusIdServiceIntroSlider extends Component {
           textColor={Colors.secondaryColor}
           onPress={() => openUrl(VERUS_ID_URL)}
         >
-          {"Learn More"}
+          {"Learn more"}
         </Button>
         <Button
           mode="contained"

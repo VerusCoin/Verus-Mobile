@@ -19,7 +19,8 @@ import { NavigationActions } from '@react-navigation/compat';
 import { resetPwd, signOut } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput } from "react-native-paper";
+import Button from "../../../../components/Button";
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";

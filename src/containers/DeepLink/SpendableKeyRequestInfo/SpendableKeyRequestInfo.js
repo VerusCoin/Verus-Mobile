@@ -8,7 +8,8 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import {Button, Checkbox, Text, TextInput} from 'react-native-paper';
+import {Checkbox, Text, TextInput} from 'react-native-paper';
+import Button from '../../../components/Button';
 import {useDispatch, useSelector} from 'react-redux';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';

@@ -7,7 +7,6 @@ import {
 } from 'react-native';
 import {
   ActivityIndicator,
-  Button,
   Card,
   Dialog,
   Divider,
@@ -15,6 +14,7 @@ import {
   Portal,
   Text,
 } from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useDispatch, useSelector} from 'react-redux';
 import {
@@ -181,14 +181,14 @@ const ShareGiftCardDialog = ({card, onCancel, onCopy, onNfc, onQr}) => {
               icon="qrcode"
               onPress={() => onQr(card)}
               style={{marginBottom: 8}}>
-              QR Code
+              QR code
             </Button>
             <Button
               mode="contained"
               icon="content-copy"
               onPress={() => onCopy(card)}
               style={{marginBottom: 8}}>
-              Copy Link
+              Copy link
             </Button>
             <Button
               mode="contained"

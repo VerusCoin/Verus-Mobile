@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, SafeAreaView } from 'react-native';
-import { Button, Divider, List } from 'react-native-paper';
+import { Divider, List } from 'react-native-paper';
+import Button from '../../../Button';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import VerusIdObjectData from '../../../VerusIdObjectData';

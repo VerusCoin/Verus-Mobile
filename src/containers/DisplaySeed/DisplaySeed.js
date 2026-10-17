@@ -16,7 +16,8 @@ import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import { CommonActions } from '@react-navigation/native';
 import { DLIGHT_PRIVATE, ELECTRUM, ETH, WYRE_SERVICE } from "../../utils/constants/intervalConstants";
-import { Card, Paragraph, Title, Button } from 'react-native-paper'
+import { Card, Paragraph, Title } from 'react-native-paper'
+import Button from '../../components/Button'
 import { deriveKeyPair, dlightSeedToBytes, isDlightSpendingKey } from "../../utils/keys";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { coinsList } from "../../utils/CoinData/CoinsList";
@@ -187,17 +188,17 @@ class DisplaySeed extends Component {
                             {fetchingDerivedKey[key]
                               ? 'Fetching...'
                               : isToggleOn
-                                ? 'Show Seed'
+                                ? 'Show seed'
                                 : key === ELECTRUM
-                                  ? 'Show Derived Key (VRSC)'
-                                  : 'Show Derived Key'}
+                                  ? 'Show derived key (VRSC)'
+                                  : 'Show derived key'}
                           </Button>
                         )
                       }
                       {
                         !isToggleOn && !fetchingDerivedKey[key] && key === ELECTRUM && (
                           <Button onPress={() => this.toggleDerived(key, coinsList.BTC)}>
-                            {'Show Derived Key (BTC)'}
+                            {'Show derived key (BTC)'}
                           </Button>
                         )
                       }
@@ -218,7 +219,7 @@ class DisplaySeed extends Component {
             </Button>
             {!completeOnBack && (
               <Button textColor={Colors.linkButtonColor} onPress={this.resetToScreen}>
-                {this.state.fromDeleteAccount ? "CONTINUE" : "HOME"}
+                {this.state.fromDeleteAccount ? "Continue" : "Home"}
               </Button>
             )}
           </View>

@@ -5,7 +5,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Button, Checkbox, Text } from 'react-native-paper';
+import { Checkbox, Text } from 'react-native-paper';
+import Button from '../../../components/Button';
 import { useSelector } from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {GenericResponse} from 'verus-typescript-primitives';

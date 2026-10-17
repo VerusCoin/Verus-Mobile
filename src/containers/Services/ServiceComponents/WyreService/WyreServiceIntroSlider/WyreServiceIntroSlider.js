@@ -7,7 +7,8 @@ import {
   KeyboardAvoidingView,
   Linking
 } from "react-native";
-import { Text, Button, Portal } from 'react-native-paper'
+import { Text, Portal } from 'react-native-paper'
+import Button from '../../../../../components/Button'
 import { createAlert } from "../../../../../actions/actions/alert/dispatchers/alert";
 import ServiceLogos from '../../../../../images/servicelogo/index'
 import { CommonActions } from '@react-navigation/native';

@@ -2,7 +2,8 @@ import React, {useState, useEffect} from 'react';
 import {Dimensions, SafeAreaView, ScrollView, TouchableOpacity, View} from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
-import { Button, Divider, List, Portal, Text } from 'react-native-paper';
+import { Divider, List, Portal, Text } from 'react-native-paper';
+import Button from '../../../components/Button';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import { getIdentity } from '../../../utils/api/channels/verusid/callCreators';
 import { unixToDate } from '../../../utils/math';

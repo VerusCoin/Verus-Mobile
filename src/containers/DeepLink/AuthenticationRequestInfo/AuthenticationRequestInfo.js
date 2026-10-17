@@ -19,7 +19,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Button, Portal, Text} from 'react-native-paper';
+import {Portal, Text} from 'react-native-paper';
+import Button from '../../../components/Button';
 import {useSelector} from 'react-redux';
 import {CommonActions} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';

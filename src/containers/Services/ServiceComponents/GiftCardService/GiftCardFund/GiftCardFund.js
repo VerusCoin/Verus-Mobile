@@ -8,13 +8,13 @@ import {
 } from 'react-native';
 import {
   ActivityIndicator,
-  Button,
   Checkbox,
   Divider,
   RadioButton,
   Text,
   TextInput,
 } from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import {useDispatch, useSelector} from 'react-redux';
 import {copyToClipboard} from '../../../../../utils/clipboard/clipboard';
 import {CoinDirectory} from '../../../../../utils/CoinData/CoinDirectory';
@@ -1012,7 +1012,7 @@ const GiftCardFund = props => {
           disabled={identityFundingLoading || (card.encrypted && !claimPassword)}
           onPress={buildPreflight}
           style={{marginTop: 16}}>
-          Verify and Build
+          Verify and build
         </Button>
       ) : (
         <View style={{marginTop: 16}}>

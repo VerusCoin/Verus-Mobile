@@ -1,7 +1,8 @@
 import React from "react";
 import { ScrollView, View } from 'react-native'
 import styles from "../../../../../styles";
-import { List, Divider, Portal, Button } from "react-native-paper";
+import { List, Divider, Portal } from "react-native-paper";
+import Button from "../../../../../components/Button";
 import VerusIdDetailsModal from "../../../../../components/VerusIdDetailsModal/VerusIdDetailsModal";
 import Colors from "../../../../../globals/colors";
 

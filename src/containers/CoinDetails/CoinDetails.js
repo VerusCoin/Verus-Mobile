@@ -156,7 +156,7 @@ class CoinDetails extends Component {
             ) : (
               <StandardButton
                 color={Colors.linkButtonColor}
-                title="ADD COIN"
+                title="Add coin"
                 onPress={() => this._handleAddCoin()}
               />
             )}

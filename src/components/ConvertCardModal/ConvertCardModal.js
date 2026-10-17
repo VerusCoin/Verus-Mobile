@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Platform, SafeAreaView, View } from "react-native";
-import { Text, Portal, Button, IconButton } from "react-native-paper";
+import { Text, Portal, IconButton } from "react-native-paper";
+import Button from "../Button";
 import Colors from "../../globals/colors";
 import SemiModal from "../SemiModal";
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';

@@ -139,12 +139,12 @@ class RecoverSeed extends Component {
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <StandardButton 
               buttonColor={Colors.warningButtonColor}
-              title="CANCEL" 
+              title="Cancel"
               onPress={this.cancel}
             />
             <StandardButton 
               color={Colors.linkButtonColor} 
-              title="RECOVER" 
+              title="Recover"
               onPress={this._handleSubmit}
             />
           </View>

@@ -12,7 +12,8 @@ import {
   Keyboard,
   ActivityIndicator,
 } from "react-native";
-import { List, Button, RadioButton, Divider, Paragraph } from 'react-native-paper'
+import { List, RadioButton, Divider, Paragraph } from 'react-native-paper'
+import Button from '../../../../components/Button'
 import { NavigationActions } from '@react-navigation/compat';
 import { saveCoinSettings } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';

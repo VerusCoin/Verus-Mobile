@@ -14,7 +14,8 @@ import {
   Keyboard,
   TextInput as NativeTextInput
 } from "react-native";
-import { TextInput, Button, Checkbox } from 'react-native-paper'
+import { TextInput, Checkbox } from 'react-native-paper'
+import Button from '../../../../components/Button'
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
 import { deleteProfile, setBiometry } from '../../../../actions/actionCreators';

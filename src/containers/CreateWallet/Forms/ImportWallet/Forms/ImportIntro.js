@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Dimensions} from 'react-native';
-import {Text, Button} from 'react-native-paper';
+import {Text} from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {TwentyFourWordIcon, ScanQrIcon, EnterKeyIcon} from '../../../../../images/customIcons';
 import Colors from '../../../../../globals/colors';
@@ -83,7 +84,7 @@ export default function ImportIntro({navigation, label}) {
           }}
           mode="outlined"
           onPress={() => navigation.navigate("ScanQr")}>
-          {"Scan QR-Code"}
+          {"Scan QR-code"}
         </Button>
         <Button
           icon={({size, color}) => (
@@ -134,7 +135,7 @@ export default function ImportIntro({navigation, label}) {
           }}
           mode="outlined"
           onPress={() => navigation.navigate("ImportText")}>
-          {"Enter Key/Seed"}
+          {"Enter key/seed"}
         </Button>
       </View>
     </View>

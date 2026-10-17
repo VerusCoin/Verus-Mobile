@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import Styles from "../../styles";
-import { Button } from "react-native-paper";
+import Button from "../../components/Button";
 import Colors from "../../globals/colors";
 import ConvertCard from "./ConvertCard/ConvertCard";
 import { useSelector } from "react-redux";

@@ -26,7 +26,8 @@
 */
 import React, {useMemo, useState, useEffect, useCallback} from 'react';
 import {Platform, SafeAreaView, View} from 'react-native';
-import {Button, Portal, Text} from 'react-native-paper';
+import {Portal, Text} from 'react-native-paper';
+import Button from '../../../components/Button';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import {
   getFriendlyNameMap,

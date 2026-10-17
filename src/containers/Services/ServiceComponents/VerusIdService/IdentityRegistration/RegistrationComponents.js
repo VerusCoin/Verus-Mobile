@@ -6,6 +6,7 @@ import {useHeaderHeight} from '@react-navigation/elements';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {CoinDirectory} from '../../../../../utils/CoinData/CoinDirectory';
 import Colors from '../../../../../globals/colors';
+import {buttonLabel, roundedButton} from '../../../../../styles/buttons.styles';
 import {formatRegistrationAmount, registrationCostRows, identityLabel, registrationState} from './presentation';
 
 export const registrationStyles = StyleSheet.create({
@@ -29,8 +30,8 @@ export const registrationStyles = StyleSheet.create({
   total: {fontWeight: '700', color: '#172033'},
   heroAmount: {fontSize: 32, fontWeight: '700', color: '#172033', flexShrink: 1},
   heroCurrency: {fontSize: 17, color: '#596579', flexShrink: 1},
-  button: {minHeight: 52, borderRadius: 24, paddingVertical: 13, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center'},
-  buttonLabel: {fontSize: 16, fontWeight: '700', letterSpacing: 0, textAlign: 'center', flexShrink: 1},
+  button: {...roundedButton, minHeight: 52, paddingVertical: 13, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center'},
+  buttonLabel,
   touchRow: {minHeight: 48, paddingVertical: 10, minWidth: 0},
   notice: {backgroundColor: '#eaf0fc', padding: 14, borderRadius: 12, gap: 8},
   warning: {backgroundColor: '#fff3df'},

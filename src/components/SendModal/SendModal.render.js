@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Platform, SafeAreaView, View } from "react-native";
-import { Text, Portal, Button } from "react-native-paper";
+import { Text, Portal } from "react-native-paper";
+import Button from "../Button";
 import Colors from "../../globals/colors";
 import {
   ADD_ERC20_TOKEN_MODAL,
