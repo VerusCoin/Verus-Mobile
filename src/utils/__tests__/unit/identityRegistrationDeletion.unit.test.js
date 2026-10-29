@@ -11,7 +11,7 @@ describe('registration deletion classification', () => {
     expect(registrationDeletionKind({status: 'commitment_prepared', commitment: {prepared: {}}, previousCommitments: [commitment]})).toBe('commitment');
   });
 
-  it.each(['registration_signed', 'registration_broadcast', 'registration_broadcast_unknown', 'registration_pending', 'registration_expired', 'needs_review'])
+  it.each(['registration_signed', 'registration_broadcast', 'registration_broadcast_unknown', 'registration_expired'])
   ('retains a signed registration in state %s', status => {
     expect(registrationDeletionKind({status, commitment, registration})).toBeNull();
   });
@@ -19,7 +19,7 @@ describe('registration deletion classification', () => {
   it('retains any historical signed reveal and treats an unexplained transaction ID conservatively', () => {
     expect(registrationDeletionKind({status: 'registration_prepared', commitment,
       registration: {prepared: {}}, previousRegistrations: [registration]})).toBeNull();
-    expect(registrationDeletionKind({status: 'needs_review', commitment, registration: {txid: 'possibly-sent'}})).toBeNull();
+    expect(registrationDeletionKind({status: 'registration_prepared', commitment, registration: {txid: 'possibly-sent'}})).toBeNull();
     expect(registrationDeletionKind({status: 'registration_broadcast_unknown', commitment})).toBeNull();
   });
 

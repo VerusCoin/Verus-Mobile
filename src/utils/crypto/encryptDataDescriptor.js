@@ -28,18 +28,22 @@ export const encryptVDXFUniValuesToDescriptor = async (encryptToAddress, uniValu
   // Create VdxfUniValue from the map
   const urlRefUniValue = new VdxfUniValue({ values: uniValues });
 
+  const plaintext = urlRefUniValue.toBuffer();
   const encryptedData = await encryptData(
     encryptToAddress,
-    urlRefUniValue.toBuffer().toString('hex'),
-    true,
+    plaintext.toString('hex'),
+    false,
   );
 
-  // Extract raw ciphertext hex — handle both string result and object result
-  const ciphertextHex =
-    typeof encryptedData === 'string'
-      ? encryptedData
-      : encryptedData.encryptedData;
-  const epkHex = encryptedData.ephemeralPublicKey;
+  // Both native platforms return these exact hex fields. A ciphertext string
+  // alone cannot describe an encrypted descriptor because it has no EPK.
+  const ciphertextHex = encryptedData?.encryptedData;
+  const epkHex = encryptedData?.ephemeralPublicKey;
+  if (typeof ciphertextHex !== 'string' || typeof epkHex !== 'string' ||
+      !/^[0-9a-f]{64}$/i.test(epkHex) || !/^[0-9a-f]+$/i.test(ciphertextHex) ||
+      ciphertextHex.length !== (plaintext.length + 16) * 2) {
+    throw new Error('Invalid native encrypted descriptor response.');
+  }
 
   // Wrap encrypted data in DataDescriptor
   const encryptedDescriptor = new DataDescriptor({

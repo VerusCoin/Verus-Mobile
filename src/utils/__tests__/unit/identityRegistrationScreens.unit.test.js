@@ -166,7 +166,7 @@ it.each([
   ['registration_broadcast', 'Done for now'],
   ['commitment_signed', 'Retry sending'],
   ['registration_signed', 'Retry sending'],
-  ['needs_review', 'Check status'],
+  ['commitment_spent', 'Check status'],
 ])('keeps the %s progress action in the fixed footer without a duplicate scrolling action', async (status, label) => {
   setSavedReview({...review, status});
   const view = await mount(IdentityRegistrationProgress);
@@ -666,7 +666,6 @@ it('groups saved registrations by next action, hides completed details, and resu
     waiting: {id: 'waiting', displayName: 'pending@', status: 'commitment_broadcast', createdAt: 1},
     ready: {id: 'ready', displayName: 'ready@', status: 'commitment_confirmed', createdAt: 2},
     completed: {id: 'completed', displayName: 'finished@', status: 'complete', createdAt: 3},
-    cancelled: {id: 'cancelled', displayName: 'hidden@', status: 'cancelled_tracking', createdAt: 4},
   };
   const navigation = {navigate: jest.fn(), replace: jest.fn()};
   const view = await mount(IdentityRegistrationStart, {navigation, route: {params: {coinId: 'VRSCTEST'}}});
@@ -675,7 +674,6 @@ it('groups saved registrations by next action, hides completed details, and resu
   expect(text).toContain('IN PROGRESS');
   expect(text.indexOf('ready@')).toBeLessThan(text.indexOf('pending@'));
   expect(text).not.toContain('finished@');
-  expect(text).not.toContain('hidden@');
   await press(button(view, 'ready@'));
   expect(mockApi.prepareRegistration).toHaveBeenCalledWith({jobId: 'ready'}, expect.any(Object));
   expect(navigation.navigate).toHaveBeenLastCalledWith('IdentityRegistrationReview', {jobId: 'ready'});

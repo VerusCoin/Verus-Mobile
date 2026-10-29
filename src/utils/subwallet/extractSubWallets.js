@@ -5,7 +5,7 @@ export const extractDisplaySubWallets = state => {
   return arrayToObject(
     Object.keys(state.coinMenus.allSubWallets),
     (curr, ticker) =>
-      state.coinMenus.allSubWallets[ticker]
+      [...state.coinMenus.allSubWallets[ticker]]
         .sort(function (x, y) {
           if (x.name < y.name) {
             return -1;

@@ -167,8 +167,7 @@ const AuthenticationRequestInfo = props => {
   const signedIn = useSelector(state => state.authentication.signedIn);
   const passthrough = useSelector(state => state.deeplink.passthrough);
   const pendingDeeplinkId =
-    passthrough?.pendingDeeplinkId ||
-    passthrough?.pendingProvisioningDeeplinkId;
+    passthrough?.pendingDeeplinkId;
   const fromService = useSelector(state => state.deeplink.fromService);
   const sendModal = useObjectSelector(state => state.sendModal);
   const sendModalType = useSelector(state => state.sendModal.type);
@@ -1050,19 +1049,12 @@ const AuthenticationRequestInfo = props => {
         (request && request.signature
           ? request.signature.identityID.toIAddress()
           : null);
-      const requestBufferString = request
-        ? request.toBuffer().toString('hex')
-        : '';
-
       openProvisionIdentityModal(
         provisioningCoinObj,
         {
           provisioningDetailsBufferString,
           provisioningRequestID: requestId,
           provisioningSignerId: requestSignerId,
-          provisioningRequestBufferString: requestBufferString,
-          provisioningRequestType: 'generic',
-          provisioningRequestHasResponseUris: responseUris.length > 0,
         },
         fromService,
       );

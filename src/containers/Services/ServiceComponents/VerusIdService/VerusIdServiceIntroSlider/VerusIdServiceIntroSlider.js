@@ -52,13 +52,6 @@ class VerusIdServiceIntroSlider extends Component {
         >
           {"Learn more"}
         </Button>
-        <Button
-          mode="contained"
-          buttonColor={Colors.secondaryColor}
-          onPress={() => this.props.navigation.navigate('IdentityRegistration', {screen: 'IdentityRegistrationStart'})}
-        >
-          Register VerusID
-        </Button>
         <Text style={{textAlign: 'center', width: '80%', color: 'white', marginTop: 12}}>
           Create an identity or continue a saved registration. Review commitment and registration costs before paying.
         </Text>

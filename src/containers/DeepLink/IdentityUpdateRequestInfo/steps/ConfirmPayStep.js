@@ -1,7 +1,6 @@
 /*
   ConfirmPayStep (Step 4 / final step)
-  - 2026-02-05: Created. Replaces IdentityUpdatePaymentConfiguration and the
-    UpdateIdentity SendModal (Form/Confirm/Result).
+  - Confirms, signs, and submits the reviewed identity update.
   - 2026-02-05: Refactored to always render the confirm layout. Fund source
     selection is now triggered via a tappable card that opens a SemiModal sheet.
   - 2026-02-06: Replaced FundSourceSelectList with custom grey-card source list
@@ -11,7 +10,7 @@
     crypto fee using Redux rates (WYRE_SERVICE -> GENERAL fallback).
   - 2026-03-11: Tightened fee validation and post-broadcast error handling .
 */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, TouchableOpacity, View } from 'react-native';
 import { Portal, Text } from 'react-native-paper';
 import Button from '../../../../components/Button';
@@ -25,7 +24,16 @@ import SemiModal from '../../../../components/SemiModal';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
-import { createUpdateIdentityTx, pushUpdateIdentityTx } from '../../../../utils/api/channels/verusid/requests/updateIdentity';
+import { createUpdateIdentityTx } from '../../../../utils/api/channels/verusid/requests/updateIdentity';
+import {createLocalIdentityUploadCrypto} from '../../../../utils/identityUpdate/localUploadCrypto';
+import {identityToDisplayJson} from '../../../../utils/identityUpdate/identityDisplay';
+import {
+  captureIdentityUpdateContext,
+  assertIdentityUpdateContext,
+  requireIdentityFundingApproval,
+  validateIdentityUpdateContext,
+  submitReviewedIdentityUpdate,
+} from '../../../../utils/identityUpdate/verifiedSubmission';
 import { requestPrivKey } from '../../../../utils/auth/authBox';
 import { satsToCoins, truncateDecimal } from '../../../../utils/math';
 import { API_GET_BALANCES, API_SEND, GENERAL, WYRE_SERVICE, USD } from '../../../../utils/constants/intervalConstants';
@@ -47,7 +55,6 @@ const ConfirmPayStep = ({
   requestIsTestnet,
   subjectIdentity,
   subjectIdTxHex,
-  updateIdTxHex,
   friendlyNames,
   coinObj,
   responseBufferString,
@@ -65,8 +72,13 @@ const ConfirmPayStep = ({
   const [selectedSource, setSelectedSource] = useState(null);
   const [fee, setFee] = useState(null);
   const [feeCurrency, setFeeCurrency] = useState(null);
-  const [txHex, setTxHex] = useState(null);
-  const [utxos, setUtxos] = useState(null);
+  const [preparedUpdate, setPreparedUpdate] = useState(null);
+  const preparationSequence = useRef(0);
+  const activeCrypto = useRef(null);
+  const preparationController = useRef(null);
+  const sending = useRef(null);
+  const completedReview = useRef(null);
+  const [submissionOutcome, setSubmissionOutcome] = useState(null);
   const [calculating, setCalculating] = useState(false);
   const [broadcasting, setBroadcasting] = useState(false);
   const [sourceSheetVisible, setSourceSheetVisible] = useState(false);
@@ -91,7 +103,35 @@ const ConfirmPayStep = ({
     return feeCurrency;
   }, [feeCurrency, friendlyNames]);
 
-  const hasFee = fee != null && !calculating;
+  // A mounted confirmation can receive another request (or a refreshed source
+  // outpoint). Bind the displayed approval and every pending callback to the
+  // inputs the user actually reviewed, including before effect cleanup runs.
+  const reviewInputs = useMemo(() => ({
+    details, requestIsTestnet, subjectIdentity, subjectIdTxHex, hasEncryptedKeys,
+    systemId: coinObj.system_id,
+  }), [details, requestIsTestnet, subjectIdentity, subjectIdTxHex, hasEncryptedKeys, coinObj.system_id]);
+  const currentReviewInputs = useRef(reviewInputs);
+  currentReviewInputs.current = reviewInputs;
+  const preparedIdentity = useMemo(() => preparedUpdate
+    ? identityToDisplayJson(preparedUpdate.built.identity) : null, [preparedUpdate]);
+  const hasFee = fee != null && preparedUpdate?.reviewInputs === reviewInputs && !calculating;
+  useEffect(() => {
+    setSelectedSource(null);
+    setFee(null);
+    setFeeCurrency(null);
+    setPreparedUpdate(null);
+    setPreparedStateChange(null);
+    setCalculating(false);
+    setBroadcasting(false);
+    setSubmissionOutcome(null);
+    setSourceSheetVisible(false);
+    return () => {
+      preparationSequence.current += 1;
+      preparationController.current?.abort();
+      activeCrypto.current?.dispose();
+      activeCrypto.current = null;
+    };
+  }, [reviewInputs]);
 
   // --- Fiat fee display ---
   const rates = useObjectSelector(state => state.ledger.rates);
@@ -167,15 +207,39 @@ const ConfirmPayStep = ({
   // --- Handlers ---
 
   const handleSelectSource = useCallback(async (source) => {
+    if (completedReview.current === reviewInputs || (sending.current && !sending.current.context.signal?.aborted)) return;
+    const sequence = ++preparationSequence.current;
+    preparationController.current?.abort();
+    const controller = new AbortController();
+    preparationController.current = controller;
+    activeCrypto.current?.dispose();
+    activeCrypto.current = null;
     setSourceSheetVisible(false);
     setSelectedSource(source);
     setCalculating(true);
     setFee(null);
     setFeeCurrency(null);
     setPreparedStateChange(null);
+    setPreparedUpdate(null);
 
+    let crypto;
     try {
       const [, address, systemId] = source.wallet.channel.split('.');
+      if (systemId !== coinObj.system_id || systemId !== requestedCurrency) {
+        throw new Error('The selected payment source belongs to a different network.');
+      }
+      const context = captureIdentityUpdateContext({
+        systemId, isTestnet: requestIsTestnet, request: details,
+        changeAddress: address, identityAddress: signerIdentityAddress, signal: controller.signal,
+      });
+      const assertActive = () => {
+        assertIdentityUpdateContext(context);
+        if (sequence !== preparationSequence.current || currentReviewInputs.current !== reviewInputs) {
+          throw new Error('Identity update preparation canceled.');
+        }
+      };
+      const activeHeight = await validateIdentityUpdateContext(context);
+      assertActive();
 
       // If request contains encrypted credential keys, encrypt them before
       // creating the tx so plaintext credentials are never sent to the server.
@@ -186,8 +250,17 @@ const ConfirmPayStep = ({
           details,
           subjectIdentity,
           coinObj,
+          assertActive,
         );
       }
+      assertActive();
+      crypto = effectiveDetails.signDataMap?.size
+        ? await createLocalIdentityUploadCrypto({
+          systemId, request: effectiveDetails, assertActive,
+        })
+        : undefined;
+      assertActive();
+      activeCrypto.current = crypto;
 
       const updateIdentityTx = await createUpdateIdentityTx(
         systemId,
@@ -196,11 +269,17 @@ const ConfirmPayStep = ({
         subjectIdTxHex,
         subjectIdentity.blockheight,
         true,
-        undefined,
         requestIsTestnet,
+        crypto,
+        activeHeight,
       );
-
-      if (updateIdentityTx.deltas.size !== 1) throw new Error('Unknown fees');
+      assertActive();
+      const reviewedHeight = await validateIdentityUpdateContext(context, updateIdentityTx);
+      const approval = requireIdentityFundingApproval(updateIdentityTx, {
+        chainId: systemId, nextBlockHeight: reviewedHeight + 1,
+      });
+      if (sequence !== preparationSequence.current) return;
+      if (updateIdentityTx.deltas.size !== 1) throw new Error('Unexpected currency debits');
 
       const feeObj = Object.fromEntries(updateIdentityTx.deltas.entries());
       const currency = Object.keys(feeObj)[0];
@@ -212,25 +291,30 @@ const ConfirmPayStep = ({
       // height) than the preview. Display the identity verified from this tx.
       setPreparedStateChange(buildIdentityStateChange({
         currentIdentity: subjectIdentity.identity,
-        updatedIdentity: updateIdentityTx.identity.toJson(),
-        chainHeight,
+        updatedIdentity: identityToDisplayJson(updateIdentityTx.identity),
+        chainHeight: reviewedHeight,
         secondsPerBlock: coinObj.seconds_per_block,
       }));
-      setFee(satsToCoins(BigNumber(updateIdentityTx.deltas.get(currency).abs().toString())).toString());
+      setFee(satsToCoins(BigNumber(approval.nativeFee)).toString());
       setFeeCurrency(currency);
-      setTxHex(updateIdentityTx.hex);
-      setUtxos(updateIdentityTx.utxos);
+      setPreparedUpdate({built: updateIdentityTx, context, reviewInputs});
     } catch (e) {
+      if (sequence !== preparationSequence.current) return;
       setSelectedSource(null);
       if (!showFundRawTransactionErrorAlert(e)) {
         Alert.alert('Error', e.message || 'Failed to calculate fee');
       }
+    } finally {
+      crypto?.dispose();
+      if (activeCrypto.current === crypto) activeCrypto.current = null;
     }
 
-    setCalculating(false);
-  }, [details, subjectIdTxHex, subjectIdentity, updateIdTxHex, requestIsTestnet, hasEncryptedKeys, coinObj, chainHeight, requestedCurrency]);
+    if (sequence === preparationSequence.current) setCalculating(false);
+  }, [details, subjectIdTxHex, subjectIdentity, requestIsTestnet, hasEncryptedKeys, coinObj, requestedCurrency, signerIdentityAddress, reviewInputs]);
 
   const handleUpdate = useCallback(async () => {
+    if (completedReview.current === reviewInputs || (sending.current && !sending.current.context.signal?.aborted) || !preparedUpdate || !hasFee) return;
+    sending.current = preparedUpdate;
     setBroadcasting(true);
     let broadcastTxid = null;
 
@@ -249,20 +333,21 @@ const ConfirmPayStep = ({
       const { wallet, coinObj: sourceCoinObj } = selectedSource;
       const [channelName, , systemId] = wallet.api_channels[API_SEND].split('.');
 
-      const spendingKey = await requestPrivKey(sourceCoinObj.id, channelName);
-
-      const keys = [];
-      for (let i = 0; i < utxos.length; i++) {
-        keys.push([spendingKey]);
+      if (systemId !== preparedUpdate.context.systemId) {
+        throw new Error('The selected payment source changed. Review the update again.');
       }
+      const result = await submitReviewedIdentityUpdate({
+        ...preparedUpdate,
+        getKeys: async () => {
+          const spendingKey = await requestPrivKey(sourceCoinObj.id, channelName, preparedUpdate.context);
+          return preparedUpdate.built.utxos.map(() => [spendingKey]);
+        },
+      });
+      broadcastTxid = result.txid;
+      if (preparedUpdate.context.signal?.aborted || currentReviewInputs.current !== preparedUpdate.reviewInputs) return;
+      completedReview.current = preparedUpdate.reviewInputs;
 
-      const result = await pushUpdateIdentityTx(systemId, txHex, utxos, keys);
-
-      if (result.error) throw new Error(result.error.message);
-
-      broadcastTxid = result.result;
-
-      // Build response (mirrored from IdentityUpdatePaymentConfiguration)
+      // Return the submitted transaction in the generic request response.
       const responseDetail = new IdentityUpdateResponseOrdinalVDXFObject({
         data: new IdentityUpdateResponseDetails({
           requestID: details.containsRequestID() ? details.requestID : undefined,
@@ -278,19 +363,39 @@ const ConfirmPayStep = ({
       baseResponse.setFlags();
 
       if (next) {
-        next(baseResponse, [detailIndex]);
+        await next(baseResponse, [detailIndex]);
       } else {
         cancel();
       }
     } catch (e) {
-      const errorMessage = broadcastTxid
-        ? `Your identity update transaction was already broadcast${broadcastTxid ? ` (${broadcastTxid})` : ''}. ${e.message || 'A later step failed after the broadcast completed.'}`
-        : e.message || 'Failed to broadcast transaction';
-      // once a txid exists, surface that funds were spent instead of implying a failed broadcast.
-      Alert.alert('Error', errorMessage);
-      setBroadcasting(false);
+      if (!preparedUpdate.context.signal?.aborted && currentReviewInputs.current === preparedUpdate.reviewInputs) {
+        if (broadcastTxid || e.code === 'BROADCAST_UNKNOWN') {
+          completedReview.current = preparedUpdate.reviewInputs;
+          setSubmissionOutcome({txid: broadcastTxid || e.txid, deliveryUnknown: !broadcastTxid});
+          setPreparedUpdate(null);
+        } else {
+          Alert.alert('Error', e.message || 'Failed to broadcast transaction');
+        }
+        setBroadcasting(false);
+      }
+    } finally {
+      if (sending.current === preparedUpdate) sending.current = null;
     }
-  }, [selectedSource, txHex, utxos, details, responseBufferString, coinObj, signerIdentityAddress, next, detailIndex, cancel]);
+  }, [selectedSource, preparedUpdate, hasFee, details, responseBufferString, coinObj, signerIdentityAddress, next, detailIndex, cancel, reviewInputs]);
+
+  if (submissionOutcome) {
+    return (
+      <View style={{flex: 1, padding: 24, gap: 20}}>
+        <Text style={parentStyles.mainTitle}>{submissionOutcome.deliveryUnknown ? 'Delivery not confirmed' : 'Update sent'}</Text>
+        <Text>{submissionOutcome.deliveryUnknown
+          ? 'The network may have received this identity update. Check the transaction’s status before starting a new review.'
+          : 'Your update was sent, but the request response could not be completed.'}</Text>
+        <Text selectable>Transaction ID: {submissionOutcome.txid}</Text>
+        <Text>This screen will not send the transaction again.</Text>
+        <Button mode="contained" onPress={cancel}>Close</Button>
+      </View>
+    );
+  }
 
   // --- Full-screen broadcasting state ---
   if (broadcasting) {
@@ -318,6 +423,17 @@ const ConfirmPayStep = ({
         </View>
 
         <IdentityStateChangeCard change={hasFee ? preparedStateChange : identityStateChange} />
+
+        {hasFee && preparedIdentity?.primaryaddresses && (
+          <View style={localStyles.recapCard}>
+            <Text style={localStyles.recapTitle}>Resulting identity</Text>
+            <Text style={localStyles.recapText}>{preparedIdentity.identityaddress || preparedIdentity.name}</Text>
+            <Text style={localStyles.recapText}>Required signatures: {preparedIdentity.minimumsignatures}</Text>
+            <Text style={localStyles.recapText}>Primary addresses: {preparedIdentity.primaryaddresses.join(', ')}</Text>
+            <Text style={localStyles.recapText}>Revocation authority: {friendlyNames[preparedIdentity.revocationauthority] || preparedIdentity.revocationauthority}</Text>
+            <Text style={localStyles.recapText}>Recovery authority: {friendlyNames[preparedIdentity.recoveryauthority] || preparedIdentity.recoveryauthority}</Text>
+          </View>
+        )}
 
         {/* Payment source card -- tappable to open sheet */}
         <TouchableOpacity
@@ -400,7 +516,13 @@ const ConfirmPayStep = ({
         <View style={parentStyles.ctaCol}>
           <Button
             mode="contained"
-            onPress={onGoBack}
+            onPress={() => {
+              preparationSequence.current += 1;
+              preparationController.current?.abort();
+              activeCrypto.current?.dispose();
+              activeCrypto.current = null;
+              onGoBack();
+            }}
             style={parentStyles.secondaryCta}
             contentStyle={parentStyles.secondaryCtaContent}
             uppercase={false}

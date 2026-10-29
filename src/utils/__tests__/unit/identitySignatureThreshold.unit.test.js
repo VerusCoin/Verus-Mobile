@@ -36,6 +36,9 @@ jest.mock('../../clipboard/clipboard', () => ({copyToClipboard: jest.fn()}));
 const React = require('react');
 const {act, create} = require('react-test-renderer');
 const IdentityUpdateRequestInfo = require('../../../containers/DeepLink/IdentityUpdateRequestInfo/IdentityUpdateRequestInfo').default;
+const {DataStringKey, GenericRequest, IDENTITY_CREDENTIAL, IdentityUpdateRequestDetails, IdentityUpdateRequestOrdinalVDXFObject} = require('verus-typescript-primitives');
+const {VERUSID_CMM_INFO, VERUSID_CMM_DATA} = require('../../constants/verusidObjectData');
+const {createAlert} = require('../../../actions/actions/alert/dispatchers/alert');
 
 const OWN_ADDRESS = 'RWCqoWfSKaDoGeiwD6ZxX2dwkMx2oHJM56';
 const OTHER_ADDRESS = 'RKDPtS54bX89AacDfkHBUm46YoxahHjkCw';
@@ -44,16 +47,22 @@ const currentIdentity = {
   recoveryauthority: 'current-recovery', revocationauthority: 'current-revocation',
   flags: 0, timelock: 0, contentmultimap: {},
 };
-const renderRequest = (updates, identity = currentIdentity) => {
+const requestEnvelope = () => new GenericRequest({details: [new IdentityUpdateRequestOrdinalVDXFObject({
+  data: IdentityUpdateRequestDetails.fromCLIJson({name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV'}),
+})]});
+const renderRequest = (updates, identity = currentIdentity, props = {}) => {
   let renderer;
   act(() => {
     renderer = create(<IdentityUpdateRequestInfo
       subjectIdentity={{fullyqualifiedname: 'T1@', identity}}
       identityUpdates={updates}
+      identityPreviewPrepared={false}
       friendlyNames={{}}
       coinObj={{id: 'VRSC', mainnet_id: 'VRSC', seconds_per_block: 60}}
-      chainInfo={{longestchain: 100}}
+      chainInfo={{blocks: 100}}
       sigtime={1}
+      requestBufferString={requestEnvelope().toBuffer().toString('hex')}
+      {...props}
     />);
   });
   return renderer;
@@ -64,6 +73,7 @@ const renderedText = renderer => renderer.root.findAllByType('Text')
 const goToRiskReview = renderer => act(() => nextButton(renderer).props.onPress());
 
 beforeEach(() => {
+  jest.clearAllMocks();
   mockState = {
     authentication: {
       signedIn: true,
@@ -75,6 +85,62 @@ beforeEach(() => {
 });
 
 describe('identity signature-threshold review', () => {
+  it('returns to review and requires a new acknowledgement when the request changes', () => {
+    const renderer = renderRequest({minimumsignatures: 2});
+    goToRiskReview(renderer);
+    act(() => renderer.root.findByProps({accessibilityLabel: 'Acknowledge high-risk changes'}).props.onPress());
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(1);
+    const previousProps = renderer.root.findByType(IdentityUpdateRequestInfo).props;
+    act(() => renderer.update(<IdentityUpdateRequestInfo {...previousProps}
+      identityUpdates={{minimumsignatures: 2, recoveryauthority: 'replacement-recovery'}} />));
+    expect(renderer.root.findAllByType('ReviewStep')).toHaveLength(1);
+    goToRiskReview(renderer);
+    expect(nextButton(renderer).props.disabled).toBe(true);
+    expect(renderedText(renderer)).toContain('Change recovery authority');
+    renderer.unmount();
+  });
+
+  it('reviews a public upload even when credential encryption deferred its preview reference', () => {
+    const details = IdentityUpdateRequestDetails.fromCLIJson({name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
+      contentmultimap: {[DataStringKey.vdxfid]: {data: {message: 'public payload'}}},
+    });
+    const renderer = renderRequest({contentmultimap: {[IDENTITY_CREDENTIAL.vdxfid]: []}}, currentIdentity, {
+      detailsBufferString: details.toBuffer().toString('hex'), hasEncryptedKeys: true,
+    });
+    expect(renderer.root.findByType('ReviewStep').props.contentCount).toBe(1);
+    act(() => nextButton(renderer).props.onPress());
+    const content = renderer.root.findByType('ContentStep').props;
+    expect(content.displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${DataStringKey.vdxfid}`])
+      .toMatchObject({data: 'Public upload: Message: public payload', isEncrypted: false});
+    renderer.unmount();
+  });
+
+  it('preserves the generic request network through final confirmation', () => {
+    mockState.authentication.activeAccount.testnetOverrides = {VRSC: 'VRSCTEST'};
+    const request = requestEnvelope();
+    request.setIsTestnet();
+    const renderer = renderRequest({}, currentIdentity, {requestBufferString: request.toBuffer().toString('hex')});
+    expect(nextButton(renderer).props.disabled).toBe(false);
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findByType('ConfirmPayStep').props.requestIsTestnet).toBe(true);
+    expect(createAlert).not.toHaveBeenCalled();
+    renderer.unmount();
+  });
+
+  it('does not advance a replacement review when an earlier sign-in prompt completes', () => {
+    mockState.authentication.signedIn = false;
+    mockState.authentication.accounts = [{testnetOverrides: {}}];
+    const renderer = renderRequest({minimumsignatures: 2});
+    act(() => nextButton(renderer).props.onPress());
+    const previousProps = renderer.root.findByType(IdentityUpdateRequestInfo).props;
+    mockState.authentication.signedIn = true;
+    act(() => renderer.update(<IdentityUpdateRequestInfo {...previousProps} identityUpdates={{minimumsignatures: 2, recoveryauthority: 'new-recovery'}} />));
+    expect(renderer.root.findAllByType('ReviewStep')).toHaveLength(1);
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(0);
+    renderer.unmount();
+  });
+
   it.each([false, true])('requires review and acknowledgement when only the threshold changes (partial: %s)', partial => {
     const updates = partial ? {minimumsignatures: 2} : {...currentIdentity, minimumsignatures: 2};
     const renderer = renderRequest(updates);

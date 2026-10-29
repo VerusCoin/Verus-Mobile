@@ -267,9 +267,6 @@ const AuthenticationRequestIdentity = props => {
       provisioningDetailsBufferString,
       provisioningRequestID: requestId,
       provisioningSignerId: requestSignerId,
-      provisioningRequestBufferString: requestBufferString,
-      provisioningRequestType: 'generic',
-      provisioningRequestHasResponseUris: request.responseURIs != null && request.responseURIs.length > 0,
     });
   };
 

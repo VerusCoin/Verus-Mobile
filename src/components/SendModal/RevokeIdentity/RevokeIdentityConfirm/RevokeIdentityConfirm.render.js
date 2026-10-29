@@ -1,11 +1,12 @@
 import React from 'react';
+import {Text} from 'react-native-paper';
 import { ScrollView, View, SafeAreaView } from 'react-native';
 import Button from '../../../Button';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import VerusIdObjectData from '../../../VerusIdObjectData';
 
-export const RevokeIdentityConfirmRender = ({ targetId, friendlyNames, goBack, submitData, ownedByUser, ownedAddress }) => {
+export const RevokeIdentityConfirmRender = ({ fee, feeCurrency, targetId, friendlyNames, goBack, submitData, ownedByUser, ownedAddress }) => {
   return (
     <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite, height: '100%' }}>
       <VerusIdObjectData
@@ -23,10 +24,12 @@ export const RevokeIdentityConfirmRender = ({ targetId, friendlyNames, goBack, s
             style={{
               backgroundColor: 'white',
               width: '100%',
-              flexDirection: 'row',
+              flexDirection: 'column',
               justifyContent: 'space-evenly',
               paddingVertical: 20
             }}>
+            <Text style={{textAlign: 'center', marginBottom: 12}}>Network fee: {fee} {feeCurrency}</Text>
+            <View style={{flexDirection: 'row', justifyContent: 'space-evenly'}}>
             <Button
               textColor={Colors.warningButtonColor}
               style={{ width: 148 }}
@@ -40,6 +43,7 @@ export const RevokeIdentityConfirmRender = ({ targetId, friendlyNames, goBack, s
               onPress={submitData}>
               Revoke
             </Button>
+            </View>
           </View>
         }
       />

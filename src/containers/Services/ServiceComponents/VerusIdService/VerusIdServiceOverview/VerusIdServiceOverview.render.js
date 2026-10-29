@@ -5,9 +5,12 @@ import { List, Divider, Portal } from "react-native-paper";
 import Button from "../../../../../components/Button";
 import VerusIdDetailsModal from "../../../../../components/VerusIdDetailsModal/VerusIdDetailsModal";
 import Colors from "../../../../../globals/colors";
+import IdentityActionsModal from './IdentityActionsModal';
+import {identityLabel} from '../IdentityRegistration/presentation';
 
 export const VerusIdServiceOverviewRender = function () {
   const {linkedIds} = this.props;
+  const {identityActions} = this.state;
   const sortedIdKeysPerChain = {};
 
   for (const chainId of Object.keys(this.props.linkedIds)) {
@@ -36,6 +39,15 @@ export const VerusIdServiceOverviewRender = function () {
       />
       <Divider />
       <Portal>
+        {identityActions != null && (
+          <IdentityActionsModal
+            selection={identityActions}
+            visible={this.state.identityActionsVisible}
+            onClose={() => this.closeIdentityActionsModal(identityActions)}
+            onDismiss={() => this.finishIdentityAction(identityActions)}
+            onSelect={action => this.closeIdentityActionsModal(identityActions, action)}
+          />
+        )}
         {this.state.verusIdDetailsModalProps != null && (
           <VerusIdDetailsModal
             {...this.state.verusIdDetailsModalProps}
@@ -56,6 +68,7 @@ export const VerusIdServiceOverviewRender = function () {
                     this.tryUnlinkIdentity(
                       this.state.verusIdDetailsModalProps.iAddress,
                       this.state.verusIdDetailsModalProps.chain,
+                      this.state.verusIdDetailsModalProps.requestContext,
                     )
                   }>
                   Unlink
@@ -76,10 +89,13 @@ export const VerusIdServiceOverviewRender = function () {
                 <React.Fragment key={iAddr}>
                   <Divider />
                   <List.Item
-                    title={linkedIds[chainId][iAddr]}
+                    title={identityLabel(iAddr, linkedIds[chainId])}
                     titleNumberOfLines={3}
                     left={props => <List.Icon {...props} icon={'account'} />}
-                    onPress={() => this.openVerusIdDetailsModal(chainId, iAddr)}
+                    right={props => <List.Icon {...props} icon="chevron-right" />}
+                    accessibilityLabel={`Actions for ${identityLabel(iAddr, linkedIds[chainId])}`}
+                    accessibilityHint="Transfer, modify, view details or unlink this identity"
+                    onPress={() => this.openIdentityActionsModal(chainId, iAddr, linkedIds[chainId][iAddr])}
                   />
                 </React.Fragment>
               );

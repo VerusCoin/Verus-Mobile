@@ -55,9 +55,13 @@ jest.mock('@bitgo/utxo-lib', () => ({
   Transaction: {fromHex: hex => ({
     getId: () => hex === 'commit-signed' ? mockCommitTxid : mockRevealTxid,
     toHex: () => hex,
+    outs: [{value: 1, script: Buffer.from('funding-script')}],
   })},
   networks: {verus: {}},
 }));
+// Canonical output ownership is exercised with the real SDK in its integration
+// suite; these orchestration fixtures use symbolic addresses and transactions.
+jest.mock('../../identityManagement/identityFunds', () => ({identityOutputAmounts: jest.fn()}));
 jest.mock('../../../store', () => ({__esModule: true, default: {getState: () => mockState, dispatch: (...args) => mockDispatch(...args)}}));
 jest.mock('../../constants/constants', () => ({I_ADDRESS_VERSION: 102}));
 jest.mock('../../auth/authBox', () => ({requestPrivKey: (...args) => mockGetKey(...args)}));
@@ -122,7 +126,11 @@ const prepared = stage => ({
   revealAuthorities: [],
   outputPlan: [{scriptHex: 'commit-script'}],
   txHex: `${stage}-unsigned`,
-  prevouts: [{txid: 'f'.repeat(64), vout: 0}],
+  ...(stage === 'registration' ? {commitment: {txid: mockCommitTxid, vout: 0}} : {}),
+  prevouts: [
+    ...(stage === 'registration' ? [{txid: mockCommitTxid, vout: 0, rawTransaction: 'commit-signed'}] : []),
+    {txid: 'f'.repeat(64), vout: 0, rawTransaction: 'funding-raw'},
+  ],
 });
 const build = async () => prepareCommitment({request, approvedCosts: mockQuote.totalOperationRequired}, createRegistrationContext());
 const confirm = txid => mockTransactions.set(txid, {
@@ -167,10 +175,19 @@ beforeEach(() => {
     commitmentVout: 0, transaction: prepared('commitment'),
   }));
   mockBuildRegistration.mockImplementation(async () => prepared('registration'));
-  mockValidate.mockImplementation(transaction => ({signingStatus: 'complete',
+  mockValidate.mockImplementation(transaction => ({signingStatus: mockSigningStatus,
     txid: transaction.stage === 'commitment' ? mockCommitTxid : mockRevealTxid}));
   mockVerifyFunding.mockImplementation(() => true);
-  mockSendRegistration.mockImplementation((_transaction, hex) => mockSend(hex));
+  mockSendRegistration.mockImplementation(async (_transaction, hex) => {
+    const txid = hex === 'commit-signed' ? mockCommitTxid : mockRevealTxid;
+    try {
+      const response = await mockSend(hex);
+      if (response?.error || response?.result !== txid) throw new Error('No matching broadcast response');
+      return response;
+    } catch (cause) {
+      throw Object.assign(new Error('Broadcast outcome is unknown'), {code: 'BROADCAST_UNKNOWN', details: {txid, cause}});
+    }
+  });
   mockRemoveJob.mockImplementation(async (id, revision) => {
     expect(mockJobs[id].revision).toBe(revision);
     delete mockJobs[id];
@@ -183,7 +200,7 @@ beforeEach(() => {
   }));
   mockRaw.mockImplementation(async txid => mockTransactions.has(txid)
     ? {result: mockTransactions.get(txid)} : {error: {code: -5, message: 'No such transaction'}});
-  mockGetInfo.mockResolvedValue({result: {blocks: 100, longestchain: 100}});
+  mockGetInfo.mockResolvedValue({result: {blocks: 100, longestchain: 100, chainid: 'system'}});
   mockGetBlock.mockResolvedValue({result: {hash: mockTipHash, height: 100, confirmations: 1, tx: [mockCommitTxid, mockRevealTxid]}});
   mockGetTxOut.mockResolvedValue({result: {
     bestblock: mockTipHash, confirmations: 1, scriptPubKey: {hex: 'commit-script'},
@@ -272,12 +289,109 @@ test('opening a prepared registration review does not rebuild, poll, or write it
   expect(mockEvents).toEqual([]);
 });
 
+test('cached reveal validation remains bound to its independently saved commitment', async () => {
+  const context = createRegistrationContext();
+  let review = await build();
+  await approveCommitment(review.jobId, review.approvalToken, context);
+  confirm(mockCommitTxid);
+  review = await prepareRegistration({jobId: review.jobId}, context);
+  await approveRegistration(review.jobId, review.approvalToken, context);
+
+  mockJobs[review.jobId].commitment.vout = 1;
+  mockValidate.mockClear();
+  mockSend.mockClear();
+  await expect(reconcileRegistration(review.jobId, context)).rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
+  expect(mockValidate).toHaveBeenCalledWith(mockJobs[review.jobId].registration.prepared, 'reveal-signed', mockAddress);
+  expect(mockSend).not.toHaveBeenCalled();
+});
+
 test('preparing from the create screen resolves one quote without requiring a separate preliminary review', async () => {
   const review = await prepareCommitment({request}, createRegistrationContext());
   expect(review.quote).toEqual(mockQuote);
   expect(mockResolve).toHaveBeenCalledTimes(1);
   expect(mockBuildCommitment.mock.calls[0][0].approvedCosts).toEqual(mockQuote.totalOperationRequired);
   expect(mockSign).not.toHaveBeenCalled();
+});
+
+const calculatedFeeError = (quote, stage = 'commitment') => Object.assign(new Error('Calculated fee exceeds estimate'), {
+  code: 'COST_LIMIT_EXCEEDED',
+  details: {quote, requiredCosts: stage === 'commitment' ? quote.totalOperationRequired : quote.totalRequired},
+});
+
+const higherCommitmentQuote = () => ({
+  ...mockQuote, commitmentFee: '20000', totalOperationRequired: {system: '10000020000'},
+});
+
+test('prepares the calculated commitment fee for review without signing', async () => {
+  const quote = higherCommitmentQuote();
+  mockBuildCommitment.mockRejectedValueOnce(calculatedFeeError(quote))
+    .mockImplementationOnce(async args => ({
+      reservation: {reservationHex: args.salt.toString('hex'), fullName: 'alice.VRSC@'},
+      commitmentVout: 0, transaction: {...prepared('commitment'), quote},
+    }));
+
+  const review = await prepareCommitment({request}, createRegistrationContext());
+
+  expect(review.quote).toEqual(quote);
+  expect(mockBuildCommitment.mock.calls.map(([args]) => args.approvedCosts))
+    .toEqual([mockQuote.totalOperationRequired, quote.totalOperationRequired]);
+  expect(mockBuildCommitment.mock.calls[1][0].salt).toEqual(mockBuildCommitment.mock.calls[0][0].salt);
+  expect(mockGetKey).not.toHaveBeenCalled();
+  expect(mockSign).not.toHaveBeenCalled();
+  expect(mockSend).not.toHaveBeenCalled();
+});
+
+test('preserves an explicit commitment cost limit and reports the calculated quote', async () => {
+  const quote = higherCommitmentQuote();
+  mockBuildCommitment.mockRejectedValueOnce(calculatedFeeError(quote));
+
+  await expect(build()).rejects.toMatchObject({
+    code: 'COST_LIMIT_EXCEEDED', registrationEstimate: {quote},
+  });
+
+  expect(mockBuildCommitment).toHaveBeenCalledTimes(1);
+  expect(mockJobs).toEqual({});
+  expect(mockGetKey).not.toHaveBeenCalled();
+});
+
+test('a calculated fee increase after review requires approval again before signing', async () => {
+  const review = await build();
+  const quote = higherCommitmentQuote();
+  mockBuildCommitment.mockRejectedValueOnce(calculatedFeeError(quote))
+    .mockImplementationOnce(async args => ({
+      reservation: {reservationHex: args.salt.toString('hex'), fullName: 'alice.VRSC@'},
+      commitmentVout: 0, transaction: {...prepared('commitment'), quote},
+    }));
+
+  await expect(approveCommitment(review.jobId, review.approvalToken, createRegistrationContext()))
+    .rejects.toMatchObject({code: 'REVIEW_CHANGED'});
+
+  expect(mockJobs[review.jobId].commitment.prepared.quote).toEqual(quote);
+  expect(mockSign).not.toHaveBeenCalled();
+  expect(mockSend).not.toHaveBeenCalled();
+});
+
+test('prepares a calculated reveal fee for review without sending it', async () => {
+  const context = createRegistrationContext();
+  let review = await build();
+  await approveCommitment(review.jobId, review.approvalToken, context);
+  confirm(mockCommitTxid);
+  const quote = {...mockQuote, nativeFee: '10000010000',
+    totalRequired: {system: '10000010000'}, totalOperationRequired: {system: '10000020000'}};
+  mockBuildRegistration.mockRejectedValueOnce(calculatedFeeError(quote, 'registration'))
+    .mockResolvedValueOnce({...prepared('registration'), quote});
+  mockGetKey.mockClear();
+  mockSign.mockClear();
+  mockSend.mockClear();
+
+  review = await prepareRegistration({jobId: review.jobId}, context);
+
+  expect(review.quote).toEqual(quote);
+  expect(mockBuildRegistration.mock.calls.map(([args]) => args.approvedCosts))
+    .toEqual([mockQuote.totalRequired, quote.totalRequired]);
+  expect(mockGetKey).not.toHaveBeenCalled();
+  expect(mockSign).not.toHaveBeenCalled();
+  expect(mockSend).not.toHaveBeenCalled();
 });
 
 test('preparation failures carry only the public estimate needed to choose another funding source', async () => {
@@ -480,12 +594,90 @@ test('account switch during construction stops durable write and does not expose
   expect(mockJobs).toEqual({});
 });
 
-test('partial signatures cannot broadcast', async () => {
+test('partial signatures are saved and resumed against their original prepared transaction without broadcasting', async () => {
   const review = await build();
+  const salt = mockJobs[review.jobId].saltHex;
   mockSigningStatus = 'partial';
   await expect(approveCommitment(review.jobId, review.approvalToken, createRegistrationContext())).rejects.toThrow(/more signatures/);
   expect(mockSend).not.toHaveBeenCalled();
   expect(mockJobs[review.jobId].commitment.signedHex).toBeUndefined();
+  expect(mockJobs[review.jobId].commitment.partial).toEqual({
+    prepared: mockJobs[review.jobId].commitment.prepared,
+    hex: 'commit-signed', txid: mockCommitTxid,
+  });
+  mockSigningStatus = 'complete';
+  await approveCommitment(review.jobId, review.approvalToken, createRegistrationContext());
+  expect(mockSign).toHaveBeenLastCalledWith(expect.objectContaining({partialTransactions: ['commit-signed']}));
+  expect(mockJobs[review.jobId].saltHex).toBe(salt);
+  expect(mockSend).toHaveBeenCalledTimes(1);
+});
+
+test.each(['timeout', 'RPC error', 'missing response', 'mismatched txid'])(
+  '%s retains the original prepared approval and signed outpoint for an identical-byte retry', async outcome => {
+    const context = createRegistrationContext();
+    const review = await build();
+    const reservation = JSON.parse(JSON.stringify(mockJobs[review.jobId].reservation));
+    mockSend.mockImplementationOnce(async () => {
+      if (outcome === 'timeout') throw new Error('timeout');
+      if (outcome === 'RPC error') return {error: {code: -25, message: 'Rejected'}};
+      if (outcome === 'missing response') return undefined;
+      return {result: 'd'.repeat(64)};
+    });
+    const result = await approveCommitment(review.jobId, review.approvalToken, context);
+    expect(result).toMatchObject({status: 'commitment_signed', lastError: expect.stringContaining('could not be confirmed')});
+    const saved = JSON.parse(JSON.stringify(mockJobs[review.jobId]));
+    expect(saved.reservation).toEqual(reservation);
+    expect(saved.commitment).toMatchObject({signedHex: 'commit-signed', txid: mockCommitTxid,
+      vout: 0, broadcastStatus: 'unknown'});
+    await retryBroadcast(review.jobId, context);
+    expect(mockSign).toHaveBeenCalledTimes(1);
+    expect(mockSendRegistration).toHaveBeenLastCalledWith(saved.commitment.prepared, saved.commitment.signedHex, saved.fundingAddress);
+  },
+);
+
+test('SDK validation rejection before submission remains a definite error and preserves its signed receipt', async () => {
+  const review = await build();
+  mockSendRegistration.mockRejectedValueOnce(Object.assign(new Error('Invalid signature'), {code: 'INVALID_SIGNATURE'}));
+  await expect(approveCommitment(review.jobId, review.approvalToken, createRegistrationContext()))
+    .rejects.toMatchObject({code: 'INVALID_SIGNATURE'});
+  expect(mockJobs[review.jobId].commitment).toMatchObject({signedHex: 'commit-signed', txid: mockCommitTxid});
+  expect(mockJobs[review.jobId].commitment.broadcastStatus).toBeUndefined();
+  expect(mockSend).not.toHaveBeenCalled();
+  expect(mockRaw).not.toHaveBeenCalled();
+});
+
+test('retry rechecks unspent funding even when saved signature validation is cached', async () => {
+  const context = createRegistrationContext();
+  const review = await build();
+  await approveCommitment(review.jobId, review.approvalToken, context);
+  mockTransactions.clear();
+  const saved = JSON.parse(JSON.stringify(mockJobs[review.jobId].commitment));
+  mockGetTxOut.mockResolvedValueOnce({result: null});
+  await expect(retryBroadcast(review.jobId, context)).rejects.toMatchObject({code: 'REVIEW_CHANGED'});
+  expect(mockSend).toHaveBeenCalledTimes(1);
+  expect(mockSign).toHaveBeenCalledTimes(1);
+  expect(mockJobs[review.jobId].commitment.signedHex).toBe(saved.signedHex);
+});
+
+test('a retry cannot submit a saved registration on a newly configured wrong-chain endpoint', async () => {
+  const context = createRegistrationContext();
+  const review = await build();
+  await approveCommitment(review.jobId, review.approvalToken, context);
+  mockTransactions.clear();
+  mockGetInfo.mockResolvedValue({result: {blocks: 100, longestchain: 100, chainid: 'another-chain'}});
+  await expect(retryBroadcast(review.jobId, context)).rejects.toMatchObject({code: 'WRONG_REGISTRATION_SYSTEM'});
+  expect(mockSend).toHaveBeenCalledTimes(1);
+});
+
+test('uncertain broadcast reconciles the locally computed txid instead of substituting error details', async () => {
+  const review = await build();
+  mockSendRegistration.mockRejectedValueOnce(Object.assign(new Error('Unknown send'), {
+    code: 'BROADCAST_UNKNOWN', details: {txid: 'd'.repeat(64)},
+  }));
+  await approveCommitment(review.jobId, review.approvalToken, createRegistrationContext());
+  expect(mockRaw).toHaveBeenCalledWith(mockCommitTxid, 1);
+  expect(mockRaw).not.toHaveBeenCalledWith('d'.repeat(64), expect.anything());
+  expect(mockJobs[review.jobId].commitment.txid).toBe(mockCommitTxid);
 });
 
 test('restricted namespaces without local authorization fail before salt persistence or payment', async () => {
@@ -668,7 +860,7 @@ test('expired commitment is rebuilt for review with the same salt, conflicting f
   await approveCommitment(review.jobId, review.approvalToken, context);
   const salt = mockJobs[review.jobId].saltHex;
   mockTransactions.clear();
-  mockGetInfo.mockResolvedValue({result: {blocks: 125, longestchain: 125}});
+  mockGetInfo.mockResolvedValue({result: {blocks: 125, longestchain: 125, chainid: 'system'}});
   mockGetBlock.mockResolvedValue({result: {hash: mockTipHash, height: 125, confirmations: 1, tx: []}});
   review = await reconcileRegistration(review.jobId, context);
   expect(review.status).toBe('commitment_expired');
@@ -688,7 +880,7 @@ test('expired commitment cannot be replaced if none of its original funding rema
   const review = await build();
   await approveCommitment(review.jobId, review.approvalToken, context);
   mockTransactions.clear();
-  mockGetInfo.mockResolvedValue({result: {blocks: 125, longestchain: 125}});
+  mockGetInfo.mockResolvedValue({result: {blocks: 125, longestchain: 125, chainid: 'system'}});
   mockGetBlock.mockResolvedValue({result: {hash: mockTipHash, height: 125, confirmations: 1, tx: []}});
   await reconcileRegistration(review.jobId, context);
   mockGetFunding.mockResolvedValue([{txid: 'e'.repeat(64), vout: 0}]);
@@ -705,7 +897,7 @@ test('a stale indexed orphan reveal still expires and can be reviewed again', as
   review = await prepareRegistration({jobId: review.jobId}, context);
   await approveRegistration(review.jobId, review.approvalToken, context);
   mockTransactions.set(mockRevealTxid, {txid: mockRevealTxid, hex: 'reveal-signed', confirmations: -1, blockhash: 'e'.repeat(64)});
-  mockGetInfo.mockResolvedValue({result: {blocks: 125, longestchain: 125}});
+  mockGetInfo.mockResolvedValue({result: {blocks: 125, longestchain: 125, chainid: 'system'}});
   mockGetBlock.mockImplementation(async key => ({result: {
     hash: mockTipHash, height: key === '125' ? 125 : 100, confirmations: key === '125' ? 1 : 26,
     tx: [mockCommitTxid],

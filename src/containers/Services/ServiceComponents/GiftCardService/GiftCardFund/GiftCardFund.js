@@ -650,6 +650,12 @@ const GiftCardFund = props => {
       const result = await broadcastGiftCardFunding({
         preflightPlan,
         pendingBroadcast: pendingFunding,
+        loadPendingBroadcast: async () => {
+          const latestCard = await loadLatestFundableCard(pendingFunding);
+          return latestCard.fundingHistory?.find(entry =>
+            entry?.id === pendingFunding?.id && isPendingFunding(entry),
+          );
+        },
         persistPendingBroadcast: persistFundingBroadcast,
       });
       const {unlinkError} = await persistFundingResult(result);

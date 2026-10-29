@@ -11,9 +11,6 @@ import { NOTIFICATION_ICON_ERROR, NOTIFICATION_ICON_VERUSID } from '../../../../
 import { updatePendingVerusIds } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
 import { dispatchAddNotification } from '../../../notifications/dispatchers/notifications';
 import { VerusIdProvisioningNotification, BasicNotification } from '../../../../../utils/notification';
-import {requestSeeds} from '../../../../../utils/auth/authBox';
-import {deriveKeyPair} from '../../../../../utils/keys';
-import {ELECTRUM} from '../../../../../utils/constants/intervalConstants';
 import { dispatchRemoveNotification } from '../../../../actions/notifications/dispatchers/notifications';
 import { verifyIdProvisioningResponse } from "../../../../../utils/api/channels/vrpc/requests/verifyIdProvisioningResponse";
 import {
@@ -105,13 +102,24 @@ export const setRequestedVerusId = async (
   requestContext,
 ) => {
   const {accountHash, context} = getOriginatingAccountHash(requestContext);
+  // Track accepted provisioning, without retaining a replayable login request.
+  const details = {
+    status: provisioningDetails.status,
+    fqn: provisioningDetails.fqn,
+    signingId: provisioningDetails.signingId,
+    createdAt: provisioningDetails.createdAt,
+    infoUri: provisioningDetails.infoUri,
+    provisioningName: provisioningDetails.provisioningName,
+    notificationUid: provisioningDetails.notificationUid,
+    error_desc: provisioningDetails.error_desc,
+  };
 
   return modifyServiceStoredDataForUser(
     current => ({
       ...current,
       pending_ids: {
         ...(current.pending_ids || {}),
-        [chain]: {...(current.pending_ids?.[chain] || {}), [iAddress]: provisioningDetails},
+        [chain]: {...(current.pending_ids?.[chain] || {}), [iAddress]: details},
       },
     }),
     VERUSID_SERVICE_ID,
@@ -189,6 +197,22 @@ export const checkVerusIdNotificationsForUpdates = async requestContext => {
   const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
   assertCurrent();
   const currentLinkedIdentities =  Object.keys(serviceData.linked_ids && serviceData.linked_ids[ticker] || {});
+
+  const notifyIdentityReady = (identityAddress, fqn, notificationUid) => {
+    const displayName = (fqn || identityAddress).replace(/\.[^.]+$/, '');
+    const notification = new VerusIdProvisioningNotification(
+      'Link VerusID',
+      [`${displayName}@`, ' is ready'],
+      notificationUid,
+      accountHash,
+      identityAddress,
+      ticker,
+    );
+    notification.icon = NOTIFICATION_ICON_VERUSID;
+    assertCurrent();
+    dispatchAddNotification(notification);
+  };
+
   if (pendingIds[ticker]) {
     const details = Object.keys(pendingIds[ticker]);
     for (const iaddress of details) {
@@ -203,6 +227,16 @@ export const checkVerusIdNotificationsForUpdates = async requestContext => {
           assertCurrent();
           await dispatchRemoveNotification(pendingIds[ticker][iaddress].notificationUid);
           assertCurrent();
+        } else {
+          const {notificationUid, fqn} = pendingIds[ticker][iaddress];
+          const notification = state.notifications?.directory?.[notificationUid];
+
+          // Rebuild an existing ready action from accepted identity metadata.
+          // Dismissed notices stay dismissed; original requests are never replayed.
+          if (notification &&
+              (notification.identityAddress !== iaddress || notification.chain !== ticker)) {
+            notifyIdentityReady(iaddress, fqn, notificationUid);
+          }
         }
         continue;
       } 
@@ -220,14 +254,7 @@ export const checkVerusIdNotificationsForUpdates = async requestContext => {
             );
             assertCurrent();
             const responseData = new primitives.LoginConsentProvisioningResponse(response.data);
-            const requestType = pendingIds[ticker][iaddress].requestType || 'loginconsent';
-            let signingId = pendingIds[ticker][iaddress].signingId || null;
-
-            if (requestType === 'loginconsent') {
-              const req = new primitives.LoginConsentRequest();
-              req.fromBuffer(Buffer.from(pendingIds[ticker][iaddress].loginRequest, 'base64'));
-              signingId = req.signing_id;
-            }
+            const signingId = pendingIds[ticker][iaddress].signingId;
 
             const verified = await verifyIdProvisioningResponse(system, response.data);
             assertCurrent();
@@ -238,16 +265,11 @@ export const checkVerusIdNotificationsForUpdates = async requestContext => {
             
             if (responseData.decision.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
 
-              const newVerusIdProvisioningNotification = new VerusIdProvisioningNotification (
-                "Retry",
+              const newVerusIdProvisioningNotification = new BasicNotification (
+                "Request a new provisioning attempt from the service.",
                 [`${pendingIds[ticker][iaddress].provisioningName.split(".")[0]}@`, ` failed to create identity.`],
-                null,
                 pendingIds[ticker][iaddress].notificationUid,
-                pendingIds[ticker][iaddress].loginRequest,
                 accountHash,
-                null,
-                null,
-                pendingIds[ticker][iaddress].requestType || 'loginconsent'
               ); 
               await deleteProvisionedIds(iaddress, ticker, context);
               assertCurrent();
@@ -330,30 +352,11 @@ export const checkVerusIdNotificationsForUpdates = async requestContext => {
         await updatePendingVerusIds(context);
         assertCurrent();
 
-        const requestType = pendingIds[ticker][iaddress].requestType || 'loginconsent';
-        let hasResponseUris = pendingIds[ticker][iaddress].hasResponseUris;
-
-        if (requestType === 'loginconsent') {
-          const req = new primitives.LoginConsentRequest();
-          req.fromBuffer(Buffer.from(pendingIds[ticker][iaddress].loginRequest, 'base64'));
-          hasResponseUris = req.challenge.redirect_uris && req.challenge.redirect_uris.length > 0;
-        }
-
-        const newVerusIdProvisioningNotification = new VerusIdProvisioningNotification (
-          hasResponseUris ? "link and login" : "link VerusID",
-          [`${identity.result.fullyqualifiedname.substring(0, identity.result.fullyqualifiedname.lastIndexOf('.'))}@`, ` is ready`],
-          null,
+        notifyIdentityReady(
+          iaddress,
+          identity.result.fullyqualifiedname,
           pendingIds[ticker][iaddress].notificationUid,
-          pendingIds[ticker][iaddress].loginRequest,
-          accountHash,
-          pendingIds[ticker][iaddress].fqn,
-          null,
-          requestType
-        ); 
-
-        newVerusIdProvisioningNotification.icon = NOTIFICATION_ICON_VERUSID;
-        assertCurrent();
-        dispatchAddNotification(newVerusIdProvisioningNotification);
+        );
       }
     }
   }

@@ -5,7 +5,10 @@ const mockDispatchRemoveNotification = jest.fn();
 const mockRequestServiceStoredData = jest.fn();
 const mockGetIdentity = jest.fn();
 const mockVerifyIdProvisioningResponse = jest.fn();
+const mockAxiosGet = jest.fn();
 let mockState;
+
+jest.mock('axios', () => ({get: mockAxiosGet}));
 
 jest.mock('../../../store', () => ({
   __esModule: true,
@@ -14,12 +17,9 @@ jest.mock('../../../store', () => ({
   },
 }));
 
-jest.mock(
-  '../../../actions/actions/services/dispatchers/services',
-  () => ({
-    modifyServiceStoredDataForUser: mockModifyServiceStoredDataForUser,
-  }),
-);
+jest.mock('../../../actions/actions/services/dispatchers/services', () => ({
+  modifyServiceStoredDataForUser: mockModifyServiceStoredDataForUser,
+}));
 
 jest.mock(
   '../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager',
@@ -45,9 +45,12 @@ jest.mock('../../api/channels/verusid/callCreators', () => ({
   getIdentity: mockGetIdentity,
 }));
 
-jest.mock('../../api/channels/vrpc/requests/verifyIdProvisioningResponse', () => ({
-  verifyIdProvisioningResponse: mockVerifyIdProvisioningResponse,
-}));
+jest.mock(
+  '../../api/channels/vrpc/requests/verifyIdProvisioningResponse',
+  () => ({
+    verifyIdProvisioningResponse: mockVerifyIdProvisioningResponse,
+  }),
+);
 
 jest.mock('../../CoinData/CoinsList', () => ({
   coinsList: {
@@ -65,10 +68,16 @@ jest.mock('../../keys', () => ({deriveKeyPair: jest.fn()}));
 
 const {
   checkVerusIdNotificationsForUpdates,
+  setRequestedVerusId,
 } = require('../../../actions/actions/services/dispatchers/verusid/verusid');
 const {
   handleProvisioningResponse,
 } = require('../../api/channels/vrpc/requests/handleProvisioningResponse');
+const {primitives} = require('verusid-ts-client');
+const {
+  VerusIdProvisioningNotification,
+  BasicNotification,
+} = require('../../notification');
 
 const deferred = () => {
   let resolve;
@@ -110,6 +119,241 @@ describe('VerusID notification session isolation', () => {
     mockState = stateFor('account-a', 1);
     mockRequestServiceStoredData.mockResolvedValue({linked_ids: {VRSC: {}}});
     mockVerifyIdProvisioningResponse.mockResolvedValue(true);
+  });
+
+  const currentContext = () => ({
+    sessionScope: {
+      sessionScoped: true,
+      accountHash: 'account-a',
+      sessionEpoch: 1,
+    },
+  });
+
+  const acceptedResponse = (signingId = 'provider') => ({
+    signing_id: signingId,
+    decision: {
+      result: {
+        state:
+          primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGAPPROVAL
+            .vdxfid,
+        identity_address: 'identity-address',
+        fully_qualified_name: 'identity.name',
+        info_uri: 'https://provider.example/status',
+      },
+    },
+  });
+
+  it('tracks an accepted response from the requested provider without retaining its request', async () => {
+    const setNotification = jest.fn();
+    const context = currentContext();
+    await handleProvisioningResponse(
+      {id: 'VRSC'},
+      acceptedResponse(),
+      'Provider',
+      'notification-a',
+      'identity-address',
+      'identity.name',
+      'provider',
+      setNotification,
+      context,
+    );
+
+    const stored = mockModifyServiceStoredDataForUser.mock.calls[0][0]({});
+    expect(stored.pending_ids.VRSC['identity-address']).toEqual({
+      status: 'NOTIFICATION_TYPE_VERUSID_PENDING',
+      fqn: 'identity.name',
+      signingId: 'provider',
+      createdAt: expect.any(Number),
+      infoUri: 'https://provider.example/status',
+      provisioningName: 'Provider',
+      notificationUid: 'notification-a',
+      error_desc: undefined,
+    });
+    expect(mockUpdatePendingVerusIds).toHaveBeenCalledWith(context);
+    expect(setNotification).toHaveBeenCalledWith(context);
+  });
+
+  it('rejects a signed response from a different provider before saving status', async () => {
+    const setNotification = jest.fn();
+    await expect(
+      handleProvisioningResponse(
+        {id: 'VRSC'},
+        acceptedResponse('other-provider'),
+        'Provider',
+        'notification-a',
+        'identity-address',
+        'identity.name',
+        'provider',
+        setNotification,
+        currentContext(),
+      ),
+    ).rejects.toThrow('signer does not match the requested provider');
+    expect(mockVerifyIdProvisioningResponse).toHaveBeenCalled();
+    expect(mockModifyServiceStoredDataForUser).not.toHaveBeenCalled();
+    expect(mockUpdatePendingVerusIds).not.toHaveBeenCalled();
+    expect(setNotification).not.toHaveBeenCalled();
+  });
+
+  it('persists accepted provisioning status without the original request or login continuation', async () => {
+    await setRequestedVerusId(
+      'identity-address',
+      {
+        status: 'pending',
+        fqn: 'identity.name',
+        signingId: 'provider',
+        createdAt: 1,
+        infoUri: 'https://provider.example/status',
+        provisioningName: 'provider',
+        notificationUid: 'notice',
+        loginRequest: 'old-signed-request',
+        requestType: 'generic',
+        hasResponseUris: true,
+        fromService: 'service',
+      },
+      'VRSC',
+      currentContext(),
+    );
+
+    const stored = mockModifyServiceStoredDataForUser.mock.calls[0][0]({});
+    expect(stored.pending_ids.VRSC['identity-address']).toMatchObject({
+      signingId: 'provider',
+      infoUri: 'https://provider.example/status',
+    });
+    for (const field of [
+      'loginRequest',
+      'requestType',
+      'hasResponseUris',
+      'fromService',
+    ]) {
+      expect(stored.pending_ids.VRSC['identity-address']).not.toHaveProperty(
+        field,
+      );
+    }
+  });
+
+  it('announces a discovered identity with a direct linking target and no request replay', async () => {
+    mockGetIdentity.mockResolvedValue({
+      result: {
+        fullyqualifiedname: 'identity.name',
+        identity: {primaryaddresses: ['RAccountAddress']},
+      },
+    });
+
+    await checkVerusIdNotificationsForUpdates(currentContext());
+    expect(VerusIdProvisioningNotification).toHaveBeenCalledWith(
+      'Link VerusID',
+      expect.any(Array),
+      'notification-a',
+      'account-a',
+      'identity-address',
+      'VRSC',
+    );
+  });
+
+  it('reports a rejected provisioning attempt without a retry-login action', async () => {
+    Object.assign(
+      mockState.channelStore_verusid.pendingIds.VRSC['identity-address'],
+      {
+        createdAt: Math.floor(Date.now() / 1000) - 700,
+        infoUri: 'https://provider.example/status',
+        provisioningName: 'provider',
+        signingId: 'provider',
+      },
+    );
+    mockAxiosGet.mockResolvedValue({
+      data: {
+        signing_id: 'provider',
+        decision: {
+          result: {
+            state:
+              primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid,
+          },
+        },
+      },
+    });
+
+    await checkVerusIdNotificationsForUpdates(currentContext());
+    expect(BasicNotification).toHaveBeenCalledWith(
+      'Request a new provisioning attempt from the service.',
+      expect.any(Array),
+      'notification-a',
+      'account-a',
+    );
+    expect(VerusIdProvisioningNotification).not.toHaveBeenCalled();
+  });
+
+  it('replaces an existing ready notice with a direct link without replaying its request', async () => {
+    Object.assign(
+      mockState.channelStore_verusid.pendingIds.VRSC['identity-address'],
+      {
+        status: 'NOTIFICATION_TYPE_VERUSID_READY',
+        fqn: 'identity.name',
+        loginRequest: 'old-request-that-must-not-be-reopened',
+      },
+    );
+    mockState.notifications = {
+      directory: {
+        'notification-a': {
+          acchash: 'account-a',
+          uri: 'old-request-that-must-not-be-reopened',
+          requestType: 'generic',
+        },
+      },
+    };
+
+    await checkVerusIdNotificationsForUpdates(currentContext());
+    expect(VerusIdProvisioningNotification).toHaveBeenCalledWith(
+      'Link VerusID',
+      ['identity@', ' is ready'],
+      'notification-a',
+      'account-a',
+      'identity-address',
+      'VRSC',
+    );
+    expect(mockDispatchAddNotification).toHaveBeenCalledTimes(1);
+    expect(mockGetIdentity).not.toHaveBeenCalled();
+    expect(mockVerifyIdProvisioningResponse).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, {identityAddress: 'identity-address', chain: 'VRSC'}])(
+    'does not recreate a dismissed or already current ready notice (%p)',
+    async notification => {
+      mockState.channelStore_verusid.pendingIds.VRSC[
+        'identity-address'
+      ].status = 'NOTIFICATION_TYPE_VERUSID_READY';
+      mockState.notifications = {directory: {'notification-a': notification}};
+
+      await checkVerusIdNotificationsForUpdates(currentContext());
+      expect(mockDispatchAddNotification).not.toHaveBeenCalled();
+      expect(mockGetIdentity).not.toHaveBeenCalled();
+    },
+  );
+
+  it('serializes and opens only the identity-link destination', () => {
+    const {VerusIdProvisioningNotification: Notice} =
+      jest.requireActual('../../notification');
+    const notice = new Notice(
+      'Link VerusID',
+      'Ready',
+      'notice',
+      'account-a',
+      'identity-address',
+      'VRSC',
+    );
+    const json = notice.toJson();
+    expect(json).toMatchObject({
+      identityAddress: 'identity-address',
+      chain: 'VRSC',
+    });
+    expect(json).not.toHaveProperty('uri');
+    expect(json).not.toHaveProperty('requestType');
+    const link = jest.fn();
+    Notice.fromJson(json, link).onAction('screen-props');
+    expect(link).toHaveBeenCalledWith(
+      'screen-props',
+      'identity-address',
+      'VRSC',
+    );
   });
 
   it('drops account-A provisioning work that completes after switching to account B', async () => {
@@ -157,16 +401,12 @@ describe('VerusID notification session isolation', () => {
     const handling = handleProvisioningResponse(
       {id: 'VRSC'},
       {decision: {result: {}}},
-      'request-base64',
-      false,
       'provisioner',
       'notification-a',
       'identity-address',
       'identity.name',
-      setNotification,
-      'loginconsent',
       'signing-id',
-      false,
+      setNotification,
       requestContext,
     );
     await new Promise(resolve => setImmediate(resolve));

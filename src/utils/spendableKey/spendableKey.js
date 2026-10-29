@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import {captureIdentityUpdateContext, assertIdentityUpdateContext, validateIdentityUpdateContext, assertIdentityUpdateSigningAuthority} from '../identityUpdate/verifiedSubmission';
 import {
   DEST_ID,
   DEST_PKH,
@@ -46,6 +47,9 @@ import {
   broadcastPendingTransactions,
   createPendingBroadcast,
   createPendingBroadcastTransaction,
+  loadMatchingPendingBroadcast,
+  verifyPendingIdentityFunding,
+  verifyPendingIdentityFundingAtActiveHeight,
 } from './durableBroadcast';
 
 const {
@@ -1347,15 +1351,7 @@ const getIdentityBalanceOutputSummaries = (
     }));
 };
 
-const getNativeFeeSatsFromDeltas = (deltas, systemId, fallbackFeeSats) => {
-  const nativeDelta = deltas && typeof deltas.get === 'function'
-    ? deltas.get(systemId)
-    : null;
 
-  return nativeDelta == null
-    ? BigNumber(fallbackFeeSats)
-    : BigNumber(nativeDelta).absoluteValue();
-};
 
 const getIdentityUtxosUsed = (identity, usedUtxos) => {
   const identityUtxoKeys = new Set((identity.utxos || []).map(utxoKey));
@@ -1499,12 +1495,16 @@ const buildCombinedIdentityAndSweepTransaction = async ({
     isTestnet: claimPlan.requestIsTestnet,
   });
 
+  await verifyPendingIdentityFundingAtActiveHeight({type: 'identity', systemId: system.systemId, txHex: updateTx.hex, inputs: updateTx.utxos, fundingApproval: updateTx.fundingApproval});
+
   return {
     type: 'identity',
     systemId: system.systemId,
     coinObj: system.coinObj,
     txHex: updateTx.hex,
     inputs: updateTx.utxos,
+    fundingApproval: updateTx.fundingApproval,
+    feeSats: updateTx.fundingApproval.nativeFee,
     keys: updateTx.utxos.map(() => [system.claimWif]),
     identity: {
       identityAddress: identity.identityAddress,
@@ -1555,11 +1555,8 @@ const buildIdentityTransactionWithIdentityFee = async ({
     maxFee: SPENDABLE_KEY_CLAIM_FEE_COINS,
     isTestnet: claimPlan.requestIsTestnet,
   });
-  const actualFeeSats = getNativeFeeSatsFromDeltas(
-    updateTx.deltas,
-    system.systemId,
-    SPENDABLE_KEY_CLAIM_FEE_SATS,
-  );
+  await verifyPendingIdentityFundingAtActiveHeight({type: 'identity', systemId: system.systemId, txHex: updateTx.hex, inputs: updateTx.utxos, fundingApproval: updateTx.fundingApproval});
+  const actualFeeSats = BigNumber(updateTx.fundingApproval.nativeFee);
   const changeBalances = sumUtxoBalances(system.systemId, feeUtxos);
 
   subtractBalanceMap(changeBalances, system.systemId, actualFeeSats);
@@ -1578,6 +1575,8 @@ const buildIdentityTransactionWithIdentityFee = async ({
     coinObj: system.coinObj,
     txHex: updateTx.hex,
     inputs: updateTx.utxos,
+    fundingApproval: updateTx.fundingApproval,
+    feeSats: updateTx.fundingApproval.nativeFee,
     keys: updateTx.utxos.map(() => [system.claimWif]),
     identity: {
       identityAddress: identity.identityAddress,
@@ -1597,6 +1596,7 @@ export const preflightSpendableKeyClaim = async ({
   destinationBySystem,
   privateAddressBySystem = {},
 }) => {
+  const reviewContext = captureIdentityUpdateContext();
   const transactions = [];
   const unsupportedIdentities = [];
 
@@ -1738,6 +1738,8 @@ export const preflightSpendableKeyClaim = async ({
         isTestnet: claimPlan.requestIsTestnet,
       });
 
+      await verifyPendingIdentityFundingAtActiveHeight({type: 'identity', systemId: system.systemId, txHex: updateTx.hex, inputs: updateTx.utxos, fundingApproval: updateTx.fundingApproval});
+
       const fundingInputs = updateTx.utxos.filter(utxo =>
         availableUtxos.some(candidate => utxoKey(candidate) === utxoKey(utxo)),
       );
@@ -1750,6 +1752,8 @@ export const preflightSpendableKeyClaim = async ({
         coinObj: system.coinObj,
         txHex: updateTx.hex,
         inputs: updateTx.utxos,
+        fundingApproval: updateTx.fundingApproval,
+        feeSats: updateTx.fundingApproval.nativeFee,
         keys: updateTx.utxos.map(() => [system.claimWif]),
         identity: {
           identityAddress: identity.identityAddress,
@@ -1774,7 +1778,10 @@ export const preflightSpendableKeyClaim = async ({
     throw new Error('No claimable transparent funds or VerusIDs were found on this spendable key.');
   }
 
+  assertIdentityUpdateContext(reviewContext);
   return {
+    ownerAccountHash: reviewContext.sessionScope.accountHash,
+    reviewContext,
     claimPlan,
     destinationBySystem,
     privateAddressBySystem,
@@ -1804,9 +1811,10 @@ const signSweepTransaction = transaction => {
   return txb.build().toHex();
 };
 
-const prepareSpendableKeyClaimBroadcast = (
+const prepareSpendableKeyClaimBroadcast = async (
   preflightPlan,
   ownerAccountHash,
+  operationContext,
 ) => {
   const ownerWalletBinding = (preflightPlan?.claimPlan?.systems || []).reduce(
     (binding, system) => {
@@ -1846,15 +1854,31 @@ const prepareSpendableKeyClaimBroadcast = (
     );
   }
 
-  const transactions = preflightPlan.transactions.map(transaction => {
+  const transactions = [];
+  for (const transaction of preflightPlan.transactions) {
     let rawTx;
+    let identitySnapshots = [];
 
     if (transaction.type === 'identity') {
+      let activeHeight = await validateIdentityUpdateContext({...operationContext, systemId: transaction.systemId}, {
+        hex: transaction.txHex, utxos: transaction.inputs, fundingApproval: transaction.fundingApproval,
+      });
+      verifyPendingIdentityFunding(transaction, {chainId: transaction.systemId, nextBlockHeight: activeHeight + 1});
+      identitySnapshots = await assertIdentityUpdateSigningAuthority({...operationContext, systemId: transaction.systemId}, {
+        hex: transaction.txHex, utxos: transaction.inputs, fundingApproval: transaction.fundingApproval,
+      }, transaction.keys);
+      // Authority inspection performs network reads. Refresh the active height
+      // and bind those authority snapshots immediately before signing.
+      activeHeight = await validateIdentityUpdateContext({...operationContext, systemId: transaction.systemId, identitySnapshots}, {
+        hex: transaction.txHex, utxos: transaction.inputs, fundingApproval: transaction.fundingApproval,
+      });
       rawTx = signUpdateIdentityTx(
         transaction.systemId,
         transaction.txHex,
         transaction.inputs,
         transaction.keys,
+        transaction.fundingApproval,
+        {chainId: transaction.systemId, nextBlockHeight: activeHeight + 1},
       );
     } else if (transaction.type === 'sweep') {
       rawTx = signSweepTransaction(transaction);
@@ -1862,8 +1886,8 @@ const prepareSpendableKeyClaimBroadcast = (
       throw new Error(`Unsupported spendable-key transaction type: ${transaction.type}`);
     }
 
-    return createPendingBroadcastTransaction({transaction, rawTx});
-  });
+    transactions.push(createPendingBroadcastTransaction({transaction: {...transaction, identitySnapshots}, rawTx}));
+  }
 
   return createPendingBroadcast({
     kind: 'spendable-key-claim',
@@ -1957,6 +1981,7 @@ export const assertSpendableKeyBroadcastOwner = (
 export const broadcastSpendableKeyClaim = async ({
   preflightPlan,
   pendingBroadcast = null,
+  loadPendingBroadcast,
   ownerAccountHash,
   currentOwnerWalletBinding = null,
   persistPendingBroadcast,
@@ -1971,8 +1996,36 @@ export const broadcastSpendableKeyClaim = async ({
     );
   }
 
-  const durableBroadcast = pendingBroadcast ||
-    prepareSpendableKeyClaimBroadcast(preflightPlan, ownerAccountHash);
+  // A fresh review must retain its original session. Only persisted signed
+  // receipts resume with a newly captured runtime context.
+  const operationContext = pendingBroadcast != null
+    ? captureIdentityUpdateContext() : preflightPlan?.reviewContext;
+  if (!operationContext) throw new Error('The transaction review is incomplete. Review it again before signing.');
+  assertIdentityUpdateContext(operationContext);
+  if (ownerAccountHash !== operationContext.sessionScope.accountHash) {
+    throw Object.assign(new Error('This claim belongs to a different active profile.'), {code: 'PENDING_BROADCAST_ACCOUNT_MISMATCH'});
+  }
+  if (pendingBroadcast == null && preflightPlan.ownerAccountHash !== operationContext.sessionScope.accountHash) {
+    throw new Error('The reviewed transaction belongs to another profile.');
+  }
+
+  let durableBroadcast = pendingBroadcast ||
+    await prepareSpendableKeyClaimBroadcast(preflightPlan, ownerAccountHash, operationContext);
+
+  // Released claims already bind the owner, but omit funding approvals. Reload
+  // their signed bytes before allowing recovery without that newer metadata.
+  const resumeSavedTransactions = pendingBroadcast != null &&
+    pendingBroadcast.transactions?.some(transaction =>
+      transaction.type === 'identity' && transaction.fundingApproval == null,
+    );
+
+  if (resumeSavedTransactions) {
+    durableBroadcast = await loadMatchingPendingBroadcast(
+      pendingBroadcast,
+      loadPendingBroadcast,
+    );
+    assertIdentityUpdateContext(operationContext);
+  }
 
   assertSpendableKeyBroadcastOwner(
     durableBroadcast,
@@ -1985,8 +2038,22 @@ export const broadcastSpendableKeyClaim = async ({
   try {
     const result = await broadcastPendingTransactions({
       pendingBroadcast: durableBroadcast,
+      resumeSavedTransactions,
+      identityContext: operationContext,
       persistPendingBroadcast,
       requestTimeoutMs,
+      assertCurrent: () => assertIdentityUpdateContext(operationContext),
+      beforeSend: async transaction => {
+        assertIdentityUpdateContext(operationContext);
+        if (
+          transaction.type === 'identity' &&
+          !(resumeSavedTransactions && transaction.fundingApproval == null)
+        ) {
+          await validateIdentityUpdateContext({...operationContext, systemId: transaction.systemId, identitySnapshots: transaction.identitySnapshots}, {
+            hex: transaction.rawTx, utxos: transaction.inputs, fundingApproval: transaction.fundingApproval,
+          });
+        }
+      },
     });
 
     return {

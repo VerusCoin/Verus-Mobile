@@ -1,3 +1,12 @@
+const mockVerifyIdentityUpdateFunding = jest.fn();
+const mockApproval = {systemId: 'root-system', nativeFee: '10000'};
+jest.mock('../../identityUpdate/verifiedSubmission', () => ({
+  captureIdentityUpdateContext: jest.fn(() => ({sessionScope: {accountHash: 'account-a'}})),
+  assertIdentityUpdateContext: jest.fn(),
+  getIdentityUpdateLockContext: jest.fn(async context => ({chainId: context.systemId, nextBlockHeight: 101})),
+  validateIdentityUpdateContext: jest.fn(async () => 100),
+  assertIdentityUpdateSigningAuthority: jest.fn(async () => []),
+}));
 const mockRootCoin = {
   id: 'VRSC',
   display_ticker: 'VRSC',
@@ -98,6 +107,8 @@ const mockOwnerWalletBinding = {
   },
 };
 const mockBroadcastOwnerPlan = {
+  ownerAccountHash: mockOwnerAccountHash,
+  reviewContext: {sessionScope: {accountHash: mockOwnerAccountHash}},
   claimPlan: {
     systems: [
       {
@@ -172,6 +183,7 @@ const mockFromWIF = jest.fn(() => ({publicKey: Buffer.alloc(33)}));
 const mockTxOutputsByHex = {};
 const mockTransactionFromHex = jest.fn(hex => {
   const tx = {
+    expiryHeight: 1200,
     ins: mockTxInputsByHex[hex] || [],
     outs: mockTxOutputsByHex[hex] || [],
     addOutput: jest.fn((script, value) => {
@@ -241,12 +253,10 @@ jest.mock('../../api/channels/verusid/requests/updateIdentity', () => ({
 }));
 
 jest.mock('verusid-ts-client', () => {
-  const actual = jest.requireActual('verusid-ts-client');
-
   return {
-    ...actual,
+    verifyIdentityUpdateFunding: mockVerifyIdentityUpdateFunding,
+    primitives: jest.requireActual('verus-typescript-primitives'),
     VerusIdInterface: {
-      ...actual.VerusIdInterface,
       createUnfundedCurrencyTransferTransaction: mockCreateUnfundedCurrencyTransferTransaction,
     },
   };
@@ -416,7 +426,7 @@ describe('spendable key claim utilities', () => {
       privKey: `wif-${coinObj.system_id}`,
     }));
     mockGetAddressUtxos.mockResolvedValue({result: []});
-    mockGetInfo.mockResolvedValue({result: {longestchain: 1000}});
+    mockGetInfo.mockImplementation(async systemId => ({result: {chainid: systemId, blocks: 1000, longestchain: 1200}}));
     mockGetCurrency.mockImplementation(async (_systemId, currencyId) => ({
       result: {
         fullyqualifiedname: `${currencyId}.currency`,
@@ -459,6 +469,7 @@ describe('spendable key claim utilities', () => {
       hex: 'identity-hex',
       utxos: args.utxos,
       deltas: new Map(),
+      fundingApproval: {...mockApproval, systemId: args.systemId},
     }));
     mockCreateUpdateIdentityWithCurrencyTransferTx.mockResolvedValue({
       hex: 'combined-identity-sweep',
@@ -473,9 +484,10 @@ describe('spendable key claim utilities', () => {
         },
       ],
       deltas: new Map(),
+      fundingApproval: mockApproval,
     });
     mockSignUpdateIdentityTx.mockReturnValue('signed-identity');
-    mockGetTransaction.mockResolvedValue({error: {message: 'not found'}});
+    mockGetTransaction.mockResolvedValue({error: {code: -5, message: 'not found'}});
     mockSendRawTransaction.mockImplementation(async (_systemId, rawTx) => ({
       result: rawTx === 'signed-identity' ? 'identity-txid' : 'sweep-txid',
     }));
@@ -929,7 +941,7 @@ describe('spendable key claim utilities', () => {
           }),
         }),
       ],
-      1100,
+      1300,
     );
   });
 
@@ -1781,7 +1793,23 @@ describe('spendable key claim utilities', () => {
     ]);
   });
 
+  it.each(['reviewContext', 'ownerAccountHash'])('rejects a new claim plan missing %s before signing', async missing => {
+    const {captureIdentityUpdateContext} = require('../../identityUpdate/verifiedSubmission');
+    const preflightPlan = {...mockBroadcastOwnerPlan, transactions: []};
+    delete preflightPlan[missing];
+    const persistPendingBroadcast = jest.fn();
+    await expect(broadcastSpendableKeyClaim({ownerAccountHash: mockOwnerAccountHash,
+      preflightPlan, persistPendingBroadcast})).rejects.toThrow(/review|profile/i);
+    expect(captureIdentityUpdateContext).not.toHaveBeenCalled();
+    expect(mockSignUpdateIdentityTx).not.toHaveBeenCalled();
+    expect(mockFromWIF).not.toHaveBeenCalled();
+    expect(persistPendingBroadcast).not.toHaveBeenCalled();
+    expect(mockSendRawTransaction).not.toHaveBeenCalled();
+  });
+
   it('broadcasts identity updates and locally signed sweeps', async () => {
+    const {validateIdentityUpdateContext} = require('../../identityUpdate/verifiedSubmission');
+    validateIdentityUpdateContext.mockResolvedValueOnce(100).mockResolvedValueOnce(105);
     const persistPendingBroadcast = jest.fn().mockResolvedValue();
     const result = await broadcastSpendableKeyClaim({
       ownerAccountHash: mockOwnerAccountHash,
@@ -1790,6 +1818,7 @@ describe('spendable key claim utilities', () => {
         transactions: [
           {
             type: 'identity',
+            fundingApproval: mockApproval,
             systemId: mockRootCoin.system_id,
             txHex: 'identity-hex',
             inputs: [rootFeeUtxo],
@@ -1812,6 +1841,8 @@ describe('spendable key claim utilities', () => {
       'identity-hex',
       [rootFeeUtxo],
       [['claim-wif']],
+      mockApproval,
+      {chainId: mockRootCoin.system_id, nextBlockHeight: 106},
     );
     expect(mockFromWIF).toHaveBeenCalledWith('claim-wif', {});
     expect(mockSendRawTransaction.mock.calls).toEqual([
@@ -1857,6 +1888,7 @@ describe('spendable key claim utilities', () => {
           transactions: [
             {
               type: 'identity',
+              fundingApproval: mockApproval,
               systemId: mockRootCoin.system_id,
               txHex: 'identity-hex',
               inputs: [rootFeeUtxo],
@@ -1900,6 +1932,8 @@ describe('spendable key claim utilities', () => {
       [mockRootCoin.system_id, 'signed-sweep'],
       [mockRootCoin.system_id, 'signed-sweep'],
     ]);
+    expect(require('../../identityUpdate/verifiedSubmission').captureIdentityUpdateContext).toHaveBeenCalledTimes(1);
+    expect(mockSignUpdateIdentityTx).toHaveBeenCalledTimes(1);
     expect(retryResult.results.map(tx => tx.txid)).toEqual([
       'identity-txid',
       'sweep-txid',
@@ -1919,6 +1953,7 @@ describe('spendable key claim utilities', () => {
           transactions: [
             {
               type: 'identity',
+              fundingApproval: mockApproval,
               systemId: mockRootCoin.system_id,
               txHex: 'identity-hex',
               inputs: [rootFeeUtxo],
@@ -1975,6 +2010,7 @@ describe('spendable key claim utilities', () => {
           transactions: [
             {
               type: 'identity',
+              fundingApproval: mockApproval,
               systemId: mockRootCoin.system_id,
               txHex: 'identity-hex',
               inputs: [rootFeeUtxo],
@@ -2010,6 +2046,7 @@ describe('spendable key claim utilities', () => {
           transactions: [
             {
               type: 'identity',
+              fundingApproval: mockApproval,
               systemId: mockRootCoin.system_id,
               txHex: 'identity-hex',
               inputs: [rootFeeUtxo],
@@ -2050,6 +2087,7 @@ describe('spendable key claim utilities', () => {
           transactions: [
             {
               type: 'identity',
+              fundingApproval: mockApproval,
               systemId: mockRootCoin.system_id,
               txHex: 'identity-hex',
               inputs: [rootFeeUtxo],
@@ -2079,6 +2117,7 @@ describe('spendable key claim utilities', () => {
           transactions: [
             {
               type: 'identity',
+              fundingApproval: mockApproval,
               systemId: mockRootCoin.system_id,
               rawTx: 'signed-identity',
               txid: 'identity-txid',
@@ -2108,6 +2147,7 @@ describe('spendable key claim utilities', () => {
           transactions: [
             {
               type: 'identity',
+              fundingApproval: mockApproval,
               systemId: mockRootCoin.system_id,
               rawTx: 'signed-identity',
               txid: 'identity-txid',
@@ -2139,6 +2179,7 @@ describe('spendable key claim utilities', () => {
           transactions: [
             {
               type: 'identity',
+              fundingApproval: mockApproval,
               systemId: mockRootCoin.system_id,
               rawTx: 'signed-identity',
               txid: 'identity-txid',
@@ -2174,6 +2215,7 @@ describe('spendable key claim utilities', () => {
         transactions: [
           {
             type: 'identity',
+            fundingApproval: mockApproval,
             systemId: mockRootCoin.system_id,
             rawTx: 'signed-identity',
             txid: 'identity-txid',
@@ -2210,6 +2252,7 @@ describe('spendable key claim utilities', () => {
           transactions: [
             {
               type: 'identity',
+              fundingApproval: mockApproval,
               systemId: mockRootCoin.system_id,
               rawTx: 'signed-identity',
               txid: 'different-txid',
@@ -2225,4 +2268,112 @@ describe('spendable key claim utilities', () => {
     expect(persistPendingBroadcast).not.toHaveBeenCalled();
     expect(mockSendRawTransaction).not.toHaveBeenCalled();
   });
+  describe('released identity claim recovery', () => {
+    const releasedClaim = () => ({
+      id: 'released-identity-claim',
+      kind: 'spendable-key-claim',
+      ownerAccountHash: mockOwnerAccountHash,
+      ownerWalletBinding: mockOwnerWalletBinding,
+      transactions: [{type: 'identity', systemId: mockRootCoin.system_id,
+        rawTx: 'signed-identity', txid: 'identity-txid', status: 'prepared',
+        inputs: [{txid: '22'.repeat(32), outputIndex: 0, address: mockRootClaimAddress}]}],
+    });
+    const resume = (pendingBroadcast, extra = {}) => broadcastSpendableKeyClaim({
+      pendingBroadcast, ownerAccountHash: mockOwnerAccountHash,
+      currentOwnerWalletBinding: mockOwnerWalletBinding,
+      loadPendingBroadcast: jest.fn().mockResolvedValue(pendingBroadcast),
+      persistPendingBroadcast: jest.fn().mockResolvedValue(), ...extra,
+    });
+
+    beforeEach(() => {
+      mockTxInputsByHex['signed-identity'] = [{script: Buffer.from('01', 'hex')}];
+      mockGetTransaction.mockResolvedValue({error: {code: -5, message: 'Not found'}});
+      mockSendRawTransaction.mockResolvedValue({result: 'identity-txid'});
+    });
+
+    it('sends the released stored bytes after proving they are absent, without signing again', async () => {
+      const saved = releasedClaim();
+      const loadPendingBroadcast = jest.fn().mockResolvedValue(saved);
+      const persistPendingBroadcast = jest.fn().mockResolvedValue();
+      const result = await resume(JSON.parse(JSON.stringify(saved)), {loadPendingBroadcast, persistPendingBroadcast});
+      expect(loadPendingBroadcast).toHaveBeenCalledTimes(1);
+      expect(mockGetTransaction).toHaveBeenCalledWith(mockRootCoin.system_id, 'identity-txid', 0);
+      expect(mockSendRawTransaction).toHaveBeenCalledTimes(1);
+      expect(mockSendRawTransaction).toHaveBeenCalledWith(mockRootCoin.system_id, saved.transactions[0].rawTx);
+      expect(persistPendingBroadcast.mock.invocationCallOrder[0]).toBeLessThan(mockSendRawTransaction.mock.invocationCallOrder[0]);
+      expect(result.results[0]).toMatchObject({txid: 'identity-txid', status: 'submitted'});
+      expect(mockSignUpdateIdentityTx).not.toHaveBeenCalled();
+      expect(mockDeriveKeyPair).not.toHaveBeenCalled();
+      expect(mockGetFundedTxBuilder).not.toHaveBeenCalled();
+      expect(mockVerifyIdentityUpdateFunding).not.toHaveBeenCalled();
+    });
+
+    it('recognizes an accepted released claim without broadcasting again', async () => {
+      const saved = releasedClaim();
+      mockGetTransaction.mockResolvedValue({result: saved.transactions[0].rawTx});
+      const result = await resume(saved);
+      expect(mockGetTransaction).toHaveBeenCalledWith(mockRootCoin.system_id, 'identity-txid', 0);
+      expect(result.results[0].status).toBe('submitted');
+      expect(mockSendRawTransaction).not.toHaveBeenCalled();
+      expect(mockSignUpdateIdentityTx).not.toHaveBeenCalled();
+      expect(mockDeriveKeyPair).not.toHaveBeenCalled();
+    });
+
+    it.each(['missing loader', 'missing saved entry', 'different transaction'])('rejects %s before recovering a released claim', async problem => {
+      const pending = releasedClaim();
+      const saved = {...pending, transactions: [{...pending.transactions[0], rawTx: 'other-signed-bytes'}]};
+      const loadPendingBroadcast = problem === 'missing loader' ? undefined
+        : jest.fn().mockResolvedValue(problem === 'missing saved entry' ? null : saved);
+      const persistPendingBroadcast = jest.fn();
+      await expect(resume(pending, {loadPendingBroadcast, persistPendingBroadcast})).rejects.toThrow();
+      expect(persistPendingBroadcast).not.toHaveBeenCalled();
+      expect(mockGetTransaction).not.toHaveBeenCalled();
+      expect(mockSendRawTransaction).not.toHaveBeenCalled();
+    });
+
+    it.each(['missing account', 'different account', 'different wallet'])('retains released claim ownership checks for %s', async problem => {
+      const pending = releasedClaim();
+      const saved = {...pending};
+      if (problem === 'missing account') delete saved.ownerAccountHash;
+      if (problem === 'different account') saved.ownerAccountHash = 'account-b';
+      if (problem === 'different wallet') saved.ownerWalletBinding = {
+        [mockRootCoin.system_id]: {coinId: mockRootCoin.id, destinationAddress: 'RDifferentWalletAddress'},
+      };
+      const persistPendingBroadcast = jest.fn();
+      await expect(resume(pending, {persistPendingBroadcast,
+        loadPendingBroadcast: jest.fn().mockResolvedValue(saved)})).rejects.toThrow();
+      expect(persistPendingBroadcast).not.toHaveBeenCalled();
+      expect(mockSendRawTransaction).not.toHaveBeenCalled();
+      expect(mockSignUpdateIdentityTx).not.toHaveBeenCalled();
+    });
+
+    it('does not downgrade a stored approval omitted by the caller', async () => {
+      const pending = releasedClaim();
+      const saved = {...pending, transactions: pending.transactions.map(transaction => ({...transaction,
+        fundingApproval: {...mockApproval, systemId: 'different-network'}}))};
+      await expect(resume(pending, {loadPendingBroadcast: jest.fn().mockResolvedValue(saved)})).rejects.toThrow(/approval|network/i);
+      expect(mockSendRawTransaction).not.toHaveBeenCalled();
+      expect(mockSignUpdateIdentityTx).not.toHaveBeenCalled();
+    });
+  });
+
+  it.each(['missing', 'wrong network', 'altered transaction'])('rejects %s funding approval before signing', async problem => {
+    const approval = problem === 'missing' ? undefined : problem === 'wrong network'
+      ? {...mockApproval, systemId: 'wrong-chain'} : mockApproval;
+    if (problem === 'altered transaction') mockVerifyIdentityUpdateFunding.mockImplementationOnce(() => { throw new Error('Changed approved change output'); });
+    await expect(broadcastSpendableKeyClaim({
+      ownerAccountHash: mockOwnerAccountHash,
+
+      preflightPlan: {
+        ...mockBroadcastOwnerPlan,
+
+        transactions: [{type: 'identity', systemId: mockRootCoin.system_id,
+          fundingApproval: approval, txHex: 'identity-hex', inputs: [], keys: [['claim-wif']],}],
+      },
+      persistPendingBroadcast: jest.fn(),
+    })).rejects.toThrow();
+    expect(mockSignUpdateIdentityTx).not.toHaveBeenCalled();
+    expect(mockSendRawTransaction).not.toHaveBeenCalled();
+  });
+
 });

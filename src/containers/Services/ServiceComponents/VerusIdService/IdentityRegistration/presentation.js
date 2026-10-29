@@ -61,10 +61,10 @@ export const registrationState = status => {
     return {title: 'Check delivery', action: 'Check progress', icon: 'cloud-sync-outline', kind: 'attention', group: 'Needs you', step: registration ? 1 : 0,
       detail: 'Your transaction is saved. Check its status or safely retry sending it.', commitment: registration ? 'Confirmed' : 'Checking delivery', registration: registration ? 'Checking delivery' : 'Not started'};
   }
-  if (['commitment_spent', 'conflict', 'expired_transaction', 'needs_review', 'needs_funds', 'needs_authority', 'reorged'].includes(status)) return {
+  if (status === 'commitment_spent') return {
     title: 'Needs attention', action: 'Review progress', icon: 'alert-circle-outline', kind: 'attention', group: 'Needs you', step: 0,
     detail: 'We need to check this registration before you can continue. Your saved record is safe.', commitment: 'Checking status', registration: 'Waiting for commitment'};
-  const registration = ['registration_pending', 'registration_broadcast'].includes(status);
+  const registration = status === 'registration_broadcast';
   return {title: registration ? 'Confirming registration' : 'Confirming commitment', action: 'View progress', icon: 'clock-outline', kind: 'waiting', group: 'In progress', step: registration ? 1 : 0,
     detail: registration ? 'Your payment is sent. The identity will be ready after a block confirmation.' : 'Your name commitment is sent. Registration becomes available after a block confirmation.',
     commitment: registration ? 'Confirmed' : 'Waiting for a block', registration: registration ? 'Waiting for a block' : 'Not started'};

@@ -2,6 +2,7 @@ let mockState;
 const mockAlert = jest.fn();
 const mockClear = jest.fn();
 const mockRemove = jest.fn();
+const mockLinkIdentity = jest.fn();
 jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
 jest.mock('react-native', () => ({
   View: 'View', Text: 'Text', TouchableOpacity: 'TouchableOpacity',
@@ -11,7 +12,8 @@ jest.mock('react-native-paper', () => ({Card: 'Card', IconButton: 'IconButton'})
 jest.mock('../../../images/customIcons', () => ({
   VerusIdAtIcon: 'VerusIdAtIcon', ReceivedIcon: 'ReceivedIcon', VerusIdErrorIcon: 'VerusIdErrorIcon',
 }));
-jest.mock('../../../containers/Services/ServiceComponents/VerusIdService/VerusIdLogin', () => ({processVerusId: jest.fn()}));
+jest.mock('../../../actions/actions/sendModal/dispatchers/sendModal', () => ({openLinkIdentityModal: mockLinkIdentity}));
+jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {getBasicCoinObj: chain => ({id: chain})}}));
 jest.mock('../../../actions/actions/notifications/dispatchers/notifications', () => ({
   dispatchClearNotifications: mockClear, dispatchRemoveNotification: mockRemove,
 }));
@@ -20,7 +22,8 @@ const React = require('react');
 const {act, create} = require('react-test-renderer');
 const NotificationWidget = require('../../../containers/Home/HomeWidgets/NotificationWidget').default;
 const {registrationNotifications} = require('../../identityRegistration/notifications');
-const {NOTIFICATION_TYPE_BASIC, NOTIFICATION_ICON_TX} = require('../../constants/notifications');
+const {NOTIFICATION_TYPE_BASIC, NOTIFICATION_ICON_TX, NOTIFICATION_TYPE_VERUS_ID_PROVISIONING} = require('../../constants/notifications');
+const {SEND_MODAL_IDENTITY_TO_LINK_FIELD} = require('../../constants/sendModal');
 const longName = 'a-long-identity-name.in-a-long-namespace.VRSCTEST@';
 const textContent = node => typeof node === 'string' ? node :
   (node.children || []).map(textContent).join('');
@@ -127,9 +130,21 @@ it('keeps a registered identity visible until the user explicitly links it', () 
   expect(view.root.findAllByProps({testID: 'registration-notice-job'})).toHaveLength(0);
 });
 
-it.each(['complete', 'cancelled_tracking'])('removes %s registrations and never shows another account’s notices', status => {
+it('opens linking for a provisioned identity without replaying its original service request', () => {
+  mockState.notifications.directory.provisioned = {
+    uid: 'provisioned', acchash: 'account', type: NOTIFICATION_TYPE_VERUS_ID_PROVISIONING,
+    title: 'Identity ready', body: 'Link VerusID', identityAddress: 'iReadyIdentity', chain: 'VRSC',
+  };
+  let view;
+  act(() => {view = render({navigate: jest.fn()});});
+  const link = view.root.findAllByType('TouchableOpacity').find(item => textContent(item) === 'Link VerusID');
+  act(() => link.props.onPress());
+  expect(mockLinkIdentity).toHaveBeenCalledWith({id: 'VRSC'}, {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: 'iReadyIdentity'});
+});
+
+it('removes completed registrations and never shows another account’s notices', () => {
   const jobs = mockState.channelStore_verusid.registrationJobs;
   expect(registrationNotifications(jobs, 'another-account')).toEqual([]);
-  jobs.job.status = status;
+  jobs.job.status = 'complete';
   expect(registrationNotifications(jobs, 'account')).toEqual([]);
 });

@@ -69,7 +69,7 @@ const Home = () => {
 
   const activeAccount = useObjectSelector((state) => state.authentication.activeAccount);
   const testnetOverrides = useObjectSelector(
-    (state) => state.authentication.activeAccount.testnetOverrides,
+    (state) => state.authentication.activeAccount?.testnetOverrides || {},
   );
   const balances = useObjectSelector((state) =>
     extractLedgerData(state, 'balances', API_GET_BALANCES),
@@ -118,6 +118,9 @@ const Home = () => {
 
   const getWidgets = useCallback(async () => {
     setWidgets([]);
+    // The previous Home can remain mounted while its navigator exits. Account
+    // teardown must not read or save widgets for the next login session.
+    if (!activeAccount?.accountHash) return;
     let widgetsList = [...Object.keys(widgetOrder)].sort((a, b) => {
       return widgetOrder[a] <= widgetOrder[b] ? -1 : 1;
     });
@@ -165,9 +168,10 @@ const Home = () => {
     }
 
     setWidgets(widgetsList);
-  }, [activeAccount.accountHash, activeCoinsForUser, widgetOrder]);
+  }, [activeAccount?.accountHash, activeCoinsForUser, widgetOrder]);
 
   const handleWidgetPress = (widgetId) => {
+    if (!activeAccount?.accountHash) return;
     const widgetSplit = widgetId.split(':');
     const widgetType = widgetSplit[0];
 
@@ -177,12 +181,14 @@ const Home = () => {
         const coinObj = activeCoinsForUser.find((x) => x.id === coinId);
 
         if (coinObj) {
-          const subWallets = allSubWallets[coinId];
+          const subWallets = allSubWallets[coinId] || [];
+          const selectedWallet = subWallets.find(wallet =>
+            wallet.id === activeSubWallets[coinId]?.id,
+          ) || subWallets[0];
 
-          openCoin(
-            coinObj,
-            activeSubWallets[coinId] ? activeSubWallets[coinId] : subWallets[0],
-          );
+          // Unlinking can remove the selected identity, and a profile change
+          // can temporarily leave a coin without initialized wallets.
+          if (selectedWallet) openCoin(coinObj, selectedWallet);
         }
       },
       [TOTAL_UNI_BALANCE_WIDGET_TYPE]: () => {
@@ -325,7 +331,7 @@ const Home = () => {
       const key = coinObj.id;
       coinBalances[coinObj.id] = BigNumber(0);
 
-      allSubWallets[coinObj.id].forEach((wallet) => {
+      (allSubWallets[coinObj.id] || []).forEach((wallet) => {
         if (balances[coinObj.id] != null && balances[coinObj.id][wallet.id] != null) {
           coinBalances[coinObj.id] = coinBalances[coinObj.id].plus(
             balances[key] &&

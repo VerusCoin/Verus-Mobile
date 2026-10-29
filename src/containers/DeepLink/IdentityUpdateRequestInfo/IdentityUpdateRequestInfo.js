@@ -1,11 +1,11 @@
+import {identityUploadToDisplayJson} from '../../../utils/identityUpdate/uploadDisplay';
 /*
   IdentityUpdateRequestInfo
   - 2026-02-02: Complete UI overhaul to match Wallet/Identity/SendWizard patterns.
   - 2026-02-05: Removed the separate Encrypted Uploads section.
     Content-multimap updates now carry encrypted flags for inline badges.
   - 2026-02-05: Refactored into a multi-step stepper that consolidates the entire
-    identity update flow into a single screen. Bypasses IdentityUpdatePaymentConfiguration
-    and the UpdateIdentity SendModal entirely.
+    identity update flow into a single screen.
   - 2026-02-05: Split into 4 steps: Overview -> Content Changes -> High-Risk Ack ->
     Confirm+Pay. Content changes got their own dedicated step with full-screen
     VerusIdObjectData. Fund source selection moved to a SemiModal sheet inside
@@ -24,7 +24,7 @@
   - 2026-03-06: Clarified current-content removal copy  and added remove-action
     detail content that explains historical on-chain visibility.
 */
-import React, {useMemo, useState, useEffect, useCallback} from 'react';
+import React, {useMemo, useState, useEffect, useCallback, useRef} from 'react';
 import {Platform, SafeAreaView, View} from 'react-native';
 import {Portal, Text} from 'react-native-paper';
 import Button from '../../../components/Button';
@@ -114,7 +114,7 @@ const IdentityUpdateRequestInfo = props => {
     detailIndex,
     next,
     subjectIdTxHex,
-    updateIdTxHex,
+    identityPreviewPrepared,
     hasEncryptedKeys,
   } = props;
   const insets = useSafeAreaInsets();
@@ -130,6 +130,7 @@ const IdentityUpdateRequestInfo = props => {
   const [details, setDetails] = useState(new IdentityUpdateRequestDetails());
   const [stepIndex, setStepIndex] = useState(STEP_REVIEW);
   const [acknowledged, setAcknowledged] = useState(false);
+  const signinContinuationActive = useRef(false);
 
   // --- Modal state ---
   const [vdxfInspectorItems, setVdxfInspectorItems] = useState([]);
@@ -150,12 +151,11 @@ const IdentityUpdateRequestInfo = props => {
   const canOpenSignerModal = Boolean(chainId && signerIdentityID);
 
   const request = useMemo(() => {
-    if (!requestBufferString) return null;
     const req = new GenericRequest();
     req.fromBuffer(Buffer.from(requestBufferString, 'hex'), 0);
     return req;
   }, [requestBufferString]);
-  const requestIsTestnet = request != null ? request.isTestnet() : false;
+  const requestIsTestnet = request.isTestnet();
 
   // --- Helper functions ---
   const getVerusId = async (chain, iAddrOrName) => {
@@ -179,7 +179,7 @@ const IdentityUpdateRequestInfo = props => {
       const str = String(value);
       return str.length > maxLen ? `${str.slice(0, maxLen)}...` : str;
     };
-    const dataJson = signData.toCLIJson();
+    const dataJson = identityUploadToDisplayJson(signData);
     if (signData.isVdxfData()) return 'VDXF data';
     if (signData.isMMRData()) return 'MMR data';
     if (dataJson.filename) return `Filename: ${trim(dataJson.filename)}`;
@@ -196,7 +196,7 @@ const IdentityUpdateRequestInfo = props => {
       return null;
     }
 
-    return signData.toCLIJson();
+    return identityUploadToDisplayJson(signData);
   };
 
   const getCmmDataKey = iAddr => {
@@ -367,9 +367,15 @@ const IdentityUpdateRequestInfo = props => {
       }
     }
 
-    if (identityUpdates.contentmultimap) {
-      for (const key in identityUpdates.contentmultimap) {
-        const updates = identityUpdates.contentmultimap[key];
+    // Credential encryption defers preview construction, so upload references
+    // may not exist in the preview identity yet. Review every requested upload.
+    const contentKeys = new Set(Object.keys(identityUpdates.contentmultimap || {}));
+    if (details.containsSignData()) {
+      for (const [key] of signDataMap.entries()) contentKeys.add(key.toIAddress());
+    }
+    if (contentKeys.size) {
+      for (const key of contentKeys) {
+        const updates = identityUpdates.contentmultimap?.[key];
         const signData = details.containsSignData()
           ? getSignDataForKey(key)
           : null;
@@ -378,8 +384,8 @@ const IdentityUpdateRequestInfo = props => {
           displayUpdates[VERUSID_CMM_INFO.key][
             `${VERUSID_CMM_DATA.key}:${key}`
           ] = {
-            data: getSignDataLabel(signData),
-            isEncrypted: true,
+            data: signData.encryptToAddress ? getSignDataLabel(signData) : `Public upload: ${getSignDataLabel(signData)}`,
+            isEncrypted: !!signData.encryptToAddress,
             onPress: () =>
               openVdxfUniValueModal(
                 [toSignDataInspectorItem(signData)],
@@ -462,7 +468,7 @@ const IdentityUpdateRequestInfo = props => {
   const getExpiryLabel = () => {
     if (!details.expires()) return '';
     return blocksToTime(
-      details.expiryHeight.toNumber() - chainInfo.longestchain,
+      details.expiryHeight.toNumber() - chainInfo.blocks,
       coinObj.seconds_per_block,
     );
   };
@@ -641,11 +647,11 @@ const IdentityUpdateRequestInfo = props => {
       buildIdentityStateChange({
         currentIdentity: identity,
         updatedIdentity: identityUpdates,
-        chainHeight: chainInfo?.longestchain,
+        chainHeight: chainInfo?.blocks,
         secondsPerBlock: coinObj.seconds_per_block,
-        prepared: Boolean(updateIdTxHex),
+        prepared: identityPreviewPrepared,
       }),
-    [identity, identityUpdates, chainInfo?.longestchain, coinObj.seconds_per_block, updateIdTxHex],
+    [identity, identityUpdates, chainInfo?.blocks, coinObj.seconds_per_block, identityPreviewPrepared],
   );
 
   const highRiskChanges = useMemo(
@@ -708,6 +714,7 @@ const IdentityUpdateRequestInfo = props => {
     if (signedIn) {
       goNext();
     } else {
+      signinContinuationActive.current = true;
       setWaitingForSignin(true);
       const allowList = requestIsTestnet
         ? accounts.filter(x => {
@@ -762,11 +769,22 @@ const IdentityUpdateRequestInfo = props => {
 
   // --- Effects ---
   useEffect(() => {
+    setStepIndex(STEP_REVIEW);
+    setAcknowledged(false);
+    setWaitingForSignin(false);
+    signinContinuationActive.current = false;
+    setVdxfUniValueModalVisible(false);
+    setIsListSelectionModalVisible(false);
+    setVerusIdDetailsModalProps(null);
+  }, [detailsBufferString, requestBufferString, subjectIdTxHex, identityUpdates, subjectIdentity]);
+
+  useEffect(() => {
     if (isWrongRequestType) wrongRequestType(requestIsTestnet);
   }, []);
 
   useEffect(() => {
-    if (signedIn && waitingForSignin) {
+    if (signedIn && waitingForSignin && signinContinuationActive.current) {
+      signinContinuationActive.current = false;
       setWaitingForSignin(false);
       goNext();
     }
@@ -783,10 +801,10 @@ const IdentityUpdateRequestInfo = props => {
   useEffect(() => {
     if (detailsBufferString) {
       const det = new IdentityUpdateRequestDetails();
-      det.fromBuffer(Buffer.from(detailsBufferString, 'hex'), 0);
+      det.fromBuffer(Buffer.from(detailsBufferString, 'hex'), 0, true, requestIsTestnet ? 'VRSCTEST' : 'VRSC');
       setDetails(det);
     }
-  }, [detailsBufferString]);
+  }, [detailsBufferString, requestIsTestnet]);
 
   useEffect(() => {
     setSigDateString(unixToDate(sigtime));
@@ -928,12 +946,11 @@ const IdentityUpdateRequestInfo = props => {
       {currentStepId === STEP_CONFIRM_PAY && (
         <ConfirmPayStep
           identityStateChange={identityStateChange}
-          chainHeight={chainInfo?.longestchain}
+          chainHeight={chainInfo?.blocks}
           details={details}
           requestIsTestnet={requestIsTestnet}
           subjectIdentity={subjectIdentity}
           subjectIdTxHex={subjectIdTxHex}
-          updateIdTxHex={updateIdTxHex}
           friendlyNames={friendlyNames}
           coinObj={coinObj}
           responseBufferString={responseBufferString}

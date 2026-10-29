@@ -1,6 +1,6 @@
 const hasSignedReceipt = receipt => !!(receipt?.signedHex || receipt?.txid);
 const registrationDeliveryStates = new Set([
-  'registration_signed', 'registration_broadcast', 'registration_broadcast_unknown', 'registration_pending',
+  'registration_signed', 'registration_broadcast', 'registration_broadcast_unknown',
 ]);
 
 // Expired replacements can have an unsigned current transaction. The warning

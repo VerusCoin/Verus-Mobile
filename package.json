@@ -12,17 +12,18 @@
     "clean-android": "cd android && ./gradlew clean && cd ..",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "bundle-android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/",
+    "bundle-android": "CI=true react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/",
     "bundle-ios": "react-native bundle --dev false --entry-file index.js --bundle-output ios/main.jsbundle --platform ios --assets-dest='./ios'",
-    "dist-android": "cd android && ./gradlew assembleRelease && cd ..",
+    "dist-android": "cd android && CI=true ./gradlew assembleRelease && cd ..",
     "check-android-16k": "python3 tools/android/check-16k.py",
     "debug-android": "cd android && ./gradlew assembleDebug --stacktrace && cd ..",
     "test": "jest",
+    "test:identity-upload-daemon": "node debug/runIdentityUploadDaemonTests.cjs",
     "lint": "eslint .",
-    "update-verus-libs": "pnpm remove verus-typescript-primitives && pnpm add 'git+https://github.com/VerusCoin/verus-typescript-primitives.git' && pnpm remove @bitgo/utxo-lib && pnpm add 'git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus' && pnpm remove verusd-rpc-ts-client && pnpm add 'git+https://github.com/VerusCoin/verusd-rpc-ts-client.git' && pnpm remove verusid-ts-client && pnpm add 'git+https://github.com/VerusCoin/verusid-ts-client.git'"
+    "update-verus-libs": "node tools/update-verus-libs.cjs"
   },
   "dependencies": {
-    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#2d3240429b7664fb01ca3f0f9e1c2b6da803f68d",
+    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#4d8caa6d1d25ade1dbf91ec2bf79ef173d2316eb",
     "@noble/curves": "1.9.7",
     "@noble/hashes": "1.8.0",
     "@react-native-async-storage/async-storage": "2.1.2",
@@ -123,10 +124,10 @@
     "varuint-bitcoin": "1.0.4",
     "version_compare": "0.0.3",
     "verus-pay-utils": "git+https://github.com/VerusCoin/verus-pay-utils.git",
-    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#36cf60817a8ff983b3f8b30f43b3f467fc064ccc",
+    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#f7de920e32e8d4778356c18ce8bb6d3a22ec72a3",
     "verus-zkedid-utils": "git+https://github.com/VerusCoin/verus-zkedid-utils.git",
-    "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#5d7155a10671415a7fd3054984b4591f5309fcf3",
-    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#afd8121e103d965660c8024f0c5dff1378d5ad15",
+    "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#f2af29b71d231f50bfac7a8aca852e9facd01b92",
+    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#05a5d37192d34338a19bc889f5305bebca3a4800",
     "vm-browserify": "0.0.4",
     "wif": "2.0.6",
     "react-native-pager-view": "6.7.1"
@@ -253,12 +254,12 @@
     "sjcl": "1.0.9",
     "ws@6": "6.2.4",
     "ws@7": "7.5.11",
-    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#36cf60817a8ff983b3f8b30f43b3f467fc064ccc",
-    "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#5d7155a10671415a7fd3054984b4591f5309fcf3",
-    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#afd8121e103d965660c8024f0c5dff1378d5ad15",
+    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#f7de920e32e8d4778356c18ce8bb6d3a22ec72a3",
+    "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#f2af29b71d231f50bfac7a8aca852e9facd01b92",
+    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#05a5d37192d34338a19bc889f5305bebca3a4800",
     "verus-typescript-primitives/bn.js": "5.2.3",
     "verusid-ts-client/bn.js": "5.2.3",
-    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#2d3240429b7664fb01ca3f0f9e1c2b6da803f68d"
+    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#4d8caa6d1d25ade1dbf91ec2bf79ef173d2316eb"
   },
   "jest": {
     "preset": "react-native",

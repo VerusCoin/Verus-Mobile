@@ -13,7 +13,9 @@ import {
 } from '../../../utils/constants/notifications';
 import {VerusIdAtIcon, ReceivedIcon, VerusIdErrorIcon} from '../../../images/customIcons';
 import {BasicNotification, LoadingNotification, VerusIdProvisioningNotification} from '../../../utils/notification';
-import {processVerusId} from '../../../containers/Services/ServiceComponents/VerusIdService/VerusIdLogin';
+import {openLinkIdentityModal} from '../../../actions/actions/sendModal/dispatchers/sendModal';
+import {CoinDirectory} from '../../../utils/CoinData/CoinDirectory';
+import {SEND_MODAL_IDENTITY_TO_LINK_FIELD} from '../../../utils/constants/sendModal';
 import {dispatchRemoveNotification, dispatchClearNotifications} from '../../../actions/actions/notifications/dispatchers/notifications';
 import {useObjectSelector} from '../../../hooks/useObjectSelector';
 import {registrationNotifications} from '../../../utils/identityRegistration/notifications';
@@ -36,7 +38,8 @@ const getNotifications = (notifications, accountHash) =>
     if (notification.acchash !== accountHash) return [];
     let item;
     if (notification.type === NOTIFICATION_TYPE_VERUS_ID_PROVISIONING) {
-      item = VerusIdProvisioningNotification.fromJson(notification, processVerusId);
+      item = VerusIdProvisioningNotification.fromJson(notification, (_props, identityAddress, chain) =>
+        openLinkIdentityModal(CoinDirectory.getBasicCoinObj(chain), {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: identityAddress}));
     } else if (notification.type === NOTIFICATION_TYPE_BASIC) {
       item = BasicNotification.fromJson(notification);
     } else if (notification.type === NOTIFICATION_TYPE_LOADING) {

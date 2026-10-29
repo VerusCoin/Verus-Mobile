@@ -79,7 +79,7 @@ const Convert = (props) => {
         rate: null
       };
 
-      allSubWallets[coinObj.id].map(wallet => {
+      (allSubWallets[coinObj.id] || []).map(wallet => {
         if (
           balances[coinObj.id] != null &&
           balances[coinObj.id][wallet.id] != null

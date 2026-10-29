@@ -36,7 +36,15 @@ THIS IS EXPERIMENTAL SOFTWARE AND IT IS PROVIDED "AS IS" AND ANY EXPRESSED OR IM
 
 ## Shared prerequisites
 
-The app uses React Native 0.77.3 with Hermes and the legacy React Native architecture. Keep the six dependency patches in `patches/`: they retain the app's ENS/Verus behavior, random-number error handling, legacy network-module build fixes and Verus SDK packaging fixes. The other compatibility patches have been replaced by library upgrades or React Native's built-in Android Gradle support; see the [dependency compatibility notes](tools/android/README.md#dependency-compatibility).
+The app uses React Native 0.77.3 with Hermes and the legacy React Native architecture. Keep the dependency patches in `patches/`: they retain the app's ENS/Verus behavior, random-number error handling, legacy network-module build fixes and Verus SDK packaging fixes. The other compatibility patches have been replaced by library upgrades or React Native's built-in Android Gradle support; see the [dependency compatibility notes](tools/android/README.md#dependency-compatibility).
+
+The pinned `verusid-ts-client` revision constructs identity updates and encrypted uploads locally, with authenticated upload and funding verification. Its former `verusid-ts-client+0.1.0.patch` backport has been removed; do not reapply it over the SDK's current verification implementation. Keep the SDK and primitive dependency pins aligned so both use the same runtime classes.
+
+Run `pnpm update-verus-libs --dry-run` to preview upstream revisions, or `pnpm update-verus-libs` to update all four core library pins and reinstall dependencies. The updater aligns direct dependencies, resolutions and pnpm overrides before regenerating the lockfile. It follows `master` for primitives and the identity client, `main` for the RPC client, and `utxo-lib-verus` for BitGo (whose `master` is a different package).
+
+Ordinary identity edits, transfers, uploads, revocations and recoveries keep the reviewed transaction in memory and make one submission attempt per review. They do not save incoming requests or signed transactions for later replay. An uncertain result reports the transaction ID so its status can be checked before starting a new review. Gift cards, spendable-key claims and funded registrations retain their separate sensitive recovery data.
+
+Run `node debug/runIdentityUploadDaemonTests.cjs` for opt-in compatibility tests against a running local testnet daemon and the adjacent VerusCoin native build. These tests do not fund, sign, or broadcast transactions.
 
 Use Node.js 22.13 or newer and Corepack with **pnpm 11.5.2**, pinned by `package.json`. The Node 22 version used for development is recorded in `.nvmrc`. `pnpm-lock.yaml` is the authoritative JavaScript lockfile.
 
@@ -55,12 +63,24 @@ Allow the install scripts to run; `--ignore-scripts` skips required native patch
 
 Install Android Studio, Java 17, Python 3, and these Android SDK components:
 
-- Android SDK Platform 35 and Build Tools 35.0.0.
+- Android SDK Platform 36 and Build Tools 35.0.0.
 - NDK 27.0.12077973.
 - Platform Tools and an emulator system image, or a connected Android device.
 - Android SDK Platform 34 if building the existing wallet SDK locally as described below.
 
-Set `ANDROID_HOME` to your SDK directory and add its `platform-tools` and `emulator` directories to `PATH`. Set `JAVA_HOME` to Java 17. The project pins Gradle 8.10.2, Android Gradle Plugin 8.7.2 and Kotlin 2.0.21; use the checked-in Gradle wrapper. The minimum Android version is API 24, and the compile and target SDK are 35.
+Set `ANDROID_HOME` to your SDK directory and add its `platform-tools` and `emulator` directories to `PATH`. Set `JAVA_HOME` to Java 17. The project pins Gradle 8.10.2, Android Gradle Plugin 8.7.2 and Kotlin 2.0.21; use the checked-in Gradle wrapper. The minimum Android version is API 24, and the compile and target SDK are 36.
+
+For macOS terminals, this example uses Android Studio's bundled Java 17. Check `java -version`; if your Android Studio bundles another version, point `JAVA_HOME` to an installed Java 17 JDK instead.
+
+```sh
+# From the repository root, with nvm loaded:
+nvm use
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+java -version
+```
 
 ### Prepare the wallet SDK dependencies
 
@@ -90,10 +110,12 @@ corepack pnpm start
 corepack pnpm android
 ```
 
+For a one-shot Android JavaScript bundle, run `corepack pnpm bundle-android`. The script sets `CI=true` to disable Metro's file watcher for this build.
+
 To produce a release APK, configure the existing release signing properties, then build and check the resulting APKs:
 
 ```sh
-(cd android && ./gradlew assembleRelease)
+corepack pnpm dist-android
 for apk in android/app/build/outputs/apk/release/*.apk; do
   python3 tools/android/check-16k.py "$apk" || exit 1
 done

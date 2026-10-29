@@ -55,28 +55,42 @@ const {decryptkey, encryptkey} = require('../../seedCrypt');
 const {
   createRegistrationContext, resolveRegistration, prepareCommitment, approveCommitment,
   reconcileRegistration, prepareRegistration, approveRegistration,
-  linkRegisteredIdentity, retryBroadcast,
+  linkRegisteredIdentity, retryBroadcast, refreshRegistrationReview,
 } = require('../../identityRegistration');
 const {linkVerusId} = require('../../../actions/actions/services/dispatchers/verusid/verusid');
 const {publishRegistrationState} = require('../../../actions/actions/services/dispatchers/verusid/registration');
 
 test.each([
   {description: 'completes native registration', branch: 'native', tokenProof: null},
+  {description: 'reviews the calculated fee for large reserve change', branch: 'native', tokenProof: null, reserveCurrencyCount: 75},
+  ...['confirmed', 'expired', 'unsent', 'signature', 'change-address', 'intent'].map(legacyReceipt => ({
+    description: `checks a legacy low-fee ${legacyReceipt} receipt without relaxing broadcast validation`,
+    branch: 'native', tokenProof: null, reserveCurrencyCount: 75, legacyReceipt,
+  })),
   {description: 'completes token-burn registration', branch: 'token-burn', tokenProof: 1},
   {description: 'completes token-payment registration', branch: 'token-payment', tokenProof: 2},
   {description: 'completes native registration using only a linked identity balance', branch: 'native', tokenProof: null, identityFunding: true},
+  ...[false, true].flatMap(identityFunding => ['commitment', 'approval', 'registration', 'saved'].map(wrongSourceStage => ({
+    description: `rejects another identity's funds for ${identityFunding ? 'identity' : 'R-address'} payment during ${wrongSourceStage}`,
+    branch: 'native', tokenProof: null, identityFunding, wrongSourceStage,
+  }))),
+  ...['timeout', 'rpc-error', 'missing-response', 'mismatched-txid'].map(broadcastFailure => ({
+    description: `reconciles an accepted commitment after ${broadcastFailure} through the SDK`,
+    branch: 'native', tokenProof: null, broadcastFailure,
+  })),
   {description: 'rejects tampered cached funding during approval refresh', branch: 'native', tokenProof: null, sourceFailure: 'tampered'},
   {description: 'rejects cached funding spent after preparation during approval refresh', branch: 'native', tokenProof: null, sourceFailure: 'spent'},
-  ...['uncontrolled', 'locked', 'revoked'].map(authorityStatus => ({
+  ...['uncontrolled', 'locked', 'countdown', 'revoked'].map(authorityStatus => ({
     description: `rejects ${authorityStatus} identity funding before payment`,
     branch: 'native', tokenProof: null, identityFunding: true, authorityStatus,
   })),
+  {description: 'accepts an identity countdown elapsed at the candidate block', branch: 'native', tokenProof: null, identityFunding: true, authorityStatus: 'elapsed-countdown'},
   ...['excess-fee', 'redirected-change', 'lost-reserve'].map(guardAttack => ({
     description: `independently blocks ${guardAttack} with coordinated signed bytes and a faulty SDK validator`,
     branch: guardAttack === 'lost-reserve' ? 'token-burn' : 'native',
     tokenProof: guardAttack === 'lost-reserve' ? 1 : null, guardAttack,
   })),
-])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack}) => {
+])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, legacyReceipt}) => {
   jest.clearAllMocks();
   mockEncryptedJobs.clear();
   const system = nameAndParentAddrToIAddr('VRSC');
@@ -100,9 +114,22 @@ test.each([
     version: new BN(3), evalCode: new BN(EVALS.EVAL_NONE), m: new BN(1), n: new BN(1),
     destinations: [fundingDestination], vData: [],
   });
-  const fundingScript = identityFunding
+  let fundingScript = identityFunding
     ? new SmartTransactionScript(nativeParams(), nativeParams()).toBuffer()
     : transparentFundingScript;
+  if (reserveCurrencyCount) {
+    // Preserving unrelated currencies makes change exceed the daemon's 2 KB
+    // threshold even though the commitment itself is small.
+    const reserve = new TokenOutput({
+      version: new BN(1),
+      values: new CurrencyValueMap({valueMap: new Map(Array.from({length: reserveCurrencyCount}, (_, index) => [
+        nameAndParentAddrToIAddr(`reserve${index}`, system), new BN(100000000),
+      ]))}),
+    });
+    fundingScript = new SmartTransactionScript(nativeParams(), new OptCCParams({
+      ...nativeParams(), evalCode: new BN(EVALS.EVAL_RESERVE_OUTPUT), vData: [reserve.toBuffer()],
+    })).toBuffer();
+  }
   sourceBuilder.addOutput(fundingScript, 200000000);
   if (tokenProof != null) {
     const destination = new TxDestination(KeyID.fromAddress(address));
@@ -141,6 +168,17 @@ test.each([
   };
   const source = sourceBuilder.buildIncomplete();
   const transactions = new Map([[source.getId(), {transaction: source, height: 10}]]);
+  const registerAuthority = identity => {
+    const builder = new TransactionBuilder(networks.verus);
+    builder.setVersion(4);
+    builder.setVersionGroupId(0x892f2085);
+    builder.setExpiryHeight(500);
+    builder.addInput(Buffer.alloc(32, 51), 0);
+    builder.addOutput(IdentityScript.fromIdentity(identity).toBuffer(), 0);
+    const transaction = builder.buildIncomplete();
+    transactions.set(transaction.getId(), {transaction, height: 20});
+    return {identity: identity.toJson('VRSC'), txid: transaction.getId(), vout: 0, blockheight: 20};
+  };
   let fundingAuthority;
   if (identityFunding) {
     const primaryKey = authorityStatus === 'uncontrolled'
@@ -151,20 +189,29 @@ test.each([
       minSigs: new BN(1), primaryAddresses: [KeyID.fromAddress(primaryKey.getAddress())],
       name: 't1', parent: IdentityID.fromAddress(system), systemId: IdentityID.fromAddress(system),
       revocationAuthority: IdentityID.fromAddress(fundingAddress), recoveryAuthority: IdentityID.fromAddress(fundingAddress),
-      unlockAfter: new BN(0),
+      unlockAfter: new BN(authorityStatus === 'countdown' ? 101 : authorityStatus === 'elapsed-countdown' ? 100 : 0),
     });
-    const authorityBuilder = new TransactionBuilder(networks.verus);
-    authorityBuilder.setVersion(4);
-    authorityBuilder.setVersionGroupId(0x892f2085);
-    authorityBuilder.setExpiryHeight(500);
-    authorityBuilder.addInput(Buffer.alloc(32, 51), 0);
-    authorityBuilder.addOutput(IdentityScript.fromIdentity(identity).toBuffer(), 0);
-    const authorityTransaction = authorityBuilder.buildIncomplete();
-    transactions.set(authorityTransaction.getId(), {transaction: authorityTransaction, height: 20});
-    fundingAuthority = {identity: identity.toJson('VRSC'), txid: authorityTransaction.getId(), vout: 0, blockheight: 20};
+    fundingAuthority = registerAuthority(identity);
     // There is no transparent balance: the only positive-value source belongs
     // to t1@, while its zero-value definition is evidence, never a fee input.
     expect(source.outs.some(output => output.script.equals(transparentFundingScript))).toBe(false);
+  }
+  let otherSource, otherAuthority;
+  let substituteFunding = wrongSourceStage === 'commitment';
+  if (wrongSourceStage) {
+    // This identity is spendable with the same key, but was not selected to pay.
+    const otherId = IdentityID.fromAddress(nameAndParentAddrToIAddr('other', system));
+    otherAuthority = registerAuthority(new Identity({
+      version: new BN(3), flags: new BN(0), minSigs: new BN(1),
+      primaryAddresses: [KeyID.fromAddress(address)], name: 'other',
+      parent: IdentityID.fromAddress(system), systemId: IdentityID.fromAddress(system),
+      revocationAuthority: otherId, recoveryAuthority: otherId, unlockAfter: new BN(0),
+    }));
+    const params = new OptCCParams({...nativeParams(), destinations: [new TxDestination(otherId)]});
+    otherSource = Transaction.fromHex(source.toHex(), networks.verus);
+    otherSource.ins[0].hash = Buffer.alloc(32, 10);
+    otherSource.outs = [{value: 200000000, script: new SmartTransactionScript(params, params).toBuffer()}];
+    transactions.set(otherSource.getId(), {transaction: otherSource, height: 10});
   }
   const spent = new Set();
   let liveSourceSpent = false;
@@ -197,12 +244,14 @@ test.each([
       }
       case 'getidentity':
         if (first === fundingAddress && fundingAuthority) return ok(fundingAuthority);
+        if (otherAuthority && first === otherAuthority.identity.identityaddress) return ok(otherAuthority);
         return {id: rpcRequest.id, result: null, error: {code: -5, message: 'Identity not found'}};
       case 'getaddressutxos':
         expect(first.addresses).toEqual([fundingAddress]);
-        return ok([...transactions].flatMap(([txid, entry]) => entry.transaction.outs
+        return ok([...transactions].filter(([txid]) => substituteFunding
+          ? txid === otherSource.getId() : txid !== otherSource?.getId()).flatMap(([txid, entry]) => entry.transaction.outs
           .map((output, outputIndex) => ({output, outputIndex, currencyvalues: fundingCurrencies(output)}))
-          .filter(({currencyvalues, outputIndex}) => currencyvalues !== null && !spent.has(`${txid}:${outputIndex}`))
+          .filter(({currencyvalues, outputIndex}) => (substituteFunding || currencyvalues !== null) && !spent.has(`${txid}:${outputIndex}`))
           .map(({output, outputIndex, currencyvalues}) => ({
             txid, outputIndex, isspendable: identityFunding ? 1 : true, satoshis: output.value,
             script: output.script.toString('hex'), currencyvalues,
@@ -246,17 +295,25 @@ test.each([
           .toMatchObject({valid: true, signingStatus: 'complete', txid: transaction.getId()});
         transactions.set(transaction.getId(), {transaction, height: 0});
         transaction.ins.forEach(input => spent.add(`${Buffer.from(input.hash).reverse().toString('hex')}:${input.index}`));
+        if (broadcastCount === 1 && broadcastFailure) {
+          if (broadcastFailure === 'timeout') throw new Error('Response lost after submission');
+          if (broadcastFailure === 'rpc-error') return {error: {code: -25, message: 'RPC rejected transaction'}};
+          if (broadcastFailure === 'missing-response') return undefined;
+          return ok('d'.repeat(64));
+        }
         return ok(transaction.getId());
       }
       default:
         throw new Error(`Unexpected offline RPC: ${rpcRequest.method}`);
     }
   });
+  const commitmentBuilder = jest.spyOn(mockClient, 'createNameReservationTransaction');
 
   const context = createRegistrationContext();
   const assertGuardBlocksCorruptedSignature = async (stage, paymentReview) => {
     const originalSign = mockClient.signIdentityRegistrationTransaction.bind(mockClient);
     const broadcastBefore = broadcastCount;
+    let corruptReceipt;
     jest.spyOn(mockClient, 'signIdentityRegistrationTransaction').mockImplementation(args => {
       const signed = originalSign(args);
       const changed = Transaction.fromHex(signed.hex, networks.verus);
@@ -284,6 +341,7 @@ test.each([
       const unsigned = changed.clone();
       unsigned.ins.forEach(input => {input.script = Buffer.alloc(0);});
       args.transaction.txHex = unsigned.toHex();
+      corruptReceipt = {prepared: args.transaction, signedHex: changed.toHex(), txid: changed.getId()};
       return {...signed, hex: changed.toHex(), txid: changed.getId()};
     });
     // Model a selector/signer/plan-validator defect agreeing on the same bad
@@ -295,8 +353,13 @@ test.each([
     await expect(approve(paymentReview.jobId, paymentReview.approvalToken, context))
       .rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
     expect(broadcastCount).toBe(broadcastBefore);
-    // A durable corrupt receipt must remain blocked on retry too, even after
-    // successful SDK validation was cached on the first attempt.
+    const saved = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(paymentReview.jobId)));
+    expect(saved[stage].signedHex).toBeUndefined();
+    // The first attempt rejects before persistence. Independently restore a
+    // corrupt receipt to ensure it is also blocked on retry.
+    saved[stage] = {...saved[stage], ...corruptReceipt};
+    saved.status = `${stage}_signed`;
+    mockEncryptedJobs.set(paymentReview.jobId, await encryptkey(mockPassword, JSON.stringify(saved)));
     await expect(retryBroadcast(paymentReview.jobId, context))
       .rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
     expect(broadcastCount).toBe(broadcastBefore);
@@ -306,11 +369,11 @@ test.each([
     fundingAddress, signingAddress: address,
     keyChannel: 'vrpc', name: tokenProof == null ? 'Alice' : 'Alice.community@',
   };
-  if (authorityStatus) {
+  if (authorityStatus && authorityStatus !== 'elapsed-countdown') {
     await expect((async () => {
       const resolved = await resolveRegistration(request, context);
       return prepareCommitment({request, approvedCosts: resolved.quote.totalOperationRequired}, context);
-    })()).rejects.toMatchObject({code: authorityStatus === 'locked' ? 'LOCKED_AUTHORITY' : 'FUNDING_AUTHORIZATION_REQUIRED'});
+    })()).rejects.toMatchObject({code: ['locked', 'countdown'].includes(authorityStatus) ? 'LOCKED_AUTHORITY' : 'FUNDING_AUTHORIZATION_REQUIRED'});
     expect(mockEncryptedJobs.size).toBe(0);
     expect(broadcastCount).toBe(0);
     return;
@@ -323,7 +386,17 @@ test.each([
   expect(resolved.quote.totalOperationRequired).toEqual({
     ...registrationCosts, [system]: new BN(registrationCosts[system]).addn(10000).toString(10),
   });
-  const review = await prepareCommitment({request, approvedCosts: resolved.quote.totalOperationRequired}, context);
+  if (wrongSourceStage === 'commitment') {
+    await expect(prepareCommitment({request}, context)).rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
+    expect(mockEncryptedJobs.size).toBe(0);
+    expect(broadcastCount).toBe(0);
+    return;
+  }
+  const review = await prepareCommitment({request, ...(reserveCurrencyCount ? {} : {
+    approvedCosts: resolved.quote.totalOperationRequired,
+  })}, context);
+  const commitmentFee = reserveCurrencyCount ? '20000' : '10000';
+  expect(review.quote.commitmentFee).toBe(commitmentFee);
   expect(broadcastCount).toBe(0);
   const encrypted = mockEncryptedJobs.get(review.jobId);
   const persisted = JSON.parse(decryptkey(mockPassword, encrypted));
@@ -350,6 +423,106 @@ test.each([
   }
   expect(mockClient.validateIdentityRegistrationTransaction(persisted.commitment.prepared))
     .toMatchObject({valid: true, signingStatus: 'unsigned'});
+
+  if (legacyReceipt) {
+    // Recreate the pre-upgrade SDK's 10,000-unit commitment with real source
+    // transactions and signatures. Only this historical fixture uses its raw
+    // signer; the public SDK must continue rejecting that fee for new sends.
+    const prepared = persisted.commitment.prepared;
+    const transaction = Transaction.fromHex(prepared.txHex, networks.verus);
+    const changeIndex = prepared.outputPlan.findIndex(output => output.role === 'change');
+    transaction.outs[changeIndex].value += 10000;
+    prepared.txHex = prepared.hex = transaction.toHex();
+    prepared.outputPlan[changeIndex].value = String(transaction.outs[changeIndex].value);
+    prepared.outputPlan[changeIndex].values[system] = prepared.outputPlan[changeIndex].value;
+    prepared.nativeFee = prepared.quote.commitmentFee = '10000';
+    prepared.quote.totalOperationRequired[system] = '100010000';
+    const {signIdentityRegistrationTransaction} = require('verusid-ts-client/lib/identity/registrationSigning');
+    const signed = signIdentityRegistrationTransaction({
+      txHex: prepared.txHex, prevouts: prepared.prevouts,
+      identityAuthorities: prepared.identityAuthorities, keys: prepared.prevouts.map(() => [mockWif]),
+    });
+    expect(signed.signingStatus).toBe('complete');
+    expect(() => mockClient.validateIdentityRegistrationTransaction(prepared, signed.hex))
+      .toThrow(expect.objectContaining({code: 'INSUFFICIENT_RELAY_FEE'}));
+    persisted.commitment = {...persisted.commitment, signedHex: signed.hex, txid: signed.txid};
+    persisted.status = 'commitment_signed';
+
+    if (legacyReceipt === 'signature' || legacyReceipt === 'intent') {
+      const changed = Transaction.fromHex(signed.hex, networks.verus);
+      if (legacyReceipt === 'signature') changed.ins[0].script[20] ^= 1;
+      else changed.outs[changeIndex].value -= 1;
+      persisted.commitment.signedHex = changed.toHex();
+      persisted.commitment.txid = changed.getId();
+    } else if (legacyReceipt === 'change-address') {
+      persisted.fundingAddress = ECPair.fromPrivateKeyBuffer(Buffer.alloc(32, 8), networks.verus).getAddress();
+    } else if (legacyReceipt === 'confirmed') {
+      transactions.set(signed.txid, {transaction: Transaction.fromHex(signed.hex, networks.verus), height: 0});
+      mine(signed.txid);
+      spent.add(`${source.getId()}:0`);
+    } else if (legacyReceipt === 'expired') {
+      tip = prepared.snapshot.expiryHeight;
+    }
+    const receipt = await encryptkey(mockPassword, JSON.stringify(persisted));
+    mockEncryptedJobs.set(review.jobId, receipt);
+
+    if (legacyReceipt === 'confirmed') {
+      expect(await reconcileRegistration(review.jobId, context)).toMatchObject({status: 'commitment_confirmed'});
+      expect(await prepareRegistration({jobId: review.jobId}, context)).toMatchObject({
+        status: 'registration_prepared', quote: {commitmentFee: '10000'},
+      });
+    } else if (legacyReceipt === 'expired') {
+      expect(await reconcileRegistration(review.jobId, context)).toMatchObject({status: 'commitment_expired'});
+      expect(await refreshRegistrationReview(review.jobId, context)).toMatchObject({
+        status: 'commitment_prepared', quote: {commitmentFee: '20000'},
+      });
+      const rebuilt = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
+      expect(rebuilt.saltHex).toBe(persisted.saltHex);
+      expect(rebuilt.previousCommitments[0].signedHex).toBe(signed.hex);
+    } else if (legacyReceipt === 'unsent') {
+      await expect(retryBroadcast(review.jobId, context)).rejects.toMatchObject({code: 'INSUFFICIENT_RELAY_FEE'});
+      const retained = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
+      expect(retained.status).toBe('commitment_signed');
+      expect(JSON.stringify(retained.commitment) === JSON.stringify(persisted.commitment)).toBe(true);
+      expect(retained.saltHex).toBe(persisted.saltHex);
+    } else {
+      const result = expect(reconcileRegistration(review.jobId, context)).rejects;
+      if (legacyReceipt === 'change-address') await result.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
+      else if (legacyReceipt === 'intent') await result.toMatchObject({code: 'TRANSACTION_CHANGED'});
+      else await result.toThrow();
+      expect(mockEncryptedJobs.get(review.jobId) === receipt).toBe(true);
+    }
+    expect(broadcastCount).toBe(0);
+    return;
+  }
+
+  if (wrongSourceStage === 'approval') {
+    substituteFunding = true;
+    const signing = jest.spyOn(mockClient, 'signIdentityRegistrationTransaction');
+    await expect(approveCommitment(review.jobId, review.approvalToken, context)).rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
+    expect(signing).not.toHaveBeenCalled();
+    expect(mockEncryptedJobs.get(review.jobId)).toBe(encrypted);
+    expect(broadcastCount).toBe(0);
+    return;
+  }
+
+  if (wrongSourceStage === 'saved') {
+    // Model an existing signed receipt without bypassing the SDK's signature,
+    // value or raw-transaction checks. Only Mobile knows the selected source.
+    const built = await mockClient.createNameReservationTransaction({
+      ...commitmentBuilder.mock.calls[0][0], funding: [{txid: otherSource.getId(), vout: 0}],
+    });
+    const signed = mockClient.signIdentityRegistrationTransaction({transaction: built.transaction, keys: [[mockWif]]});
+    expect(signed.signingStatus).toBe('complete');
+    persisted.commitment = {prepared: built.transaction, vout: built.commitmentVout, signedHex: signed.hex, txid: signed.txid};
+    persisted.status = 'commitment_signed';
+    const receipt = await encryptkey(mockPassword, JSON.stringify(persisted));
+    mockEncryptedJobs.set(review.jobId, receipt);
+    await expect(retryBroadcast(review.jobId, context)).rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
+    expect(mockEncryptedJobs.get(review.jobId)).toBe(receipt);
+    expect(broadcastCount).toBe(0);
+    return;
+  }
 
   if (sourceFailure) {
     if (sourceFailure === 'tampered') {
@@ -387,6 +560,13 @@ test.each([
   expect(submitted.status).toBe('commitment_broadcast');
   expect(broadcastCount).toBe(1);
   const saved = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
+  if (broadcastFailure) {
+    expect(saved.commitment.broadcastStatus).toBe('unknown');
+    await retryBroadcast(review.jobId, context);
+    expect(broadcastCount).toBe(1);
+    expect(JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId))).commitment.signedHex)
+      .toBe(saved.commitment.signedHex);
+  }
   expect(saved.reservation.reservationHex).toBe(persisted.reservation.reservationHex);
   expect(saved.commitment.txid).not.toBe(Transaction.fromHex(saved.commitment.prepared.txHex, networks.verus).getId());
   expect(mockClient.validateIdentityRegistrationTransaction(saved.commitment.prepared, saved.commitment.signedHex))
@@ -404,9 +584,20 @@ test.each([
   const ready = await reconcileRegistration(review.jobId, context);
   expect(ready.status).toBe('commitment_confirmed');
   expect(linkVerusId).not.toHaveBeenCalled();
+  if (wrongSourceStage === 'registration') {
+    substituteFunding = true;
+    const before = mockEncryptedJobs.get(review.jobId);
+    await expect(prepareRegistration({jobId: review.jobId}, context)).rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
+    expect(mockEncryptedJobs.get(review.jobId)).toBe(before);
+    expect(broadcastCount).toBe(1);
+    return;
+  }
   const registrationReview = await prepareRegistration({jobId: review.jobId}, context);
   expect(registrationReview.status).toBe('registration_prepared');
   expect(registrationReview.quote.totalRequired).toEqual(registrationCosts);
+  expect(registrationReview.quote.commitmentFee).toBe(commitmentFee);
+  expect(registrationReview.quote.totalOperationRequired[system])
+    .toBe(new BN(registrationCosts[system]).add(new BN(commitmentFee)).toString(10));
   expect(broadcastCount).toBe(1);
   const preparedReveal = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
   // Check the actual reveal output against the daemon's current registeridentity
@@ -431,7 +622,7 @@ test.each([
     rawTransaction: saved.commitment.signedHex,
   });
   expect(preparedReveal.registration.prepared.prevouts[tokenProof == null ? 1 : 2]).toMatchObject({
-    txid: saved.commitment.txid, value: '199990000',
+    txid: saved.commitment.txid, value: new BN(200000000).sub(new BN(commitmentFee)).toString(10),
   });
   if (identityFunding) {
     expect(preparedReveal.registration.prepared.changeAddress).toBe(fundingAddress);

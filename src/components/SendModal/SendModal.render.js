@@ -18,7 +18,6 @@ import {
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
   TRADITIONAL_CRYPTO_SEND_MODAL,
-  UPDATE_IDENTITY_SEND_MODAL,
   WITHDRAW_SEND_MODAL,
 } from "../../utils/constants/sendModal";
 import SemiModal from "../SemiModal";
@@ -62,9 +61,6 @@ import RevokeIdentityResult from "./RevokeIdentity/RevokeIdentityResult/RevokeId
 import RecoverIdentityForm from "./RecoverIdentity/RecoverIdentityForm/RecoverIdentityForm";
 import RecoverIdentityConfirm from "./RecoverIdentity/RecoverIdentityConfirm/RecoverIdentityConfirm";
 import RecoverIdentityResult from "./RecoverIdentity/RecoverIdentityResult/RecoverIdentityResult";
-import UpdateIdentityForm from "./UpdateIdentity/UpdateIdentityForm/UpdateIdentityForm";
-import UpdateIdentityConfirm from "./UpdateIdentity/UpdateIdentityConfirm/UpdateIdentityConfirm";
-import UpdateIdentityResult from "./UpdateIdentity/UpdateIdentityResult/UpdateIdentityResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -82,7 +78,6 @@ const SEND_FORMS = {
   [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenForm,
   [REVOKE_IDENTITY_SEND_MODAL]: RevokeIdentityForm,
   [RECOVER_IDENTITY_SEND_MODAL]: RecoverIdentityForm,
-  [UPDATE_IDENTITY_SEND_MODAL]: UpdateIdentityForm
 };
 
 const SEND_CONFIRMATION = {
@@ -98,7 +93,6 @@ const SEND_CONFIRMATION = {
   [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenConfirm,
   [REVOKE_IDENTITY_SEND_MODAL]: RevokeIdentityConfirm,
   [RECOVER_IDENTITY_SEND_MODAL]: RecoverIdentityConfirm,
-  [UPDATE_IDENTITY_SEND_MODAL]: UpdateIdentityConfirm
 };
 
 const SEND_RESULTS = {
@@ -114,7 +108,6 @@ const SEND_RESULTS = {
   [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenResult,
   [REVOKE_IDENTITY_SEND_MODAL]: RevokeIdentityResult,
   [RECOVER_IDENTITY_SEND_MODAL]: RecoverIdentityResult,
-  [UPDATE_IDENTITY_SEND_MODAL]: UpdateIdentityResult
 };
 
 export const SendModalRender = function () {

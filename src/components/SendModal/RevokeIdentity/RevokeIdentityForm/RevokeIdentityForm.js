@@ -1,3 +1,6 @@
+import {captureIdentityUpdateContext, assertIdentityUpdateContext, validateIdentityUpdateContext} from '../../../../utils/identityUpdate/verifiedSubmission';
+import {satsToCoins} from '../../../../utils/math';
+import BigNumber from 'bignumber.js';
 import {useCallback, useEffect, useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {fromBase58Check} from '@bitgo/utxo-lib/dist/src/address';
@@ -22,6 +25,7 @@ import { decryptkey } from '../../../../utils/seedCrypt';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
+import store from '../../../../store';
 
 const RevokeIdentityForm = (props) => {
   const { height } = Dimensions.get("window");
@@ -78,7 +82,7 @@ const RevokeIdentityForm = (props) => {
     const {addresses} = keyObj;
 
     return addresses;
-  }, []);
+  }, [instanceKey, sendModal.data[SEND_MODAL_ENCRYPTED_IDENTITY_SEED]]);
 
   const submitData = useCallback(async () => {
     if (formHasError()) {
@@ -94,8 +98,15 @@ const RevokeIdentityForm = (props) => {
     let ownedAddress = '';
     let revocableByUser = false;
 
+    let updateContext;
     try {
+      updateContext = captureIdentityUpdateContext({
+        systemId: data[SEND_MODAL_SYSTEM_ID],
+        modalRequestId: sendModal.requestId,
+        allowSignedOut: true,
+      });
       const tarRes = await getIdentity(data[SEND_MODAL_SYSTEM_ID], identity);
+      assertIdentityUpdateContext(updateContext);
       if (tarRes.error) {
         throw new Error(tarRes.error.message);
       }
@@ -117,6 +128,7 @@ const RevokeIdentityForm = (props) => {
       }
 
       const revRes = await getIdentity(data[SEND_MODAL_SYSTEM_ID], revocation);
+      assertIdentityUpdateContext(updateContext);
       if (revRes.error) {
         throw new Error(revRes.error.message);
       }
@@ -135,6 +147,7 @@ const RevokeIdentityForm = (props) => {
 
       let isInWallet = false;
       const addrs = await getPotentialPrimaryAddresses(coinsList.VRSC);
+      assertIdentityUpdateContext(updateContext);
 
       for (const address of revRes.result.identity.primaryaddresses) {
         if (addrs.includes(address)) {
@@ -151,11 +164,18 @@ const RevokeIdentityForm = (props) => {
         );
       }
 
+      updateContext = {...updateContext, identitySnapshots: [{
+        identityAddress: revRes.result.identity.identityaddress, txid: revRes.result.txid, vout: revRes.result.vout,
+      }]};
+
       const friendlyNames = await getFriendlyNameMap(data[SEND_MODAL_SYSTEM_ID], tarRes.result);
+      assertIdentityUpdateContext(updateContext);
 
       const targetIdAddr = tarRes.result.identity.identityaddress;
       const revocationResult = await createRevokeIdentityTx(data[SEND_MODAL_SYSTEM_ID], targetIdAddr, revRes.result.identity.identityaddress)
 
+      await validateIdentityUpdateContext(updateContext, revocationResult);
+      assertIdentityUpdateContext(updateContext);
       props.setModalHeight(height >= 720 ? 696 : height - 24);
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         targetId: tarRes.result,
@@ -163,15 +183,25 @@ const RevokeIdentityForm = (props) => {
         friendlyNames,
         ownedAddress,
         revocableByUser,
-        revocationResult
+        revocationResult,
+        updateContext,
+        fee: satsToCoins(BigNumber(revocationResult.fundingApproval.nativeFee)).toString(),
+        feeCurrency: networkName,
       })
     } catch (e) {
+      if (e.code === 'SESSION_CHANGED') return;
+      if (updateContext) {
+        try { assertIdentityUpdateContext(updateContext); } catch (_) { return; }
+      }
       if (!showFundRawTransactionErrorAlert(e)) {
         Alert.alert('Error', e.message);
       }
+    } finally {
+      // A cancelled review must not change the busy state of a replacement dialog.
+      if (store.getState().sendModal.requestId === sendModal.requestId) {
+        props.setLoading(false);
+      }
     }
-
-    props.setLoading(false)
   }, [formHasError, getPotentialPrimaryAddresses, sendModal, dispatch, props]);
 
   return RevokeIdentityFormRender({

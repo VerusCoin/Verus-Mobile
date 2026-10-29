@@ -41,6 +41,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import Styles from '../../styles';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
 import { coinsList } from '../../utils/CoinData/CoinsList';
+import { prepareSubWalletCarousel } from '../../utils/subwallet/carousel';
 
 const DynamicHeader = ({ switchTab }) => {
   const dispatch = useDispatch();
@@ -74,6 +75,7 @@ const DynamicHeader = ({ switchTab }) => {
   const [loadingCarouselItems, setLoadingCarouselItems] = useState(true);
   const [mappedCoinObj, setMappedCoinObj] = useState(null);
   const fadeAnimation = useRef(new Animated.Value(0)).current;
+  const currentWallets = useRef({chainTicker, wallets: allSubWallets});
 
   const pendingBalance = useMemo(() => {
     return Object.values(balances).reduce((a, b) => {
@@ -115,33 +117,6 @@ const DynamicHeader = ({ switchTab }) => {
     }).start();
   }, [fadeAnimation]);
 
-  const prepareCarouselItems = useCallback(
-    (allSubWallets, selectedSubWallet) => {
-      let wallets = [];
-
-      if (selectedSubWallet == null) {
-        wallets = allSubWallets;
-      } else {
-        let newSubWallets = [...allSubWallets];
-
-        while (newSubWallets[0].id !== selectedSubWallet.id) {
-          newSubWallets.push(newSubWallets.shift());
-        }
-
-        wallets = newSubWallets;
-      }
-
-      if (wallets.length === 1) {
-        return [{ ...wallets[0], index: 0 }];
-      } else {
-        return wallets.map((x, index) => {
-          return { ...x, index };
-        });
-      }
-    },
-    [],
-  );
-
   useEffect(() => {
     fadeIn();
 
@@ -159,16 +134,27 @@ const DynamicHeader = ({ switchTab }) => {
   }, [activeCoin, fadeIn]);
 
   useEffect(() => {
+    currentWallets.current = {chainTicker, wallets: allSubWallets};
     setLoadingCarouselItems(true);
-    const items = prepareCarouselItems(allSubWallets, selectedSubWallet);
+    const items = prepareSubWalletCarousel(allSubWallets, selectedSubWallet);
     setCarouselItems(items);
     setLoadingCarouselItems(false);
-  }, [allSubWallets, selectedSubWallet, prepareCarouselItems]);
+  }, [chainTicker, allSubWallets, selectedSubWallet]);
 
   const setSubWallet = (wallet) => {
-    dispatch(setCoinSubWallet(chainTicker, wallet));
+    // Carousel gestures can finish after the wallet list has been rebuilt.
+    const current = currentWallets.current;
+    if (current.chainTicker !== chainTicker) return;
 
-    const items = prepareCarouselItems(allSubWallets, wallet);
+    const currentWallet = wallet === null
+      ? null
+      : (current.wallets || []).find((item) => item.id === wallet?.id);
+
+    if (currentWallet === undefined) return;
+
+    dispatch(setCoinSubWallet(chainTicker, currentWallet));
+
+    const items = prepareSubWalletCarousel(current.wallets, currentWallet);
     setCarouselItems(items);
   };
 
@@ -188,9 +174,9 @@ const DynamicHeader = ({ switchTab }) => {
 
   const handleLeftSwipe = () => {
     if (selectedSubWallet != null && carouselItems.length > 1) {
-      const currentIndex = carouselItems.findIndex(
+      const currentIndex = Math.max(0, carouselItems.findIndex(
         (x) => x.id === selectedSubWallet.id,
-      );
+      ));
       const index =
         currentIndex === carouselItems.length - 1 ? 0 : currentIndex + 1;
 
@@ -200,9 +186,9 @@ const DynamicHeader = ({ switchTab }) => {
 
   const handleRightSwipe = () => {
     if (selectedSubWallet != null && carouselItems.length > 1) {
-      const currentIndex = carouselItems.findIndex(
+      const currentIndex = Math.max(0, carouselItems.findIndex(
         (x) => x.id === selectedSubWallet.id,
-      );
+      ));
       const index =
         currentIndex === 0 ? carouselItems.length - 1 : currentIndex - 1;
 
@@ -292,6 +278,7 @@ const DynamicHeader = ({ switchTab }) => {
 
     return (
       <Animated.View
+        key={item.id}
         style={{
           opacity: fadeAnimation,
           width:

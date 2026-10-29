@@ -9,7 +9,7 @@ import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
 import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
 import { explorers } from '../../../../utils/CoinData/CoinData';
 
-export const RecoverIdentityResultRender = ({targetId, networkObj, finishSend, txid, openExplorer}) => {
+export const RecoverIdentityResultRender = ({targetId, networkObj, finishSend, txid, deliveryUnknown, openExplorer}) => {
   const formattedFriendlyName = convertFqnToDisplayFormat(targetId.fullyqualifiedname);
 
   return (
@@ -37,16 +37,16 @@ export const RecoverIdentityResultRender = ({targetId, networkObj, finishSend, t
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`${formattedFriendlyName} recovered!`}
+          {deliveryUnknown ? 'Delivery not confirmed' : `${formattedFriendlyName} recovered!`}
         </Text>
       </TouchableOpacity>
-      <View style={{paddingVertical: 16}}>
+      {!deliveryUnknown && <View style={{paddingVertical: 16}}>
         <AnimatedSuccessCheckmark
           style={{
             width: 128,
           }}
         />
-      </View>
+      </View>}
       <View style={{width: '75%'}}>
         <Text
           style={{
@@ -54,7 +54,9 @@ export const RecoverIdentityResultRender = ({targetId, networkObj, finishSend, t
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`Your VerusID has been recovered on the ${networkObj ? networkObj.display_name : "???"} blockchain.`}
+          {deliveryUnknown
+            ? 'The network may have received this transaction. Check its status before starting a new review.'
+            : `Your VerusID has been recovered on the ${networkObj ? networkObj.display_name : '???'} blockchain.`}
         </Text>
       </View>
       <View style={{paddingVertical: 8, width: '75%'}}>
@@ -64,7 +66,7 @@ export const RecoverIdentityResultRender = ({targetId, networkObj, finishSend, t
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {'This action may take a few minutes to confirm on-chain.'}
+          {deliveryUnknown ? 'This screen will not send the transaction again.' : 'This action may take a few minutes to confirm on-chain.'}
         </Text>
       </View>
       <View
@@ -86,7 +88,7 @@ export const RecoverIdentityResultRender = ({targetId, networkObj, finishSend, t
           textColor={Colors.secondaryColor}
           style={{width: 148}}
           onPress={finishSend}>
-          Done
+          {deliveryUnknown ? 'Close' : 'Done'}
         </Button>
       </View>
       <TouchableOpacity

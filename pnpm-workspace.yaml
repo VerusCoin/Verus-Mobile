@@ -6,10 +6,10 @@ blockExoticSubdeps: false
 autoInstallPeers: false
 
 overrides:
-  "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#2d3240429b7664fb01ca3f0f9e1c2b6da803f68d"
-  verus-typescript-primitives: "github:VerusCoin/verus-typescript-primitives#36cf60817a8ff983b3f8b30f43b3f467fc064ccc"
-  verusd-rpc-ts-client: "github:VerusCoin/verusd-rpc-ts-client#5d7155a10671415a7fd3054984b4591f5309fcf3"
-  verusid-ts-client: "github:VerusCoin/verusid-ts-client#afd8121e103d965660c8024f0c5dff1378d5ad15"
+  "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#4d8caa6d1d25ade1dbf91ec2bf79ef173d2316eb"
+  verus-typescript-primitives: "github:VerusCoin/verus-typescript-primitives#f7de920e32e8d4778356c18ce8bb6d3a22ec72a3"
+  verusd-rpc-ts-client: "github:VerusCoin/verusd-rpc-ts-client#f2af29b71d231f50bfac7a8aca852e9facd01b92"
+  verusid-ts-client: "github:VerusCoin/verusid-ts-client#05a5d37192d34338a19bc889f5305bebca3a4800"
   word-wrap: "1.2.4"
   bs58check: "2.1.2"
   braces: "3.0.3"
