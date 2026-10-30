@@ -62,6 +62,8 @@ const ConfirmPayStep = ({
   next,
   cancel,
   onGoBack,
+  onReviewContent,
+  footerBottomPadding,
   highRiskCount,
   contentCount,
   hasEncryptedKeys,
@@ -493,6 +495,14 @@ const ConfirmPayStep = ({
           <View style={localStyles.recapRow}>
             <Text style={localStyles.recapText}>{contentCount} content {contentCount === 1 ? 'change' : 'changes'}</Text>
           </View>
+          {onReviewContent && (
+            <TouchableOpacity
+              accessibilityRole="button"
+              onPress={onReviewContent}
+              style={{minHeight: 44, justifyContent: 'center'}}>
+              <Text style={{color: Colors.primaryColor, fontSize: 16, fontWeight: '600'}}>Review content again</Text>
+            </TouchableOpacity>
+          )}
           {hasEncryptedKeys && (
             <View style={localStyles.encryptedKeyRecapRow}>
               <MaterialCommunityIcons
@@ -512,7 +522,7 @@ const ConfirmPayStep = ({
       </ScrollView>
 
       {/* Footer: Back + Update */}
-      <View style={parentStyles.footer}>
+      <View style={[parentStyles.footer, footerBottomPadding != null && {paddingBottom: footerBottomPadding}]}>
         <View style={parentStyles.ctaCol}>
           <Button
             mode="contained"
@@ -539,7 +549,7 @@ const ConfirmPayStep = ({
             style={parentStyles.primaryCta}
             disabled={!hasFee}
           >
-            Update
+            Update identity
           </GradientButton>
         </View>
       </View>
