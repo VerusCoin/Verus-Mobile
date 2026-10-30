@@ -23,7 +23,7 @@
     "update-verus-libs": "node tools/update-verus-libs.cjs"
   },
   "dependencies": {
-    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#4d8caa6d1d25ade1dbf91ec2bf79ef173d2316eb",
+    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#ff60e360fe608dd177e8a63c026552a06112ba59",
     "@noble/curves": "1.9.7",
     "@noble/hashes": "1.8.0",
     "@react-native-async-storage/async-storage": "2.1.2",
@@ -124,10 +124,10 @@
     "varuint-bitcoin": "1.0.4",
     "version_compare": "0.0.3",
     "verus-pay-utils": "git+https://github.com/VerusCoin/verus-pay-utils.git",
-    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#f7de920e32e8d4778356c18ce8bb6d3a22ec72a3",
+    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#cfe8c45e43ac7846d73083501aa42665ec9f85d9",
     "verus-zkedid-utils": "git+https://github.com/VerusCoin/verus-zkedid-utils.git",
     "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#f2af29b71d231f50bfac7a8aca852e9facd01b92",
-    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#05a5d37192d34338a19bc889f5305bebca3a4800",
+    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#50fa3ffa3bfdd0c2a92414da540c257802c76cd5",
     "vm-browserify": "0.0.4",
     "wif": "2.0.6",
     "react-native-pager-view": "6.7.1"
@@ -254,12 +254,12 @@
     "sjcl": "1.0.9",
     "ws@6": "6.2.4",
     "ws@7": "7.5.11",
-    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#f7de920e32e8d4778356c18ce8bb6d3a22ec72a3",
+    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#cfe8c45e43ac7846d73083501aa42665ec9f85d9",
     "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#f2af29b71d231f50bfac7a8aca852e9facd01b92",
-    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#05a5d37192d34338a19bc889f5305bebca3a4800",
+    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#50fa3ffa3bfdd0c2a92414da540c257802c76cd5",
     "verus-typescript-primitives/bn.js": "5.2.3",
     "verusid-ts-client/bn.js": "5.2.3",
-    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#4d8caa6d1d25ade1dbf91ec2bf79ef173d2316eb"
+    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#ff60e360fe608dd177e8a63c026552a06112ba59"
   },
   "jest": {
     "preset": "react-native",
