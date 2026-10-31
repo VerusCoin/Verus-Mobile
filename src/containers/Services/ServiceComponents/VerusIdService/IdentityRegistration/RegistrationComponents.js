@@ -204,6 +204,7 @@ export const RegistrationDetails = ({review}) => {
   return <View style={styles.card}>
     <Disclosure title="Identity details" summary="Ownership, recovery and transaction details">
       <DetailRow label="Controlled by">This wallet</DetailRow>
+      {!!review.identity?.privateaddress && <DetailRow label="Private address">{review.identity.privateaddress}</DetailRow>}
       <DetailRow label="Namespace">{identityLabel(review.identity?.parent, names)}</DetailRow>
       <DetailRow label="Referral">{review.referralID ? identityLabel(review.referralID, names) : 'None'}</DetailRow>
       <DetailRow label="Recovery">{authority(review.identity?.recoveryauthority)}</DetailRow>

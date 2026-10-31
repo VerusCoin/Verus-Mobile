@@ -92,6 +92,7 @@ test.each([
   ['funding address', job => { job.fundingAddress = 'i-other'; }],
   ['signing address', job => { job.signingAddress = 'R-other'; }],
   ['identity', job => { job.identity.recoveryauthority = 'i-other'; }],
+  ['private address', job => { job.identity.privateaddress = 'zs-other'; }],
   ['referral', job => { job.request.referralID = 'i-other'; }],
   ['reservation authorization', job => { job.reservation.authorizationID = 'i-other'; }],
   ['reservation preimage', job => { job.reservation.reservationHex = '040506'; }],

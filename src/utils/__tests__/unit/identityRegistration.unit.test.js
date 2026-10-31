@@ -119,6 +119,7 @@ const request = {
   systemId: 'system', chainTicker: 'VRSC', rootSystemName: 'VRSC',
   fundingAddress: mockAddress, signingAddress: mockAddress, keyChannel: 'vrpc', name: 'alice',
 };
+const PRIVATE_ADDRESS = 'zs1wczplx4kegw32h8g0f7xwl57p5tvnprwdmnzmdnsw50chcl26f7tws92wk2ap03ykaq6jyyztfa';
 const prepared = stage => ({
   stage, quote: {...mockQuote},
   snapshot: {systemID: 'system', expiryHeight: 120},
@@ -229,6 +230,33 @@ test('persists reservation before signing, and signed bytes before broadcast; re
   expect(JSON.stringify(mockJobs)).not.toContain('private-key-must-never-be-persisted');
   expect(mockGetKey.mock.calls[0][2].sessionScope.accountHash).toBe('account-a');
   expect(mockSendRegistration).toHaveBeenCalledWith(mockJobs[review.jobId].commitment.prepared, 'commit-signed', mockAddress);
+});
+
+test('keeps the reviewed private address through saved registration and approval refresh', async () => {
+  const context = createRegistrationContext();
+  const privateRequest = {...request, privateAddress: PRIVATE_ADDRESS};
+  const review = await prepareCommitment({request: privateRequest}, context);
+  expect(review.identity.privateaddress).toBe(PRIVATE_ADDRESS);
+  expect(mockJobs[review.jobId].request.privateAddress).toBe(PRIVATE_ADDRESS);
+  privateRequest.privateAddress = '';
+  await refreshRegistrationReview(review.jobId, context);
+  await approveCommitment(review.jobId, review.approvalToken, context);
+  confirm(mockCommitTxid);
+  const reveal = await prepareRegistration({jobId: review.jobId}, context);
+  expect(reveal.identity.privateaddress).toBe(PRIVATE_ADDRESS);
+  expect(mockBuildRegistration).toHaveBeenLastCalledWith(expect.objectContaining({
+    identity: expect.objectContaining({privateaddress: PRIVATE_ADDRESS}),
+  }));
+  await approveRegistration(review.jobId, reveal.approvalToken, context);
+  expect(mockJobs[review.jobId].identity.privateaddress).toBe(PRIVATE_ADDRESS);
+});
+
+test('rejects an invalid private address before preparing a commitment or charging either fee', async () => {
+  await expect(prepareCommitment({request: {...request, privateAddress: 'invalid'}}, createRegistrationContext()))
+    .rejects.toThrow('valid private zs-address');
+  expect(mockBuildCommitment).not.toHaveBeenCalled();
+  expect(mockJobs).toEqual({});
+  expect(mockSend).not.toHaveBeenCalled();
 });
 
 test('a first payment writes its refreshed plan and signed receipt once before immediate broadcast', async () => {

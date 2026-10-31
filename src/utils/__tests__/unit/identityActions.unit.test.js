@@ -53,6 +53,12 @@ beforeEach(() => {
   Platform.OS = 'ios';
 });
 
+test('linking opens the multi-selection page on the selected identity network', () => {
+  const instance = overview();
+  instance.openLinkIdentitiesFromChain('VRSCTEST');
+  expect(mockNavigate).toHaveBeenCalledWith('LinkIdentities', {chain: 'VRSCTEST'});
+});
+
 test.each([['transfer', 'IdentityTransfer'], ['modify', 'IdentityModify']])(
   '%s opens the correct identity screen after the native sheet has dismissed',
   (action, screen) => {

@@ -35,6 +35,7 @@ import {registrationCommitmentFee, registrationDeletionKind} from './deletion';
 import {sha256} from '../crypto/hash';
 import {validateLookupBinding} from '../api/channels/verusid/requests/lookupBinding';
 import {identityOutputAmounts} from '../identityManagement/identityFunds';
+import {validatePrivateAddress} from '../identityManagement/identityDefinition';
 
 const inFlight = new Map();
 const verifiedReceipts = new Map();
@@ -319,6 +320,7 @@ export const normalizeRegistrationRequest = async (request, requestContext) => {
   const context = createRegistrationContext(requestContext);
   request = copy(request);
   assertWalletRequest(request);
+  if (request.privateAddress != null) request.privateAddress = validatePrivateAddress(request.privateAddress);
   request = await normalizeIdentityChoices(request, context);
 
   if (
@@ -413,6 +415,7 @@ const makeIdentity = (request, resolvedName) => ({
   systemid: request.systemId,
   identityaddress: resolvedName.identityID,
   primaryaddresses: [request.signingAddress],
+  ...(request.privateAddress ? {privateaddress: request.privateAddress} : {}),
   recoveryauthority: request.recoveryAuthority || resolvedName.identityID,
   revocationauthority: request.revocationAuthority || resolvedName.identityID,
 });

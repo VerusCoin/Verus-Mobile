@@ -56,6 +56,8 @@ const otherKey = ECPair.fromPrivateKeyBuffer(Buffer.alloc(32, 12), networks.veru
 const otherAddress = otherKey.getAddress();
 const thirdAddress = ECPair.fromPrivateKeyBuffer(Buffer.alloc(32, 13), networks.verus).getAddress();
 const coin = {id: 'VRSCTEST', display_ticker: 'VRSCTEST', system_id: SYSTEM, currency_id: SYSTEM, testnet: true};
+const PRIVATE = 'zs1wczplx4kegw32h8g0f7xwl57p5tvnprwdmnzmdnsw50chcl26f7tws92wk2ap03ykaq6jyyztfa';
+const OTHER_PRIVATE = 'zs1e0r2fuxpn6kymwa656trkwk8mpwzj03ucpw6kpvje5gjl6mgtjgdvafcgl54su2uclwgw6v24em';
 const ok = result => ({result, error: null});
 const missing = () => ({result: null, error: {code: -5, message: 'Not found'}});
 const builder = () => {
@@ -313,6 +315,44 @@ test('copies the recipient identity signer list/threshold with self recovery and
   }});
   expect(plan.review.losesControl).toBe(true);
   await expect(sendIdentityUpdate(plan)).resolves.toHaveProperty('txid');
+});
+
+test('uses this network’s wallet private address for the modify shortcut', async () => {
+  mockState.authentication.activeAccount.keys.VRSCTEST.dlight_private = {addresses: [PRIVATE]};
+  mockState.authentication.activeAccount.keys.VRSC = {dlight_private: {addresses: [OTHER_PRIVATE]}};
+  const model = await load();
+  expect(model.walletPrivateAddress).toBe(PRIVATE);
+  const plan = await prepareIdentityUpdate(model, {mode: 'modify', changes: {privateaddress: model.walletPrivateAddress}});
+  expect(plan.review.after.privateaddress).toBe(PRIVATE);
+  await expect(sendIdentityUpdate(plan)).resolves.toHaveProperty('txid');
+});
+
+test.each([undefined, 'bad-private-address'])('does not offer an unavailable or invalid wallet private address (%s)', async privateAddress => {
+  mockState.authentication.activeAccount.keys.VRSCTEST.dlight_private = {addresses: [privateAddress]};
+  mockState.authentication.activeAccount.keys.VRSC = {dlight_private: {addresses: [OTHER_PRIVATE]}};
+  expect((await load()).walletPrivateAddress).toBe('');
+});
+
+test('copies the recipient private address into the reviewed and signed identity output', async () => {
+  putIdentity('alice', {privateaddress: PRIVATE});
+  putIdentity('satoshi', {primaryaddresses: [otherAddress], privateaddress: OTHER_PRIVATE});
+  const plan = await prepare({mode: 'transfer', recipient: 'satoshi@'});
+  expect(plan.review).toMatchObject({usesRecipientPrivateAddress: true,
+    before: {privateaddress: PRIVATE}, after: {privateaddress: OTHER_PRIVATE}});
+  await sendIdentityUpdate(plan);
+  const transaction = Transaction.fromHex(mockSend.mock.calls[0][0], networks.verus);
+  const output = new IdentityScript();
+  output.fromBuffer(transaction.outs[0].script);
+  expect(output.getIdentity().privateAddresses[0].toAddressString()).toBe(OTHER_PRIVATE);
+});
+
+test('requires a new review when the recipient changes its private address', async () => {
+  putIdentity('satoshi', {primaryaddresses: [otherAddress], privateaddress: PRIVATE});
+  const plan = await prepare({mode: 'transfer', recipient: 'satoshi@'});
+  putIdentity('satoshi', {primaryaddresses: [otherAddress], privateaddress: OTHER_PRIVATE});
+  await expect(sendIdentityUpdate(plan)).rejects.toMatchObject({code: 'REVIEW_CHANGED'});
+  expect(mockSign).not.toHaveBeenCalled();
+  expect(mockSend).not.toHaveBeenCalled();
 });
 
 test('supports an identity as the only payment source with the actual SDK signer', async () => {

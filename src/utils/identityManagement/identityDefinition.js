@@ -162,7 +162,7 @@ export const buildModifiedIdentity = (identity, changes) => {
   return finishUpdate(identity, updated);
 };
 
-/** Transfer signing control and make the transferred identity its own authority. */
+/** Copy recipient controls and its published private address, with self authorities. */
 export const buildTransferredIdentity = (identity, {address, targetIdentity} = {}) => {
   requireIdentity(identity);
   if (identity.hasTokenizedIdControl()) {
@@ -175,10 +175,12 @@ export const buildTransferredIdentity = (identity, {address, targetIdentity} = {
 
   let primaryaddresses;
   let minimumsignatures;
+  let privateaddress;
   if (hasTarget) {
     requireIdentity(targetIdentity);
     primaryaddresses = validatePrimaryAddresses(targetIdentity.primaryAddresses.map(primary => primary.toAddress()));
     minimumsignatures = validateMinimumSignatures(targetIdentity.minSigs.toNumber(), primaryaddresses.length);
+    privateaddress = targetIdentity.privateAddresses?.[0]?.toAddressString();
   } else {
     primaryaddresses = validatePrimaryAddresses([address]);
     minimumsignatures = 1;
@@ -190,5 +192,6 @@ export const buildTransferredIdentity = (identity, {address, targetIdentity} = {
     minimumsignatures,
     recoveryauthority: authority,
     revocationauthority: authority,
+    ...(privateaddress ? {privateaddress} : {}),
   });
 };

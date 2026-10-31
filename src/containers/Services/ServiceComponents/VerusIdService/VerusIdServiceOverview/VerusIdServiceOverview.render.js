@@ -104,9 +104,9 @@ export const VerusIdServiceOverviewRender = function () {
             <List.Subheader>{`Options`}</List.Subheader>
             <Divider />
             <List.Item
-              title={'Link VerusID'}
+              title={'Link identities'}
               right={props => <List.Icon {...props} icon={'plus'} size={20} />}
-              onPress={() => this.openLinkIdentityModalFromChain(chainId)}
+              onPress={() => this.openLinkIdentitiesFromChain(chainId)}
             />
             <Divider />
           </React.Fragment>

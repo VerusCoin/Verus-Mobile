@@ -300,6 +300,7 @@ function IdentityModifyForm({navigation, route}) {
             onChangeText={value => change(key, value)} />
           <TextAction disabled={busy} label={`Use this identity for ${label.toLowerCase()}`}
             onPress={() => change(key, model.displayName)}>Use this identity</TextAction>
+          {key === 'recoveryauthority' && <Text style={styles.muted}>The recovery identity can take control of this identity. After a change, only the new recovery identity can authorize another change to recovery. Choose an identity whose owner you trust.</Text>}
         </View>)}
         <Text style={styles.muted}>Use a full name ending in @ or an identity address. Changing either role also requires this wallet to control its current authority.</Text>
       </View>
@@ -307,6 +308,8 @@ function IdentityModifyForm({navigation, route}) {
         <Text style={styles.subtitle}>Private receiving address</Text>
         <Input label="Private address (optional)" value={fields.privateaddress} disabled={busy} multiline
           placeholder="zs-address" onChangeText={value => change('privateaddress', value)} />
+        {!!model.walletPrivateAddress && <TextAction disabled={busy}
+          onPress={() => change('privateaddress', model.walletPrivateAddress)}>Use this wallet’s private address</TextAction>}
         <Text style={styles.muted}>The address published for private payments. Changing it does not move existing funds. Leave empty to remove the identity’s published private addresses.</Text>
       </View>
       <FundingSource form={form} />
@@ -375,7 +378,7 @@ function IdentityTransferForm({navigation, route}) {
         </View>
         <View style={styles.notice}>
           <Text style={styles.body}>Using another VerusID?</Text>
-          <Text style={styles.muted}>We’ll copy its current primary addresses and required signatures. Future changes to that VerusID won’t change this one.</Text>
+          <Text style={styles.muted}>We’ll copy its current primary addresses, required signatures, and private receiving address if it has one. Future changes to that VerusID won’t change this one.</Text>
         </View>
         <View style={styles.card}>
           <CheckOption label="Return identity funds to my wallet" checked={returnFunds} disabled={busy}
@@ -441,7 +444,10 @@ export function IdentityUpdateReview({navigation}) {
   const completedPlan = useRef(null);
   const review = plan?.review;
   const transfer = review?.mode === 'transfer';
-  const needsAcknowledgement = transfer || review?.losesControl || Number(review?.after?.minimumsignatures) > 1;
+  const assignsExternalRecovery = !transfer && !!review &&
+    review.before.recoveryauthority !== review.after.recoveryauthority &&
+    review.after.recoveryauthority !== review.identityAddress;
+  const needsAcknowledgement = transfer || assignsExternalRecovery || review?.losesControl || Number(review?.after?.minimumsignatures) > 1;
   const stale = error?.code === 'REVIEW_CHANGED';
   const acknowledged = !!plan && acknowledgedPlan === plan;
   const unlinkAfterSend = !!review?.losesControl && keepLinkedPlan !== plan;
@@ -559,6 +565,10 @@ export function IdentityUpdateReview({navigation}) {
     {!transfer && review.losesControl && <View style={[styles.notice, styles.warning]}>
       <Text style={styles.body}>These changes remove this wallet’s ability to control the identity on its own.</Text>
     </View>}
+    {assignsExternalRecovery && <View style={[styles.notice, styles.warning]}>
+      <Text style={styles.subtitle}>Recovery gives control</Text>
+      <Text style={styles.body}>{authorityName(review.after.recoveryauthority, review)} will be able to take control of this identity. Only that identity will be able to authorize future changes to the recovery identity.</Text>
+    </View>}
     {review.losesControl && <View style={styles.card}>
       <CheckOption label="Unlink from my wallet after sending" checked={unlinkAfterSend} disabled={busy}
         onPress={() => setKeepLinkedPlan(value => value === plan ? null : plan)} />
@@ -593,8 +603,11 @@ export function IdentityUpdateReview({navigation}) {
         <DetailRow label="Recovery identity">{authorityName(review.before.recoveryauthority, review)}</DetailRow>
       </Disclosure>}
       {review.after.privateaddress ? <>
-        <DetailRow label="Private receiving address retained">{review.after.privateaddress}</DetailRow>
-        <Text style={styles.muted}>Private payments still go to this address’s existing owner. The transfer does not give the recipient its private key. Modify the identity first if this address should be removed or changed.</Text>
+        <DetailRow label={review.usesRecipientPrivateAddress ? 'Recipient’s private receiving address' : 'Private receiving address retained'}>{review.after.privateaddress}</DetailRow>
+        {review.usesRecipientPrivateAddress ? <>
+          <Text style={styles.muted}>Private payments will use the address published by {review.recipientName}. Existing private funds are not moved.</Text>
+          {review.before.privateaddress !== review.after.privateaddress && <DetailRow label="Previous private receiving address">{review.before.privateaddress || 'None'}</DetailRow>}
+        </> : <Text style={styles.muted}>Private payments still go to this address’s existing owner. The transfer does not give the recipient its private key. Modify the identity first if this address should be removed or changed.</Text>}
       </> : <Text style={styles.muted}>No private receiving address is published.</Text>}
     </View>}
     {(review.warnings || []).map((warning, index) => <View key={index} style={[styles.notice, styles.warning]}>

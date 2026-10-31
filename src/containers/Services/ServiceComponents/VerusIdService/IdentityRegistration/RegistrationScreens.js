@@ -4,7 +4,7 @@ import {ActivityIndicator, Text, TextInput} from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useSelector} from 'react-redux';
 import {useFocusEffect} from '@react-navigation/native';
-import {VRPC} from '../../../../../utils/constants/intervalConstants';
+import {DLIGHT_PRIVATE, VRPC} from '../../../../../utils/constants/intervalConstants';
 import {VERUSID_SERVICE_ID} from '../../../../../utils/constants/services';
 import {
   createRegistrationContext,
@@ -228,6 +228,7 @@ export function IdentityRegistrationCreate({navigation, route}) {
   ), [coins, account]);
   const [coinId, setCoinId] = useState(route.params?.coinId || wallets[0]?.id);
   const selected = wallets.find(coin => coin.id === coinId);
+  const privateAddress = account?.keys?.[selected?.id]?.[DLIGHT_PRIVATE]?.addresses?.[0];
   const fundingSources = useMemo(
     () => registrationFundingSources(selected, account, linkedIds),
     [selected, account, linkedIds],
@@ -265,6 +266,7 @@ export function IdentityRegistrationCreate({navigation, route}) {
       fundingName: fundingSource.fundingName,
       keyChannel: VRPC,
       name: name.trim(),
+      ...(privateAddress ? {privateAddress} : {}),
       ...(referralID.trim() ? {referralID: referralID.trim()} : {}),
       ...(recoveryAuthority.trim() ? {recoveryAuthority: recoveryAuthority.trim()} : {}),
       ...(revocationAuthority.trim() ? {revocationAuthority: revocationAuthority.trim()} : {}),
@@ -351,6 +353,7 @@ export function IdentityRegistrationCreate({navigation, route}) {
         onSelect={address => setManualFunding(current => ({...current, [coinId]: address}))}
       />
       <Text style={styles.muted}>Both payments use this source. Change returns here.</Text>
+      {!!privateAddress && <Text style={styles.muted}>Your identity will use this wallet’s private address for private payments.</Text>}
     </View>
     <View style={styles.card}>
       <Text style={styles.subtitle}>Save with a referral</Text>

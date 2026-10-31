@@ -59,9 +59,12 @@ const {
 } = require('../../identityRegistration');
 const {linkVerusId} = require('../../../actions/actions/services/dispatchers/verusid/verusid');
 const {publishRegistrationState} = require('../../../actions/actions/services/dispatchers/verusid/registration');
+const PRIVATE_ADDRESS = 'zs1wczplx4kegw32h8g0f7xwl57p5tvnprwdmnzmdnsw50chcl26f7tws92wk2ap03ykaq6jyyztfa';
 
 test.each([
   {description: 'completes native registration', branch: 'native', tokenProof: null},
+  {description: 'preserves the wallet private address through a commitment broadcast retry', branch: 'native', tokenProof: null, privateAddress: PRIVATE_ADDRESS, broadcastFailure: 'timeout'},
+  {description: 'registers the wallet private address when paying from a linked identity', branch: 'native', tokenProof: null, privateAddress: PRIVATE_ADDRESS, identityFunding: true},
   {description: 'reviews the calculated fee for large reserve change', branch: 'native', tokenProof: null, reserveCurrencyCount: 75},
   ...['confirmed', 'expired', 'unsent', 'signature', 'change-address', 'intent'].map(legacyReceipt => ({
     description: `checks a legacy low-fee ${legacyReceipt} receipt without relaxing broadcast validation`,
@@ -90,7 +93,7 @@ test.each([
     branch: guardAttack === 'lost-reserve' ? 'token-burn' : 'native',
     tokenProof: guardAttack === 'lost-reserve' ? 1 : null, guardAttack,
   })),
-])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, legacyReceipt}) => {
+])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, legacyReceipt, privateAddress}) => {
   jest.clearAllMocks();
   mockEncryptedJobs.clear();
   const system = nameAndParentAddrToIAddr('VRSC');
@@ -368,6 +371,7 @@ test.each([
     systemId: system, chainTicker: 'VRSC', rootSystemName: 'VRSC',
     fundingAddress, signingAddress: address,
     keyChannel: 'vrpc', name: tokenProof == null ? 'Alice' : 'Alice.community@',
+    ...(privateAddress ? {privateAddress} : {}),
   };
   if (authorityStatus && authorityStatus !== 'elapsed-countdown') {
     await expect((async () => {
@@ -402,6 +406,7 @@ test.each([
   const persisted = JSON.parse(decryptkey(mockPassword, encrypted));
   expect(review.identity.parent).toBe(tokenProof == null ? system : token);
   expect(persisted.reservation.parentID).toBe(tokenProof == null ? system : token);
+  expect(persisted.identity.privateaddress).toBe(privateAddress);
   expect(encrypted).not.toContain(persisted.reservation.reservationHex);
   expect(JSON.stringify(persisted)).not.toContain(mockWif);
   expect(JSON.stringify(review)).not.toContain(persisted.reservation.reservationHex);
@@ -614,8 +619,10 @@ test.each([
     identityaddress: review.identityAddress, primaryaddresses: [address],
     recoveryauthority: review.identityAddress, revocationauthority: review.identityAddress,
     contentmap: {}, contentmultimap: {},
+    ...(privateAddress ? {privateaddress: privateAddress} : {}),
   });
-  expect(revealIdentity.privateAddresses || []).toEqual([]);
+  expect((revealIdentity.privateAddresses || []).map(destination => destination.toAddressString()))
+    .toEqual(privateAddress ? [privateAddress] : []);
   expect(preparedReveal.registration.prepared.prevouts).toHaveLength(tokenProof == null ? 2 : 3);
   expect(preparedReveal.registration.prepared.prevouts[0]).toMatchObject({
     txid: saved.commitment.txid, vout: saved.commitment.vout, value: '0',

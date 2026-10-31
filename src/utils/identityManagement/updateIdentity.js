@@ -28,10 +28,12 @@ import {
 import {getSpendableUtxos} from '../api/channels/vrpc/requests/getAddressUtxos';
 import {convertFqnToDisplayFormat} from '../fullyqualifiedname';
 import {identityToDisplayJson} from '../identityUpdate/identityDisplay';
+import {DLIGHT_PRIVATE} from '../constants/intervalConstants';
 import {
   buildModifiedIdentity,
   buildTransferredIdentity,
   getIdentityEditFields,
+  validatePrivateAddress,
 } from './identityDefinition';
 import {
   readIdentityFunds,
@@ -299,6 +301,12 @@ export const loadIdentityForUpdate = async ({chain, identityAddress}, requestCon
 
   const fundingSources = identitySources(coin, signingAddress, state);
   const identityNames = await resolveLabels(coin, subject.identity, {[subject.address]: subject.name}, context);
+  let walletPrivateAddress = '';
+  try {
+    walletPrivateAddress = validatePrivateAddress(state.authentication.activeAccount.keys?.[coin.id]?.[DLIGHT_PRIVATE]?.addresses?.[0] || '');
+  } catch (_) {
+    // An unavailable or invalid private address must not prevent other edits.
+  }
   const model = freeze({
     displayName: subject.name,
     identityAddress: subject.address,
@@ -310,6 +318,7 @@ export const loadIdentityForUpdate = async ({chain, identityAddress}, requestCon
     fields: getIdentityEditFields(subject.identity),
     identityNames,
     signingAddress,
+    walletPrivateAddress,
     fundingAddress: signingAddress,
     fundingSources,
     locked: subject.identity.isLocked() || subject.identity.unlockAfter.toNumber() > height,
@@ -596,6 +605,7 @@ export const prepareIdentityUpdate = async (model, options, requestContext) => {
 
   let updated;
   let recipientName = null;
+  let usesRecipientPrivateAddress = false;
 
   if (mode === 'transfer') {
     if (versionOf(enteredRecipient) === R_ADDR_VERSION) {
@@ -605,6 +615,7 @@ export const prepareIdentityUpdate = async (model, options, requestContext) => {
       const target = await readOnce(enteredRecipient);
       updated = buildTransferredIdentity(subject.identity, {targetIdentity: target.identity});
       recipientName = target.name;
+      usesRecipientPrivateAddress = !!target.identity.privateAddresses?.[0];
     }
   } else {
     const resolved = {...changes};
@@ -854,6 +865,7 @@ export const prepareIdentityUpdate = async (model, options, requestContext) => {
     isTestnet: coin.testnet === true,
     identityNames: names,
     recipientName,
+    usesRecipientPrivateAddress,
     fee: fee.toFixed(),
     feeCurrency: coin.display_ticker || coin.display_name || coin.id,
     fundingAddress,

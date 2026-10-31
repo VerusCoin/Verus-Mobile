@@ -132,7 +132,7 @@ describe('identity transfer definitions', () => {
     expect(result.unlockAfter.toNumber()).toBe(99);
   });
 
-  it('copies the recipient signing policy, resets external authorities to self, and preserves other fields', () => {
+  it('copies the recipient signing policy and private address, resets external authorities to self, and preserves other fields', () => {
     const identity = makeIdentity();
     const recipient = makeIdentity({
       name: 'recipient', parent: RECOVERY, flags: 0, timelock: 0,
@@ -147,15 +147,31 @@ describe('identity transfer definitions', () => {
     expect(result.minSigs.toNumber()).toBe(2);
     expect(result.recoveryAuthority.toAddress()).toBe(ID);
     expect(result.revocationAuthority.toAddress()).toBe(ID);
-    expect(result.privateAddresses[0].toAddressString()).toBe(PRIVATE);
+    expect(result.privateAddresses[0].toAddressString()).toBe(OTHER_PRIVATE);
     expect(result.contentMultiMap.kvContent.size).toBe(0);
     result.setPrimaryAddresses([FIRST, SECOND]);
     result.setRecovery(RECOVERY);
     result.setRevocation(REVOCATION);
+    result.privateAddresses = [SaplingPaymentAddress.fromAddressString(PRIVATE)];
     result.contentMultiMap = identity.contentMultiMap;
     expect(result.toBuffer()).toEqual(before);
     expect(identity.toBuffer()).toEqual(before);
     expect(recipient.toBuffer()).toEqual(recipientBefore);
+  });
+
+  it('retains the published private address if the recipient identity has none', () => {
+    const recipient = makeIdentity({primaryaddresses: [THIRD], minimumsignatures: 1, privateaddress: undefined});
+    const result = buildTransferredIdentity(makeIdentity(), {targetIdentity: recipient});
+    expect(result.privateAddresses[0].toAddressString()).toBe(PRIVATE);
+  });
+
+  it('copies only the recipient’s published address and retains additional existing private addresses', () => {
+    const identity = makeIdentity();
+    identity.privateAddresses.push(SaplingPaymentAddress.fromAddressString(PRIVATE));
+    const recipient = makeIdentity({primaryaddresses: [THIRD], minimumsignatures: 1, privateaddress: OTHER_PRIVATE});
+    recipient.privateAddresses.push(SaplingPaymentAddress.fromAddressString(OTHER_PRIVATE));
+    const result = buildTransferredIdentity(identity, {targetIdentity: recipient});
+    expect(result.privateAddresses.map(address => address.toAddressString())).toEqual([OTHER_PRIVATE, PRIVATE]);
   });
 
   it.each([{}, {address: THIRD, targetIdentity: makeIdentity()}])('requires exactly one destination: %p', recipient => {

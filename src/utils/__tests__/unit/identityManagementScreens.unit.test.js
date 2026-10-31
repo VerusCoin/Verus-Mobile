@@ -143,6 +143,27 @@ test('the modify form submits only changed fields and selects the highest funded
   expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();
 });
 
+test('the private-address shortcut fills the form and requires a separate review', async () => {
+  const loaded = {...model, walletPrivateAddress: 'zsWallet'};
+  mockApi.loadIdentityForUpdate.mockResolvedValueOnce(loaded);
+  const view = await mount(IdentityModify);
+  await press(button(view, 'Use this wallet’s private address'));
+  expect(input(view, 'Private address (optional)').props.value).toBe('zsWallet');
+  expect(mockApi.prepareIdentityUpdate).not.toHaveBeenCalled();
+  await press(footerAction(view, 'Review changes'));
+  expect(mockApi.prepareIdentityUpdate).toHaveBeenCalledWith(loaded, {
+    mode: 'modify', fundingAddress: 'iTreasury', changes: {privateaddress: 'zsWallet'},
+  }, mockManagement.context);
+  expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();
+});
+
+test('wallets without a private address omit the shortcut and explain recovery authority', async () => {
+  const view = await mount(IdentityModify);
+  expect(button(view, 'Use this wallet’s private address')).toBeUndefined();
+  expect(textContent(view.root)).toContain('The recovery identity can take control of this identity.');
+  expect(textContent(view.root)).toContain('only the new recovery identity can authorize another change to recovery');
+});
+
 test('preparing a review locks editable controls and ignores rapid double taps', async () => {
   const prepared = deferred();
   mockApi.prepareIdentityUpdate.mockReturnValueOnce(prepared.promise);
@@ -208,6 +229,7 @@ test.each([
   ['transfer', {mode: 'transfer', losesControl: false}],
   ['loss of control', {mode: 'modify', losesControl: true}],
   ['multisignature ownership', {mode: 'modify', losesControl: false, after: {...fields, primaryaddresses: ['Rwallet', 'Rother'], minimumsignatures: 2}}],
+  ['external recovery authority', {mode: 'modify', losesControl: false, after: {...fields, recoveryauthority: 'iTreasury'}}],
 ])('%s requires acknowledgement beside the fixed payment button', async (_, change) => {
   mockManagement.plan = makePlan(change);
   const view = await mount(IdentityUpdateReview);
@@ -238,6 +260,27 @@ test('review displays the exact fee, self authorities and retained private-payme
   await press(button(view, 'Previous authorities'));
   expect(textContent(view.root)).toContain('guardian@');
   expect(textContent(view.root)).toContain('revoker@');
+});
+
+test('review explains who can take control when changing to an external recovery identity', async () => {
+  mockManagement.plan = makePlan({mode: 'modify', losesControl: false, after: {...fields, recoveryauthority: 'iTreasury'}});
+  const view = await mount(IdentityUpdateReview);
+  const text = textContent(view.root);
+  expect(text).toContain('treasury@ will be able to take control of this identity.');
+  expect(text).toContain('Only that identity will be able to authorize future changes to the recovery identity.');
+  expect(footerAction(view, 'Pay & save changes').props.disabled).toBe(true);
+});
+
+test('transfer review shows the recipient private address and the replaced address', async () => {
+  mockManagement.plan = makePlan({usesRecipientPrivateAddress: true,
+    after: {...makePlan().review.after, privateaddress: 'zsRecipient'}});
+  const view = await mount(IdentityUpdateReview);
+  const text = textContent(view.root);
+  expect(text).toContain('Recipient’s private receiving addresszsRecipient');
+  expect(text).toContain('Previous private receiving addresszsOriginal');
+  expect(text).toContain('Private payments will use the address published by satoshi@.');
+  expect(text).toContain('Existing private funds are not moved.');
+  expect(text).not.toContain('Private payments still go to this address’s existing owner');
 });
 
 test('approval sends the exact displayed plan once and prevents leaving or changing acknowledgement while sending', async () => {

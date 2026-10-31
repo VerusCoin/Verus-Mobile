@@ -39,6 +39,7 @@ const review = {
   identity: {primaryaddresses: ['wallet']}, fundingName: 'Wallet address',
   fundingAddress: 'wallet', signingAddress: 'wallet', linked: false,
 };
+const PRIVATE_ADDRESS = 'zs1wczplx4kegw32h8g0f7xwl57p5tvnprwdmnzmdnsw50chcl26f7tws92wk2ap03ykaq6jyyztfa';
 const setSavedReview = value => {
   mockApi.getRegistrationReview.mockResolvedValue(value);
   mockApi.reconcileRegistration.mockResolvedValue(value);
@@ -355,6 +356,32 @@ it('the form quotes both stages and navigates using only a saved job ID', async 
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
   expect(navigation.navigate).toHaveBeenCalledWith('IdentityCommitmentReview', {jobId: 'job'});
   expect(view.root.findAllByType(CostReview)).toHaveLength(0);
+  expect(mockApi.prepareCommitment.mock.calls[0][0].request.privateAddress).toBeUndefined();
+});
+
+it('uses the selected network wallet’s private address when creating an identity', async () => {
+  mockState.authentication.activeAccount.keys.VRSC.dlight_private = {addresses: ['zsOtherNetwork']};
+  mockState.authentication.activeAccount.keys.VRSCTEST = {
+    vrpc: {addresses: ['test-wallet']}, dlight_private: {addresses: [PRIVATE_ADDRESS]},
+  };
+  mockState.coins.activeCoinsForUser.push({
+    id: 'VRSCTEST', system_id: 'test-chain', currency_id: 'test-chain', display_ticker: 'VRSCTEST', testnet: true,
+  });
+  const view = await mount(IdentityRegistrationCreate, {route: {params: {coinId: 'VRSCTEST'}}});
+  await enterName(view);
+  expect(textContent(view.root)).toContain('Your identity will use this wallet’s private address');
+  await press(button(view, 'Review costs'));
+  expect(mockApi.prepareCommitment.mock.calls[0][0].request).toMatchObject({
+    systemId: 'test-chain', rootSystemName: 'VRSCTEST', signingAddress: 'test-wallet', privateAddress: PRIVATE_ADDRESS,
+  });
+});
+
+it('includes the private receiving address in the identity review', async () => {
+  setSavedReview({...review, identity: {...review.identity, privateaddress: PRIVATE_ADDRESS}});
+  const view = await mount(IdentityRegistrationReview);
+  await press(button(view, 'Identity details'));
+  expect(textContent(view.root)).toContain('Private address');
+  expect(textContent(view.root)).toContain(PRIVATE_ADDRESS);
 });
 
 it('does not flash costs while preparation is pending and ignores a second review tap', async () => {
