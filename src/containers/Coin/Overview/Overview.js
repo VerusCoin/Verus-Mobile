@@ -13,7 +13,7 @@ import {
 import { connect } from 'react-redux';
 import { expireCoinData, expireServiceData, setActiveOverviewFilter } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
-import { conditionallyUpdateService, conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
+import { conditionallyUpdateService, conditionallyUpdateWallets } from "../../../actions/actionDispatchers";
 import store from "../../../store";
 import TxDetailsModal from '../../../components/TxDetailsModal/TxDetailsModal'
 import {
@@ -102,27 +102,30 @@ class Overview extends Component {
           API_GET_TRANSACTIONS
         ];
 
-        const updates = [{
-          keys: serviceUpdates,
-          update: conditionallyUpdateService,
-          params: [this.props.dispatch],
-        }, {
-          keys: coinUpdates,
-          update: conditionallyUpdateWallet,
-          params: [this.props.dispatch, this.props.activeCoin.id],
-        }]
+        // Balance and transaction requests belong to the same refresh batch.
+        // Start them before service work so notifications cannot hold them up.
+        const walletRefresh = conditionallyUpdateWallets(
+          store.getState(),
+          this.props.dispatch,
+          coinUpdates.map(updateId => ({
+            chainTicker: this.props.activeCoin.id,
+            updateId,
+          })),
+        ).catch(e => {
+          console.warn('Error forcing wallet updates');
+          console.warn(e);
+        });
 
-        for (const update of updates) {
-          for (const key of update.keys) {
-            try {
-              await update.update(store.getState(), ...update.params, key)
-            } catch(e) {
-              console.warn("Error forcing update to " + key)
-              console.warn(e)
-            }
+        for (const updateId of serviceUpdates) {
+          try {
+            await conditionallyUpdateService(store.getState(), this.props.dispatch, updateId);
+          } catch (e) {
+            console.warn('Error forcing update to ' + updateId);
+            console.warn(e);
           }
         }
 
+        await walletRefresh;
         this.setState({ loading: false });
       });
     }

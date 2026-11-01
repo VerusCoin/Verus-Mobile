@@ -34,7 +34,7 @@ import {
 import { USD } from '../../utils/constants/currencies';
 import {
   conditionallyUpdateService,
-  conditionallyUpdateWallet,
+  conditionallyUpdateWallets,
   dispatchAddWidget,
 } from '../../actions/actionDispatchers';
 import BigNumber from 'bignumber.js';
@@ -262,34 +262,29 @@ const Home = () => {
 
       const coinUpdates = [API_GET_FIATPRICE, API_GET_BALANCES, API_GET_INFO];
 
-      const updates = [
-        {
-          keys: serviceUpdates,
-          update: conditionallyUpdateService,
-          params: [[dispatch]],
-        },
-        {
-          keys: coinUpdates,
-          update: conditionallyUpdateWallet,
-          params: activeCoinsForUser.map((coinObj) => {
-            return [dispatch, coinObj.id];
-          }),
-        },
-      ];
+      // Plan the whole wallet refresh together so address requests can share a
+      // batch. Service work runs alongside it without delaying wallet requests.
+      const walletRefresh = conditionallyUpdateWallets(
+        store.getState(),
+        dispatch,
+        coinUpdates.flatMap(updateId =>
+          activeCoinsForUser.map(coin => ({chainTicker: coin.id, updateId})),
+        ),
+      ).catch(e => {
+        console.warn('Error forcing wallet updates');
+        console.warn(e);
+      });
 
-      for (const update of updates) {
-        for (const key of update.keys) {
-          try {
-            for (const paramList of update.params) {
-              await update.update(store.getState(), ...paramList, key);
-            }
-          } catch (e) {
-            console.warn('Error forcing update to ' + key);
-            console.warn(e);
-          }
+      for (const updateId of serviceUpdates) {
+        try {
+          await conditionallyUpdateService(store.getState(), dispatch, updateId);
+        } catch (e) {
+          console.warn('Error forcing update to ' + updateId);
+          console.warn(e);
         }
       }
 
+      await walletRefresh;
       setLoading(false);
     },
     [activeCoinsForUser, dispatch],

@@ -17,7 +17,9 @@ import {
   CHANNELS,
   VRPC,
   PRE_DATA,
-  DEFAULT_INTERVAL_CHANNELS
+  DEFAULT_INTERVAL_CHANNELS,
+  API_GET_BALANCES,
+  API_GET_TRANSACTIONS,
 } from "../../../../utils/constants/intervalConstants";
 import Store from '../../../../store/index'
 import { clearServiceUpdateExpiredIntervalId, setServiceUpdateExpiredIntervalId } from '../../updateManager';
@@ -29,6 +31,17 @@ import {
   scopeSessionAction,
   sessionScopeIsCurrent,
 } from '../../updates/sessionRequests';
+import {
+  createWalletRefreshInterval,
+  clearWalletRefreshInterval,
+} from './walletRefreshIntervals';
+
+const isSharedWalletUpdate = updateId =>
+  updateId === API_GET_BALANCES || updateId === API_GET_TRANSACTIONS;
+
+const clearCoinUpdateInterval = handle => {
+  if (!clearWalletRefreshInterval(handle)) clearInterval(handle);
+};
 //TODO: If app is ever used in any server side rendering scenario, switch store
 //to a function parameter on all of these functions rather than an import
 
@@ -126,6 +139,18 @@ export const createCoinUpdateExpiredInterval = (interval, chainTicker, updateId,
   const sessionScope = captureSessionScope(Store.getState());
 
   if (interval !== ALWAYS_ACTIVATED && interval !== NEVER_ACTIVATED) {
+    if (isSharedWalletUpdate(updateId)) {
+      const handle = createWalletRefreshInterval(
+        interval, chainTicker, updateId, onComplete, sessionScope,
+      );
+
+      Store.dispatch(scopeSessionAction(
+        setCoinUpdateExpiredIntervalId(chainTicker, updateId, handle),
+        sessionScope,
+      ));
+      return;
+    }
+
     //console.log(`${updateId} update expired interval set to ${interval}`)
     const intervalAction = async () => {
       if (!sessionScopeIsCurrent(Store.getState(), sessionScope)) return;
@@ -221,7 +246,7 @@ export const clearAllCoinIntervals = (
 
   for (let updateType in intervalData) { 
     clearTimeout(intervalData[updateType].expire_id)
-    clearInterval(intervalData[updateType].update_expired_id)
+    clearCoinUpdateInterval(intervalData[updateType].update_expired_id)
 
     const clearExpireAction = clearCoinExpireTimeoutId(chainTicker, updateType);
     const clearUpdateAction = clearCoinUpdateExpiredIntervalId(
@@ -330,7 +355,7 @@ export const refreshCoinIntervals = (coinObj, onCompletes, updateParams, allSeen
 
     for (let updateId in oldIntervalData) {
       clearTimeout(oldIntervalData[updateId].expire_id)
-      clearInterval(oldIntervalData[updateId].update_expired_id)
+      clearCoinUpdateInterval(oldIntervalData[updateId].update_expired_id)
     }
   }
 
@@ -341,7 +366,9 @@ export const refreshCoinIntervals = (coinObj, onCompletes, updateParams, allSeen
     if (newTrackingData[updateId].channels.length > 0) {
       const updateExpiredInterval = newIntervalData[updateId].update_expired_interval
       const antiCollisionOffsetMargin = (updateExpiredInterval * 0.30)
-      const antiCollisionOffset = Math.floor(
+      // Address reads should meet on one refresh cycle. Keep jitter only for
+      // unrelated polling, which does not participate in the explicit batch.
+      const antiCollisionOffset = isSharedWalletUpdate(updateId) ? 0 : Math.floor(
         Math.random() * ((antiCollisionOffsetMargin * 0.5) - 1) * (Math.random() > 0.5 ? 1 : -1)
       );
 

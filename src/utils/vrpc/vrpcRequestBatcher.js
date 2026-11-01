@@ -1,6 +1,8 @@
 import {AppState} from 'react-native';
+import {vrpcErrorResponse} from './vrpcRequestMany';
 
 const BATCH_COMMANDS = new Set(['getaddressbalance', 'getaddressdeltas', 'getaddressmempool']);
+const REFRESH_COMMANDS = new Set([...BATCH_COMMANDS, 'getinfo']);
 const MAX_BATCH_SIZE = 20;
 const BATCH_RETRY_AFTER_MS = 5 * 60 * 1000;
 const FAST_REJECTION_MS = 5000;
@@ -62,8 +64,12 @@ export default class VrpcRequestBatcher {
     this.delayMs = delayMs;
   }
 
-  canBatch(command) {
-    if (!BATCH_COMMANDS.has(command)) return false;
+  supportsRefresh(command) {
+    return REFRESH_COMMANDS.has(command);
+  }
+
+  canBatch(command, explicit = false) {
+    if (!(explicit ? REFRESH_COMMANDS : BATCH_COMMANDS).has(command)) return false;
 
     const retryAt = disabledUntil.get(this.endpoint);
     if (retryAt == null) return true;
@@ -84,12 +90,39 @@ export default class VrpcRequestBatcher {
         const entries = this.queue;
         this.queue = [];
         this.timer = null;
-        // Serialize chunks/windows to respect the proxy's envelope admission
-        // limits and notice a rejection before sending the next batch.
-        this.flushing = this.flushing.then(() => this.flush(entries)).catch(error => {
-          entries.forEach(entry => entry.reject(error));
-        });
+        this.scheduleFlush(entries);
       }, this.delayMs);
+    });
+  }
+
+  /** Send a known refresh immediately, including any reads already waiting. */
+  requestMany(requests) {
+    const entries = this.queue;
+    this.queue = [];
+    if (this.timer != null) clearTimeout(this.timer);
+    this.timer = null;
+
+    const responses = requests.map(req => {
+      if (!this.supportsRefresh(req.cmd)) {
+        return vrpcErrorResponse({code: -32601, message: `Unsupported refresh method: ${req.cmd}`});
+      }
+
+      return new Promise((resolve, reject) => {
+        entries.push({req, resolve, reject});
+      }).catch(vrpcErrorResponse);
+    });
+
+    this.scheduleFlush(entries);
+    return Promise.all(responses);
+  }
+
+  scheduleFlush(entries) {
+    if (entries.length === 0) return;
+
+    // Serialize envelopes to respect admission limits and observe a capability
+    // rejection before sending the next chunk. No collection timer is involved.
+    this.flushing = this.flushing.then(() => this.flush(entries)).catch(error => {
+      entries.forEach(entry => entry.reject(error));
     });
   }
 
@@ -112,7 +145,7 @@ export default class VrpcRequestBatcher {
   async flush(entries) {
     for (let start = 0; start < entries.length; start += MAX_BATCH_SIZE) {
       const chunk = entries.slice(start, start + MAX_BATCH_SIZE);
-      if (chunk.length === 1 || !this.canBatch(chunk[0].req.cmd)) {
+      if (chunk.length === 1 || !this.canBatch(chunk[0].req.cmd, true)) {
         await this.sendSingles(chunk);
         continue;
       }

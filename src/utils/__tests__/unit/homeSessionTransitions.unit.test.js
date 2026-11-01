@@ -3,6 +3,8 @@ const mockDispatch = jest.fn();
 const mockNavigation = {navigate: jest.fn(), closeDrawer: jest.fn(), dispatch: jest.fn()};
 const mockAddWidget = jest.fn();
 const mockRefreshRegistrations = jest.fn(() => Promise.resolve());
+const mockUpdateWallets = jest.fn();
+const mockUpdateService = jest.fn();
 
 jest.mock('react-native', () => ({AppState: {addEventListener: () => ({remove: jest.fn()})}}));
 jest.mock('react-redux', () => ({
@@ -28,7 +30,8 @@ jest.mock('../../../actions/actionCreators', () => ({
   expireCoinData: jest.fn(), expireServiceData: jest.fn(), saveGeneralSettings: jest.fn(),
 }));
 jest.mock('../../../actions/actionDispatchers', () => ({
-  conditionallyUpdateService: jest.fn(), conditionallyUpdateWallet: jest.fn(),
+  conditionallyUpdateService: (...args) => mockUpdateService(...args),
+  conditionallyUpdateWallets: (...args) => mockUpdateWallets(...args),
   dispatchAddWidget: (...args) => mockAddWidget(...args),
 }));
 jest.mock('../../../actions/actions/alert/dispatchers/alert', () => ({createAlert: jest.fn()}));
@@ -49,7 +52,11 @@ const React = require('react');
 const {act, create} = require('react-test-renderer');
 const Home = require('../../../containers/Home/Home').default;
 const {CURRENCY_WIDGET_TYPE, TOTAL_UNI_BALANCE_WIDGET_TYPE, VERUSID_WIDGET_TYPE} = require('../../constants/widgets');
-const {API_GET_BALANCES} = require('../../constants/intervalConstants');
+const {
+  API_GET_BALANCES, API_GET_FIATPRICE, API_GET_INFO,
+  API_GET_SERVICE_ACCOUNT, API_GET_SERVICE_PAYMENT_METHODS,
+  API_GET_SERVICE_RATES, API_GET_SERVICE_NOTIFICATIONS,
+} = require('../../constants/intervalConstants');
 const coin = {id: 'VRSCTEST', default_app: 'overview', apps: {overview: {data: [{key: 'overview'}]}}};
 const wallet = {id: 'main', name: 'Main wallet', api_channels: {[API_GET_BALANCES]: 'vrpc'}};
 const identityWallet = {id: 'identity', name: 'Alice@', api_channels: {[API_GET_BALANCES]: 'vrpc.id'}};
@@ -71,7 +78,13 @@ const mount = async () => {
   return view;
 };
 const update = async view => act(async () => {view.update(<Home />);});
-beforeEach(() => {jest.clearAllMocks(); mockState = stateFor(); views = [];});
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockUpdateWallets.mockReset().mockResolvedValue([]);
+  mockUpdateService.mockReset().mockResolvedValue(undefined);
+  mockState = stateFor();
+  views = [];
+});
 afterEach(() => act(() => views.forEach(view => view.unmount())));
 
 test('Home remains renderable while a profile logout clears the active account', async () => {
@@ -104,4 +117,58 @@ test('a card opens an available wallet after its previously selected identity wa
   await act(async () => view.root.findByType('Cards').props.handleWidgetPress(cardId));
   expect(mockDispatch).toHaveBeenCalledWith({type: 'active-subwallet', coin: coin.id, wallet});
   expect(mockDispatch).not.toHaveBeenCalledWith({type: 'active-subwallet', coin: coin.id, wallet: identityWallet});
+});
+
+test('Home submits all coins in one refresh while service work is pending', async () => {
+  mockState.coins.activeCoinsForUser = [coin, {...coin, id: 'VRSC'}];
+  let finishWallets;
+  let finishService;
+  mockUpdateWallets.mockReturnValueOnce(new Promise(resolve => {finishWallets = resolve;}));
+  mockUpdateService.mockReturnValueOnce(new Promise(resolve => {finishService = resolve;}));
+  const view = await mount();
+  const home = () => view.root.findByType('Home').props;
+
+  await act(async () => home().forceUpdate());
+
+  expect(mockUpdateWallets).toHaveBeenCalledTimes(1);
+  expect(mockUpdateWallets).toHaveBeenCalledWith(mockState, mockDispatch, [
+    {chainTicker: 'VRSCTEST', updateId: API_GET_FIATPRICE},
+    {chainTicker: 'VRSC', updateId: API_GET_FIATPRICE},
+    {chainTicker: 'VRSCTEST', updateId: API_GET_BALANCES},
+    {chainTicker: 'VRSC', updateId: API_GET_BALANCES},
+    {chainTicker: 'VRSCTEST', updateId: API_GET_INFO},
+    {chainTicker: 'VRSC', updateId: API_GET_INFO},
+  ]);
+  expect(mockUpdateService).toHaveBeenCalledTimes(1);
+  expect(home().loading).toBe(true);
+
+  await act(async () => finishService());
+  expect(mockUpdateService.mock.calls.map(call => call[2])).toEqual([
+    API_GET_SERVICE_ACCOUNT, API_GET_SERVICE_PAYMENT_METHODS,
+    API_GET_SERVICE_RATES, API_GET_SERVICE_NOTIFICATIONS,
+  ]);
+  expect(home().loading).toBe(true);
+
+  await act(async () => finishWallets([]));
+  expect(home().loading).toBe(false);
+});
+
+test('Home finishes refresh and continues service updates after failures', async () => {
+  const walletError = new Error('Wallet unavailable');
+  const serviceError = new Error('Service unavailable');
+  mockUpdateWallets.mockRejectedValueOnce(walletError);
+  mockUpdateService.mockRejectedValueOnce(serviceError);
+  const warning = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+  try {
+    const view = await mount();
+    await act(async () => view.root.findByType('Home').props.forceUpdate());
+
+    expect(mockUpdateService).toHaveBeenCalledTimes(4);
+    expect(warning).toHaveBeenCalledWith(walletError);
+    expect(warning).toHaveBeenCalledWith(serviceError);
+    expect(view.root.findByType('Home').props.loading).toBe(false);
+  } finally {
+    warning.mockRestore();
+  }
 });

@@ -124,15 +124,15 @@ describe('VRPC address request batching', () => {
     jest.restoreAllMocks();
   });
 
-  it('collects mixed address requests for 500ms and caches each original response', async () => {
+  it('collects mixed address requests for 50ms and caches each original response', async () => {
     const rpc = connect();
     const firstRequest = balance('identity-one');
     const secondRequest = deltas('identity-two');
     const first = rpc.request(firstRequest);
 
-    await advance(200);
+    await advance(20);
     const second = rpc.request(secondRequest);
-    await advance(299);
+    await advance(29);
     expect(mockRpcRequest).not.toHaveBeenCalled();
 
     await advance(1);
