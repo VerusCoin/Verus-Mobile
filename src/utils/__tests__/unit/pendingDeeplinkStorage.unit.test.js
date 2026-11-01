@@ -16,7 +16,11 @@ const {
   GenericRequest,
   SpendableKeyDetails,
   SpendableKeyDetailsOrdinalVDXFObject,
+  ProvisionIdentityDetails,
+  ProvisionIdentityDetailsOrdinalVDXFObject,
 } = require('verus-typescript-primitives');
+const {SecureStorage} = require('../../keychain/secureStore');
+const {DEEPLINK_STORAGE_INTERNAL_KEY} = require('../../../../env/index');
 const {getMnemonicEntropyBuffer} = require('../../walletBackup/walletBackup');
 const {
   getPendingDeeplinkRequest,
@@ -46,7 +50,39 @@ const makeSpendableRequestBuffer = marker => {
 
 describe('pending deeplink durable broadcast storage', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     mockStorage.clear();
+  });
+
+  it('does not persist service-regenerable provisioning requests', async () => {
+    const requestBufferString = new GenericRequest({details: [
+      new ProvisionIdentityDetailsOrdinalVDXFObject({data: new ProvisionIdentityDetails()}),
+    ]}).toBuffer().toString('hex');
+
+    await expect(savePendingDeeplinkRequest({requestBufferString})).resolves.toBeNull();
+    expect(SecureStorage.setItem).not.toHaveBeenCalled();
+  });
+
+  it('does not persist an empty spendable-key detail', async () => {
+    const requestBufferString = new GenericRequest({details: [
+      new SpendableKeyDetailsOrdinalVDXFObject({data: new SpendableKeyDetails({
+        data: Buffer.alloc(0),
+        seedFormat: SpendableKeyDetails.SEED_FORMAT_BIP39,
+        encryptionFormat: SpendableKeyDetails.ENCRYPTION_FORMAT_NONE,
+      })}),
+    ]}).toBuffer().toString('hex');
+
+    await expect(savePendingDeeplinkRequest({requestBufferString})).resolves.toBeNull();
+    expect(SecureStorage.setItem).not.toHaveBeenCalled();
+  });
+
+  it('does not reopen previously saved provisioning requests as pending claims', async () => {
+    const requestBufferString = new GenericRequest({details: [
+      new ProvisionIdentityDetailsOrdinalVDXFObject({data: new ProvisionIdentityDetails()}),
+    ]}).toBuffer().toString('hex');
+    mockStorage.set(DEEPLINK_STORAGE_INTERNAL_KEY, JSON.stringify([{id: 'old-provisioning', requestBufferString}]));
+
+    await expect(loadPendingDeeplinkRequests()).resolves.toEqual([]);
   });
 
   it('keeps concurrent request updates instead of losing the last writer', async () => {

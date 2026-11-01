@@ -12,7 +12,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Button, Portal, Text } from 'react-native-paper';
+import { Portal, Text } from 'react-native-paper';
+import Button from '../../../components/Button';
 import { useSelector } from 'react-redux';
 import { GenericResponse } from 'verus-typescript-primitives';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
@@ -36,6 +37,7 @@ import { VERUSID_NETWORK_DEFAULT } from '../../../../env/index';
 import { processAppEncryptionRequest } from '../../../utils/deeplink/handlers/appEncryptionRequestHandler';
 import { ensureGenericResponseSigner } from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 import styles from '../../../styles/appEncryption.styles';
+import { convertFqnToDisplayFormat } from '../../../utils/fullyqualifiedname';
 
 // ── Helpers ──
 
@@ -166,7 +168,7 @@ const IdentityPickerSheet = ({
                               ]}
                               numberOfLines={1}
                             >
-                              {friendlyName}
+                              {friendlyName !== iAddr ? convertFqnToDisplayFormat(friendlyName) : iAddr}
                             </Text>
                             <Text
                               style={styles.identityAddress}
@@ -751,7 +753,11 @@ const AppEncryptionRequestInfo = (props) => {
                 styles.identitySelectName,
                 selectedIdentity && styles.identitySelectNameSelected,
               ]}>
-                {selectedIdentity ? selectedIdentity.friendlyName : 'Tap to choose'}
+                {selectedIdentity
+                  ? selectedIdentity.friendlyName && selectedIdentity.friendlyName !== selectedIdentity.iAddress
+                    ? convertFqnToDisplayFormat(selectedIdentity.friendlyName)
+                    : selectedIdentity.iAddress
+                  : 'Tap to choose'}
               </Text>
               {selectedIdentity && (
                 <Text style={styles.identitySelectAddress}>

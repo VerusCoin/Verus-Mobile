@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import {captureIdentityUpdateContext, assertIdentityUpdateContext, validateIdentityUpdateContext, assertIdentityUpdateSigningAuthority} from '../identityUpdate/verifiedSubmission';
 import {Buffer} from 'buffer';
 import {entropyToMnemonic} from 'bip39';
 import {
@@ -56,6 +57,9 @@ import {
   broadcastPendingTransactions,
   createPendingBroadcast,
   createPendingBroadcastTransaction,
+  loadMatchingPendingBroadcast,
+  verifyPendingIdentityFunding,
+  verifyPendingIdentityFundingAtActiveHeight,
 } from '../spendableKey/durableBroadcast';
 
 const {getFundedTxBuilder, validateFundedCurrencyTransfer} = smarttxs;
@@ -1287,6 +1291,8 @@ export const addGiftCardPendingFunding = (card, fundingResult) => {
   const fundingEntry = {
     id: pendingBroadcast?.id || null,
     kind: pendingBroadcast?.kind || 'gift-card-funding',
+    ownerAccountHash: pendingBroadcast?.ownerAccountHash || fundingResult?.preflightPlan?.ownerAccountHash,
+    ownerWalletBinding: pendingBroadcast?.ownerWalletBinding,
     createdAt: pendingBroadcast?.createdAt || now,
     updatedAt: pendingBroadcast?.updatedAt || now,
     status: GIFT_CARD_FUNDING_STATUS_PENDING,
@@ -1974,15 +1980,7 @@ const getIdentityUpdate = async (systemId, identityAddress) => {
   };
 };
 
-const getNativeFeeSatsFromDeltas = (deltas, systemId, fallbackFeeSats) => {
-  const nativeDelta = deltas && typeof deltas.get === 'function'
-    ? deltas.get(systemId)
-    : null;
 
-  return nativeDelta == null
-    ? BigNumber(fallbackFeeSats)
-    : BigNumber(nativeDelta).absoluteValue();
-};
 
 const getIdentityFunding = (identity, identityFundingByKey) => {
   return identityFundingByKey?.get(getIdentityFundingKey(identity)) || identity;
@@ -2112,17 +2110,15 @@ const buildIdentityFundingTransaction = async ({
         expectedIdentityPrimaryAddress: cardAddress,
         isTestnet: requestIsTestnet,
       });
-  const actualFeeSats = getNativeFeeSatsFromDeltas(
-    updateTx.deltas,
-    group.systemId,
-    inputPlan.expectedFeeSats,
-  );
+  await verifyPendingIdentityFundingAtActiveHeight({type: 'identity', systemId: group.systemId, txHex: updateTx.hex, inputs: updateTx.utxos, fundingApproval: updateTx.fundingApproval});
+  const actualFeeSats = BigNumber(updateTx.fundingApproval.nativeFee);
 
   return {
     type: 'identity',
     systemId: group.systemId,
     txHex: updateTx.hex,
     inputs: updateTx.utxos,
+    fundingApproval: updateTx.fundingApproval,
     signingCoinId: sourceCoin.id,
     sourceAddress,
     identity: {
@@ -2147,6 +2143,7 @@ export const preflightGiftCardFunding = async ({
   activeCoinsForUser,
   activeAccount,
 }) => {
+  const reviewContext = captureIdentityUpdateContext();
   if (!canStartGiftCardFunding(card) && hasGiftCardBeenShared(card)) {
     throw new Error(
       'Shared gift cards are single-use and cannot be funded after funds or a funding attempt have been recorded. Create a new gift card instead.',
@@ -2252,7 +2249,10 @@ export const preflightGiftCardFunding = async ({
     }
   }
 
+  assertIdentityUpdateContext(reviewContext);
   return {
+    reviewContext,
+    ownerAccountHash: reviewContext.sessionScope.accountHash,
     cardId: card.id,
     selections,
     topups,
@@ -2283,21 +2283,38 @@ const signCurrencyFundingTransaction = async transaction => {
   return txb.build().toHex();
 };
 
-const prepareGiftCardFundingBroadcast = async preflightPlan => {
+const prepareGiftCardFundingBroadcast = async (preflightPlan, context) => {
   const transactions = [];
 
   for (const transaction of preflightPlan.transactions) {
     let rawTx;
+    let identitySnapshots = [];
 
     if (transaction.type === 'identity') {
+      assertIdentityUpdateContext(context);
       const spendingKey = await requestPrivKey(transaction.signingCoinId, VRPC);
+      assertIdentityUpdateContext(context);
+      let activeHeight = await validateIdentityUpdateContext({...context, systemId: transaction.systemId}, {
+        hex: transaction.txHex, utxos: transaction.inputs, fundingApproval: transaction.fundingApproval,
+      });
+      verifyPendingIdentityFunding(transaction, {chainId: transaction.systemId, nextBlockHeight: activeHeight + 1});
       const keys = transaction.inputs.map(() => [spendingKey]);
+      identitySnapshots = await assertIdentityUpdateSigningAuthority({...context, systemId: transaction.systemId}, {
+        hex: transaction.txHex, utxos: transaction.inputs, fundingApproval: transaction.fundingApproval,
+      }, keys);
 
+      // Authority inspection performs network reads. Refresh the active height
+      // and bind those authority snapshots immediately before signing.
+      activeHeight = await validateIdentityUpdateContext({...context, systemId: transaction.systemId, identitySnapshots}, {
+        hex: transaction.txHex, utxos: transaction.inputs, fundingApproval: transaction.fundingApproval,
+      });
       rawTx = signUpdateIdentityTx(
         transaction.systemId,
         transaction.txHex,
         transaction.inputs,
         keys,
+        transaction.fundingApproval,
+        {chainId: transaction.systemId, nextBlockHeight: activeHeight + 1},
       );
     } else if (transaction.type === 'currency') {
       rawTx = await signCurrencyFundingTransaction(transaction);
@@ -2306,12 +2323,14 @@ const prepareGiftCardFundingBroadcast = async preflightPlan => {
     }
 
     transactions.push(
-      createPendingBroadcastTransaction({transaction, rawTx}),
+      createPendingBroadcastTransaction({transaction: {...transaction, identitySnapshots}, rawTx}),
     );
   }
 
   return createPendingBroadcast({
     kind: 'gift-card-funding',
+    ownerAccountHash: context.sessionScope.accountHash,
+    ownerWalletBinding: context.walletBinding,
     transactions,
   });
 };
@@ -2319,6 +2338,7 @@ const prepareGiftCardFundingBroadcast = async preflightPlan => {
 export const broadcastGiftCardFunding = async ({
   preflightPlan = null,
   pendingBroadcast = null,
+  loadPendingBroadcast,
   persistPendingBroadcast,
   requestTimeoutMs,
 }) => {
@@ -2326,14 +2346,70 @@ export const broadcastGiftCardFunding = async ({
     throw new Error('Gift-card funding requires a preflight plan or pending broadcast.');
   }
 
-  const durableBroadcast = pendingBroadcast ||
-    await prepareGiftCardFundingBroadcast(preflightPlan);
+  // A fresh review must retain its original session. Only persisted signed
+  // receipts resume with a newly captured runtime context.
+  const operationContext = pendingBroadcast != null
+    ? captureIdentityUpdateContext() : preflightPlan?.reviewContext;
+  if (!operationContext) throw new Error('The transaction review is incomplete. Review it again before signing.');
+  assertIdentityUpdateContext(operationContext);
+  if (pendingBroadcast == null && preflightPlan.ownerAccountHash !== operationContext.sessionScope.accountHash) {
+    throw new Error('The reviewed transaction belongs to another profile.');
+  }
+
+  let durableBroadcast = pendingBroadcast ||
+    await prepareGiftCardFundingBroadcast(preflightPlan, operationContext);
+
+  // Released gift records predate owner bindings and identity funding approvals.
+  // Recover only the authoritative signed batch from this profile's gift store.
+  const resumeSavedTransactions = pendingBroadcast != null && (
+    (pendingBroadcast.ownerAccountHash == null &&
+      pendingBroadcast.ownerWalletBinding == null) ||
+    pendingBroadcast.transactions?.some(transaction =>
+      transaction.type === 'identity' && transaction.fundingApproval == null,
+    )
+  );
+
+  if (resumeSavedTransactions) {
+    durableBroadcast = await loadMatchingPendingBroadcast(
+      pendingBroadcast,
+      loadPendingBroadcast,
+    );
+    assertIdentityUpdateContext(operationContext);
+  }
+
+  const storedWithoutOwner = resumeSavedTransactions &&
+    durableBroadcast.ownerAccountHash == null &&
+    durableBroadcast.ownerWalletBinding == null;
+
+  if (!storedWithoutOwner &&
+      durableBroadcast.ownerAccountHash !== operationContext.sessionScope.accountHash) {
+    throw new Error('This saved funding operation belongs to another profile or is missing its profile binding.');
+  }
+
+  if (!storedWithoutOwner &&
+      durableBroadcast.ownerWalletBinding !== operationContext.walletBinding) {
+    throw new Error('This saved funding operation belongs to different wallet addresses.');
+  }
 
   try {
     const result = await broadcastPendingTransactions({
       pendingBroadcast: durableBroadcast,
+      resumeSavedTransactions,
+      identityContext: operationContext,
       persistPendingBroadcast,
       requestTimeoutMs,
+      assertCurrent: () => assertIdentityUpdateContext(operationContext),
+      beforeSend: async transaction => {
+        assertIdentityUpdateContext(operationContext);
+        if (
+          transaction.type === 'identity' &&
+          !(resumeSavedTransactions && transaction.fundingApproval == null)
+        ) {
+          await validateIdentityUpdateContext({...operationContext, systemId: transaction.systemId, identitySnapshots: transaction.identitySnapshots}, {
+            hex: transaction.rawTx, utxos: transaction.inputs, fundingApproval: transaction.fundingApproval,
+          });
+        }
+      },
     });
 
     return {

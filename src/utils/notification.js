@@ -1,6 +1,5 @@
 import {
   NOTIFICATION_TYPE_BASIC,
-  NOTIFICATION_TYPE_DEEPLINK,
   NOTIFICATION_TYPE_LOADING,
   NOTIFICATION_TYPE_NAVIGATION,
   NOTIFICATION_TYPE_VERUS_ID_PROVISIONING,
@@ -75,21 +74,26 @@ export class LoadingNotification extends Notification {
   }
 }
 
-export class DeeplinkNotification extends Notification {
-  constructor(body, title, reopen = () => {}, uid, uri, acchash, fromService = null) {
-    super(body, title, NOTIFICATION_TYPE_DEEPLINK, uid, acchash)
-    this.uri = uri
-    this.reopen = reopen
-    this.fromService = fromService
+// A completed provisioning notification opens identity linking, never login replay.
+export class VerusIdProvisioningNotification extends Notification {
+  constructor(body, title, uid, acchash, identityAddress, chain, linkIdentity = () => {}) {
+    super(body, title, NOTIFICATION_TYPE_VERUS_ID_PROVISIONING, uid, acchash);
+    this.identityAddress = identityAddress;
+    this.chain = chain;
+    this.linkIdentity = linkIdentity;
   }
 
-  static fromJson(json, reopen) {
-    const {body, title, uid, uri, fromService} = json;
-    return new DeeplinkNotification(body, title, reopen, uid, uri, null, fromService);
+  static fromJson(json, linkIdentity) {
+    const {body, title, uid, identityAddress, chain} = json;
+    return new VerusIdProvisioningNotification(body, title, uid, null, identityAddress, chain, linkIdentity);
+  }
+
+  isActionable() {
+    return !!this.identityAddress && !!this.chain;
   }
 
   onAction(props = null) {
-    return this.reopen(props, this.uri, this.fromService)
+    return this.linkIdentity(props, this.identityAddress, this.chain);
   }
 
   toJson() {
@@ -98,39 +102,8 @@ export class DeeplinkNotification extends Notification {
       title: this.title,
       type: this.type,
       uid: this.uid,
-      uri: this.uri,
-      fromService: this.fromService
-    };
-  }
-}
-
-export class VerusIdProvisioningNotification extends DeeplinkNotification {
-  constructor(body, title, reopen = () => {}, uid, uri, acchash, fqn, fromService, requestType) {
-    super(body, title, reopen, uid, uri, acchash, fromService)
-    this.type = NOTIFICATION_TYPE_VERUS_ID_PROVISIONING
-    this.fqn = fqn
-    this.requestType = requestType
-  }
-
-  static fromJson(json, reopen) {
-    const {body, title, uid, uri, fqn, fromService, requestType} = json;
-    return new VerusIdProvisioningNotification(body, title, reopen, uid, uri, null, fqn, fromService, requestType);
-  }
-
-  onAction(props = null) {
-    return this.reopen(props, this.uri, this.fromService, this.fqn, this.requestType)
-  }
-
-  toJson() {
-    return {
-      body: this.body,
-      title: this.title,
-      type: this.type,
-      uid: this.uid,
-      uri: this.uri,
-      fqn: this.fqn,
-      fromService: this.fromService,
-      requestType: this.requestType
+      identityAddress: this.identityAddress,
+      chain: this.chain,
     };
   }
 }

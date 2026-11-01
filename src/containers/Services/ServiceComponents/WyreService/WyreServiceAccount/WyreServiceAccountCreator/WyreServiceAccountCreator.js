@@ -8,7 +8,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard
 } from "react-native";
-import { Text, TextInput, Portal, Button } from 'react-native-paper'
+import { Text, TextInput, Portal } from 'react-native-paper'
+import Button from '../../../../../../components/Button'
 import WyreProvider from "../../../../../../utils/services/WyreProvider";
 import Colors from "../../../../../../globals/colors";
 import { createAlert, resolveAlert } from "../../../../../../actions/actions/alert/dispatchers/alert";
@@ -326,7 +327,7 @@ class WyreServiceAccountCreator extends Component {
             disabled={this.state.email.length == 0 || this.state.country.key.length == 0}
             onPress={async () => this.tryCreateAccount()}
           >
-            {"Create Account"}
+            {"Create account"}
           </Button>
         </View>
       </TouchableWithoutFeedback>

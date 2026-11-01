@@ -136,11 +136,8 @@ const makeProps = () => ({
     coinObj: {id: 'VRSC', system_id: 'system-id'},
     data: {
       [SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]: 'alice',
-      provisioningRequestType: 'generic',
       provisioningRequestID: 'challenge-id',
-      provisioningRequestBufferString: 'request-buffer',
       provisioningSignerId: 'signer-id',
-      provisioningRequestHasResponseUris: false,
       fromService: false,
     },
   },
@@ -310,16 +307,12 @@ describe('provision identity session isolation', () => {
     expect(mockHandleProvisioningResponse).toHaveBeenCalledWith(
       expect.objectContaining({id: 'VRSC'}),
       {decision: 'accepted'},
-      'request-buffer',
-      false,
       'provisioner',
       'notification-id',
       'identity-id',
       'alice.parent.name',
-      expect.any(Function),
-      'generic',
       'signer-id',
-      null,
+      expect.any(Function),
       {
         modalRequestId: 'modal-a',
         sessionScope: {

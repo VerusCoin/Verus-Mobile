@@ -1,6 +1,7 @@
 import React from "react";
 import { ScrollView, View, TouchableWithoutFeedback, Keyboard } from "react-native";
-import { TextInput, Button, Paragraph, Checkbox } from "react-native-paper";
+import { TextInput, Paragraph, Checkbox } from "react-native-paper";
+import Button from "../../../Button";
 import Styles from "../../../../styles";
 import { SEND_MODAL_IDENTITY_TO_RECOVER_FIELD, SEND_MODAL_NEW_PRIVATE_IDENTITY_ADDRESS_FIELD, SEND_MODAL_NEW_RECOVERY_IDENTITY_FIELD, SEND_MODAL_NEW_REVOCATION_IDENTITY_FIELD, SEND_MODAL_PRIMARY_RECOVERY_ADDRESS_FIELD, SEND_MODAL_RECOVERY_CHANGE_PRIVATE_ADDRESS, SEND_MODAL_RECOVERY_CHANGE_REVOCATION_RECOVERY } from "../../../../utils/constants/sendModal";
 import Colors from "../../../../globals/colors";

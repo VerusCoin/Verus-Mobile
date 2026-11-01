@@ -12,7 +12,6 @@ import {
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
 } from '../../../../utils/constants/sendModal';
-import {convertFqnToDisplayFormat} from '../../../../utils/fullyqualifiedname';
 import {LinkIdentityConfirmRender} from './LinkIdentityConfirm.render';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 import Store from '../../../../store';
@@ -63,7 +62,7 @@ export const LinkIdentityConfirm = props => {
 
       await linkVerusId(
         identityaddress,
-        convertFqnToDisplayFormat(verusId.fullyqualifiedname),
+        verusId.fullyqualifiedname,
         coinObj.id,
         requestContext,
       );

@@ -93,9 +93,7 @@ export class ProvisionIdentityConfirm extends Component {
 
       const {coinObj} = this.props.sendModal;
 
-      const provisioningRequestType =
-        this.props.sendModal.data.provisioningRequestType ||
-        (this.props.sendModal.data.provisioningDetailsBufferString ? 'generic' : 'loginconsent');
+
 
       let loginRequest = null;
       if (this.props.sendModal.data.request) {
@@ -209,29 +207,15 @@ export class ProvisionIdentityConfirm extends Component {
       const provisioningName = provisioningIdentity.result.identity.name;
       const newLoadingNotification = new LoadingNotification();
 
-      const requestPayload =
-        provisioningRequestType === 'generic'
-          ? this.props.sendModal.data.provisioningRequestBufferString
-          : loginRequest.toBuffer().toString('base64');
-
-      if (provisioningRequestType === 'generic' && !requestPayload) {
-        throw new Error("Missing provisioning request payload");
-      }
-
-      const hasResponseUris =
-        this.props.sendModal.data.provisioningRequestHasResponseUris ||
-        (loginRequest && loginRequest.challenge.redirect_uris && loginRequest.challenge.redirect_uris.length > 0);
-
       assertProvisioningSessionCurrent(requestContext);
       await handleProvisioningResponse(
         coinObj,
         res.data,
-        requestPayload,
-        this.props.sendModal.data.fromService,
         provisioningName,
         newLoadingNotification.uid,
         nameId,
         requestedFqn,
+        provisioningSignerId,
         async originatingContext => {
           assertProvisioningSessionCurrent(originatingContext);
 
@@ -248,9 +232,6 @@ export class ProvisionIdentityConfirm extends Component {
 
           dispatchAddNotification(newLoadingNotification);
         },
-        provisioningRequestType,
-        provisioningSignerId,
-        hasResponseUris,
         requestContext,
       );
       assertProvisioningSessionCurrent(requestContext);

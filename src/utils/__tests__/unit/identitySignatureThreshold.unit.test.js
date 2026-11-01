@@ -36,6 +36,9 @@ jest.mock('../../clipboard/clipboard', () => ({copyToClipboard: jest.fn()}));
 const React = require('react');
 const {act, create} = require('react-test-renderer');
 const IdentityUpdateRequestInfo = require('../../../containers/DeepLink/IdentityUpdateRequestInfo/IdentityUpdateRequestInfo').default;
+const {ContentMultiMapRemoveKey, DataStringKey, GenericRequest, IDENTITY_CREDENTIAL, IdentityUpdateRequestDetails, IdentityUpdateRequestOrdinalVDXFObject, KvMap, PartialSignData} = require('verus-typescript-primitives');
+const {VERUSID_CMM_INFO, VERUSID_CMM_DATA} = require('../../constants/verusidObjectData');
+const {createAlert} = require('../../../actions/actions/alert/dispatchers/alert');
 
 const OWN_ADDRESS = 'RWCqoWfSKaDoGeiwD6ZxX2dwkMx2oHJM56';
 const OTHER_ADDRESS = 'RKDPtS54bX89AacDfkHBUm46YoxahHjkCw';
@@ -44,16 +47,22 @@ const currentIdentity = {
   recoveryauthority: 'current-recovery', revocationauthority: 'current-revocation',
   flags: 0, timelock: 0, contentmultimap: {},
 };
-const renderRequest = (updates, identity = currentIdentity) => {
+const requestEnvelope = () => new GenericRequest({details: [new IdentityUpdateRequestOrdinalVDXFObject({
+  data: IdentityUpdateRequestDetails.fromCLIJson({name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV'}),
+})]});
+const renderRequest = (updates, identity = currentIdentity, props = {}) => {
   let renderer;
   act(() => {
     renderer = create(<IdentityUpdateRequestInfo
       subjectIdentity={{fullyqualifiedname: 'T1@', identity}}
       identityUpdates={updates}
+      identityPreviewPrepared={false}
       friendlyNames={{}}
       coinObj={{id: 'VRSC', mainnet_id: 'VRSC', seconds_per_block: 60}}
-      chainInfo={{longestchain: 100}}
+      chainInfo={{blocks: 100}}
       sigtime={1}
+      requestBufferString={requestEnvelope().toBuffer().toString('hex')}
+      {...props}
     />);
   });
   return renderer;
@@ -64,6 +73,7 @@ const renderedText = renderer => renderer.root.findAllByType('Text')
 const goToRiskReview = renderer => act(() => nextButton(renderer).props.onPress());
 
 beforeEach(() => {
+  jest.clearAllMocks();
   mockState = {
     authentication: {
       signedIn: true,
@@ -75,6 +85,210 @@ beforeEach(() => {
 });
 
 describe('identity signature-threshold review', () => {
+  it('returns to review and requires a new acknowledgement when the request changes', () => {
+    const renderer = renderRequest({minimumsignatures: 2});
+    goToRiskReview(renderer);
+    act(() => renderer.root.findByProps({accessibilityLabel: 'Acknowledge high-risk changes'}).props.onPress());
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(1);
+    const previousProps = renderer.root.findByType(IdentityUpdateRequestInfo).props;
+    act(() => renderer.update(<IdentityUpdateRequestInfo {...previousProps}
+      identityUpdates={{minimumsignatures: 2, recoveryauthority: 'replacement-recovery'}} />));
+    expect(renderer.root.findAllByType('ReviewStep')).toHaveLength(1);
+    goToRiskReview(renderer);
+    expect(nextButton(renderer).props.disabled).toBe(true);
+    expect(renderedText(renderer)).toContain('Change recovery authority');
+    renderer.unmount();
+  });
+
+  it('reviews a public upload even when credential encryption deferred its preview reference', () => {
+    const details = IdentityUpdateRequestDetails.fromCLIJson({name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
+      contentmultimap: {[DataStringKey.vdxfid]: {data: {message: 'public payload'}}},
+    });
+    const renderer = renderRequest({contentmultimap: {[IDENTITY_CREDENTIAL.vdxfid]: []}}, currentIdentity, {
+      detailsBufferString: details.toBuffer().toString('hex'), hasEncryptedKeys: true,
+    });
+    expect(renderer.root.findByType('ReviewStep').props.contentCount).toBe(1);
+    const content = renderer.root.findByType('ReviewStep').findByType('ContentStep').props;
+    const upload = content.displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${DataStringKey.vdxfid}:upload`];
+    expect(upload).toMatchObject({isEncrypted: false, contentKey: DataStringKey.vdxfid});
+    expect(upload.signData.data.toString('utf8')).toBe('public payload');
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(1);
+    expect(renderer.root.findAllByType('ContentStep')).toHaveLength(0);
+    renderer.unmount();
+  });
+
+  it('shows complete requested values on the first screen and excludes generated preview references', () => {
+    const values = [
+      {[DataStringKey.vdxfid]: 'First requested value'},
+      {[DataStringKey.vdxfid]: 'Second requested value that must not be hidden'},
+    ];
+    const details = IdentityUpdateRequestDetails.fromCLIJson({
+      name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
+      contentmultimap: {[DataStringKey.vdxfid]: values},
+    });
+    const before = details.toBuffer().toString('hex');
+    const renderer = renderRequest({contentmultimap: {
+      [DataStringKey.vdxfid]: [{[DataStringKey.vdxfid]: 'preview-only reference'}],
+      [IDENTITY_CREDENTIAL.vdxfid]: [{[DataStringKey.vdxfid]: 'another generated reference'}],
+    }}, currentIdentity, {detailsBufferString: before});
+    const review = renderer.root.findByType('ReviewStep');
+    const updates = review.findByType('ContentStep').props.displayUpdates[VERUSID_CMM_INFO.key];
+    expect(Object.keys(updates)).toHaveLength(1);
+    expect(updates[`${VERUSID_CMM_DATA.key}:${DataStringKey.vdxfid}`].rawData).toEqual(values);
+    expect(JSON.stringify(updates)).not.toContain('preview-only reference');
+    expect(JSON.stringify(updates)).not.toContain('another generated reference');
+    expect(details.toBuffer().toString('hex')).toBe(before);
+    renderer.unmount();
+  });
+
+  it('does not mask ordinary values when an upload uses the same content key', () => {
+    // The SDK rejects overlapping keys before submission. Review must still show
+    // every requested payload when credential encryption defers preparation.
+    const values = [{[DataStringKey.vdxfid]: 'Visible ordinary content'}];
+    const details = IdentityUpdateRequestDetails.fromCLIJson({
+      name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
+      contentmultimap: {[DataStringKey.vdxfid]: values},
+    });
+    details.signDataMap = new KvMap();
+    details.signDataMap.setByAddress(DataStringKey.vdxfid,
+      PartialSignData.fromCLIJson({message: 'Visible upload content'}));
+    details.toggleContainsSignData();
+    const renderer = renderRequest({}, currentIdentity, {
+      detailsBufferString: details.toBuffer().toString('hex'), hasEncryptedKeys: true,
+    });
+    const updates = renderer.root.findByType('ReviewStep').findByType('ContentStep')
+      .props.displayUpdates[VERUSID_CMM_INFO.key];
+    const key = `${VERUSID_CMM_DATA.key}:${DataStringKey.vdxfid}`;
+    expect(Object.keys(updates)).toHaveLength(2);
+    expect(updates[key].rawData).toEqual(values);
+    expect(updates[`${key}:upload`].signData.data.toString('utf8')).toBe('Visible upload content');
+    renderer.unmount();
+  });
+
+  it('keeps clearing all content visible on the first screen and requires the risk acknowledgement', () => {
+    const details = IdentityUpdateRequestDetails.fromCLIJson({
+      name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
+      contentmultimap: {[ContentMultiMapRemoveKey.vdxfid]: [{
+        [ContentMultiMapRemoveKey.vdxfid]: {version: 1, action: 4},
+      }]},
+    });
+    const renderer = renderRequest({}, {
+      ...currentIdentity, contentmultimap: {[DataStringKey.vdxfid]: ['Current content']},
+    }, {detailsBufferString: details.toBuffer().toString('hex')});
+    const updates = renderer.root.findByType('ReviewStep').findByType('ContentStep')
+      .props.displayUpdates[VERUSID_CMM_INFO.key];
+    expect(Object.values(updates)).toEqual([
+      expect.objectContaining({removeMeta: expect.objectContaining({action: 4})}),
+    ]);
+    expect(renderer.root.findByType('ReviewStep').props.highRiskCount).toBe(1);
+    goToRiskReview(renderer);
+    expect(renderedText(renderer)).toContain('This clears current identity content.');
+    expect(nextButton(renderer).props.disabled).toBe(true);
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(0);
+    act(() => renderer.root.findByProps({accessibilityLabel: 'Acknowledge high-risk changes'}).props.onPress());
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(1);
+    renderer.unmount();
+  });
+
+  it('reviews data recorded under the removal key even when it is not a removal instruction', () => {
+    const values = [{[DataStringKey.vdxfid]: 'This statement is still recorded in the identity update.'}];
+    const details = IdentityUpdateRequestDetails.fromCLIJson({
+      name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
+      contentmultimap: {[ContentMultiMapRemoveKey.vdxfid]: values},
+    });
+    const renderer = renderRequest({}, currentIdentity, {
+      detailsBufferString: details.toBuffer().toString('hex'),
+    });
+    const review = renderer.root.findByType('ReviewStep');
+    const updates = review.findByType('ContentStep').props.displayUpdates[VERUSID_CMM_INFO.key];
+
+    expect(Object.keys(updates)).toHaveLength(1);
+    expect(updates[`${VERUSID_CMM_DATA.key}:${ContentMultiMapRemoveKey.vdxfid}:unrecognized`])
+      .toMatchObject({
+        unrecognizedRemoval: true,
+        contentKey: ContentMultiMapRemoveKey.vdxfid,
+        rawData: values,
+        displayTitle: 'Unrecognized removal data',
+      });
+    expect(review.props.contentCount).toBe(1);
+    expect(review.props.highRiskCount).toBe(0);
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findByType('ConfirmPayStep').props.contentCount).toBe(1);
+    renderer.unmount();
+  });
+
+  it('keeps recognized removal actions and other recorded data under the removal key separate', () => {
+    const ignored = {[DataStringKey.vdxfid]: 'Additional data recorded alongside the removal'};
+    const removal = {[ContentMultiMapRemoveKey.vdxfid]: {version: 1, action: 4}};
+    const details = IdentityUpdateRequestDetails.fromCLIJson({
+      name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
+      contentmultimap: {[ContentMultiMapRemoveKey.vdxfid]: [ignored, removal]},
+    });
+    const renderer = renderRequest({}, currentIdentity, {
+      detailsBufferString: details.toBuffer().toString('hex'),
+    });
+    const review = renderer.root.findByType('ReviewStep');
+    const updates = review.findByType('ContentStep').props.displayUpdates[VERUSID_CMM_INFO.key];
+
+    expect(Object.values(updates)).toEqual(expect.arrayContaining([
+      expect.objectContaining({unrecognizedRemoval: true, rawData: [ignored]}),
+      expect.objectContaining({removeMeta: expect.objectContaining({action: 4}), rawData: [removal]}),
+    ]));
+    expect(Object.keys(updates)).toHaveLength(2);
+    expect(review.props.contentCount).toBe(2);
+    expect(review.props.highRiskCount).toBe(1);
+    goToRiskReview(renderer);
+    expect(nextButton(renderer).props.disabled).toBe(true);
+    renderer.unmount();
+  });
+
+  it('returns a replacement content request to its own first-screen review', () => {
+    const makeDetails = message => IdentityUpdateRequestDetails.fromCLIJson({
+      name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
+      contentmultimap: {[DataStringKey.vdxfid]: {data: {message}}},
+    }).toBuffer().toString('hex');
+    const renderer = renderRequest({}, currentIdentity, {detailsBufferString: makeDetails('Old request')});
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(1);
+    const previousProps = renderer.root.findByType(IdentityUpdateRequestInfo).props;
+    act(() => renderer.update(<IdentityUpdateRequestInfo {...previousProps}
+      detailsBufferString={makeDetails('Replacement request')} />));
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(0);
+    const updates = renderer.root.findByType('ReviewStep').findByType('ContentStep')
+      .props.displayUpdates[VERUSID_CMM_INFO.key];
+    expect(Object.values(updates)).toHaveLength(1);
+    expect(Object.values(updates)[0].signData.data.toString('utf8')).toBe('Replacement request');
+    renderer.unmount();
+  });
+
+  it('preserves the generic request network through final confirmation', () => {
+    mockState.authentication.activeAccount.testnetOverrides = {VRSC: 'VRSCTEST'};
+    const request = requestEnvelope();
+    request.setIsTestnet();
+    const renderer = renderRequest({}, currentIdentity, {requestBufferString: request.toBuffer().toString('hex')});
+    expect(nextButton(renderer).props.disabled).toBe(false);
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findByType('ConfirmPayStep').props.requestIsTestnet).toBe(true);
+    expect(createAlert).not.toHaveBeenCalled();
+    renderer.unmount();
+  });
+
+  it('does not advance a replacement review when an earlier sign-in prompt completes', () => {
+    mockState.authentication.signedIn = false;
+    mockState.authentication.accounts = [{testnetOverrides: {}}];
+    const renderer = renderRequest({minimumsignatures: 2});
+    act(() => nextButton(renderer).props.onPress());
+    const previousProps = renderer.root.findByType(IdentityUpdateRequestInfo).props;
+    mockState.authentication.signedIn = true;
+    act(() => renderer.update(<IdentityUpdateRequestInfo {...previousProps} identityUpdates={{minimumsignatures: 2, recoveryauthority: 'new-recovery'}} />));
+    expect(renderer.root.findAllByType('ReviewStep')).toHaveLength(1);
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(0);
+    renderer.unmount();
+  });
+
   it.each([false, true])('requires review and acknowledgement when only the threshold changes (partial: %s)', partial => {
     const updates = partial ? {minimumsignatures: 2} : {...currentIdentity, minimumsignatures: 2};
     const renderer = renderRequest(updates);

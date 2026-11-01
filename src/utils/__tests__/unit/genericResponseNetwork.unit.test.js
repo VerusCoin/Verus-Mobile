@@ -49,6 +49,12 @@ const {
   GenericResponse,
 } = require('verus-typescript-primitives');
 const GenericRequestHome = require('../../../containers/DeepLink/GenericRequestHome/GenericRequestHome').default;
+const {createAlert} = require('../../../actions/actions/alert/dispatchers/alert');
+const requestHex = (name = 'original', count = 1) => new GenericRequest({
+  details: Array.from({length: count}, () => new AuthenticationRequestOrdinalVDXFObject({
+    data: new AuthenticationRequestDetails({requestID: CompactIAddressObject.fromFQN(`${name}@`, 'VRSC')}),
+  })),
+}).toBuffer().toString('hex');
 
 describe('generic response network context during request handling', () => {
   let renderer;
@@ -64,6 +70,55 @@ describe('generic response network context during request handling', () => {
 
   afterEach(() => {
     if (renderer) act(() => renderer.unmount());
+  });
+
+  it('stops processing later request details after a failed handler cancels the flow', async () => {
+    mockHandleAuthentication.mockRejectedValueOnce(new Error('Invalid first detail'));
+    const cancel = jest.fn();
+    const warning = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    await act(async () => {
+      renderer = create(<GenericRequestHome deeplinkData={requestHex('original', 2)} navigation={{navigate: jest.fn()}} cancel={cancel} />);
+    });
+    expect(mockHandleAuthentication).toHaveBeenCalledTimes(1);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(createAlert).toHaveBeenCalledWith('Error', 'Invalid first detail');
+    warning.mockRestore();
+  });
+
+  it('ignores old handler completion when a new deeplink replaces a pending request', async () => {
+    let release;
+    mockHandleAuthentication.mockImplementationOnce((_request, response) => new Promise(resolve => {
+      release = () => resolve({response, displayProps: {marker: 'old-result'}, handledIndices: []});
+    })).mockImplementationOnce(async (_request, response) => ({response, displayProps: {marker: 'new-result'}, handledIndices: []}));
+    const props = {navigation: {navigate: jest.fn()}, cancel: jest.fn()};
+    await act(async () => { renderer = create(<GenericRequestHome {...props} deeplinkData={requestHex()} />); });
+    await act(async () => { renderer.update(<GenericRequestHome {...props} deeplinkData={requestHex('replacement')} />); });
+    expect(mockHandleAuthentication).toHaveBeenCalledTimes(2);
+    expect(renderer.root.findByType('AuthenticationRequestInfo').props.marker).toBe('new-result');
+    await act(async () => { release(); });
+    expect(renderer.root.findByType('AuthenticationRequestInfo').props.marker).toBe('new-result');
+    expect(props.cancel).not.toHaveBeenCalled();
+  });
+
+  it('does not advance a canceled request when its former child later completes', async () => {
+    const props = {navigation: {navigate: jest.fn()}, cancel: jest.fn()};
+    await act(async () => { renderer = create(<GenericRequestHome {...props} deeplinkData={requestHex()} />); });
+    const screen = renderer.root.findByType('AuthenticationRequestInfo');
+    act(() => screen.props.cancel());
+    act(() => screen.props.cancel());
+    await act(async () => screen.props.next(new GenericResponse(), [0]));
+    expect(props.cancel).toHaveBeenCalledTimes(1);
+    expect(props.navigation.navigate).not.toHaveBeenCalled();
+  });
+
+  it('ignores a former child cancel after replacing its request', async () => {
+    const props = {navigation: {navigate: jest.fn()}, cancel: jest.fn()};
+    await act(async () => { renderer = create(<GenericRequestHome {...props} deeplinkData={requestHex()} />); });
+    const oldCancel = renderer.root.findByType('AuthenticationRequestInfo').props.cancel;
+    await act(async () => { renderer.update(<GenericRequestHome {...props} deeplinkData={requestHex('replacement')} />); });
+    act(() => oldCancel());
+    expect(props.cancel).not.toHaveBeenCalled();
+    expect(renderer.root.findAllByType('AuthenticationRequestInfo')).toHaveLength(1);
   });
 
   it.each([

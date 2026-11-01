@@ -34,7 +34,7 @@ export const processVerusId = async (props, requestPayload, fromService = null, 
         passthrough,
       },
     });
-    props.navigation.navigate('DeepLink');
+    props.navigation.navigate('DeepLink', {screen: 'VerifyDeepLink'});
     return;
   }
 
@@ -50,5 +50,5 @@ export const processVerusId = async (props, requestPayload, fromService = null, 
       passthrough: { fqnToAutoLink }
     },
   });
-  props.navigation.navigate('DeepLink');
+  props.navigation.navigate('DeepLink', {screen: 'VerifyDeepLink'});
 }

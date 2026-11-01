@@ -1,32 +1,13 @@
+import {identityUploadToDisplayJson} from '../../../utils/identityUpdate/uploadDisplay';
+import {identityToDisplayJson} from '../../../utils/identityUpdate/identityDisplay';
 /*
-  IdentityUpdateRequestInfo
-  - 2026-02-02: Complete UI overhaul to match Wallet/Identity/SendWizard patterns.
-  - 2026-02-05: Removed the separate Encrypted Uploads section.
-    Content-multimap updates now carry encrypted flags for inline badges.
-  - 2026-02-05: Refactored into a multi-step stepper that consolidates the entire
-    identity update flow into a single screen. Bypasses IdentityUpdatePaymentConfiguration
-    and the UpdateIdentity SendModal entirely.
-  - 2026-02-05: Split into 4 steps: Overview -> Content Changes -> High-Risk Ack ->
-    Confirm+Pay. Content changes got their own dedicated step with full-screen
-    VerusIdObjectData. Fund source selection moved to a SemiModal sheet inside
-    the Confirm step instead of a separate screen.
-  - 2026-02-06: High-risk step shows primary-address deltas (add/remove), uses a
-    single acknowledgment checkbox, and flags new addresses not in wallet.
-    Adds a post-update primary-address ownership summary ("In wallet" vs "External")
-    so users can clearly see whether they retain control when adding external addresses.
-  - 2026-02-06: Fixed wallet address derivation ordering so "in wallet" matching
-    is reliable during the High-risk step.
-  - 2026-02-07: Fixed misleading HighRiskStep display. primaryAddressAfterUpdateInfo
-    is now only passed when primary addresses are actually changing, preventing the
-    "You will share control" message from appearing for authority-only changes.
-  - 2026-02-07: Authority-only changes now show a dedicated card with prominent ID
-    name and info icon (AuthorityInfoSheet) instead of generic outcome messaging.
-  - 2026-03-06: Clarified current-content removal copy  and added remove-action
-    detail content that explains historical on-chain visibility.
-*/
-import React, {useMemo, useState, useEffect, useCallback} from 'react';
+ * Review original content inline before control acknowledgement and payment.
+ * Display representations never replace the original request used for signing.
+ */
+import React, {useMemo, useState, useEffect, useCallback, useRef} from 'react';
 import {Platform, SafeAreaView, View} from 'react-native';
-import {Button, Portal, Text} from 'react-native-paper';
+import {Portal, Text} from 'react-native-paper';
+import Button from '../../../components/Button';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import {
   getFriendlyNameMap,
@@ -88,9 +69,8 @@ import {identityUpdateRequestInfoStyles as styles} from '../../../styles';
 
 // Step identifiers
 const STEP_REVIEW = 0;
-const STEP_CONTENT = 1;
-const STEP_HIGH_RISK = 2;
-const STEP_CONFIRM_PAY = 3;
+const STEP_HIGH_RISK = 1;
+const STEP_CONFIRM_PAY = 2;
 const CMM_CLEAR_MAP_SENTINEL = '__CMM_CLEAR__';
 
 const IdentityUpdateRequestInfo = props => {
@@ -113,7 +93,7 @@ const IdentityUpdateRequestInfo = props => {
     detailIndex,
     next,
     subjectIdTxHex,
-    updateIdTxHex,
+    identityPreviewPrepared,
     hasEncryptedKeys,
   } = props;
   const insets = useSafeAreaInsets();
@@ -126,9 +106,9 @@ const IdentityUpdateRequestInfo = props => {
   const {fullyqualifiedname, identity} = subjectIdentity;
 
   // --- Core state ---
-  const [details, setDetails] = useState(new IdentityUpdateRequestDetails());
   const [stepIndex, setStepIndex] = useState(STEP_REVIEW);
   const [acknowledged, setAcknowledged] = useState(false);
+  const signinContinuationActive = useRef(false);
 
   // --- Modal state ---
   const [vdxfInspectorItems, setVdxfInspectorItems] = useState([]);
@@ -149,12 +129,18 @@ const IdentityUpdateRequestInfo = props => {
   const canOpenSignerModal = Boolean(chainId && signerIdentityID);
 
   const request = useMemo(() => {
-    if (!requestBufferString) return null;
     const req = new GenericRequest();
     req.fromBuffer(Buffer.from(requestBufferString, 'hex'), 0);
     return req;
   }, [requestBufferString]);
-  const requestIsTestnet = request != null ? request.isTestnet() : false;
+  const requestIsTestnet = request.isTestnet();
+  const details = useMemo(() => {
+    const parsed = new IdentityUpdateRequestDetails();
+    if (detailsBufferString) {
+      parsed.fromBuffer(Buffer.from(detailsBufferString, 'hex'), 0, true, requestIsTestnet ? 'VRSCTEST' : 'VRSC');
+    }
+    return parsed;
+  }, [detailsBufferString, requestIsTestnet]);
 
   // --- Helper functions ---
   const getVerusId = async (chain, iAddrOrName) => {
@@ -178,7 +164,7 @@ const IdentityUpdateRequestInfo = props => {
       const str = String(value);
       return str.length > maxLen ? `${str.slice(0, maxLen)}...` : str;
     };
-    const dataJson = signData.toCLIJson();
+    const dataJson = identityUploadToDisplayJson(signData);
     if (signData.isVdxfData()) return 'VDXF data';
     if (signData.isMMRData()) return 'MMR data';
     if (dataJson.filename) return `Filename: ${trim(dataJson.filename)}`;
@@ -195,14 +181,14 @@ const IdentityUpdateRequestInfo = props => {
       return null;
     }
 
-    return signData.toCLIJson();
+    return identityUploadToDisplayJson(signData);
   };
 
   const getCmmDataKey = iAddr => {
     const keyLabel = getVDXFKeyLabel(iAddr, true);
     if (keyLabel == null) {
       if (cmmDataKeys && cmmDataKeys[iAddr]) return cmmDataKeys[iAddr].label;
-      return iAddr.substring(0, 4) + '...' + iAddr.substring(iAddr.length - 4);
+      return 'Unrecognized content key';
     }
     return capitalizeString(keyLabel);
   };
@@ -322,6 +308,7 @@ const IdentityUpdateRequestInfo = props => {
           identityUpdates.privateaddress !== identity.privateaddress
             ? {
                 data: displayIdentityAddress(identityUpdates.privateaddress),
+                rawData: identityUpdates.privateaddress,
                 onPress: () =>
                   copyToClipboard(identityUpdates.privateaddress, {
                     message: `${identityUpdates.privateaddress} copied to clipboard.`,
@@ -366,91 +353,128 @@ const IdentityUpdateRequestInfo = props => {
       }
     }
 
-    if (identityUpdates.contentmultimap) {
-      for (const key in identityUpdates.contentmultimap) {
-        const updates = identityUpdates.contentmultimap[key];
+    // Review the original requested values, before uploads are replaced with
+    // transaction references or credentials are encrypted for publication.
+    const requestedContent = detailsBufferString
+      ? identityToDisplayJson(details.identity).contentmultimap || {}
+      : identityUpdates.contentmultimap || {};
+    const contentKeys = new Set(Object.keys(requestedContent));
+    if (details.containsSignData()) {
+      for (const [key] of signDataMap.entries()) contentKeys.add(key.toIAddress());
+    }
+    if (contentKeys.size) {
+      for (const key of contentKeys) {
+        const updates = requestedContent[key];
         const signData = details.containsSignData()
           ? getSignDataForKey(key)
           : null;
 
         if (signData != null) {
           displayUpdates[VERUSID_CMM_INFO.key][
-            `${VERUSID_CMM_DATA.key}:${key}`
+            `${VERUSID_CMM_DATA.key}:${key}:upload`
           ] = {
-            data: getSignDataLabel(signData),
-            isEncrypted: true,
+            data: signData.encryptToAddress ? getSignDataLabel(signData) : `Public upload: ${getSignDataLabel(signData)}`,
+            signData,
+            contentKey: key,
+            displayTitle: getCmmDataKey(key),
+            isEncrypted: !!signData.encryptToAddress,
             onPress: () =>
               openVdxfUniValueModal(
                 [toSignDataInspectorItem(signData)],
                 getCmmDataKey(key),
               ),
           };
-        } else {
-          const {removeEntries, nonRemoveUpdates} = splitContentMultiMapUpdates(key, updates);
+        }
+        const {removeEntries, nonRemoveUpdates} = splitContentMultiMapUpdates(key, updates);
 
-          if (removeEntries.length > 0) {
-            removeEntries.forEach(({update, removeMeta, index}) => {
-              const removeUi = buildContentMultiMapRemoveUi({
-                removeMeta,
-                fallbackKey: key,
-                currentContentMultiMap: identity.contentmultimap,
-                getKeyLabel: getCmmDataKey,
-                definedKeyVdxfId: DATA_TYPE_DEFINEDKEY.vdxfid,
-              });
-              if (!removeUi) return;
-              const targetKey =
-                removeMeta.action === 4
-                  ? CMM_CLEAR_MAP_SENTINEL
-                  : removeMeta.entryKey || key;
-              // Keep every removal separate from additions to the same key.
-              const updateKey = `${VERUSID_CMM_DATA.key}:${targetKey}:remove:${index}`;
-
-              // derive remove-action copy from the current identity state, not from chain permanence.
-              displayUpdates[VERUSID_CMM_INFO.key][updateKey] = {
-                data: removeUi.summary,
-                rawData: [update],
-                removeMeta: {
-                  ...removeMeta,
-                  entryLabel: removeUi.targetLabel,
-                },
-                highRisk: removeMeta.action === 4,
-                highRiskType:
-                  removeMeta.action === 4 ? 'content-clear' : undefined,
-                highRiskTitle:
-                  removeMeta.action === 4
-                    ? 'Clear current identity content'
-                    : undefined,
-                highRiskWarning:
-                  removeMeta.action === 4
-                    ? removeUi.highRiskWarning
-                    : undefined,
-                displayTitle: removeUi.displayTitle,
-                onPress: () =>
-                  openVdxfUniValueModal(
-                    toCmmModalObjects([update], key),
-                    removeUi.modalTitle,
-                  ),
-              };
-            });
-          }
-
-          if (nonRemoveUpdates.length > 0) {
-            const dataLabel = getCmmDataLabel(nonRemoveUpdates);
-            const isCredentialKey =
-              hasEncryptedKeys && key === IDENTITY_CREDENTIAL.vdxfid;
-            displayUpdates[VERUSID_CMM_INFO.key][
-              `${VERUSID_CMM_DATA.key}:${key}`
-            ] = {
-              data: dataLabel,
-              rawData: nonRemoveUpdates,
-              isEncryptedKey: isCredentialKey,
-              onPress: () =>
-                openVdxfUniValueModal(
-                  toCmmModalObjects(nonRemoveUpdates),
-                  getCmmDataKey(key),
-                ),
+        // Unrecognized removal instructions have no removal effect, but their
+        // bytes are still published in the update transaction and need review.
+        if (key === ContentMultiMapRemoveKey.vdxfid) {
+          const recognizedIndexes = new Set(removeEntries.map(entry => entry.index));
+          const unrecognized = normalizeCmmUpdates(updates).filter((_, index) => !recognizedIndexes.has(index));
+          if (unrecognized.length > 0) {
+            displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}:unrecognized`] = {
+              data: 'Unrecognized removal data',
+              displayTitle: 'Unrecognized removal data',
+              contentKey: key,
+              rawData: unrecognized,
+              unrecognizedRemoval: true,
+              onPress: () => openVdxfUniValueModal(
+                unrecognized.map((value, index) => ({
+                  kind: 'raw-value', key: `raw:${index + 1}`, data: value, rawData: value,
+                })),
+                'Unrecognized removal data',
+              ),
             };
           }
+        }
+
+        if (removeEntries.length > 0) {
+          removeEntries.forEach(({update, removeMeta, index}) => {
+            const removeUi = buildContentMultiMapRemoveUi({
+              removeMeta,
+              fallbackKey: key,
+              currentContentMultiMap: identity.contentmultimap,
+              getKeyLabel: getCmmDataKey,
+              definedKeyVdxfId: DATA_TYPE_DEFINEDKEY.vdxfid,
+            });
+            if (!removeUi) return;
+            const targetKey =
+              removeMeta.action === 4
+                ? CMM_CLEAR_MAP_SENTINEL
+                : removeMeta.entryKey || key;
+            // Keep every removal separate from additions to the same key.
+            const updateKey = `${VERUSID_CMM_DATA.key}:${targetKey}:remove:${index}`;
+
+            // derive remove-action copy from the current identity state, not from chain permanence.
+            displayUpdates[VERUSID_CMM_INFO.key][updateKey] = {
+              data: removeUi.summary,
+              rawData: [update],
+              removeMeta: {
+                ...removeMeta,
+                entryLabel: removeUi.targetLabel,
+              },
+              highRisk: removeMeta.action === 4,
+              highRiskType:
+                removeMeta.action === 4 ? 'content-clear' : undefined,
+              highRiskTitle:
+                removeMeta.action === 4
+                  ? 'Clear current identity content'
+                  : undefined,
+              highRiskWarning:
+                removeMeta.action === 4
+                  ? removeUi.highRiskWarning
+                  : undefined,
+              displayTitle: removeUi.displayTitle,
+              contentKey: key,
+              removalUi: removeUi,
+              onPress: () =>
+                openVdxfUniValueModal(
+                  toCmmModalObjects([update], key),
+                  removeUi.modalTitle,
+                ),
+            };
+          });
+        }
+
+        if (nonRemoveUpdates.length > 0) {
+          const dataLabel = getCmmDataLabel(nonRemoveUpdates);
+          const isCredentialKey =
+            hasEncryptedKeys && key === IDENTITY_CREDENTIAL.vdxfid;
+          displayUpdates[VERUSID_CMM_INFO.key][
+            `${VERUSID_CMM_DATA.key}:${key}`
+          ] = {
+            data: dataLabel,
+            rawData: nonRemoveUpdates,
+            contentKey: key,
+            displayTitle: getCmmDataKey(key),
+            isEncryptedKey: isCredentialKey,
+            onPress: () =>
+              openVdxfUniValueModal(
+                toCmmModalObjects(nonRemoveUpdates),
+                getCmmDataKey(key),
+              ),
+          };
         }
       }
     }
@@ -461,7 +485,7 @@ const IdentityUpdateRequestInfo = props => {
   const getExpiryLabel = () => {
     if (!details.expires()) return '';
     return blocksToTime(
-      details.expiryHeight.toNumber() - chainInfo.longestchain,
+      details.expiryHeight.toNumber() - chainInfo.blocks,
       coinObj.seconds_per_block,
     );
   };
@@ -509,7 +533,8 @@ const IdentityUpdateRequestInfo = props => {
   const [loading, setLoading] = useState(false);
   const [sigDateString, setSigDateString] = useState(unixToDate(sigtime));
   const [waitingForSignin, setWaitingForSignin] = useState(false);
-  const [displayUpdates, setDisplayUpdates] = useState(getDisplayUpdates());
+  const displayUpdates = useMemo(getDisplayUpdates,
+    [details, detailsBufferString, identityUpdates, subjectIdentity, friendlyNames, cmmDataKeys, hasEncryptedKeys]);
 
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const activeAccount = useSelector(
@@ -572,7 +597,7 @@ const IdentityUpdateRequestInfo = props => {
   }, [identity, identityUpdates, walletAddresses, friendlyNames]);
 
   // --- Classify changes ---
-  const {highRiskChanges: baseHighRiskChanges, contentChanges} = useMemo(
+  const {highRiskChanges: baseHighRiskChanges} = useMemo(
     () => classifyChanges(displayUpdates),
     [displayUpdates],
   );
@@ -640,11 +665,11 @@ const IdentityUpdateRequestInfo = props => {
       buildIdentityStateChange({
         currentIdentity: identity,
         updatedIdentity: identityUpdates,
-        chainHeight: chainInfo?.longestchain,
+        chainHeight: chainInfo?.blocks,
         secondsPerBlock: coinObj.seconds_per_block,
-        prepared: Boolean(updateIdTxHex),
+        prepared: identityPreviewPrepared,
       }),
-    [identity, identityUpdates, chainInfo?.longestchain, coinObj.seconds_per_block, updateIdTxHex],
+    [identity, identityUpdates, chainInfo?.blocks, coinObj.seconds_per_block, identityPreviewPrepared],
   );
 
   const highRiskChanges = useMemo(
@@ -680,18 +705,19 @@ const IdentityUpdateRequestInfo = props => {
     groupKey => Object.values(displayUpdates[groupKey] || {}).some(Boolean),
   );
 
+  const contentChangeCount = Object.values(displayUpdates[VERUSID_CMM_INFO.key] || {}).filter(Boolean).length;
+
   // --- Stepper navigation ---
-  // Build the ordered list of steps (skip content/high-risk if none)
+  // Content is always expanded on the opening review. Only control changes
+  // require a separate acknowledgement before payment and submission.
   const steps = useMemo(() => {
     const s = [STEP_REVIEW];
-    if (hasContent) s.push(STEP_CONTENT);
     if (hasHighRisk) s.push(STEP_HIGH_RISK);
     s.push(STEP_CONFIRM_PAY);
     return s;
-  }, [hasContent, hasHighRisk]);
+  }, [hasHighRisk]);
 
   const currentStepId = steps[stepIndex] ?? STEP_REVIEW;
-  const isLastStep = stepIndex === steps.length - 1;
   const isFirstStep = stepIndex === 0;
 
   const goNext = useCallback(() => {
@@ -707,6 +733,7 @@ const IdentityUpdateRequestInfo = props => {
     if (signedIn) {
       goNext();
     } else {
+      signinContinuationActive.current = true;
       setWaitingForSignin(true);
       const allowList = requestIsTestnet
         ? accounts.filter(x => {
@@ -761,11 +788,22 @@ const IdentityUpdateRequestInfo = props => {
 
   // --- Effects ---
   useEffect(() => {
+    setStepIndex(STEP_REVIEW);
+    setAcknowledged(false);
+    setWaitingForSignin(false);
+    signinContinuationActive.current = false;
+    setVdxfUniValueModalVisible(false);
+    setIsListSelectionModalVisible(false);
+    setVerusIdDetailsModalProps(null);
+  }, [detailsBufferString, requestBufferString, subjectIdTxHex, identityUpdates, subjectIdentity]);
+
+  useEffect(() => {
     if (isWrongRequestType) wrongRequestType(requestIsTestnet);
   }, []);
 
   useEffect(() => {
-    if (signedIn && waitingForSignin) {
+    if (signedIn && waitingForSignin && signinContinuationActive.current) {
+      signinContinuationActive.current = false;
       setWaitingForSignin(false);
       goNext();
     }
@@ -774,18 +812,6 @@ const IdentityUpdateRequestInfo = props => {
   useEffect(() => {
     setExpiryLabel(getExpiryLabel());
   }, [details]);
-
-  useEffect(() => {
-    setDisplayUpdates(getDisplayUpdates());
-  }, [details, identityUpdates, friendlyNames, cmmDataKeys]);
-
-  useEffect(() => {
-    if (detailsBufferString) {
-      const det = new IdentityUpdateRequestDetails();
-      det.fromBuffer(Buffer.from(detailsBufferString, 'hex'), 0);
-      setDetails(det);
-    }
-  }, [detailsBufferString]);
 
   useEffect(() => {
     setSigDateString(unixToDate(sigtime));
@@ -798,8 +824,9 @@ const IdentityUpdateRequestInfo = props => {
 
   // --- Footer button logic ---
   const getFooterButtonLabel = () => {
-    if (currentStepId === STEP_CONFIRM_PAY) return 'Update';
-    return 'Next';
+    if (currentStepId === STEP_CONFIRM_PAY) return 'Update identity';
+    if (currentStepId === STEP_REVIEW && hasHighRisk) return 'Review risks';
+    return 'Continue';
   };
 
   const getFooterLeftLabel = () => {
@@ -825,10 +852,7 @@ const IdentityUpdateRequestInfo = props => {
   const handleFooterRight = () => {
     if (currentStepId === STEP_REVIEW) {
       handleContinue();
-    } else if (
-      currentStepId === STEP_CONTENT ||
-      currentStepId === STEP_HIGH_RISK
-    ) {
+    } else if (currentStepId === STEP_HIGH_RISK) {
       goNext();
     }
     // For STEP_CONFIRM_PAY, the ConfirmPayStep handles its own buttons
@@ -880,23 +904,18 @@ const IdentityUpdateRequestInfo = props => {
           details={details}
           fullyqualifiedname={fullyqualifiedname}
           highRiskCount={highRiskChanges.length}
-          contentCount={contentChanges.length}
+          contentCount={contentChangeCount}
           openVerusIdDetailsModal={openVerusIdDetailsModal}
           signerIdentityID={signerIdentityID}
-          styles={styles}
-        />
-      )}
-
-      {currentStepId === STEP_CONTENT && (
-        <ContentStep
-          subjectIdentity={subjectIdentity}
-          friendlyNames={friendlyNames}
-          displayUpdates={displayUpdates}
-          chainInfo={chainInfo}
-          coinObj={coinObj}
-          cmmDataKeys={cmmDataKeys}
-          styles={styles}
-        />
+          styles={styles}>
+          {hasContent && (
+            <ContentStep
+              subjectIdentity={subjectIdentity}
+              displayUpdates={displayUpdates}
+              cmmDataKeys={cmmDataKeys}
+            />
+          )}
+        </ReviewStep>
       )}
 
       {currentStepId === STEP_HIGH_RISK && (
@@ -927,12 +946,11 @@ const IdentityUpdateRequestInfo = props => {
       {currentStepId === STEP_CONFIRM_PAY && (
         <ConfirmPayStep
           identityStateChange={identityStateChange}
-          chainHeight={chainInfo?.longestchain}
+          chainHeight={chainInfo?.blocks}
           details={details}
           requestIsTestnet={requestIsTestnet}
           subjectIdentity={subjectIdentity}
           subjectIdTxHex={subjectIdTxHex}
-          updateIdTxHex={updateIdTxHex}
           friendlyNames={friendlyNames}
           coinObj={coinObj}
           responseBufferString={responseBufferString}
@@ -941,8 +959,10 @@ const IdentityUpdateRequestInfo = props => {
           cancel={cancel}
           onGoBack={goBack}
           highRiskCount={highRiskChanges.length}
-          contentCount={contentChanges.length}
+          contentCount={contentChangeCount}
           hasEncryptedKeys={hasEncryptedKeys}
+          onReviewContent={hasContent ? () => setStepIndex(STEP_REVIEW) : undefined}
+          footerBottomPadding={footerBottomPadding}
           styles={styles}
         />
       )}

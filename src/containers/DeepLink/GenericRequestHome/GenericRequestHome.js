@@ -3,7 +3,7 @@
   - Coordinates generic request detail handlers, chooses the matching deeplink
     screen, and forwards completed responses through the request flow.
 */
-import React, {useCallback, useState, useEffect} from 'react';
+import React, {useCallback, useState, useEffect, useRef} from 'react';
 import {Linking, TouchableOpacity, View} from 'react-native';
 import { Portal, Text } from 'react-native-paper';
 import {useSelector} from 'react-redux';
@@ -59,10 +59,20 @@ import {
 } from '../../../utils/deeplink/experimentalDeeplinks';
 
 
-const GenericRequestHome = props => {
+const GenericRequestSession = props => {
   const {
     deeplinkData
   } = props;
+  const active = useRef(true);
+  useEffect(() => {
+    active.current = true;
+    return () => { active.current = false; };
+  }, []);
+  const cancel = () => {
+    if (!active.current) return;
+    active.current = false;
+    props.cancel();
+  };
 
   /**
    * @type {[GenericRequest, (GenericRequest) => {}]}
@@ -154,6 +164,7 @@ const GenericRequestHome = props => {
         if (!processedDetailIndices.includes(i)) {
           try {
             const res = await processDetailAtIndex(i);
+            if (!active.current) return;
             const newIndices = [...processedDetailIndices];
 
             for (const processedIndex of res.handledIndices) {
@@ -182,9 +193,11 @@ const GenericRequestHome = props => {
 
             return;
           } catch (e) {
+            if (!active.current) return;
             createAlert("Error", e.message)
-            props.cancel()
+            cancel()
             console.warn(e)
+            return;
           }
         }
       }
@@ -198,6 +211,7 @@ const GenericRequestHome = props => {
    * @param {Array<number>} handledIndices
    */
   const next = async (response, handledIndices) => {
+    if (!active.current) return;
     if (request.isTestnet()) response.setIsTestnet();
     let newDetailsProcessed = detailsProcessed;
 
@@ -301,7 +315,7 @@ const GenericRequestHome = props => {
     [AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid]: () => (
       <AuthenticationRequestInfo
         {...displayProps}
-        cancel={props.cancel}
+        cancel={cancel}
         setLoading={props.setLoading}
         navigation={props.navigation}
         next={next}
@@ -313,7 +327,7 @@ const GenericRequestHome = props => {
     [IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid]: () => (
       <IdentityUpdateRequestInfo
         {...displayProps}
-        cancel={props.cancel}
+        cancel={cancel}
         setLoading={props.setLoading}
         navigation={props.navigation}
         requestBufferString={request.toBuffer().toString('hex')}
@@ -329,7 +343,7 @@ const GenericRequestHome = props => {
     [VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid]: () => (
       <InvoiceInfo
         {...displayProps}
-        cancel={props.cancel}
+        cancel={cancel}
         setLoading={props.setLoading}
         navigation={props.navigation}
         next={next}
@@ -341,7 +355,7 @@ const GenericRequestHome = props => {
     [APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid]: () => (
       <AppEncryptionRequestInfo
         {...displayProps}
-        cancel={props.cancel}
+        cancel={cancel}
         setLoading={props.setLoading}
         navigation={props.navigation}
         next={next}
@@ -353,7 +367,7 @@ const GenericRequestHome = props => {
     [USER_DATA_REQUEST_VDXF_KEY.vdxfid]: () => (
       <UserDataRequestInfo
         {...displayProps}
-        cancel={props.cancel}
+        cancel={cancel}
         setLoading={props.setLoading}
         navigation={props.navigation}
         next={next}
@@ -365,7 +379,7 @@ const GenericRequestHome = props => {
     [DATA_PACKET_REQUEST_VDXF_KEY.vdxfid]: () => (
       <DataPacketRequestInfo
         {...displayProps}
-        cancel={props.cancel}
+        cancel={cancel}
         setLoading={props.setLoading}
         navigation={props.navigation}
         next={next}
@@ -377,7 +391,7 @@ const GenericRequestHome = props => {
     [CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid]: () => (
       <WalletBackupRequestInfo
         {...displayProps}
-        cancel={props.cancel}
+        cancel={cancel}
         setLoading={props.setLoading}
         navigation={props.navigation}
         next={next}
@@ -389,7 +403,7 @@ const GenericRequestHome = props => {
     [SPENDABLE_KEY_DETAILS_VDXF_KEY.vdxfid]: () => (
       <SpendableKeyRequestInfo
         {...displayProps}
-        cancel={props.cancel}
+        cancel={cancel}
         setLoading={props.setLoading}
         navigation={props.navigation}
         next={next}
@@ -451,5 +465,8 @@ const GenericRequestHome = props => {
     </View>
   );
 };
+
+// A replacement deeplink starts an independent response and review lifecycle.
+const GenericRequestHome = props => <GenericRequestSession key={props.deeplinkData} {...props} />;
 
 export default GenericRequestHome;

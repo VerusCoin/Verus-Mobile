@@ -2,7 +2,8 @@
 import React, {useState, useEffect} from 'react';
 import {Platform, SafeAreaView, ScrollView, TouchableOpacity, View} from 'react-native';
 import { primitives } from "verusid-ts-client"
-import { Button, Portal, Text } from 'react-native-paper';
+import { Portal, Text } from 'react-native-paper';
+import Button from '../../../components/Button';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import { getFriendlyNameMap, getIdentity } from '../../../utils/api/channels/verusid/callCreators';
 import { blocksToTime, satsToCoins, unixToDate } from '../../../utils/math';

@@ -34,7 +34,9 @@ export const getKeyMaterial = async (systemID) => {
         : esk;
       return { extsk: hex };
     }
-  } catch (e) {}
+  } catch (e) {
+    if (e?.code === 'SESSION_CHANGED') throw e;
+  }
 
   throw new Error(
     `No Z (shielded address) seed has been set up. ` +

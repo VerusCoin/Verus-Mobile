@@ -81,7 +81,7 @@ describe('NFC import submission', () => {
 
   const prepareEncryptedImport = async () => {
     mockReadBackup.mockResolvedValueOnce({encrypted: true});
-    const scan = button('Scan NFC Backup').props.onPress;
+    const scan = button('Scan NFC backup').props.onPress;
     await act(async () => {await scan();});
     act(() => renderer.root.findByType('TextInput').props.onChangeText('backup password'));
     return scan;
@@ -93,7 +93,7 @@ describe('NFC import submission', () => {
     const started = deferred();
     mockReadBackup.mockReturnValueOnce(read.promise);
     props.onComplete.mockImplementationOnce(() => {started.resolve(); return created.promise;});
-    const scan = button('Scan NFC Backup').props.onPress;
+    const scan = button('Scan NFC backup').props.onPress;
     let pending;
     await act(async () => {
       pending = scan();
@@ -123,7 +123,7 @@ describe('NFC import submission', () => {
     const created = deferred();
     const started = deferred();
     props.onComplete.mockImplementationOnce(() => {started.resolve(); return created.promise;});
-    const decrypt = button('Decrypt and Import').props.onPress;
+    const decrypt = button('Decrypt and import').props.onPress;
     let pending;
     await act(async () => {
       pending = decrypt();
@@ -134,25 +134,25 @@ describe('NFC import submission', () => {
     expect(mockDecodeBackup).toHaveBeenCalledTimes(1);
     expect(mockBeginNfc).toHaveBeenCalledTimes(1);
     expect(props.onComplete).toHaveBeenCalledTimes(1);
-    expect(button('Decrypt and Import').props.disabled).toBe(true);
-    expect(button('Scan Different Card').props.disabled).toBe(true);
+    expect(button('Decrypt and import').props.disabled).toBe(true);
+    expect(button('Scan different card').props.disabled).toBe(true);
     expect(button('Back').props.disabled).toBe(true);
 
     await act(async () => {created.resolve(); await pending;});
-    expect(button('Decrypt and Import').props.disabled).toBe(false);
+    expect(button('Decrypt and import').props.disabled).toBe(false);
   });
 
   it('allows a corrected password retry after decryption fails', async () => {
     await prepareEncryptedImport();
     mockDecodeBackup.mockImplementationOnce(() => {throw new Error('wrong password');});
 
-    await act(async () => {await button('Decrypt and Import').props.onPress();});
+    await act(async () => {await button('Decrypt and import').props.onPress();});
     expect(mockAlert).toHaveBeenCalledWith('Error', 'wrong password');
     expect(props.onComplete).not.toHaveBeenCalled();
-    expect(button('Decrypt and Import').props.disabled).toBe(false);
+    expect(button('Decrypt and import').props.disabled).toBe(false);
 
     act(() => renderer.root.findByType('TextInput').props.onChangeText('correct password'));
-    await act(async () => {await button('Decrypt and Import').props.onPress();});
+    await act(async () => {await button('Decrypt and import').props.onPress();});
     expect(mockDecodeBackup).toHaveBeenLastCalledWith({
       walletBackupOrdinal: {encrypted: true}, password: 'correct password',
     });
@@ -161,15 +161,15 @@ describe('NFC import submission', () => {
 
   it('releases the import gate after a failed NFC read or profile creation', async () => {
     mockReadBackup.mockRejectedValueOnce(new Error('card removed'));
-    await act(async () => {await button('Scan NFC Backup').props.onPress();});
+    await act(async () => {await button('Scan NFC backup').props.onPress();});
     expect(mockAlert).toHaveBeenCalledWith('NFC Import Failed', 'card removed');
     expect(props.onComplete).not.toHaveBeenCalled();
 
     props.onComplete.mockRejectedValueOnce(new Error('setup failed'));
-    await act(async () => {await button('Scan NFC Backup').props.onPress();});
+    await act(async () => {await button('Scan NFC backup').props.onPress();});
     expect(mockAlert).toHaveBeenCalledWith('Error', 'setup failed');
 
-    await act(async () => {await button('Scan NFC Backup').props.onPress();});
+    await act(async () => {await button('Scan NFC backup').props.onPress();});
     expect(mockReadBackup).toHaveBeenCalledTimes(3);
     expect(props.onComplete).toHaveBeenCalledTimes(2);
     expect(mockActivateKeepAwake).toHaveBeenCalledTimes(2);

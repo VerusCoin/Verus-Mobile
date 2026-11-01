@@ -10,12 +10,12 @@ import {
 } from 'react-native';
 import {
   Text,
-  Button,
   Paragraph,
   TextInput,
   Chip,
   TouchableRipple,
 } from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import {createAlert} from '../../../../../actions/actions/alert/dispatchers/alert';
 import TallButton from '../../../../../components/LargerButton';
 import Colors from '../../../../../globals/colors';

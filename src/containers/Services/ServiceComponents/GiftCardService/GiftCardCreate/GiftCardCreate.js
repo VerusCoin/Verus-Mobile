@@ -9,11 +9,11 @@ import {
 } from 'react-native';
 import {
   ActivityIndicator,
-  Button,
   Switch,
   Text,
   TextInput,
 } from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import {useSelector} from 'react-redux';
 import {modifyServiceStoredDataForUser} from '../../../../../actions/actions/services/dispatchers/services';
 import {GIFT_CARD_SERVICE_ID} from '../../../../../utils/constants/services';

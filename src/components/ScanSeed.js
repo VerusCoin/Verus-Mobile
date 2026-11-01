@@ -11,9 +11,7 @@ import {
   TouchableOpacity,
   Text
 } from "react-native";
-import {
-  Button
-} from "react-native-paper";
+import Button from "./Button";
 import Colors from "../globals/colors";
 import Styles from '../styles/index'
 import BarcodeReader from "./BarcodeReader/BarcodeReader";

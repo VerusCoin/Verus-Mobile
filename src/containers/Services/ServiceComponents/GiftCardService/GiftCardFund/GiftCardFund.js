@@ -8,13 +8,13 @@ import {
 } from 'react-native';
 import {
   ActivityIndicator,
-  Button,
   Checkbox,
   Divider,
   RadioButton,
   Text,
   TextInput,
 } from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import {useDispatch, useSelector} from 'react-redux';
 import {copyToClipboard} from '../../../../../utils/clipboard/clipboard';
 import {CoinDirectory} from '../../../../../utils/CoinData/CoinDirectory';
@@ -54,6 +54,7 @@ import { clearChainLifecycle, refreshActiveChainLifecycles } from '../../../../.
 import { setUserCoins } from '../../../../../actions/actionCreators';
 import { useObjectSelector } from '../../../../../hooks/useObjectSelector';
 import {showFundRawTransactionErrorAlert} from '../../../../../utils/vrpc/fundRawTransactionError';
+import {convertFqnToDisplayFormat} from '../../../../../utils/fullyqualifiedname';
 
 const STEP_MODE = 0;
 const STEP_FUNDS = 1;
@@ -650,6 +651,12 @@ const GiftCardFund = props => {
       const result = await broadcastGiftCardFunding({
         preflightPlan,
         pendingBroadcast: pendingFunding,
+        loadPendingBroadcast: async () => {
+          const latestCard = await loadLatestFundableCard(pendingFunding);
+          return latestCard.fundingHistory?.find(entry =>
+            entry?.id === pendingFunding?.id && isPendingFunding(entry),
+          );
+        },
         persistPendingBroadcast: persistFundingBroadcast,
       });
       const {unlinkError} = await persistFundingResult(result);
@@ -881,7 +888,7 @@ const GiftCardFund = props => {
         linkedIdentityOptions.map(identity => (
           <View key={identity.key}>
             <Checkbox.Item
-              label={identity.fullyQualifiedName || identity.identityAddress}
+              label={identity.fullyQualifiedName ? convertFqnToDisplayFormat(identity.fullyQualifiedName) : identity.identityAddress}
               status={selectedIds[identity.key] ? 'checked' : 'unchecked'}
               onPress={() =>
                 setSelectedIds({
@@ -917,7 +924,7 @@ const GiftCardFund = props => {
           <Text style={{fontWeight: 'bold'}}>VerusIDs moved to gift card</Text>
           {selections.identities.map(identity => (
             <Text key={identity.key}>
-              {identity.fullyQualifiedName || identity.identityAddress}
+              {identity.fullyQualifiedName ? convertFqnToDisplayFormat(identity.fullyQualifiedName) : identity.identityAddress}
             </Text>
           ))}
         </View>
@@ -965,7 +972,7 @@ const GiftCardFund = props => {
           {identityFunding.map(identity => (
             <View key={identity.key} style={{marginBottom: 8}}>
               <Text style={{fontWeight: 'bold'}}>
-                {identity.fullyQualifiedName || identity.identityAddress}
+                {identity.fullyQualifiedName ? convertFqnToDisplayFormat(identity.fullyQualifiedName) : identity.identityAddress}
               </Text>
               {(identity.currencies || []).map(currency => (
                 <Text key={`${identity.key}:${currency.currencyId}`}>
@@ -1012,7 +1019,7 @@ const GiftCardFund = props => {
           disabled={identityFundingLoading || (card.encrypted && !claimPassword)}
           onPress={buildPreflight}
           style={{marginTop: 16}}>
-          Verify and Build
+          Verify and build
         </Button>
       ) : (
         <View style={{marginTop: 16}}>
@@ -1042,7 +1049,7 @@ const GiftCardFund = props => {
               </Text>
               {identityFeeFundingTransactions.map(tx => (
                 <Text key={`${tx.systemId}:${tx.identity.identityAddress}`}>
-                  {tx.identity.fullyQualifiedName || tx.identity.identityAddress}
+                  {tx.identity.fullyQualifiedName ? convertFqnToDisplayFormat(tx.identity.fullyQualifiedName) : tx.identity.identityAddress}
                 </Text>
               ))}
             </View>

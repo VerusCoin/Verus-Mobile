@@ -25,6 +25,7 @@ import {
   shouldUseCachedVrpcResponse,
 } from './vrpcCachePolicy';
 import {getManyUtxoFundRawTransactionError} from './fundRawTransactionError';
+import VrpcRequestBatcher from './vrpcRequestBatcher';
 
 class CachedVerusdRpcInterface extends VerusdRpcInterface {
   static CACHED_REQUESTS = CACHED_VRPC_REQUESTS;
@@ -32,11 +33,12 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
   static DEFAULT_MS_BEFORE_UPDATE = DEFAULT_VRPC_CACHE_MAX_AGE_MS;
   static MS_BEFORE_UPDATE = VRPC_CACHE_MAX_AGE_MS;
 
-  static CALL_DELAY_MS = 500;
+  static CALL_DELAY_MS = 50;
 
   endpoint;
   
   callswaiting = {};
+  pendingBatchRequests = new Map();
 
   /**
    * @param {string} systemId 
@@ -63,6 +65,11 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
     this.lasttime = 0;
     this.setLastNetworkResponseTime = setLastNetworkResponseTime;
     this.getLastNetworkResponseTime = getLastNetworkResponseTime;
+    this.requestBatcher = new VrpcRequestBatcher(
+      endpoint,
+      req => super.request(req),
+      CachedVerusdRpcInterface.CALL_DELAY_MS,
+    );
   }
 
   registerCallStart(cacheId) {
@@ -98,9 +105,14 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
    */
   async request(req) {
     const cacheId = getVrpcResponseCacheKey(this.chain, this.endpoint, req);
+    const batchable = this.requestBatcher.canBatch(req.cmd);
+    if (batchable && this.pendingBatchRequests.has(cacheId)) {
+      return this.pendingBatchRequests.get(cacheId);
+    }
+
     const callDelay = this.registerCallStart(cacheId);
 
-    return new Promise((resolve, reject) => {
+    const pending = new Promise((resolve, reject) => {
       setTimeout(async () => {
         try {
           const cmd = req.cmd;
@@ -125,7 +137,9 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
             }
           }
           
-          const res = await super.request(req);
+          const res = batchable
+            ? await this.requestBatcher.request(req)
+            : await super.request(req);
           const fundingError =
             req.cmd === 'fundrawtransaction'
               ? getManyUtxoFundRawTransactionError(res.error, req.utxos)
@@ -157,7 +171,15 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
           reject(requestError)
         }
       }, callDelay)
-    })
+    });
+
+    if (!batchable) return pending;
+
+    // Share identical address lookups through the network request AND cache
+    // write, so the old per-key delay cannot put duplicates in another batch.
+    const shared = pending.finally(() => this.pendingBatchRequests.delete(cacheId));
+    this.pendingBatchRequests.set(cacheId, shared);
+    return shared;
   }
 }
 

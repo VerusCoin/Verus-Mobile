@@ -1,7 +1,8 @@
 import React from 'react';
 import { useEffect, useState } from "react"
 import { Keyboard, ScrollView, TouchableWithoutFeedback, View } from "react-native";
-import { Button, Checkbox, TextInput } from "react-native-paper";
+import { Checkbox, TextInput } from "react-native-paper";
+import Button from "../../../Button";
 import { useDispatch, useSelector } from 'react-redux';
 import { initializeAccountData } from "../../../../actions/actionDispatchers";
 import {setBiometry} from '../../../../actions/actionCreators';
