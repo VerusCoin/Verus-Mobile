@@ -8,7 +8,7 @@ autoInstallPeers: false
 overrides:
   "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#ff60e360fe608dd177e8a63c026552a06112ba59"
   verus-typescript-primitives: "github:VerusCoin/verus-typescript-primitives#cfe8c45e43ac7846d73083501aa42665ec9f85d9"
-  verusd-rpc-ts-client: "github:VerusCoin/verusd-rpc-ts-client#f2af29b71d231f50bfac7a8aca852e9facd01b92"
+  verusd-rpc-ts-client: "github:VerusCoin/verusd-rpc-ts-client#cf9d52dc1b255492fbc18593ffb51ffbeeb0e326"
   verusid-ts-client: "github:VerusCoin/verusid-ts-client#50fa3ffa3bfdd0c2a92414da540c257802c76cd5"
   word-wrap: "1.2.4"
   bs58check: "2.1.2"

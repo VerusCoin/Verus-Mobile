@@ -538,7 +538,10 @@ export function IdentityUpdateReview({navigation}) {
       <Text style={styles.muted}>{leavingFunds ? 'Includes the network fee and funds given to the new owner.' : 'Network fee only. No identity registration charge.'}</Text>
       <View style={styles.divider} />
       <DetailRow label="Network fee">{review.fee} {review.feeCurrency || review.chainTicker}</DetailRow>
-      <DetailRow label="Fee paid from">{review.fundingName || (review.fundingAddress === review.signingAddress ? 'Wallet address' : identityLabel(review.fundingAddress, review.identityNames))}</DetailRow>
+      <DetailRow label="Fee paid from">{review.fundingAddress === review.signingAddress
+        ? review.fundingName || 'Wallet address'
+        : identityLabel(review.fundingAddress, {...review.identityNames,
+          ...(review.fundingName ? {[review.fundingAddress]: review.fundingName} : {})})}</DetailRow>
       <Text style={styles.muted}>{leavingFunds && review.fundingAddress === review.identityAddress
         ? 'Remaining payment funds stay with the identity for its new owner and are included above.'
         : review.changeAddress === review.signingAddress ? 'Payment change returns to your main wallet address.' : 'Unspent change returns to this payment address.'}</Text>

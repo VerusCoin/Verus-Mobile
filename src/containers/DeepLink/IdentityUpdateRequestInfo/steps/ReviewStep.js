@@ -5,6 +5,7 @@ import Colors from '../../../../globals/colors';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {reviewStepStyles as localStyles} from '../../../../styles';
 import IdentityStateChangeCard from '../components/IdentityStateChangeCard';
+import {convertFqnToDisplayFormat} from '../../../../utils/fullyqualifiedname';
 
 // Keep the request context compact so the proposed content is the main task.
 const ReviewStep = ({
@@ -29,7 +30,7 @@ const ReviewStep = ({
   >
     <View style={styles.header}>
       <Text allowFontScaling accessibilityRole="header" style={styles.mainTitle}>Review identity update</Text>
-      <Text allowFontScaling selectable style={localStyles.identityName}>{fullyqualifiedname}</Text>
+      <Text allowFontScaling selectable style={localStyles.identityName}>{convertFqnToDisplayFormat(fullyqualifiedname)}</Text>
     </View>
 
     <View style={localStyles.requestContext}>

@@ -524,19 +524,19 @@ it('scrolls each failed attempt to its error and shows only the button spinner w
 it('uses the friendly selected linked VerusID for payment while keeping the wallet key as controller', async () => {
   mockState.authentication.activeAccount.keys.VRSCTEST = {vrpc: {addresses: ['test-wallet']}};
   mockState.coins.activeCoinsForUser = [{id: 'VRSCTEST', system_id: 'test-chain', currency_id: 'test-chain', display_ticker: 'VRSCTEST', testnet: true}];
-  mockState.channelStore_verusid.watchedVerusIds = {VRSCTEST: {'test-id': 't1@'}, VRSC: {'main-id': 'main@'}};
+  mockState.channelStore_verusid.watchedVerusIds = {VRSCTEST: {'test-id': 't1.VRSCTEST@'}, VRSC: {'main-id': 'main@'}};
   mockState.ledger = {balances: {'vrpc.test-id.test-chain': {VRSCTEST: {confirmed: '1000'}}}};
   const view = await mount(IdentityRegistrationCreate);
   await press(button(view, 'Pay from'));
-  expect(radio(view, 't1@')).toBeDefined();
+  expect(radio(view, 't1.VRSCTEST@')).toBeDefined();
   expect(radio(view, 'main@')).toBeUndefined();
   expect(textContent(view.root)).toContain('1000 VRSCTEST confirmed');
-  expect(radio(view, 't1@').props.accessibilityState.selected).toBe(true);
-  await press(radio(view, 't1@'));
+  expect(radio(view, 't1.VRSCTEST@').props.accessibilityState.selected).toBe(true);
+  await press(radio(view, 't1.VRSCTEST@'));
   await enterName(view);
   await press(button(view, 'Review costs'));
   expect(mockApi.prepareCommitment).toHaveBeenCalledWith({
-    request: expect.objectContaining({systemId: 'test-chain', fundingAddress: 'test-id', signingAddress: 'test-wallet', fundingName: 't1@', rootSystemName: 'VRSCTEST'}),
+    request: expect.objectContaining({systemId: 'test-chain', fundingAddress: 'test-id', signingAddress: 'test-wallet', fundingName: 't1.VRSCTEST@', rootSystemName: 'VRSCTEST'}),
   }, expect.any(Object));
 });
 

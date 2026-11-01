@@ -54,10 +54,10 @@ const {
   setRequestedVerusId,
   deleteProvisionedIds,
   deleteAllProvisionedIds,
-  clearOldPendingVerusIds,
 } = require('../../../actions/actions/services/dispatchers/verusid/verusid');
 const {VERUSID_SERVICE_ID} = require('../../constants/services');
-const {SET_IDENTITY_REGISTRATION_JOBS, SET_WATCHED_VERUSIDS, SIGN_OUT_COMPLETE} = require('../../constants/storeType');
+const {SET_IDENTITY_REGISTRATION_JOBS, SET_WATCHED_VERUSIDS, SIGN_OUT_COMPLETE, INIT_VERUSID_CHANNEL_START} = require('../../constants/storeType');
+const {initVerusIdWallet} = jest.requireActual('../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager');
 const {channelStore_verusid} = require('../../../reducers/channelStores/verusid');
 const {requestServiceStoredData} = require('../../auth/authBox');
 const {loadServiceStoredDataForUser, storeServiceStoredDataForUser} = require('../../asyncStore/serviceStoredDataStorage');
@@ -98,7 +98,32 @@ describe('durable identity registration storage', () => {
     mockReconcile.mockResolvedValue(undefined);
   });
 
-  it('preserves reservations across every shared service writer and provider cleanup', async () => {
+  it.each([
+    ['VRSC', 'alice.VRSC@', 'alice@'],
+    ['VRSC', 'alice.vrsc@', 'alice@'],
+    ['VRSC', 'subid.dudecoin.VRSC@', 'subid.dudecoin@'],
+    ['VRSCTEST', 'Mumble.VRSCTEST@', 'Mumble.VRSCTEST@'],
+    ['VRSCTEST', 'subid.dudecoin.VRSCTEST@', 'subid.dudecoin.VRSCTEST@'],
+    ['VRSCTEST', 'Child.Parent.VRSCTEST', 'Child.Parent.VRSCTEST@'],
+  ])('saves full identity names under their address, dropping only VRSC (%s, %s)', async (chain, fullName, savedName) => {
+    const identityAddress = 'i7jpcdr29uBZAee1LC9EeYJcaFX2QPd8sb';
+    const existing = {
+      linked_ids: {[chain]: {iExisting: 'Existing.Parent@'}},
+      pending_ids: {[chain]: {iPending: {createdAt: 1}}},
+      registration_jobs: {version: 1, jobs: {'job-a': job()}},
+    };
+    mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify(existing);
+
+    await linkVerusId(identityAddress, fullName, chain, context());
+
+    expect(data()).toEqual({
+      ...existing,
+      linked_ids: {[chain]: {...existing.linked_ids[chain], [identityAddress]: savedName}},
+    });
+    expect(require('../../api/channels/verusid/callCreators').getIdentity).not.toHaveBeenCalled();
+  });
+
+  it('preserves reservations across every shared service writer and explicit provider deletion', async () => {
     const first = saveRegistrationJob(job(), context());
     const linking = linkVerusId('iFirst', 'first@', 'VRSC', context());
     const provisioning = setRequestedVerusId('iPending', {createdAt: 1}, 'VRSC', context());
@@ -106,7 +131,6 @@ describe('durable identity registration storage', () => {
     await Promise.all([
       unlinkVerusId('iFirst', 'VRSC', context()),
       saveRegistrationJob(job('job-b'), context()),
-      clearOldPendingVerusIds(context()),
       deleteProvisionedIds('iPending', 'VRSC', context()),
       deleteAllProvisionedIds(context()),
     ]);
@@ -116,6 +140,38 @@ describe('durable identity registration storage', () => {
     expect(data().registration_jobs.jobs['job-a'].reservation.salt).toBe('private-salt');
     expect(data().linked_ids.VRSC).toEqual({});
     expect(data().pending_ids).toEqual({});
+  });
+
+  it.each([
+    ['empty', {}],
+    ['older than seven days', {
+      VRSC: {
+        iPending: {createdAt: 1, status: 'NOTIFICATION_TYPE_VERUSID_PENDING'},
+        iReady: {createdAt: 1, status: 'NOTIFICATION_TYPE_VERUSID_READY'},
+      },
+      VRSCTEST: {
+        iError: {createdAt: 1, status: 'NOTIFICATION_TYPE_VERUSID_ERROR'},
+      },
+    }],
+  ])('initializes wallets with %s pending IDs without removing records or rewriting storage', async (_label, pendingIds) => {
+    const stored = {
+      linked_ids: {VRSC: {iLinked: 'linked@'}},
+      pending_ids: pendingIds,
+      registration_jobs: {version: 1, jobs: {'job-a': job()}},
+    };
+    mockStoredData = {[VERUSID_SERVICE_ID]: JSON.stringify(stored)};
+
+    await initVerusIdWallet({
+      id: 'VRSC', system_id: 'system-a', vrpc_endpoints: ['https://rpc.example'],
+    }, context());
+
+    expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({
+      type: INIT_VERUSID_CHANNEL_START,
+      payload: expect.objectContaining({pendingIds, watchedVerusIds: stored.linked_ids}),
+    }));
+    expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+    expect(data()).toEqual(stored);
+    expect(lastSummary().payload.registrationJobs['job-a'].status).toBe('commitment_broadcast');
   });
 
   it('publishes only public fields and clears them on sign-out', async () => {

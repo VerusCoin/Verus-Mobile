@@ -11,6 +11,7 @@ import { VERUSID_SERVICE_ID } from "../../../../../utils/constants/services";
 import { VerusIdServiceOverviewRender } from "./VerusIdServiceOverview.render";
 import { CoinDirectory } from "../../../../../utils/CoinData/CoinDirectory";
 import Store from "../../../../../store";
+import {identityLabel} from '../IdentityRegistration/presentation';
 import {
   captureSessionScope,
   sessionScopeIsCurrent,
@@ -80,7 +81,7 @@ export class VerusIdServiceOverview extends Component {
       identityActions: {
         chain,
         iAddress,
-        displayName,
+        displayName: identityLabel(iAddress, {[iAddress]: displayName}),
         requestContext: captureRequestContext(),
       },
       identityActionsVisible: true,

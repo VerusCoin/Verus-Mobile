@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import {convertFqnToDisplayFormat} from '../../../../../utils/fullyqualifiedname';
 
 // All SDK amounts are atomic integer strings. Never convert through Number.
 export const formatRegistrationAmount = amount => new BigNumber(amount || '0')
@@ -32,7 +33,7 @@ export const identityLabel = (address, names = {}, fallback = 'Unresolved identi
   const name = typeof names?.[address] === 'string' ? names[address].trim() : '';
   // Currency definitions may provide a bare name for the same i-address. An
   // identity recipient still needs its @ suffix, including the root identity.
-  if (name && name !== address) return name.endsWith('@') ? name : `${name}@`;
+  if (name && name !== address) return convertFqnToDisplayFormat(name);
   if (/^i[1-9A-HJ-NP-Za-km-z]{20,}$/.test(address)) return `${fallback} (${address.slice(0, 5)}…${address.slice(-4)})`;
   return address;
 };

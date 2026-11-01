@@ -504,6 +504,32 @@ describe('spendable key claim utilities', () => {
     ];
   });
 
+  it.each(['gift.dudecoin.VRSCTEST@', undefined])(
+    'uses only the full RPC name %s for a claimed identity', async fullName => {
+      const identity = {
+        identityaddress: mockClaimedIdentityAddress,
+        minimumsignatures: 1,
+        name: 'gift',
+        parent: mockRootCoin.system_id,
+        primaryaddresses: [mockRootClaimAddress],
+      };
+      mockEndpoints[mockRootCoin.system_id].getIdentitiesWithAddress.mockResolvedValue({
+        result: [{identity, friendlyname: 'gift@'}],
+      });
+      mockGetIdentity.mockResolvedValue({result: {
+        identity, friendlyname: 'gift@', fullyqualifiedname: fullName,
+      }});
+
+      const plan = await discoverSpendableKeyClaims({
+        mnemonic: 'seed words', requestIsTestnet: false, activeCoinsForUser: [],
+      });
+
+      expect(plan.systems[0].identities).toHaveLength(1);
+      expect(plan.systems[0].identities[0].fullyQualifiedName).toBe(fullName);
+      expect(mockGetIdentity).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it('discovers balances and primary-address identities on active systems', async () => {
     mockUnpackOutput.mockImplementation(
       (output, _systemId, _isInput, allowNonTransferEvals) => {

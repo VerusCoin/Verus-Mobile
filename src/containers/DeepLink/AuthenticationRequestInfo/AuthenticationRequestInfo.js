@@ -1261,7 +1261,9 @@ const AuthenticationRequestInfo = props => {
                   <Text style={styles.targetLabel}>Identity</Text>
                   <Text style={styles.targetName}>
                     {selectedIdentity
-                      ? selectedIdentity.friendlyName
+                      ? selectedIdentity.friendlyName && selectedIdentity.friendlyName !== selectedIdentity.iAddress
+                        ? convertFqnToDisplayFormat(selectedIdentity.friendlyName)
+                        : selectedIdentity.iAddress
                       : 'Select VerusID'}
                   </Text>
                   <Text style={styles.targetAddress}>

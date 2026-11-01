@@ -7,7 +7,6 @@ import {
   SET_WATCHED_VERUSIDS,
   SET_PENDING_VERUSIDS,
 } from "../../../../../utils/constants/storeType";
-import { clearOldPendingVerusIds } from '../../../services/dispatchers/verusid/verusid';
 import {publishRegistrationJobs, refreshRegistrationJobs} from '../../../services/dispatchers/verusid/registration';
 import {
   captureSessionScope,
@@ -36,7 +35,6 @@ const assertSessionCurrent = (sessionScope, requestContext) => {
 export const initVerusIdWallet = async (coinObj, requestedContext) => {
   const sessionScope = getSessionScope(requestedContext);
   const requestContext = {...(requestedContext || {}), sessionScope};
-  await clearOldPendingVerusIds(requestContext);
   assertSessionCurrent(sessionScope, requestContext);
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID)
   assertSessionCurrent(sessionScope, requestContext);

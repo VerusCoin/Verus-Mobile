@@ -41,6 +41,11 @@ jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', 
     getRegistrationJob: async id => read(id),
     saveRegistrationJob: save,
     updateRegistrationJob: async (id, update) => save(update(read(id))),
+    removeRegistrationJob: async (id, revision) => {
+      expect(read(id).revision).toBe(revision);
+      mockEncryptedJobs.delete(id);
+      return {jobId: id};
+    },
     publishRegistrationState: jest.fn(),
   };
 });
@@ -55,7 +60,7 @@ const {decryptkey, encryptkey} = require('../../seedCrypt');
 const {
   createRegistrationContext, resolveRegistration, prepareCommitment, approveCommitment,
   reconcileRegistration, prepareRegistration, approveRegistration,
-  linkRegisteredIdentity, retryBroadcast, refreshRegistrationReview,
+  linkRegisteredIdentity, retryBroadcast, refreshRegistrationReview, deleteRegistration,
 } = require('../../identityRegistration');
 const {linkVerusId} = require('../../../actions/actions/services/dispatchers/verusid/verusid');
 const {publishRegistrationState} = require('../../../actions/actions/services/dispatchers/verusid/registration');
@@ -63,6 +68,7 @@ const PRIVATE_ADDRESS = 'zs1wczplx4kegw32h8g0f7xwl57p5tvnprwdmnzmdnsw50chcl26f7t
 
 test.each([
   {description: 'completes native registration', branch: 'native', tokenProof: null},
+  {description: 'deletes a confirmed receipt with incompatible saved funding approval', branch: 'native', tokenProof: null, deleteCompleted: true},
   {description: 'preserves the wallet private address through a commitment broadcast retry', branch: 'native', tokenProof: null, privateAddress: PRIVATE_ADDRESS, broadcastFailure: 'timeout'},
   {description: 'registers the wallet private address when paying from a linked identity', branch: 'native', tokenProof: null, privateAddress: PRIVATE_ADDRESS, identityFunding: true},
   {description: 'reviews the calculated fee for large reserve change', branch: 'native', tokenProof: null, reserveCurrencyCount: 75},
@@ -93,7 +99,7 @@ test.each([
     branch: guardAttack === 'lost-reserve' ? 'token-burn' : 'native',
     tokenProof: guardAttack === 'lost-reserve' ? 1 : null, guardAttack,
   })),
-])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, legacyReceipt, privateAddress}) => {
+])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, legacyReceipt, privateAddress, deleteCompleted}) => {
   jest.clearAllMocks();
   mockEncryptedJobs.clear();
   const system = nameAndParentAddrToIAddr('VRSC');
@@ -673,10 +679,25 @@ test.each([
   expect(publishRegistrationState).not.toHaveBeenCalled();
   expect(await linkRegisteredIdentity(review.jobId, context)).toMatchObject({status: 'complete', linked: true});
   expect(linkVerusId).toHaveBeenCalledTimes(1);
-  expect(linkVerusId).toHaveBeenCalledWith(review.identityAddress, review.displayName, 'VRSC', context);
+  expect(linkVerusId).toHaveBeenCalledWith(review.identityAddress, signedReveal.reservation.fullName, 'VRSC', context);
   expect(publishRegistrationState).toHaveBeenCalledWith(context);
   await reconcileRegistration(review.jobId, context);
   expect(linkVerusId).toHaveBeenCalledTimes(1);
+  if (deleteCompleted) {
+    const receipt = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
+    // Deliberately make historical approval metadata incompatible with the
+    // current verifier, while retaining the exact confirmed signed bytes.
+    delete receipt.registration.prepared.commitment;
+    mockEncryptedJobs.set(review.jobId, await encryptkey(mockPassword, JSON.stringify(receipt)));
+    expect(() => mockClient.validateIdentityRegistrationTransaction(
+      receipt.registration.prepared, receipt.registration.signedHex, receipt.fundingAddress,
+    )).toThrow(expect.objectContaining({code: 'REGISTRATION_FUNDING_MISMATCH'}));
+    await expect(reconcileRegistration(review.jobId, context))
+      .rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
+    expect(await deleteRegistration(review.jobId, 'completed', context)).toEqual({jobId: review.jobId});
+    expect(mockEncryptedJobs.has(review.jobId)).toBe(false);
+    expect(linkVerusId).toHaveBeenCalledTimes(1);
+  }
   expect(broadcastCount).toBe(2);
   expect(rpcCalls).not.toContain('registernamecommitment');
   expect(rpcCalls).not.toContain('registeridentity');

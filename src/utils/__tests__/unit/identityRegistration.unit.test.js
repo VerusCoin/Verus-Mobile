@@ -1122,6 +1122,30 @@ const registeredReview = async context => {
   return reconcileRegistration(review.jobId, context);
 };
 
+test.each([
+  ['alice.VRSC@', 'alice@'],
+  ['alice.VRSCTEST@', 'alice.VRSCTEST@'],
+  ['alice.dudecoin.VRSCTEST@', 'alice.dudecoin.VRSCTEST@'],
+])(
+  'links the full registration name %s without looking it up again', async (fullName, displayName) => {
+    mockBuildCommitment.mockImplementation(async args => ({
+      reservation: {reservationHex: args.salt.toString('hex'), fullName},
+      commitmentVout: 0, transaction: prepared('commitment'),
+    }));
+    const context = createRegistrationContext();
+    const review = await registeredReview(context);
+    expect(review.displayName).toBe(displayName);
+    // The link must use the reservation's full name, independent of UI labels.
+    mockJobs[review.jobId].displayName = 'alice@';
+    mockGetIdentity.mockClear();
+
+    await linkRegisteredIdentity(review.jobId, context);
+
+    expect(mockLink).toHaveBeenCalledWith('i-alice', fullName, 'VRSC', context);
+    expect(mockGetIdentity).not.toHaveBeenCalled();
+  },
+);
+
 test('an unpaid draft can be deleted without chain calls', async () => {
   const context = createRegistrationContext();
   const review = await build();
@@ -1171,10 +1195,40 @@ test('deleting a completed receipt verifies confirmation and leaves the linked i
 test('a reorg prevents deletion of an apparently completed registration', async () => {
   const context = createRegistrationContext();
   const review = await registeredReview(context);
+  const saved = JSON.parse(JSON.stringify(mockJobs[review.jobId]));
   mockTransactions.get(mockRevealTxid).confirmations = 0;
   await expect(deleteRegistration(review.jobId, 'completed', context)).rejects.toThrow(/still in progress/);
   expect(mockRemoveJob).not.toHaveBeenCalled();
-  expect(mockJobs[review.jobId].status).toBe('registration_broadcast');
+  expect(mockJobs[review.jobId]).toEqual(saved);
+});
+
+test.each([
+  ['missing transaction', () => mockTransactions.delete(mockRevealTxid)],
+  ['different transaction bytes', () => { mockTransactions.get(mockRevealTxid).hex = 'different-signed'; }],
+  ['orphaned block', () => mockGetBlock.mockResolvedValueOnce({result: {
+    hash: mockTipHash, height: 100, confirmations: -1, tx: [mockRevealTxid],
+  }})],
+  ['replaced active block', () => mockGetBlock.mockImplementation(async hash => ({result: {
+    hash: hash === '100' ? 'd'.repeat(64) : mockTipHash,
+    height: 100, confirmations: 1, tx: [mockRevealTxid],
+  }}))],
+  ['missing block inclusion', () => mockGetBlock.mockResolvedValue({result: {
+    hash: mockTipHash, height: 100, confirmations: 1, tx: [mockCommitTxid],
+  }})],
+  ['unavailable server', () => mockRaw.mockRejectedValue(new Error('network unavailable'))],
+  ['changed session', () => mockRaw.mockImplementation(async () => {
+    mockState.authentication.sessionEpoch++;
+    return {result: mockTransactions.get(mockRevealTxid)};
+  })],
+])('completed deletion retains the record after %s', async (_description, change) => {
+  const context = createRegistrationContext();
+  const review = await registeredReview(context);
+  const saved = JSON.parse(JSON.stringify(mockJobs[review.jobId]));
+  change();
+
+  await expect(deleteRegistration(review.jobId, 'completed', context)).rejects.toThrow();
+  expect(mockRemoveJob).not.toHaveBeenCalled();
+  expect(mockJobs[review.jobId]).toEqual(saved);
 });
 
 test('a completed record missing its commitment receipt cannot bypass confirmation checks for deletion', async () => {

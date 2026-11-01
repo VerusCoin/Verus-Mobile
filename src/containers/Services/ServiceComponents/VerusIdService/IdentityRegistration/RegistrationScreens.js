@@ -334,14 +334,18 @@ export function IdentityRegistrationCreate({navigation, route}) {
       <View style={styles.divider} />
       <SelectionField
         label="Pay from"
-        value={fundingSource?.fundingName || 'Choose a payment source'}
+        value={fundingSource?.isIdentity
+          ? identityLabel(fundingSource.address, {[fundingSource.address]: fundingSource.fundingName})
+          : fundingSource?.fundingName || 'Choose a payment source'}
         disabled={busy}
         options={fundingSources.map(source => {
           const balance = registrationFundingBalance(selected, source, balances);
 
           return {
             value: source.address,
-            label: source.fundingName,
+            label: source.isIdentity
+              ? identityLabel(source.address, {[source.address]: source.fundingName})
+              : source.fundingName,
             selected: source.address === fundingSource?.address,
             description: balance != null && showBalance
               ? `${String(balance)} ${selected.display_ticker} confirmed`

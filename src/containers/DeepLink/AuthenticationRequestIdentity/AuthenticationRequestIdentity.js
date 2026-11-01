@@ -15,6 +15,7 @@ import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { SEND_MODAL_IDENTITY_TO_LINK_FIELD } from '../../../utils/constants/sendModal';
 import Styles from '../../../styles/index';
 import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
+import {convertFqnToDisplayFormat} from '../../../utils/fullyqualifiedname';
 
 const AuthenticationRequestIdentity = props => {
   const {
@@ -311,7 +312,8 @@ const AuthenticationRequestIdentity = props => {
                 <React.Fragment key={iAddr}>
                   <Divider />
                   <List.Item
-                    title={linkedIds[chainId][iAddr]}
+                    title={linkedIds[chainId][iAddr] && linkedIds[chainId][iAddr] !== iAddr
+                      ? convertFqnToDisplayFormat(linkedIds[chainId][iAddr]) : iAddr}
                     description={iAddr}
                     descriptionNumberOfLines={1}
                     titleNumberOfLines={1}

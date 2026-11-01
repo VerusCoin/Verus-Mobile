@@ -16,7 +16,7 @@ import {BasicNotification, LoadingNotification, VerusIdProvisioningNotification}
 import {openLinkIdentityModal} from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import {CoinDirectory} from '../../../utils/CoinData/CoinDirectory';
 import {SEND_MODAL_IDENTITY_TO_LINK_FIELD} from '../../../utils/constants/sendModal';
-import {dispatchRemoveNotification, dispatchClearNotifications} from '../../../actions/actions/notifications/dispatchers/notifications';
+import {dispatchRemoveNotification, dispatchClearAccountNotifications} from '../../../actions/actions/notifications/dispatchers/notifications';
 import {useObjectSelector} from '../../../hooks/useObjectSelector';
 import {registrationNotifications} from '../../../utils/identityRegistration/notifications';
 
@@ -150,9 +150,9 @@ const NotificationWidget = props => {
             <TouchableOpacity
               style={styles.clearButton}
               accessibilityRole="button"
-              onPress={() => Alert.alert('Clear Notifications', 'Clear all dismissible notifications?', [
+              onPress={() => Alert.alert('Clear Notifications', 'Clear all dismissible notifications for this profile?', [
                 {text: 'Cancel', style: 'cancel'},
-                {text: 'Clear', onPress: () => dispatchClearNotifications()},
+                {text: 'Clear', onPress: () => dispatchClearAccountNotifications(accountHash)},
               ])}>
               <Text style={styles.clearLabel}>Clear all</Text>
             </TouchableOpacity>

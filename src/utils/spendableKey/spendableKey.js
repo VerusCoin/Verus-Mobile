@@ -162,24 +162,8 @@ const getIdentityPrimaryAddresses = identity => {
   return Array.isArray(primaryAddresses) ? primaryAddresses : [];
 };
 
-const getIdentityDisplayName = (result, identity, systemId) => {
-  if (result.fullyqualifiedname || result.friendlyname) {
-    return result.fullyqualifiedname || result.friendlyname;
-  }
-
-  if (identity.fullyqualifiedname || identity.friendlyname) {
-    return identity.fullyqualifiedname || identity.friendlyname;
-  }
-
-  if (
-    identity.name &&
-    (identity.parent == null || identity.parent === systemId)
-  ) {
-    return `${identity.name}@`;
-  }
-
-  return undefined;
-};
+const getIdentityFullName = (result, identity) =>
+  result.fullyqualifiedname || identity.fullyqualifiedname;
 
 const getIdentityAuthorityAddresses = identity => {
   const identityAddress = getIdentityAddress(identity);
@@ -246,7 +230,7 @@ const enrichIdentityResult = async (systemId, identityResult) => {
       blockheight: identityResult.blockheight || directResult.blockheight,
       friendlyname: identityResult.friendlyname || directResult.friendlyname,
       fullyqualifiedname:
-        identityResult.fullyqualifiedname || directResult.fullyqualifiedname,
+        directResult.fullyqualifiedname || identityResult.fullyqualifiedname,
       status: identityResult.status || directResult.status,
       cansignfor: identityResult.cansignfor ?? directResult.cansignfor,
       canspendfor: identityResult.canspendfor ?? directResult.canspendfor,
@@ -763,7 +747,7 @@ export const deriveSpendableKeyAddresses = async ({
   };
 };
 
-const getClaimableIdentities = (identityResults, claimAddress, systemId) => {
+const getClaimableIdentities = (identityResults, claimAddress) => {
   return identityResults
     .filter(result => {
       const identity = getIdentityFromResult(result);
@@ -790,7 +774,7 @@ const getClaimableIdentities = (identityResults, claimAddress, systemId) => {
 
       return {
         identityAddress: getIdentityAddress(identity),
-        fullyQualifiedName: getIdentityDisplayName(result, identity, systemId),
+        fullyQualifiedName: getIdentityFullName(result, identity),
         authorityNames: result.authorityNames || {},
         result,
         unsupportedReason,
@@ -820,9 +804,7 @@ const getClaimableIdentitiesFromUtxos = async (systemId, utxos, claimAddress) =>
             txid: utxo.txid,
             vout: utxo.outputIndex,
             blockheight: utxo.height,
-            fullyqualifiedname:
-              utxo.fullyqualifiedname ||
-              utxo.friendlyname,
+            fullyqualifiedname: utxo.fullyqualifiedname,
             identity,
           });
         }
@@ -840,7 +822,6 @@ const getClaimableIdentitiesFromUtxos = async (systemId, utxos, claimAddress) =>
   return getClaimableIdentities(
     enrichedIdentityResults,
     claimAddress,
-    systemId,
   );
 };
 
@@ -954,7 +935,6 @@ export const discoverSpendableKeyClaims = async ({
       identitiesFromRpc = getClaimableIdentities(
         enrichedIdentityResults,
         claimAddress,
-        coinObj.system_id,
       );
       identityLookupSucceeded = true;
     } catch (e) {

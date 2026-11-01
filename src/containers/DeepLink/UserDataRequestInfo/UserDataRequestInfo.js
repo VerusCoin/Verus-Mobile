@@ -31,6 +31,7 @@ import { buildUserDataResponse } from '../../../utils/deeplink/userData/buildUse
 import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 import {userDataRequestedSignerMatchesIdentity} from '../../../utils/deeplink/userData/requestedSigner';
 import {getMatchingRequestAccounts} from '../../../utils/deeplink/requestAccounts';
+import {convertFqnToDisplayFormat} from '../../../utils/fullyqualifiedname';
 
 const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
@@ -565,7 +566,11 @@ const UserDataRequestInfo = props => {
               ]}
               numberOfLines={1}
             >
-              {selectedIdentity ? selectedIdentity.friendlyName : 'Select identity'}
+              {selectedIdentity
+                ? selectedIdentity.friendlyName && selectedIdentity.friendlyName !== selectedIdentity.iAddress
+                  ? convertFqnToDisplayFormat(selectedIdentity.friendlyName)
+                  : selectedIdentity.iAddress
+                : 'Select identity'}
             </Text>
             {selectedIdentity ? (
               <Text style={styles.identitySelectAddress}>

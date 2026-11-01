@@ -11,11 +11,13 @@ import {
 } from '../../actions/actions/updates/sessionRequests';
 import { linkVerusId } from '../../actions/actions/services/dispatchers/verusid/verusid';
 import { CoinDirectory } from '../CoinData/CoinDirectory';
+import { coinsList } from '../CoinData/CoinsList';
 import VrpcProvider from '../vrpc/vrpcInterface';
 import { requestServiceStoredData } from '../auth/authBox';
 import { VERUSID_SERVICE_ID } from '../constants/services';
 import { SET_WATCHED_VERUSIDS } from '../constants/storeType';
 import { convertFqnToDisplayFormat } from '../fullyqualifiedname';
+import { getIdentity } from '../api/channels/verusid/requests/getIdentity';
 
 // Bind saved links to the wallet context and original rows that produced them.
 const contexts = new WeakMap();
@@ -143,7 +145,7 @@ export const discoverLinkableIdentities = async context => {
     throw new Error('Unable to verify the current network height.');
   }
 
-  // The address index returns complete definitions, so no per-ID lookup is needed.
+  // The address index supplies the definitions needed to check spending authority.
   const indexed = [];
 
   for (const address of context.walletAddresses) {
@@ -170,9 +172,47 @@ export const discoverLinkableIdentities = async context => {
     const identity = result?.identity || result;
 
     if (hasAddressVersion(identity?.identityaddress, I_ADDR_VERSION)) {
-      definitions.set(identity.identityaddress, identity);
+      definitions.set(identity.identityaddress, {
+        ...identity,
+        fullyqualifiedname: result?.fullyqualifiedname || identity.fullyqualifiedname,
+      });
     }
   }
+
+  // Root namespaces need no lookup. Resolve other parents once for the whole
+  // discovery run, retaining full names separately from their display labels.
+  const parentNames = new Map([
+    [coinsList.VRSC.currency_id, 'VRSC@'],
+    [coinsList.VRSCTEST.currency_id, 'VRSCTEST@'],
+  ]);
+  if (context.chain === 'VRSC' || context.chain === 'VRSCTEST') {
+    parentNames.set(context.systemId, `${context.chain}@`);
+  }
+  const qualifyName = name => name.endsWith('@') ? name : `${name}@`;
+  for (const [identityAddress, identity] of definitions) {
+    if (typeof identity.fullyqualifiedname === 'string' && identity.fullyqualifiedname.trim()) {
+      parentNames.set(identityAddress, qualifyName(identity.fullyqualifiedname.trim()));
+    }
+  }
+  const resolveName = async (identityAddress, identity) => {
+    if (parentNames.has(identityAddress)) return parentNames.get(identityAddress);
+    const name = typeof identity.name === 'string' ? identity.name.trim() : '';
+    if (!name) return null;
+    if (!identity.parent) return qualifyName(name);
+
+    if (!parentNames.has(identity.parent)) {
+      const response = await getIdentity(context.systemId, identity.parent);
+      assertCurrent(context);
+      const parent = rpcResult(response);
+      if (parent?.identity?.identityaddress !== identity.parent ||
+          typeof parent.fullyqualifiedname !== 'string' || !parent.fullyqualifiedname.trim()) {
+        throw new Error('Unable to resolve an identity’s parent namespace. Try loading identities again.');
+      }
+      parentNames.set(identity.parent, qualifyName(parent.fullyqualifiedname.trim()));
+    }
+
+    return `${name}.${parentNames.get(identity.parent)}`;
+  };
 
   const linkedData = await requestServiceStoredData(VERUSID_SERVICE_ID);
   assertCurrent(context);
@@ -220,16 +260,18 @@ export const discoverLinkableIdentities = async context => {
       continue;
     }
 
-    // The daemon supplies name and parent, but no fully qualified name. Use
-    // the returned name as a label without guessing the parent namespace.
+    const fullyQualifiedName = await resolveName(identityAddress, identity);
+    assertCurrent(context);
+
+    // A saved link must carry its full name; an address cannot stand in for one.
+    if (!fullyQualifiedName) {
+      continue;
+    }
+
     const row = Object.freeze({
       identityAddress,
-      displayName:
-        typeof identity.fullyqualifiedname === 'string' && identity.fullyqualifiedname
-          ? convertFqnToDisplayFormat(identity.fullyqualifiedname)
-          : typeof identity.name === 'string' && identity.name.trim()
-            ? identity.name
-            : identityAddress,
+      fullyQualifiedName,
+      displayName: convertFqnToDisplayFormat(fullyQualifiedName),
       ownedAddresses: Object.freeze(ownedAddresses),
       minimumSignatures,
       canControl: true,
@@ -324,7 +366,7 @@ export const linkSelectedIdentities = async ({ context, identities }) => {
         if (!record.linked.has(identity.identityAddress)) {
           await linkVerusId(
             identity.identityAddress,
-            identity.displayName,
+            identity.fullyQualifiedName,
             context.chain,
             context,
           );

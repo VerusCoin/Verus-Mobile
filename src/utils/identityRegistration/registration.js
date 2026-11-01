@@ -36,6 +36,7 @@ import {sha256} from '../crypto/hash';
 import {validateLookupBinding} from '../api/channels/verusid/requests/lookupBinding';
 import {identityOutputAmounts} from '../identityManagement/identityFunds';
 import {validatePrivateAddress} from '../identityManagement/identityDefinition';
+import {convertFqnToDisplayFormat} from '../fullyqualifiedname';
 
 const inFlight = new Map();
 const verifiedReceipts = new Map();
@@ -598,7 +599,7 @@ export const prepareCommitment = async ({request, approvedCosts}, requestContext
       status: 'commitment_prepared',
       linked: false,
       name: resolved.policy.resolvedName.name,
-      displayName: built.reservation.fullName,
+      displayName: convertFqnToDisplayFormat(built.reservation.fullName),
       identityAddress,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -1107,13 +1108,15 @@ export const reconcileRegistration = async (jobId, requestContext) => {
 export const deleteRegistration = async (jobId, expectedDeletionKind, requestContext) => {
   const context = createRegistrationContext(requestContext);
   return exclusive(jobId, context, async () => {
-    let job = await readJob(jobId, context);
+    const job = await readJob(jobId, context);
     if (!expectedDeletionKind || registrationDeletionKind(job) !== expectedDeletionKind) {
       throw errorWithCode('REGISTRATION_CHANGED', 'Registration changed. Review its current status before deleting it.');
     }
     if (expectedDeletionKind === 'completed') {
-      job = await reconcileJob(job, context);
-      if (registrationDeletionKind(job) !== 'completed')
+      // Deleting completed history needs proof that its exact saved transaction
+      // remains confirmed, not reapproval of its historical funding plan.
+      const confirmation = await transactionEvidence(job, 'registration', context);
+      if (!confirmation?.confirmed)
         throw new Error('Registration is still in progress. Its payment record cannot be deleted yet.');
     }
     return guarded(context, () => removeRegistrationJob(jobId, job.revision, context));
@@ -1148,7 +1151,7 @@ export const linkRegisteredIdentity = async (jobId, requestContext) => {
       refreshActiveChainLifecycles,
     } = require('../../actions/actions/intervals/dispatchers/lifecycleManager');
 
-    await guarded(context, () => linkVerusId(job.identityAddress, job.displayName, job.chainTicker, context));
+    await guarded(context, () => linkVerusId(job.identityAddress, job.reservation.fullName, job.chainTicker, context));
     await guarded(context, () => publishRegistrationState(context));
 
     const state = store.getState();

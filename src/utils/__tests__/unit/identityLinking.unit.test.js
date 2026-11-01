@@ -105,21 +105,96 @@ test('discovers current address-index matches, deduplicates and marks only same-
   expect(mockGetIdentitiesWithAddress).toHaveBeenCalledWith({address: wallet, unspent: true});
   expect(mockGetIdentity).not.toHaveBeenCalled();
   expect(identities).toEqual([
-    expect.objectContaining({identityAddress: alice, displayName: 'Alice', linked: false, canControl: true}),
-    expect.objectContaining({identityAddress: bob, displayName: 'Bob', linked: true, canControl: true}),
+    expect.objectContaining({identityAddress: alice, displayName: 'Alice@', linked: false, canControl: true}),
+    expect.objectContaining({identityAddress: bob, displayName: 'Bob@', linked: true, canControl: true}),
   ]);
 });
 
-test('uses the index name without inventing its parent namespace or fetching more identity data', async () => {
+test('resolves a shared non-root parent once while preserving full names for saved links', async () => {
+  mockGetIdentity.mockResolvedValue({result: {
+    identity: {identityaddress: carol}, fullyqualifiedname: 'Champions.VRSC@',
+  }});
   const {identities} = await discover([
     definition(alice, {parent: carol}),
-    definition(bob, {fullyqualifiedname: 'Bob.VRSC@'}),
+    definition(bob, {parent: carol}),
     definition(carol, {name: ''}),
   ]);
-  expect(identities.find(row => row.identityAddress === alice).displayName).toBe('Alice');
-  expect(identities.find(row => row.identityAddress === bob).displayName).toBe('Bob@');
-  expect(identities.find(row => row.identityAddress === carol).displayName).toBe(carol);
+  expect(identities.find(row => row.identityAddress === alice)).toMatchObject({
+    displayName: 'Alice.Champions@', fullyQualifiedName: 'Alice.Champions.VRSC@',
+  });
+  expect(identities.find(row => row.identityAddress === bob).displayName).toBe('Bob.Champions@');
+  expect(identities.find(row => row.identityAddress === carol).displayName).toBe('Champions@');
+  expect(mockGetIdentity).toHaveBeenCalledTimes(1);
+  expect(mockGetIdentity).toHaveBeenCalledWith(rootSystem, carol);
+});
+
+test('does not offer an unresolved identity address as a name to save', async () => {
+  const {identities} = await discover([definition(carol, {name: ''})]);
+  expect(identities).toEqual([]);
   expect(mockGetIdentity).not.toHaveBeenCalled();
+  expect(mockLinkIdentity).not.toHaveBeenCalled();
+});
+
+test('saves the full nested testnet name during linking without later name lookups', async () => {
+  const subid = 'i7jpcdr29uBZAee1LC9EeYJcaFX2QPd8sb';
+  mockState.authentication.activeAccount.testnetOverrides = {enabled: true};
+  mockGetInfo.mockResolvedValue({result: {chainid: testSystem, blocks: 100}});
+  mockGetIdentity.mockResolvedValue({result: {
+    identity: {identityaddress: carol}, fullyqualifiedname: 'dudecoin.VRSCTEST@',
+  }});
+  const {context, identities} = await discover([
+    definition(subid, {
+      name: 'subid', parent: carol, systemid: testSystem, primaryaddresses: [wallet2],
+    }),
+  ]);
+  expect(identities).toEqual([expect.objectContaining({
+    identityAddress: subid,
+    displayName: 'subid.dudecoin.VRSCTEST@',
+    fullyQualifiedName: 'subid.dudecoin.VRSCTEST@',
+  })]);
+  expect(mockGetIdentity).toHaveBeenCalledTimes(1);
+  expect(mockGetIdentity).toHaveBeenCalledWith(testSystem, carol);
+  mockGetIdentity.mockClear();
+
+  await expect(linkSelectedIdentities({context, identities})).resolves.toEqual({
+    linked: identities, failed: [], refreshError: null,
+  });
+  expect(mockLinkIdentity).toHaveBeenCalledWith(
+    subid, 'subid.dudecoin.VRSCTEST@', 'VRSCTEST', context,
+  );
+  expect(mockSaved.linked_ids.VRSCTEST[subid]).toBe('subid.dudecoin.VRSCTEST@');
+  await retryIdentityLinkRefresh(context);
+  expect(mockGetIdentity).not.toHaveBeenCalled();
+});
+
+test('preserves a supplied wrapper name and reuses it for another identity’s parent', async () => {
+  const {identities} = await discover([
+    {identity: definition(alice), fullyqualifiedname: 'Alice.Champions.VRSCTEST@'},
+    definition(bob, {parent: alice}),
+  ]);
+  expect(identities.find(row => row.identityAddress === alice)).toMatchObject({
+    displayName: 'Alice.Champions.VRSCTEST@', fullyQualifiedName: 'Alice.Champions.VRSCTEST@',
+  });
+  expect(identities.find(row => row.identityAddress === bob).displayName).toBe('Bob.Alice.Champions.VRSCTEST@');
+  expect(mockGetIdentity).not.toHaveBeenCalled();
+});
+
+test('does not label a nested identity as a root identity when its parent cannot be resolved', async () => {
+  mockGetIdentity.mockResolvedValue({result: {identity: {identityaddress: carol}}});
+  await expect(discover([definition(alice, {parent: carol})])).rejects.toThrow('parent namespace');
+  expect(mockLinkIdentity).not.toHaveBeenCalled();
+});
+
+test('stops discovery if the account changes during parent resolution', async () => {
+  const response = deferred();
+  mockGetIdentity.mockReturnValue(response.promise);
+  const finding = discover([definition(alice, {parent: carol})]);
+  await new Promise(resolve => setImmediate(resolve));
+  expect(mockGetIdentity).toHaveBeenCalledTimes(1);
+  mockState = stateFor('account-b', 2);
+  response.resolve({result: {identity: {identityaddress: carol}, fullyqualifiedname: 'Champions.VRSC@'}});
+  await expect(finding).rejects.toMatchObject({code: 'SESSION_CHANGED'});
+  expect(mockLinkIdentity).not.toHaveBeenCalled();
 });
 
 test('uses testnet by default for a testnet account and rejects the other network', () => {
@@ -230,11 +305,11 @@ test('links multiple identities through the existing writer and refreshes wallet
   const result = await linkSelectedIdentities({context, identities: [...identities, identities[0]]});
   expect(result).toEqual({linked: identities, failed: [], refreshError: null});
   expect(mockLinkIdentity).toHaveBeenCalledTimes(2);
-  expect(mockLinkIdentity).toHaveBeenNthCalledWith(1, alice, 'Alice', 'VRSC', context);
-  expect(mockLinkIdentity).toHaveBeenNthCalledWith(2, bob, 'Bob', 'VRSC', context);
+  expect(mockLinkIdentity).toHaveBeenNthCalledWith(1, alice, 'Alice.VRSC@', 'VRSC', context);
+  expect(mockLinkIdentity).toHaveBeenNthCalledWith(2, bob, 'Bob.VRSC@', 'VRSC', context);
   expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({
     type: SET_WATCHED_VERUSIDS,
-    payload: {watchedVerusIds: {VRSC: {[alice]: 'Alice', [bob]: 'Bob'}}},
+    payload: {watchedVerusIds: {VRSC: {[alice]: 'Alice.VRSC@', [bob]: 'Bob.VRSC@'}}},
     meta: context.sessionScope,
   }));
   expect(mockSetUserCoins).toHaveBeenCalledWith(mockState.coins.activeCoinList, 'account-a');
@@ -253,7 +328,7 @@ test('reports partial failures, keeps successful links, and retries only failed 
   const result = await linkSelectedIdentities({context, identities});
   expect(result.linked.map(row => row.identityAddress)).toEqual([alice, carol]);
   expect(result.failed).toEqual([{identity: identities[1], error: expect.objectContaining({message: 'Storage unavailable'})}]);
-  expect(mockSaved.linked_ids.VRSC).toEqual({[alice]: 'Alice', [carol]: 'Carol'});
+  expect(mockSaved.linked_ids.VRSC).toEqual({[alice]: 'Alice.VRSC@', [carol]: 'Carol.VRSC@'});
   mockLinkIdentity.mockImplementation(save);
   const retry = await linkSelectedIdentities({context, identities});
   expect(retry.failed).toEqual([]);
@@ -310,7 +385,7 @@ test('ignores an already-linked selection and prevents concurrent submissions', 
   const linking = linkSelectedIdentities({context, identities});
   await expect(linkSelectedIdentities({context, identities})).rejects.toThrow('already being linked');
   expect(mockLinkIdentity).toHaveBeenCalledTimes(1);
-  expect(mockLinkIdentity).toHaveBeenCalledWith(bob, 'Bob', 'VRSC', context);
+  expect(mockLinkIdentity).toHaveBeenCalledWith(bob, 'Bob.VRSC@', 'VRSC', context);
   pending.resolve();
   await linking;
 });

@@ -15,7 +15,7 @@ jest.mock('../../../images/customIcons', () => ({
 jest.mock('../../../actions/actions/sendModal/dispatchers/sendModal', () => ({openLinkIdentityModal: mockLinkIdentity}));
 jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {getBasicCoinObj: chain => ({id: chain})}}));
 jest.mock('../../../actions/actions/notifications/dispatchers/notifications', () => ({
-  dispatchClearNotifications: mockClear, dispatchRemoveNotification: mockRemove,
+  dispatchClearAccountNotifications: mockClear, dispatchRemoveNotification: mockRemove,
 }));
 
 const React = require('react');
@@ -98,12 +98,33 @@ it('keeps registration notices after clearing ordinary notifications and support
   act(() => view.update(<NotificationWidget navigation={{navigate: jest.fn()}} />));
   expect(notice(view)).toBeDefined();
   expect(mockClear).toHaveBeenCalledTimes(1);
+  expect(mockClear).toHaveBeenCalledWith('account');
   expect(mockRemove).not.toHaveBeenCalled();
   const toggle = view.root.findAllByType('TouchableOpacity').find(item => item.props.accessibilityState);
   act(() => toggle.props.onPress());
   expect(view.root.findAllByProps({testID: 'registration-notice-job'})).toHaveLength(0);
   act(() => view.root.findAllByType('TouchableOpacity').find(item => item.props.accessibilityState).props.onPress());
   expect(notice(view)).toBeDefined();
+});
+
+it('clears the profile that opened the confirmation even if the active profile changes', () => {
+  mockState.notifications.directory.message = {
+    uid: 'message', acchash: 'account', type: NOTIFICATION_TYPE_BASIC,
+    icon: NOTIFICATION_ICON_TX, title: 'Payment received', body: 'A wallet payment',
+  };
+  let view;
+  act(() => {view = render({navigate: jest.fn()});});
+  const clear = view.root.findAllByType('TouchableOpacity').find(item => textContent(item) === 'Clear all');
+  act(() => clear.props.onPress());
+  const confirm = mockAlert.mock.calls[0][2].find(action => action.text === 'Clear');
+  expect(mockClear).not.toHaveBeenCalled();
+
+  mockState.authentication.activeAccount = {accountHash: 'another-account'};
+  act(() => view.update(<NotificationWidget navigation={{navigate: jest.fn()}} />));
+  act(() => confirm.onPress());
+
+  expect(mockClear).toHaveBeenCalledTimes(1);
+  expect(mockClear).toHaveBeenCalledWith('account');
 });
 
 it('keeps a registered identity visible until the user explicitly links it', () => {

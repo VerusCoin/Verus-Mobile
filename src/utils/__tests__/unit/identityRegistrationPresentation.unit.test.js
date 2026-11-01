@@ -138,6 +138,10 @@ describe('registration names and next actions', () => {
     ['VRSCTEST', 'VRSCTEST@'],
     ['Champions', 'Champions@'],
     ['friend.VRSCTEST', 'friend.VRSCTEST@'],
+    ['friend.vRsCtEsT@', 'friend.vRsCtEsT@'],
+    ['friend.VRSC@', 'friend@'],
+    ['friend.Champions.VRSCTEST@', 'friend.Champions.VRSCTEST@'],
+    ['friend.Champions', 'friend.Champions@'],
     ['friend@', 'friend@'],
     [' friend@ ', 'friend@'],
   ])('shows the identity suffix when a resolved label is %s', (name, expected) => {

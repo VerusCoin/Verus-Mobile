@@ -6,6 +6,7 @@ import { modifyServiceStoredDataForUser } from '../services';
 import { coinsList } from '../../../../../utils/CoinData/CoinsList';
 import { getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
 import { primitives } from 'verusid-ts-client';
+import { convertFqnToDisplayFormat } from '../../../../../utils/fullyqualifiedname';
 import { NOTIFICATION_TYPE_VERUSID_READY, NOTIFICATION_TYPE_VERUSID_ERROR, NOTIFICATION_TYPE_VERUSID_FAILED } from '../../../../../utils/constants/services';
 import { NOTIFICATION_ICON_ERROR, NOTIFICATION_ICON_VERUSID } from '../../../../../utils/constants/notifications';
 import { updatePendingVerusIds } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
@@ -68,7 +69,7 @@ export const linkVerusId = async (iAddress, fqn, chain, requestContext) => {
       ...current,
       linked_ids: {
         ...(current.linked_ids || {}),
-        [chain]: {...(current.linked_ids?.[chain] || {}), [iAddress]: fqn},
+        [chain]: {...(current.linked_ids?.[chain] || {}), [iAddress]: convertFqnToDisplayFormat(fqn)},
       },
     }),
     VERUSID_SERVICE_ID,
@@ -199,10 +200,10 @@ export const checkVerusIdNotificationsForUpdates = async requestContext => {
   const currentLinkedIdentities =  Object.keys(serviceData.linked_ids && serviceData.linked_ids[ticker] || {});
 
   const notifyIdentityReady = (identityAddress, fqn, notificationUid) => {
-    const displayName = (fqn || identityAddress).replace(/\.[^.]+$/, '');
+    const displayName = fqn ? convertFqnToDisplayFormat(fqn) : identityAddress;
     const notification = new VerusIdProvisioningNotification(
       'Link VerusID',
-      [`${displayName}@`, ' is ready'],
+      [displayName, ' is ready'],
       notificationUid,
       accountHash,
       identityAddress,
@@ -218,9 +219,9 @@ export const checkVerusIdNotificationsForUpdates = async requestContext => {
     for (const iaddress of details) {
       assertCurrent();
       
-      // once an ID is linked, remove it from pending IDs, or if the server has rejected it delete.
+      // Once a ready ID is linked, its pending tracking record is no longer needed.
       if (pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY) {
-        if (currentLinkedIdentities.indexOf(iaddress) > -1 || pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_FAILED) {
+        if (currentLinkedIdentities.indexOf(iaddress) > -1) {
           await deleteProvisionedIds(iaddress, ticker, context);
           assertCurrent();
           await updatePendingVerusIds(context);
@@ -263,22 +264,36 @@ export const checkVerusIdNotificationsForUpdates = async requestContext => {
               throw new Error('Failed to verify response from service');
             }
             
-            if (responseData.decision.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
+            if (responseData.decision.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid &&
+                pendingIds[ticker][iaddress].status !== NOTIFICATION_TYPE_VERUSID_FAILED) {
+
+              // A provider failure does not prove the identity was never created.
+              // Retain the request and continue checking the chain below. Only
+              // report a newly observed failure, so dismissed notices stay dismissed.
+              pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_FAILED;
+              pendingIds[ticker][iaddress].error_desc = [
+                `${pendingIds[ticker][iaddress].provisioningName.split(".")[0]}@`,
+                ' failed to create identity.',
+              ];
 
               const newVerusIdProvisioningNotification = new BasicNotification (
                 "Request a new provisioning attempt from the service.",
-                [`${pendingIds[ticker][iaddress].provisioningName.split(".")[0]}@`, ` failed to create identity.`],
+                pendingIds[ticker][iaddress].error_desc,
                 pendingIds[ticker][iaddress].notificationUid,
                 accountHash,
               ); 
-              await deleteProvisionedIds(iaddress, ticker, context);
+              await setRequestedVerusId(
+                iaddress,
+                pendingIds[ticker][iaddress],
+                ticker,
+                context,
+              );
               assertCurrent();
               await updatePendingVerusIds(context);
               assertCurrent();
               newVerusIdProvisioningNotification.icon = NOTIFICATION_ICON_ERROR;
               assertCurrent();
               dispatchAddNotification(newVerusIdProvisioningNotification);
-              continue;
             }
           } 
         } catch (e) {
@@ -360,33 +375,4 @@ export const checkVerusIdNotificationsForUpdates = async requestContext => {
       }
     }
   }
-};
-
-export const clearOldPendingVerusIds = async requestContext => {
-  const {accountHash, context} = getOriginatingAccountHash(requestContext);
-
-  return modifyServiceStoredDataForUser(
-    current => {
-      const pendingIds = Object.entries(current.pending_ids || {}).reduce(
-        (pending, [chain, identities]) => {
-          pending[chain] = Object.entries(identities || {}).reduce(
-            (remaining, [id, details]) => {
-              if (!(details.createdAt + 604800 < Math.floor(Date.now() / 1000))) {
-                remaining[id] = details;
-              }
-              return remaining;
-            },
-            {},
-          );
-          return pending;
-        },
-        {},
-      );
-      // Registration recovery data has no provider TTL.
-      return {...current, pending_ids: pendingIds};
-    },
-    VERUSID_SERVICE_ID,
-    accountHash,
-    context,
-  );
 };

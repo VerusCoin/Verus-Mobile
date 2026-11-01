@@ -26,6 +26,7 @@ import IdentityPickerSheet from '../AuthenticationRequestInfo/components/Identit
 import { buildDataPacketResponse } from '../../../utils/deeplink/dataPacket/signDataPacket';
 import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 import {getMatchingRequestAccounts} from '../../../utils/deeplink/requestAccounts';
+import {convertFqnToDisplayFormat} from '../../../utils/fullyqualifiedname';
 
 const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
@@ -376,7 +377,11 @@ const DataPacketRequestInfo = props => {
               ]}
               numberOfLines={1}
             >
-              {selectedIdentity ? selectedIdentity.friendlyName : 'Select identity'}
+              {selectedIdentity
+                ? selectedIdentity.friendlyName && selectedIdentity.friendlyName !== selectedIdentity.iAddress
+                  ? convertFqnToDisplayFormat(selectedIdentity.friendlyName)
+                  : selectedIdentity.iAddress
+                : 'Select identity'}
             </Text>
             {selectedIdentity ? (
               <Text style={styles.identitySelectAddress}>

@@ -46,6 +46,7 @@ import {writeDeeplinkUriToNfc} from '../../../../../utils/walletBackup/walletBac
 import {SET_DEEPLINK_DATA} from '../../../../../utils/constants/storeType';
 import Colors from '../../../../../globals/colors';
 import Styles from '../../../../../styles';
+import {convertFqnToDisplayFormat} from '../../../../../utils/fullyqualifiedname';
 
 const fieldWidth = 320;
 const GIFT_CARD_REFRESH_INTERVAL_MS = 30000;
@@ -766,7 +767,7 @@ const GiftCardServiceOverview = ({
                 ))}
                 {(system.identities || []).map(identity => (
                   <Text key={identity.identityAddress}>
-                    {identity.fullyQualifiedName || identity.identityAddress}
+                    {identity.fullyQualifiedName ? convertFqnToDisplayFormat(identity.fullyQualifiedName) : identity.identityAddress}
                   </Text>
                 ))}
               </View>
@@ -795,7 +796,7 @@ const GiftCardServiceOverview = ({
                         fontSize: 12,
                         marginTop: 2,
                       }}>
-                      Waiting for {identity.fullyQualifiedName || identity.identityAddress}
+                      Waiting for {identity.fullyQualifiedName ? convertFqnToDisplayFormat(identity.fullyQualifiedName) : identity.identityAddress}
                     </Text>
                   ))}
                   {(entry.txids || []).map(txid => (
