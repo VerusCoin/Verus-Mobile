@@ -260,6 +260,7 @@ describe('explicit cached VRPC refresh batches', () => {
     expect(bodies().map(body => body.length)).toEqual([20]);
 
     firstNetwork.resolve(httpResponse(bodies()[0]));
+    await jest.advanceTimersByTimeAsync(500);
     const results = await pending;
 
     expect(bodies().map(body => body.length)).toEqual([20, 20, 5]);
@@ -281,7 +282,9 @@ describe('explicit cached VRPC refresh batches', () => {
     expect(mockSetCachedResponse).toHaveBeenCalledTimes(2);
 
     mockHttpPost.mockRejectedValueOnce(new Error('timeout'));
-    const failed = await rpc.requestMany([balance('new-A'), balance('new-B')]);
+    const failing = rpc.requestMany([balance('new-A'), balance('new-B')]);
+    await jest.advanceTimersByTimeAsync(50);
+    const failed = await failing;
     expect(failed.map(result => result.error.message)).toEqual(['timeout', 'timeout']);
     expect(bodies()).toHaveLength(2);
   });
@@ -306,7 +309,9 @@ describe('explicit cached VRPC refresh batches', () => {
   it('continues later envelopes after a transport timeout and caches only successful entries', async () => {
     mockHttpPost.mockRejectedValueOnce(new Error('timeout'));
 
-    const results = await rpc.requestMany(Array.from({length: 25}, (_, index) => balance(`A${index}`)));
+    const pending = rpc.requestMany(Array.from({length: 25}, (_, index) => balance(`A${index}`)));
+    await jest.advanceTimersByTimeAsync(250);
+    const results = await pending;
 
     expect(results.slice(0, 20).every(result => result.error.message === 'timeout')).toBe(true);
     expect(results.slice(20).every(result => result.result.balance === 100)).toBe(true);
@@ -317,14 +322,18 @@ describe('explicit cached VRPC refresh batches', () => {
   it('retries unsupported envelopes singly, keeps address consolidation, and shares capability state', async () => {
     mockHttpPost.mockResolvedValueOnce({status: 200, data: {error: {code: -32600, message: 'Batch disabled'}}});
     const requests = [balance('A'), deltas(['A']), deltas(['B']), mempool(['A']), mempool(['B'])];
-    const results = await rpc.requestMany(requests);
+    const pending = rpc.requestMany(requests);
+    await jest.advanceTimersByTimeAsync(100);
+    const results = await pending;
 
     expect(Array.isArray(bodies()[0])).toBe(true);
     expect(bodies().slice(1).map(body => body.method)).toEqual(['getaddressbalance', 'getaddressdeltas', 'getaddressmempool']);
     expect(bodies()[2].params[0].addresses).toEqual(['A', 'B']);
     expect(results.every(result => result.error == null)).toBe(true);
 
-    await rpc.requestMany([balance('C'), balance('D')]);
+    const fallback = rpc.requestMany([balance('C'), balance('D')]);
+    await jest.advanceTimersByTimeAsync(100);
+    await fallback;
     expect(bodies().slice(-2).every(body => !Array.isArray(body))).toBe(true);
     await jest.advanceTimersByTimeAsync(5 * 60 * 1000);
     await rpc.requestMany([balance('E'), balance('F')]);

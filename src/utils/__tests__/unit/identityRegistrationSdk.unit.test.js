@@ -112,6 +112,7 @@ const {
   OptCCParams, SmartTransactionScript, TokenOutput, TxDestination, nameAndParentAddrToIAddr,
 } = require('verus-typescript-primitives');
 const {VerusIdInterface} = require('verusid-ts-client');
+const VrpcRequestBatcher = require('../../vrpc/vrpcRequestBatcher').default;
 const {
   createRegistrationContext, resolveRegistration, prepareCommitment, approveCommitment,
   reconcileRegistration, prepareRegistration, approveRegistration,
@@ -121,6 +122,7 @@ const {linkVerusId} = require('../../../actions/actions/services/dispatchers/ver
 const {publishRegistrationState} = require('../../../actions/actions/services/dispatchers/verusid/registration');
 const PRIVATE_ADDRESS = 'zs1wczplx4kegw32h8g0f7xwl57p5tvnprwdmnzmdnsw50chcl26f7tws92wk2ap03ykaq6jyyztfa';
 
+// Allow ten seconds for complete flows using real transport pacing and retries.
 test.each([
   {description: 'completes native registration', branch: 'native', tokenProof: null},
   {description: 'deletes a confirmed receipt with incompatible saved funding approval', branch: 'native', tokenProof: null, deleteCompleted: true},
@@ -134,6 +136,10 @@ test.each([
   {description: 'completes token-burn registration', branch: 'token-burn', tokenProof: 1},
   {description: 'completes token-payment registration', branch: 'token-payment', tokenProof: 2},
   {description: 'completes native registration using only a linked identity balance', branch: 'native', tokenProof: null, identityFunding: true},
+  ...[false, true].map(identityFunding => ({
+    description: `completes ${identityFunding ? 'identity-funded' : 'native'} registration after batch rejection and a lost broadcast response`,
+    branch: 'native', tokenProof: null, identityFunding, batchUnsupported: true, broadcastFailure: 'timeout',
+  })),
   ...[false, true].flatMap(identityFunding => ['commitment', 'approval', 'registration', 'saved'].map(wrongSourceStage => ({
     description: `rejects another identity's funds for ${identityFunding ? 'identity' : 'R-address'} payment during ${wrongSourceStage}`,
     branch: 'native', tokenProof: null, identityFunding, wrongSourceStage,
@@ -154,7 +160,7 @@ test.each([
     branch: guardAttack === 'lost-reserve' ? 'token-burn' : 'native',
     tokenProof: guardAttack === 'lost-reserve' ? 1 : null, guardAttack,
   })),
-])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, historicalReceipt, privateAddress, deleteCompleted}) => {
+])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, historicalReceipt, privateAddress, deleteCompleted, batchUnsupported}) => {
   jest.clearAllMocks();
   mockEncryptedJobs.clear();
   const system = nameAndParentAddrToIAddr('VRSC');
@@ -284,10 +290,15 @@ test.each([
     transactions.get(txid).height = tip;
   };
   const rpcCalls = [];
+  const rpcReads = [];
+  const batchCalls = [];
+  let activeSingleTxOuts = 0;
+  let peakSingleTxOuts = 0;
   let broadcastCount = 0;
 
-  mockClient = new VerusIdInterface(system, 'https://offline.invalid', undefined, async rpcRequest => {
+  const respond = async rpcRequest => {
     rpcCalls.push(rpcRequest.method);
+    rpcReads.push(rpcRequest);
     const [first, second] = rpcRequest.params || [];
     const ok = result => ({id: rpcRequest.id, error: null, result});
     switch (rpcRequest.method) {
@@ -370,7 +381,37 @@ test.each([
       default:
         throw new Error(`Unexpected offline RPC: ${rpcRequest.method}`);
     }
+  };
+
+  // Exercise the installed SDK's request serialization and Mobile's actual
+  // batching/fallback transport. Each fallback server has its own capability
+  // marker, so rejecting arrays cannot disable batching in another scenario.
+  const endpoint = `https://offline-${identityFunding ? 'identity' : 'address'}-${batchUnsupported ? 'fallback' : 'batch'}.invalid`;
+  mockClient = new VerusIdInterface(system, endpoint, undefined, async request => {
+    if (request.method !== 'gettxout') return respond(request);
+
+    activeSingleTxOuts++;
+    peakSingleTxOuts = Math.max(peakSingleTxOuts, activeSingleTxOuts);
+    try {
+      await new Promise(resolve => setImmediate(resolve));
+      return await respond(request);
+    } finally {
+      activeSingleTxOuts--;
+    }
   });
+  mockClient.interface.rpcBatchRequestOverride = async requests => {
+    batchCalls.push(requests);
+    expect(requests.length).toBeLessThanOrEqual(20);
+    expect(requests.every(request => request.method !== 'sendrawtransaction')).toBe(true);
+
+    if (batchUnsupported) {
+      return {result: null, error: {code: -32600, message: 'Batching is disabled'}};
+    }
+
+    return Promise.all(requests.map(respond));
+  };
+  const batcher = new VrpcRequestBatcher(endpoint, requests => mockClient.interface.request(requests), 500);
+  mockClient.interface.requestMany = requests => batcher.requestMany(requests);
   const commitmentBuilder = jest.spyOn(mockClient, 'createNameReservationTransaction');
 
   const context = createRegistrationContext();
@@ -449,6 +490,10 @@ test.each([
     return;
   }
   const resolved = await resolveRegistration(request, context);
+  // Snapshot and namespace policy share definitions within this resolution,
+  // while the ending snapshot assertion still performs a fresh chain read.
+  expect(rpcCalls.filter(method => method === 'getcurrency')).toHaveLength(tokenProof == null ? 1 : 2);
+  expect(rpcCalls.filter(method => method === 'getinfo')).toHaveLength(2);
   const registrationCosts = tokenProof == null
     ? {[system]: '100000000'}
     : {[system]: tokenProof === 1 ? '1020000' : '1000000', [token]: '100000000'};
@@ -462,11 +507,23 @@ test.each([
     expect(broadcastCount).toBe(0);
     return;
   }
+  const preparationReadStart = rpcReads.length;
   const review = await prepareCommitment({request, ...(reserveCurrencyCount ? {} : {
     approvedCosts: resolved.quote.totalOperationRequired,
   })}, context);
   const commitmentFee = reserveCurrencyCount ? '20000' : '10000';
   expect(review.quote.commitmentFee).toBe(commitmentFee);
+  // The funding preflight and coin selection reuse immutable source bytes.
+  // Spendability checks remain separate reads, including later approval.
+  expect(rpcReads.slice(preparationReadStart).filter(request =>
+    request.method === 'getrawtransaction' && request.params[0] === source.getId() && !request.params[1]
+  )).toHaveLength(reserveCurrencyCount ? 2 : 1);
+  if (!batchUnsupported) {
+    const groupedMethods = batchCalls.map(requests => requests.map(request => request.method));
+    expect(groupedMethods).toContainEqual(['getinfo', 'getcurrency']);
+    expect(groupedMethods).toContainEqual(['getinfo', 'getblock']);
+    expect(groupedMethods.some(methods => methods.includes('getrawtransaction') && methods.includes('gettxout'))).toBe(true);
+  }
   expect(broadcastCount).toBe(0);
   const encrypted = mockEncryptedJobs.get(review.jobId);
   const persisted = mockReadJob(review.jobId);
@@ -765,4 +822,12 @@ test.each([
   expect(broadcastCount).toBe(2);
   expect(rpcCalls).not.toContain('registernamecommitment');
   expect(rpcCalls).not.toContain('registeridentity');
-});
+  if (batchUnsupported) {
+    expect(batchCalls).toHaveLength(1);
+    expect(peakSingleTxOuts).toBe(1);
+  } else {
+    // Reveal submission checks every input together before broadcasting.
+    expect(batchCalls.some(requests => requests.length >= 2 &&
+      requests.every(request => request.method === 'gettxout'))).toBe(true);
+  }
+}, 10000);

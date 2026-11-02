@@ -126,27 +126,30 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
   }
 
   /**
-   * Execute an explicit refresh without a collection delay. Cache entries and
+   * Execute an explicit read group without a collection delay. Cache entries and
    * in-flight reads belong to the original requests, never the merged queries.
    * Each result settles independently so one failed history read cannot discard
-   * a successful balance update from the same batch.
+   * a successful balance update from the same batch. Callers can restrict cache
+   * reuse; fresh verification reads also bypass previously started requests.
    */
-  async requestMany(requests) {
+  async requestMany(requests, {cacheMethods = CACHED_VRPC_REQUESTS} = {}) {
     const owned = [];
     const results = requests.map(req => {
-      if (!this.requestBatcher.supportsRefresh(req.cmd)) {
-        return vrpcErrorResponse({code: -32601, message: `Unsupported refresh method: ${req.cmd}`});
+      if (!this.requestBatcher.supportsExplicit(req.cmd)) {
+        return vrpcErrorResponse({code: -32601, message: `Unsupported batch method: ${req.cmd}`});
       }
 
       const cacheId = getVrpcResponseCacheKey(this.chain, this.endpoint, req);
-      let pending = this.pendingBatchRequests.get(cacheId);
+      const cacheable = isVrpcResponseCacheable(req.cmd) && cacheMethods.includes(req.cmd);
+      let pending = cacheable ? this.pendingBatchRequests.get(cacheId) : null;
 
       if (!pending) {
-        const entry = {req, cacheId};
-        pending = this.shareRead(cacheId, new Promise((resolve, reject) => {
+        const entry = {req, cacheId, cacheable};
+        pending = new Promise((resolve, reject) => {
           entry.resolve = resolve;
           entry.reject = reject;
-        }));
+        });
+        if (cacheable) pending = this.shareRead(cacheId, pending);
         owned.push(entry);
       }
 
@@ -156,7 +159,7 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
     // Reserve every key before the first await, then read caches concurrently.
     // Filtering afterward keeps network order independent of storage latency.
     const cached = await Promise.all(owned.map(entry =>
-      this.getCachedResponse(entry.req, entry.cacheId),
+      entry.cacheable ? this.getCachedResponse(entry.req, entry.cacheId) : null,
     ));
     const misses = owned.filter((entry, index) => {
       if (cached[index] == null) return true;
@@ -170,7 +173,10 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
 
       await Promise.all(misses.map(async (entry, index) => {
         try {
-          entry.resolve(await this.cacheResponse(entry.req, entry.cacheId, responses[index]));
+          const response = responses[index];
+          entry.resolve(entry.cacheable
+            ? await this.cacheResponse(entry.req, entry.cacheId, response)
+            : response);
         } catch (error) {
           entry.reject(error);
         }
@@ -188,7 +194,9 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
 
     const cacheId = getVrpcResponseCacheKey(this.chain, this.endpoint, req);
 
-    if (this.requestBatcher.supportsRefresh(req.cmd)) {
+    // Currency definitions share cache/in-flight reads with registration batches,
+    // but a lone lookup still starts immediately without a collection timer.
+    if (this.requestBatcher.supportsRefresh(req.cmd) || req.cmd === 'getcurrency') {
       if (this.pendingBatchRequests.has(cacheId)) {
         return this.pendingBatchRequests.get(cacheId);
       }
@@ -203,7 +211,7 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
     }
 
     // Preserve serialization and error handling for operations outside the
-    // explicitly supported refresh reads, particularly transaction creation.
+    // shared cached reads above, particularly transaction creation.
     const callDelay = this.registerCallStart(cacheId);
 
     try {
@@ -452,8 +460,16 @@ class VrpcInterface {
 
     // Preserve fundrawtransaction errors raised while the VerusID client builds
     // identity transactions instead of letting the client replace the RPC detail.
+    const cachedInterface = this.cacheInterfaces[id];
     verusIdInterface.interface.fundRawTransaction =
-      this.cacheInterfaces[id].fundRawTransaction.bind(this.cacheInterfaces[id]);
+      cachedInterface.fundRawTransaction.bind(cachedInterface);
+
+    // Reuse namespace definitions while keeping tip, authority and spendability
+    // verification fresh. The SDK supplies independent reads as explicit groups;
+    // the shared transport handles batch limits and unsupported-server fallback.
+    verusIdInterface.interface.getCurrency = cachedInterface.getCurrency.bind(cachedInterface);
+    verusIdInterface.interface.requestMany = requests =>
+      cachedInterface.requestMany(requests, {cacheMethods: ['getcurrency']});
 
     return verusIdInterface;
   }

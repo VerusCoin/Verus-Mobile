@@ -236,7 +236,7 @@ describe('VRPC address request batching', () => {
 
     expect(mockRpcRequest.mock.calls).toEqual([[requests.slice(0, 20)]]);
     firstNetwork.resolve(requests.slice(0, 20).map(responseFor));
-    await advance(0);
+    await advance(250);
     expect(await result).toEqual(requests.map(responseFor));
     expect(mockRpcRequest.mock.calls).toEqual([
       [requests.slice(0, 20)],
@@ -285,7 +285,7 @@ describe('VRPC address request batching', () => {
     expect(mockRpcRequest).toHaveBeenCalledTimes(2);
 
     firstSingle.resolve(responseFor(requests[0]));
-    await advance(0);
+    await advance(500);
     expect(await result).toEqual(requests.map(responseFor));
     expect(mockRpcRequest.mock.calls).toEqual([
       [requests.slice(0, 20)],

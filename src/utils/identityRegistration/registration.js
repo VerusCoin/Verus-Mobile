@@ -2,6 +2,7 @@ import {Buffer} from 'buffer';
 import {ECPair, Transaction, networks} from '@bitgo/utxo-lib';
 import {
   fromBase58Check,
+  GetTxOutRequest,
   I_ADDR_VERSION,
   nameAndParentAddrToIAddr,
   resolveIdentityRegistrationName,
@@ -1203,11 +1204,16 @@ const broadcastSaved = async (job, stage, context) => {
 
   // Funding and signature verification is deliberately offline in the SDK.
   // Refresh spendability separately on every first submission and retry.
-  // Check one input at a time to avoid a burst against the server's concurrency
-  // limit. Each completed check immediately allows the next, with no timer delay.
-  for (const prevout of transaction.prepared.prevouts) {
-    const unspent = registrationRpcResult(await guarded(context, () =>
-      client.interface.getTxOut(prevout.txid, prevout.vout, true)), 'Check registration input');
+  // Send the known inputs together. The shared transport bounds batches and
+  // falls back to sequential singles; every result must pass before broadcast.
+  const prevouts = transaction.prepared.prevouts;
+  const responses = await guarded(context, () => client.interface.requestMany(
+    prevouts.map(prevout => new GetTxOutRequest(job.systemId, prevout.txid, prevout.vout, true)),
+  ));
+
+  for (let index = 0; index < prevouts.length; index++) {
+    const prevout = prevouts[index];
+    const unspent = registrationRpcResult(responses[index], 'Check registration input');
 
     if (
       !unspent ||
@@ -1217,6 +1223,7 @@ const broadcastSaved = async (job, stage, context) => {
       throw errorWithCode('REVIEW_CHANGED', 'Registration funds changed or could not be verified. Your saved transaction and reservation have been retained.');
     }
   }
+
   assertRegistrationContext(context);
   verifyRegistrationFundingSource(transaction.prepared, job, transaction.signedHex);
 

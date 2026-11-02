@@ -27,6 +27,7 @@ const mockRaw = jest.fn();
 const mockGetInfo = jest.fn();
 const mockGetBlock = jest.fn();
 const mockGetTxOut = jest.fn();
+const mockRequestMany = jest.fn();
 const mockGetCurrency = jest.fn();
 const mockGetIdentity = jest.fn();
 const mockBuildCommitment = jest.fn();
@@ -47,6 +48,7 @@ const mockClient = {
     getRawTransaction: mockRaw, sendRawTransaction: mockSend,
     getInfo: mockGetInfo, getBlock: mockGetBlock, getTxOut: mockGetTxOut, getCurrency: mockGetCurrency,
     getIdentity: mockGetIdentity,
+    requestMany: mockRequestMany,
   },
 };
 
@@ -206,6 +208,11 @@ beforeEach(() => {
   mockGetTxOut.mockResolvedValue({result: {
     bestblock: mockTipHash, confirmations: 1, scriptPubKey: {hex: 'commit-script'},
   }});
+  mockRequestMany.mockImplementation(requests => Promise.all(requests.map(request => {
+    expect(request.cmd).toBe('gettxout');
+    expect(request.chain).toBe('system');
+    return mockGetTxOut(...request.getParams());
+  })));
   mockSend.mockImplementation(async hex => {
     const txid = hex === 'commit-signed' ? mockCommitTxid : mockRevealTxid;
     const job = Object.values(mockJobs)[0];
@@ -510,7 +517,7 @@ test('missing broadcast is retried with identical saved bytes and no signing', a
   expect(mockSend.mock.calls.map(call => call[0])).toEqual(['commit-signed', 'commit-signed']);
 });
 
-test.each(['first submission', 'retry'])('registration %s checks inputs one at a time before sending', async attempt => {
+test.each(['first submission', 'retry'])('registration %s checks all batched inputs before sending', async attempt => {
   const context = createRegistrationContext();
   let review = await build();
   await approveCommitment(review.jobId, review.approvalToken, context);
@@ -528,6 +535,7 @@ test.each(['first submission', 'retry'])('registration %s checks inputs one at a
   let peak = 0;
   let completed = 0;
   mockGetTxOut.mockClear();
+  mockRequestMany.mockClear();
   mockGetTxOut.mockImplementation(async () => {
     active++;
     peak = Math.max(peak, active);
@@ -548,7 +556,10 @@ test.each(['first submission', 'retry'])('registration %s checks inputs one at a
     ? await retryBroadcast(review.jobId, context)
     : await approveRegistration(review.jobId, review.approvalToken, context);
   expect(result.status).toBe('registration_broadcast');
-  expect(peak).toBe(1);
+  expect(peak).toBe(inputs.length);
+  expect(mockRequestMany).toHaveBeenCalledTimes(1);
+  expect(mockRequestMany.mock.calls[0][0].map(request => request.getParams()))
+    .toEqual(inputs.map(input => [input.txid, input.vout, true]));
   expect(mockGetTxOut).toHaveBeenCalledTimes(expectedChecks);
   expect(mockGetTxOut.mock.calls.slice(-inputs.length)).toEqual(inputs.map(input => [input.txid, input.vout, true]));
 });
@@ -556,26 +567,32 @@ test.each(['first submission', 'retry'])('registration %s checks inputs one at a
 test.each([
   ['spent input', {result: null}, 'REVIEW_CHANGED'],
   ['RPC rejection', {error: {code: 429, message: 'Server busy'}}, 429],
-])('a %s stops further input checks and retains the signed registration', async (_label, response, code) => {
-  const context = createRegistrationContext();
-  let review = await build();
-  await approveCommitment(review.jobId, review.approvalToken, context);
-  confirm(mockCommitTxid);
-  review = await prepareRegistration({jobId: review.jobId}, context);
-  const reservation = JSON.parse(JSON.stringify(mockJobs[review.jobId].reservation));
-  mockGetTxOut.mockClear();
-  mockSendRegistration.mockClear();
-  mockGetTxOut.mockResolvedValueOnce(response);
+  ['changed tip', {result: {bestblock: 'different-tip'}}, 'REVIEW_CHANGED'],
+].flatMap(([label, response, code]) => [0, 1].map(index => ({label, response, code, index}))))(
+  'a $label in batch position $index prevents broadcast and retains the signed registration',
+  async ({response, code, index}) => {
+    const context = createRegistrationContext();
+    let review = await build();
+    await approveCommitment(review.jobId, review.approvalToken, context);
+    confirm(mockCommitTxid);
+    review = await prepareRegistration({jobId: review.jobId}, context);
+    const reservation = JSON.parse(JSON.stringify(mockJobs[review.jobId].reservation));
+    mockGetTxOut.mockClear();
+    mockSendRegistration.mockClear();
+    const valid = mockGetTxOut.getMockImplementation();
+    let position = 0;
+    mockGetTxOut.mockImplementation((...args) => position++ === index ? Promise.resolve(response) : valid(...args));
 
-  await expect(approveRegistration(review.jobId, review.approvalToken, context)).rejects.toMatchObject({code});
-  expect(mockGetTxOut).toHaveBeenCalledTimes(1);
-  expect(mockSendRegistration).not.toHaveBeenCalled();
-  expect(mockJobs[review.jobId]).toMatchObject({
-    status: 'registration_signed',
-    reservation,
-    registration: {signedHex: 'reveal-signed', txid: mockRevealTxid},
-  });
-});
+    await expect(approveRegistration(review.jobId, review.approvalToken, context)).rejects.toMatchObject({code});
+    expect(mockGetTxOut).toHaveBeenCalledTimes(mockJobs[review.jobId].registration.prepared.prevouts.length);
+    expect(mockSendRegistration).not.toHaveBeenCalled();
+    expect(mockJobs[review.jobId]).toMatchObject({
+      status: 'registration_signed',
+      reservation,
+      registration: {signedHex: 'reveal-signed', txid: mockRevealTxid},
+    });
+  },
+);
 
 test.each(['commitment', 'registration'])('independent funding verification gates signing and sending %s', async stage => {
   const context = createRegistrationContext();

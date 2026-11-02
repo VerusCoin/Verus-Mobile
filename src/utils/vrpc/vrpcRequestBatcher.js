@@ -3,9 +3,25 @@ import {vrpcErrorResponse} from './vrpcRequestMany';
 
 const BATCH_COMMANDS = new Set(['getaddressbalance', 'getaddressdeltas', 'getaddressmempool']);
 const REFRESH_COMMANDS = new Set([...BATCH_COMMANDS, 'getinfo']);
+// Registration supplies these read groups explicitly. They never enter the
+// collection window used by ordinary wallet refresh requests.
+const EXPLICIT_COMMANDS = new Set([
+  ...REFRESH_COMMANDS,
+  'getcurrency',
+  'getblock',
+  'getrawtransaction',
+  'gettxout',
+  'getidentity',
+]);
 const MAX_BATCH_SIZE = 20;
+const BATCH_ITEMS_PER_SECOND = 80;
 const BATCH_RETRY_AFTER_MS = 5 * 60 * 1000;
 const FAST_REJECTION_MS = 5000;
+
+// The server charges each RPC item, even when several share one HTTP envelope.
+// Share pacing across chains, separate requestMany calls and recreated clients.
+// Leave some room below the server's 100-item rate for ordinary single requests.
+const nextSendAt = new Map();
 
 // Capability failures belong to the server, not a chain or connection. Keep
 // them across endpoint recreation, but never persist them between app sessions.
@@ -68,8 +84,12 @@ export default class VrpcRequestBatcher {
     return REFRESH_COMMANDS.has(command);
   }
 
+  supportsExplicit(command) {
+    return EXPLICIT_COMMANDS.has(command);
+  }
+
   canBatch(command, explicit = false) {
-    if (!(explicit ? REFRESH_COMMANDS : BATCH_COMMANDS).has(command)) return false;
+    if (!(explicit ? EXPLICIT_COMMANDS : BATCH_COMMANDS).has(command)) return false;
 
     const retryAt = disabledUntil.get(this.endpoint);
     if (retryAt == null) return true;
@@ -95,7 +115,7 @@ export default class VrpcRequestBatcher {
     });
   }
 
-  /** Send a known refresh immediately, including any reads already waiting. */
+  /** Queue a known read group without a collection delay, including waiting reads. */
   requestMany(requests) {
     const entries = this.queue;
     this.queue = [];
@@ -103,8 +123,8 @@ export default class VrpcRequestBatcher {
     this.timer = null;
 
     const responses = requests.map(req => {
-      if (!this.supportsRefresh(req.cmd)) {
-        return vrpcErrorResponse({code: -32601, message: `Unsupported refresh method: ${req.cmd}`});
+      if (!this.supportsExplicit(req.cmd)) {
+        return vrpcErrorResponse({code: -32601, message: `Unsupported batch method: ${req.cmd}`});
       }
 
       return new Promise((resolve, reject) => {
@@ -126,8 +146,27 @@ export default class VrpcRequestBatcher {
     });
   }
 
+  async waitForSend(itemCount) {
+    // Pace starts, so time spent receiving the previous response already counts
+    // toward the interval. An idle server can always receive its first batch now.
+    let waitMs;
+    while ((waitMs = (nextSendAt.get(this.endpoint) || 0) - Date.now()) > 0) {
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+      // Another client for this server may have sent while we were waiting.
+      // Recheck before reserving the next start, including after app suspension.
+    }
+
+    nextSendAt.set(
+      this.endpoint,
+      Date.now() + Math.ceil(itemCount * 1000 / BATCH_ITEMS_PER_SECOND),
+    );
+  }
+
   async sendSingle(entry) {
     try {
+      // Keep explicit single reads and unsupported-batch retries on the same
+      // schedule; splitting an envelope must not bypass its item-rate limit.
+      await this.waitForSend(1);
       entry.resolve(await this.sendRequest(entry.req));
     } catch (error) {
       entry.reject(error);
@@ -150,6 +189,8 @@ export default class VrpcRequestBatcher {
         continue;
       }
 
+      await this.waitForSend(chunk.length);
+      // Capability detection measures the network request, excluding queue time.
       const started = Date.now();
       let response;
       let thrownError;
