@@ -77,8 +77,11 @@ class SendModal extends Component {
     }
 
     if (lastProps.alertActive != this.props.alertActive) {
+      // Failed account initialization may have signed out and cleared the
+      // dialog while its error alert was open. Only restore a live request.
       const shouldRestoreVisibility =
         !this.props.alertActive &&
+        this.props.sendModal.requestId != null &&
         !(
           this.props.sendModal.type === AUTHENTICATE_USER_SEND_MODAL &&
           this.props.hasAuthenticatedSession

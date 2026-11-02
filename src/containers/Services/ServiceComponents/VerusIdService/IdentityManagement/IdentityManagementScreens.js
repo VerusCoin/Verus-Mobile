@@ -374,11 +374,11 @@ function IdentityTransferForm({navigation, route}) {
             scanHandled.current = false;
             setScanning(true);
           }}>Scan QR code</TextAction>
-          <Text style={styles.muted}>Enter a transparent address, or a VerusID name ending in @. Identity addresses also work.</Text>
+          <Text style={styles.muted}>Enter a transparent address, or a VerusID name ending in @. Identity addresses also work. Transfers to a transparent address clear this identity’s private receiving address.</Text>
         </View>
         <View style={styles.notice}>
           <Text style={styles.body}>Using another VerusID?</Text>
-          <Text style={styles.muted}>We’ll copy its current primary addresses, required signatures, and private receiving address if it has one. Future changes to that VerusID won’t change this one.</Text>
+          <Text style={styles.muted}>We’ll copy its current primary addresses, required signatures, and private receiving address. If it has no private receiving address, this identity’s private receiving address will be cleared. Future changes to that VerusID won’t change this one.</Text>
         </View>
         <View style={styles.card}>
           <CheckOption label="Return identity funds to my wallet" checked={returnFunds} disabled={busy}
@@ -606,12 +606,12 @@ export function IdentityUpdateReview({navigation}) {
         <DetailRow label="Recovery identity">{authorityName(review.before.recoveryauthority, review)}</DetailRow>
       </Disclosure>}
       {review.after.privateaddress ? <>
-        <DetailRow label={review.usesRecipientPrivateAddress ? 'Recipient’s private receiving address' : 'Private receiving address retained'}>{review.after.privateaddress}</DetailRow>
-        {review.usesRecipientPrivateAddress ? <>
-          <Text style={styles.muted}>Private payments will use the address published by {review.recipientName}. Existing private funds are not moved.</Text>
-          {review.before.privateaddress !== review.after.privateaddress && <DetailRow label="Previous private receiving address">{review.before.privateaddress || 'None'}</DetailRow>}
-        </> : <Text style={styles.muted}>Private payments still go to this address’s existing owner. The transfer does not give the recipient its private key. Modify the identity first if this address should be removed or changed.</Text>}
-      </> : <Text style={styles.muted}>No private receiving address is published.</Text>}
+        <DetailRow label="Recipient’s private receiving address">{review.after.privateaddress}</DetailRow>
+        <Text style={styles.muted}>Private payments will use the address published by {review.recipientName}. Existing private funds are not moved.</Text>
+        {review.before.privateaddress !== review.after.privateaddress && <DetailRow label="Previous private receiving address">{review.before.privateaddress || 'None'}</DetailRow>}
+      </> : <Text style={styles.muted}>{review.before.privateaddress
+        ? 'The private receiving address will be cleared. Existing private funds are not moved.'
+        : 'No private receiving address is published.'}</Text>}
     </View>}
     {(review.warnings || []).map((warning, index) => <View key={index} style={[styles.notice, styles.warning]}>
       <Text style={styles.body}>{warning}</Text>

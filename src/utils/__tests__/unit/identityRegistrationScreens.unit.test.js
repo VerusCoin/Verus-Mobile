@@ -8,7 +8,13 @@ const mockApi = {
 let mockState;
 const mockAlert = jest.fn();
 const mockScrollTo = jest.fn();
+const mockPublishRegistrationJobs = jest.fn();
+const mockClearRegistrationJobs = jest.fn();
 jest.mock('../../identityRegistration', () => mockApi);
+jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', () => ({
+  publishRegistrationJobs: (...args) => mockPublishRegistrationJobs(...args),
+  clearRegistrationJobs: (...args) => mockClearRegistrationJobs(...args),
+}));
 jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
 jest.mock('@react-navigation/native', () => ({useFocusEffect: callback => require('react').useEffect(callback, [callback])}));
 jest.mock('@react-navigation/elements', () => ({useHeaderHeight: () => 96}));
@@ -82,6 +88,10 @@ const mount = async (Component, props = {}) => {
 beforeEach(() => {
   jest.clearAllMocks();
   mockScrollTo.mockReset();
+  mockPublishRegistrationJobs.mockReset().mockResolvedValue({});
+  mockClearRegistrationJobs.mockReset().mockImplementation(async () => {
+    mockState.channelStore_verusid.registrationJobs = {};
+  });
   views = [];
   mockState = {
     authentication: {activeAccount: {keys: {VRSC: {vrpc: {addresses: ['wallet']}}}}},
@@ -116,6 +126,162 @@ it.each([
     await enterName(view);
     expect(footerAction(view, label).props.disabled).toBe(false);
   }
+});
+
+it('waits for saved summaries before showing an empty registration list or enabling creation', async () => {
+  let finishLoading;
+  mockPublishRegistrationJobs.mockReturnValueOnce(new Promise(resolve => { finishLoading = resolve; }));
+  const view = await mount(IdentityRegistrationStart);
+
+  expect(mockPublishRegistrationJobs).toHaveBeenCalledWith({sessionScope: {accountHash: 'account', sessionEpoch: 1}});
+  expect(footerAction(view, 'Create a VerusID').props.disabled).toBe(true);
+  expect(textContent(view.root)).not.toContain('A name that’s yours');
+  expect(view.root.findByType('ScrollView').props.refreshControl.props.refreshing).toBe(true);
+
+  await act(async () => finishLoading({}));
+
+  expect(footerAction(view, 'Create a VerusID').props.disabled).toBeFalsy();
+  expect(textContent(view.root)).toContain('A name that’s yours');
+  expect(mockApi.reconcileRegistration).not.toHaveBeenCalled();
+  expect(mockApi.prepareCommitment).not.toHaveBeenCalled();
+});
+
+it.each([new Error('Unsupported receipt with protected transaction bytes'), null])('shows a retryable load error without exposing receipt details or offering a fresh registration (%p)', async failure => {
+  mockPublishRegistrationJobs.mockRejectedValueOnce(failure);
+  const view = await mount(IdentityRegistrationStart);
+
+  expect(textContent(view.root)).toContain('Saved registrations could not be loaded. Your registration data has not been changed.');
+  expect(textContent(view.root)).not.toContain('protected transaction bytes');
+  expect(textContent(view.root)).not.toContain('A name that’s yours');
+  expect(footerAction(view, 'Create a VerusID').props.disabled).toBe(true);
+  expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(1);
+
+  await press(button(view, 'Retry loading registrations'));
+
+  expect(mockPublishRegistrationJobs).toHaveBeenCalledTimes(2);
+  expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(0);
+  expect(footerAction(view, 'Create a VerusID').props.disabled).toBeFalsy();
+  expect(textContent(view.root)).toContain('A name that’s yours');
+  expect(mockApi.deleteRegistration).not.toHaveBeenCalled();
+  expect(mockApi.prepareCommitment).not.toHaveBeenCalled();
+  expect(mockApi.reconcileRegistration).not.toHaveBeenCalled();
+});
+
+it('keeps last known registrations visible but disables actions until their summaries reload', async () => {
+  mockState.channelStore_verusid.registrationJobs.saved = {
+    id: 'saved', displayName: 'saved@', status: 'commitment_prepared', deletionKind: 'draft', createdAt: 1,
+  };
+  mockPublishRegistrationJobs.mockRejectedValueOnce(new Error('Storage unavailable'));
+  const view = await mount(IdentityRegistrationStart);
+
+  expect(textContent(view.root)).toContain('saved@');
+  expect(button(view, 'saved@').props.disabled).toBe(true);
+  expect(view.root.findByProps({accessibilityLabel: 'Delete saved registration for saved@'}).props.disabled).toBe(true);
+
+  await pullRefresh(view);
+
+  expect(button(view, 'saved@').props.disabled).toBe(false);
+  expect(view.root.findByProps({accessibilityLabel: 'Delete saved registration for saved@'}).props.disabled).toBe(false);
+  expect(mockState.channelStore_verusid.registrationJobs.saved.id).toBe('saved');
+  expect(mockApi.deleteRegistration).not.toHaveBeenCalled();
+});
+
+it('does not show a registration storage error after the originating account changes', async () => {
+  mockPublishRegistrationJobs.mockRejectedValueOnce(Object.assign(new Error('Account changed'), {code: 'SESSION_CHANGED'}));
+  const view = await mount(IdentityRegistrationStart);
+
+  expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(0);
+  expect(footerAction(view, 'Create a VerusID').props.disabled).toBe(true);
+  expect(textContent(view.root)).not.toContain('A name that’s yours');
+});
+
+it('only offers the registration reset after a failed summary load', async () => {
+  const view = await mount(IdentityRegistrationStart);
+
+  expect(button(view, 'Clear all registration data')).toBeUndefined();
+  expect(mockClearRegistrationJobs).not.toHaveBeenCalled();
+});
+
+it.each(['cancel', 'dismiss'])('keeps registration data when the reset confirmation is closed with %s', async choice => {
+  mockPublishRegistrationJobs.mockRejectedValueOnce(new Error('Unsupported registration storage'));
+  const view = await mount(IdentityRegistrationStart);
+
+  await press(button(view, 'Clear all registration data'));
+  await press(button(view, 'Clear all registration data'));
+
+  expect(mockAlert).toHaveBeenCalledTimes(1);
+  const [title, message, actions, options] = mockAlert.mock.calls[0];
+  expect(title).toBe('Clear all registration data?');
+  expect(message).toContain('Are you sure?');
+  expect(message).toContain('commitment secrets for this profile');
+  expect(message).toContain('fees already paid will not be refunded');
+  expect(message).toContain('This cannot be undone');
+  expect(actions.find(action => action.text === 'Clear all registration data').style).toBe('destructive');
+  expect(mockClearRegistrationJobs).not.toHaveBeenCalled();
+
+  await act(async () => choice === 'cancel'
+    ? actions.find(action => action.style === 'cancel').onPress()
+    : options.onDismiss());
+
+  expect(mockClearRegistrationJobs).not.toHaveBeenCalled();
+  expect(button(view, 'Retry loading registrations')).toBeDefined();
+  await press(button(view, 'Clear all registration data'));
+  expect(mockAlert).toHaveBeenCalledTimes(2);
+});
+
+it('clears registrations only after confirmation and shows the fresh state only after saving', async () => {
+  mockState.channelStore_verusid.registrationJobs.saved = {
+    id: 'saved', displayName: 'saved@', status: 'commitment_broadcast', createdAt: 1,
+  };
+  mockPublishRegistrationJobs.mockRejectedValueOnce(new Error('Unsupported registration storage'));
+  let finishClear;
+  mockClearRegistrationJobs.mockImplementationOnce(() => new Promise(resolve => {
+    finishClear = () => {
+      mockState.channelStore_verusid.registrationJobs = {};
+      resolve();
+    };
+  }));
+  const view = await mount(IdentityRegistrationStart);
+  await press(button(view, 'Clear all registration data'));
+  expect(mockClearRegistrationJobs).not.toHaveBeenCalled();
+  const confirm = mockAlert.mock.calls[0][2].find(action => action.style === 'destructive').onPress;
+  let saving;
+
+  await act(async () => { saving = confirm(); });
+  await act(async () => confirm());
+
+  expect(mockClearRegistrationJobs).toHaveBeenCalledTimes(1);
+  expect(mockClearRegistrationJobs).toHaveBeenCalledWith({sessionScope: {accountHash: 'account', sessionEpoch: 1}});
+  expect(footerAction(view, 'Create a VerusID').props.disabled).toBe(true);
+  expect(textContent(view.root)).not.toContain('A name that’s yours');
+
+  await act(async () => { finishClear(); await saving; });
+
+  expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(0);
+  expect(textContent(view.root)).toContain('A name that’s yours');
+  expect(textContent(view.root)).not.toContain('saved@');
+  expect(footerAction(view, 'Create a VerusID').props.disabled).toBeFalsy();
+  expect(button(view, 'Clear all registration data')).toBeUndefined();
+  expect(mockApi.prepareCommitment).not.toHaveBeenCalled();
+  expect(mockApi.deleteRegistration).not.toHaveBeenCalled();
+});
+
+it('keeps the recovery controls and saved rows when clearing registration data fails', async () => {
+  mockState.channelStore_verusid.registrationJobs.saved = {
+    id: 'saved', displayName: 'saved@', status: 'commitment_broadcast', createdAt: 1,
+  };
+  mockPublishRegistrationJobs.mockRejectedValueOnce(new Error('Unsupported registration storage'));
+  mockClearRegistrationJobs.mockRejectedValueOnce(new Error('Unable to save registration reset.'));
+  const view = await mount(IdentityRegistrationStart);
+  await press(button(view, 'Clear all registration data'));
+  await act(async () => mockAlert.mock.calls[0][2].find(action => action.style === 'destructive').onPress());
+
+  expect(textContent(view.root)).toContain('Unable to save registration reset.');
+  expect(textContent(view.root)).toContain('saved@');
+  expect(textContent(view.root)).not.toContain('A name that’s yours');
+  expect(footerAction(view, 'Create a VerusID').props.disabled).toBe(true);
+  expect(button(view, 'Retry loading registrations')).toBeDefined();
+  expect(button(view, 'Clear all registration data')).toBeDefined();
 });
 
 it.each([
@@ -436,7 +602,8 @@ it.each([
 it('offers to link a confirmed identity and links only after explicit confirmation', async () => {
   const registered = {...review, status: 'registered', linked: false, commitmentHeight: 10, registrationTxid: 'registration-txid'};
   setSavedReview(registered);
-  const view = await mount(IdentityRegistrationProgress);
+  const navigation = {navigate: jest.fn(), replace: jest.fn()};
+  const view = await mount(IdentityRegistrationProgress, {navigation});
   expect(mockApi.linkRegisteredIdentity).not.toHaveBeenCalled();
   expect(textContent(view.root)).toContain('Ready to link');
   expect(textContent(view.root)).toContain('Registration paid');
@@ -450,14 +617,14 @@ it('offers to link a confirmed identity and links only after explicit confirmati
   expect(mockApi.linkRegisteredIdentity).toHaveBeenCalledWith('job', expect.any(Object));
   expect(mockApi.approveRegistration).not.toHaveBeenCalled();
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
-  expect(button(view, 'Link to wallet')).toBeUndefined();
-  expect(textContent(view.root)).toContain('linked to this wallet');
+  expect(navigation.navigate).toHaveBeenCalledWith('IdentityRegistrationStart');
 });
 
 it('stops passive polling after registration is ready to link and accepts confirmation once', async () => {
   jest.useFakeTimers();
   setSavedReview({...review, status: 'registered', linked: false});
-  const view = await mount(IdentityRegistrationProgress);
+  const navigation = {navigate: jest.fn(), replace: jest.fn()};
+  const view = await mount(IdentityRegistrationProgress, {navigation});
   const initialChecks = mockApi.reconcileRegistration.mock.calls.length;
   await press(button(view, 'Link to wallet'));
   await press(button(view, 'Link to wallet'));
@@ -477,8 +644,7 @@ it('stops passive polling after registration is ready to link and accepts confir
   expect(mockApi.reconcileRegistration).toHaveBeenCalledTimes(initialChecks);
   await act(async () => mockAlert.mock.calls[1][2].find(action => action.text === 'Link identity').onPress());
   expect(mockApi.linkRegisteredIdentity).toHaveBeenCalledTimes(1);
-  expect(button(view, 'Link to wallet')).toBeUndefined();
-  expect(textContent(view.root)).toContain('linked to this wallet');
+  expect(navigation.navigate).toHaveBeenCalledWith('IdentityRegistrationStart');
 });
 
 it('keeps the full cost estimate visible when the wallet needs more funding', async () => {

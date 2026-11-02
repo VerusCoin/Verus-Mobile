@@ -120,13 +120,16 @@ describe('identity edit definitions', () => {
 });
 
 describe('identity transfer definitions', () => {
-  it('transfers to one transparent address with exactly one required signature', () => {
+  it('transfers to one transparent address with one required signature and clears private addresses', () => {
     const identity = makeIdentity();
+    identity.privateAddresses.push(SaplingPaymentAddress.fromAddressString(OTHER_PRIVATE));
     const result = buildTransferredIdentity(identity, {address: ` ${THIRD} `});
     expect(getIdentityEditFields(result)).toEqual({
       ...getIdentityEditFields(identity), primaryaddresses: [THIRD], minimumsignatures: 1,
-      recoveryauthority: ID, revocationauthority: ID,
+      recoveryauthority: ID, revocationauthority: ID, privateaddress: '',
     });
+    expect(result.privateAddresses).toEqual([]);
+    expect(identity.privateAddresses.map(address => address.toAddressString())).toEqual([PRIVATE, OTHER_PRIVATE]);
     expect(result.getIdentityAddress()).toBe(identity.getIdentityAddress());
     expect(result.flags.toNumber()).toBe(3);
     expect(result.unlockAfter.toNumber()).toBe(99);
@@ -159,10 +162,14 @@ describe('identity transfer definitions', () => {
     expect(recipient.toBuffer()).toEqual(recipientBefore);
   });
 
-  it('retains the published private address if the recipient identity has none', () => {
+  it('clears all private addresses if the recipient identity has none without changing the source', () => {
+    const identity = makeIdentity();
+    identity.privateAddresses.push(SaplingPaymentAddress.fromAddressString(OTHER_PRIVATE));
     const recipient = makeIdentity({primaryaddresses: [THIRD], minimumsignatures: 1, privateaddress: undefined});
-    const result = buildTransferredIdentity(makeIdentity(), {targetIdentity: recipient});
-    expect(result.privateAddresses[0].toAddressString()).toBe(PRIVATE);
+    const result = buildTransferredIdentity(identity, {targetIdentity: recipient});
+    expect(result.privateAddresses).toEqual([]);
+    expect(getIdentityEditFields(result).privateaddress).toBe('');
+    expect(identity.privateAddresses.map(address => address.toAddressString())).toEqual([PRIVATE, OTHER_PRIVATE]);
   });
 
   it('copies only the recipient’s published address and retains additional existing private addresses', () => {

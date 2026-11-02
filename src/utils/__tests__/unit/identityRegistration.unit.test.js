@@ -87,7 +87,7 @@ jest.mock('../../api/channels/verusid/requests/registerIdentity', () => ({
 jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', () => ({
   publishRegistrationState: (...args) => mockPublishState(...args),
   removeRegistrationJob: (...args) => mockRemoveJob(...args),
-  getRegistrationJobs: async () => JSON.parse(JSON.stringify(mockJobs)),
+  getRegistrationJobSummaries: async () => JSON.parse(JSON.stringify(mockJobs)),
   getRegistrationJob: async id => JSON.parse(JSON.stringify(mockJobs[id])),
   saveRegistrationJob: async job => {
     if (mockPersistenceError) throw new Error('storage unavailable');
@@ -472,6 +472,8 @@ test('separates commitment, registration and explicit linking with immediate wal
   expect(mockPublishState).not.toHaveBeenCalled();
   await reconcileRegistration(review.jobId, context);
   expect(mockLink).not.toHaveBeenCalled();
+  expect(mockJobs[review.jobId]).toBeDefined();
+  expect(mockRemoveJob).not.toHaveBeenCalled();
   review = await linkRegisteredIdentity(review.jobId, context);
   expect(review).toMatchObject({status: 'complete', linked: true});
   expect(mockLink).toHaveBeenCalledWith('i-alice', 'alice.VRSC@', 'VRSC', context);
@@ -480,7 +482,8 @@ test('separates commitment, registration and explicit linking with immediate wal
   expect(mockSetUserCoins).toHaveBeenCalledWith(mockState.coins.activeCoinList, 'profile-a');
   expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({type: 'set-user-coins', meta: context.sessionScope}));
   expect(mockRefreshLifecycles).toHaveBeenCalledWith(mockState.coins.activeCoinList);
-  await linkRegisteredIdentity(review.jobId, context);
+  expect(mockJobs[review.jobId]).toBeUndefined();
+  expect(mockRemoveJob).toHaveBeenCalledTimes(1);
   expect(mockLink).toHaveBeenCalledTimes(1);
   expect(mockPublishState).toHaveBeenCalledTimes(1);
   expect(mockSign).toHaveBeenCalledTimes(2);
@@ -505,6 +508,73 @@ test('missing broadcast is retried with identical saved bytes and no signing', a
   await retryBroadcast(review.jobId, context);
   expect(mockSign).toHaveBeenCalledTimes(1);
   expect(mockSend.mock.calls.map(call => call[0])).toEqual(['commit-signed', 'commit-signed']);
+});
+
+test.each(['first submission', 'retry'])('registration %s checks inputs one at a time before sending', async attempt => {
+  const context = createRegistrationContext();
+  let review = await build();
+  await approveCommitment(review.jobId, review.approvalToken, context);
+  confirm(mockCommitTxid);
+  review = await prepareRegistration({jobId: review.jobId}, context);
+  if (attempt === 'retry') {
+    await approveRegistration(review.jobId, review.approvalToken, context);
+    mockTransactions.delete(mockRevealTxid);
+  }
+
+  // Retries also check the commitment while reconciling the saved transaction.
+  const inputs = mockJobs[review.jobId].registration.prepared.prevouts;
+  const expectedChecks = inputs.length + (attempt === 'retry' ? 1 : 0);
+  let active = 0;
+  let peak = 0;
+  let completed = 0;
+  mockGetTxOut.mockClear();
+  mockGetTxOut.mockImplementation(async () => {
+    active++;
+    peak = Math.max(peak, active);
+    await new Promise(resolve => setImmediate(resolve));
+    active--;
+    completed++;
+    return {result: {bestblock: mockTipHash, confirmations: 1, scriptPubKey: {hex: 'commit-script'}}};
+  });
+
+  const send = mockSendRegistration.getMockImplementation();
+  mockSendRegistration.mockImplementation(async (...args) => {
+    expect(active).toBe(0);
+    expect(completed).toBe(expectedChecks);
+    return send(...args);
+  });
+
+  const result = attempt === 'retry'
+    ? await retryBroadcast(review.jobId, context)
+    : await approveRegistration(review.jobId, review.approvalToken, context);
+  expect(result.status).toBe('registration_broadcast');
+  expect(peak).toBe(1);
+  expect(mockGetTxOut).toHaveBeenCalledTimes(expectedChecks);
+  expect(mockGetTxOut.mock.calls.slice(-inputs.length)).toEqual(inputs.map(input => [input.txid, input.vout, true]));
+});
+
+test.each([
+  ['spent input', {result: null}, 'REVIEW_CHANGED'],
+  ['RPC rejection', {error: {code: 429, message: 'Server busy'}}, 429],
+])('a %s stops further input checks and retains the signed registration', async (_label, response, code) => {
+  const context = createRegistrationContext();
+  let review = await build();
+  await approveCommitment(review.jobId, review.approvalToken, context);
+  confirm(mockCommitTxid);
+  review = await prepareRegistration({jobId: review.jobId}, context);
+  const reservation = JSON.parse(JSON.stringify(mockJobs[review.jobId].reservation));
+  mockGetTxOut.mockClear();
+  mockSendRegistration.mockClear();
+  mockGetTxOut.mockResolvedValueOnce(response);
+
+  await expect(approveRegistration(review.jobId, review.approvalToken, context)).rejects.toMatchObject({code});
+  expect(mockGetTxOut).toHaveBeenCalledTimes(1);
+  expect(mockSendRegistration).not.toHaveBeenCalled();
+  expect(mockJobs[review.jobId]).toMatchObject({
+    status: 'registration_signed',
+    reservation,
+    registration: {signedHex: 'reveal-signed', txid: mockRevealTxid},
+  });
 });
 
 test.each(['commitment', 'registration'])('independent funding verification gates signing and sending %s', async stage => {
@@ -1179,11 +1249,9 @@ test('an unsigned registration after a paid commitment remains deletable but a s
   expect(mockRemoveJob).not.toHaveBeenCalled();
 });
 
-test('deleting a completed receipt verifies confirmation and leaves the linked identity intact', async () => {
+test('manual deletion of a confirmed unlinked receipt verifies confirmation without changing identities', async () => {
   const context = createRegistrationContext();
-  let review = await registeredReview(context);
-  review = await linkRegisteredIdentity(review.jobId, context);
-  mockLink.mockClear(); mockPublishState.mockClear(); mockClearLifecycle.mockClear();
+  const review = await registeredReview(context);
   expect(review.deletionKind).toBe('completed');
   await deleteRegistration(review.jobId, 'completed', context);
   expect(mockJobs).toEqual({});
@@ -1277,7 +1345,9 @@ test('wallet refresh failure leaves linking retryable without signing or paying 
   await expect(linkRegisteredIdentity(review.jobId, context)).rejects.toThrow('wallet refresh failed');
   expect(mockJobs[review.jobId]).toMatchObject({status: 'registered', linked: false});
   expect(mockRefreshLifecycles).not.toHaveBeenCalled();
+  expect(mockRemoveJob).not.toHaveBeenCalled();
   expect(await linkRegisteredIdentity(review.jobId, context)).toMatchObject({status: 'complete', linked: true});
+  expect(mockJobs[review.jobId]).toBeUndefined();
   expect(mockLink).toHaveBeenCalledTimes(2);
   expect(mockSign).toHaveBeenCalledTimes(2);
   expect(mockSend).toHaveBeenCalledTimes(2);
@@ -1296,25 +1366,27 @@ test.each(['link', 'publish'])('an account switch during explicit %s cannot refr
   expect(mockSetUserCoins).not.toHaveBeenCalled();
   expect(mockDispatch).not.toHaveBeenCalled();
   expect(mockJobs[review.jobId]).toMatchObject({status: 'registered', linked: false});
+  expect(mockRemoveJob).not.toHaveBeenCalled();
 });
 
-test('explicitly linked registrations retain their link through a reorg without automatic wallet refresh', async () => {
+test('failed completion cleanup leaves the linking action retryable without paying again', async () => {
   const context = createRegistrationContext();
   const review = await registeredReview(context);
+  mockRemoveJob.mockRejectedValueOnce(new Error('storage unavailable'));
+
+  await expect(linkRegisteredIdentity(review.jobId, context)).rejects.toThrow('storage unavailable');
+  expect(mockJobs[review.jobId]).toMatchObject({status: 'registered', linked: false});
+
+  expect(await reconcileRegistration(review.jobId, context)).toMatchObject({status: 'registered'});
+  expect(mockRemoveJob).toHaveBeenCalledTimes(1);
   expect(await linkRegisteredIdentity(review.jobId, context)).toMatchObject({status: 'complete', linked: true});
-  mockLink.mockClear();
-  mockPublishState.mockClear();
-  mockClearLifecycle.mockClear();
-  mockRefreshLifecycles.mockClear();
-  mockTransactions.delete(mockRevealTxid);
-  mockGetTxOut.mockResolvedValue({result: null});
-  expect(await reconcileRegistration(review.jobId, context)).toMatchObject({status: 'registration_signed', linked: true});
-  confirm(mockRevealTxid);
-  expect(await reconcileRegistration(review.jobId, context)).toMatchObject({status: 'complete', linked: true});
-  expect(mockLink).not.toHaveBeenCalled();
-  expect(mockPublishState).not.toHaveBeenCalled();
-  expect(mockClearLifecycle).not.toHaveBeenCalled();
-  expect(mockRefreshLifecycles).not.toHaveBeenCalled();
+  expect(mockJobs[review.jobId]).toBeUndefined();
+  expect(mockRemoveJob).toHaveBeenCalledTimes(2);
+  expect(mockLink).toHaveBeenCalledTimes(2);
+  expect(mockPublishState).toHaveBeenCalledTimes(2);
+  expect(mockRefreshLifecycles).toHaveBeenCalledTimes(2);
+  expect(mockSign).toHaveBeenCalledTimes(2);
+  expect(mockSend).toHaveBeenCalledTimes(2);
 });
 
 test.each([

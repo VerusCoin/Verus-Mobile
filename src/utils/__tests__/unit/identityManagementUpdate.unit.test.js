@@ -333,23 +333,28 @@ test.each([undefined, 'bad-private-address'])('does not offer an unavailable or 
   expect((await load()).walletPrivateAddress).toBe('');
 });
 
-test('copies the recipient private address into the reviewed and signed identity output', async () => {
+test.each([
+  ['satoshi@', OTHER_PRIVATE], ['satoshi@', undefined], [otherAddress, undefined],
+])('uses or clears the private address in the reviewed and signed output for recipient %s (%s)', async (recipient, recipientPrivateAddress) => {
   putIdentity('alice', {privateaddress: PRIVATE});
-  putIdentity('satoshi', {primaryaddresses: [otherAddress], privateaddress: OTHER_PRIVATE});
-  const plan = await prepare({mode: 'transfer', recipient: 'satoshi@'});
-  expect(plan.review).toMatchObject({usesRecipientPrivateAddress: true,
-    before: {privateaddress: PRIVATE}, after: {privateaddress: OTHER_PRIVATE}});
+  putIdentity('satoshi', {primaryaddresses: [otherAddress], privateaddress: recipientPrivateAddress});
+  const plan = await prepare({mode: 'transfer', recipient});
+  expect(plan.review).toMatchObject({usesRecipientPrivateAddress: !!recipientPrivateAddress,
+    before: {privateaddress: PRIVATE}, after: {privateaddress: recipientPrivateAddress || ''}});
   await sendIdentityUpdate(plan);
   const transaction = Transaction.fromHex(mockSend.mock.calls[0][0], networks.verus);
   const output = new IdentityScript();
   output.fromBuffer(transaction.outs[0].script);
-  expect(output.getIdentity().privateAddresses[0].toAddressString()).toBe(OTHER_PRIVATE);
+  expect((output.getIdentity().privateAddresses || []).map(address => address.toAddressString()))
+    .toEqual(recipientPrivateAddress ? [recipientPrivateAddress] : []);
 });
 
-test('requires a new review when the recipient changes its private address', async () => {
-  putIdentity('satoshi', {primaryaddresses: [otherAddress], privateaddress: PRIVATE});
+test.each([
+  [PRIVATE, OTHER_PRIVATE], [PRIVATE, undefined], [undefined, PRIVATE],
+])('requires a new review when the recipient changes its private address from %s to %s', async (before, after) => {
+  putIdentity('satoshi', {primaryaddresses: [otherAddress], privateaddress: before});
   const plan = await prepare({mode: 'transfer', recipient: 'satoshi@'});
-  putIdentity('satoshi', {primaryaddresses: [otherAddress], privateaddress: OTHER_PRIVATE});
+  putIdentity('satoshi', {primaryaddresses: [otherAddress], privateaddress: after});
   await expect(sendIdentityUpdate(plan)).rejects.toMatchObject({code: 'REVIEW_CHANGED'});
   expect(mockSign).not.toHaveBeenCalled();
   expect(mockSend).not.toHaveBeenCalled();

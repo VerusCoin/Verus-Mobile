@@ -11,12 +11,19 @@ import {
   registrationDeletionKind,
 } from '../../../../../utils/identityRegistration/deletion';
 import {
+  decodeRegistrationJob,
+  encodeRegistrationJob,
+  registrationStorageEqual,
+} from '../../../../../utils/identityRegistration/storage';
+import {
   captureSessionScope,
   scopeSessionAction,
   sessionScopeIsCurrent,
 } from '../../../updates/sessionRequests';
 
-const VERSION = 1;
+const JOB_VERSION = 1;
+const COLLECTION_VERSION = 2;
+let registrationResetRevision = 0;
 
 export const captureRegistrationContext = requestContext => ({
   ...(requestContext || {}),
@@ -41,25 +48,52 @@ export const assertRegistrationSession = requestContext => {
   return context;
 };
 
-const readCollection = data => {
+const readCollection = (data, context) => {
   const collection = data.registration_jobs;
-  if (collection == null) return {};
+  if (collection == null) return {storedJobs: {}, jobs: {}};
 
   if (
-    collection.version !== VERSION ||
+    collection.version !== COLLECTION_VERSION ||
     !collection.jobs ||
     typeof collection.jobs !== 'object' ||
     Array.isArray(collection.jobs)
   ) {
-    throw new Error('This identity registration record requires a newer wallet.');
+    throw new Error('Unsupported identity registration storage format.');
   }
-  return collection.jobs;
+
+  if (collection.accountHash !== context.sessionScope.accountHash) {
+    throw new Error('Identity registration belongs to another account.');
+  }
+
+  // Validate every compact record's account and ID without expanding its
+  // transaction inputs and outputs merely to publish a list or choose polling.
+  const jobs = Object.keys(collection.jobs).reduce((result, id) => {
+    if (collection.jobs[id]?.format !== COLLECTION_VERSION) {
+      throw new Error('Invalid compact identity registration record.');
+    }
+    result[id] = readStoredJob(collection.jobs[id], id, context, true);
+    return result;
+  }, {});
+
+  return {storedJobs: collection.jobs, jobs};
 };
 
 const assertJobAccount = (job, context) => {
   if (job.accountHash !== context.sessionScope.accountHash) {
     throw new Error('Identity registration belongs to another account.');
   }
+};
+
+const readStoredJob = (record, id, context, summaryOnly = false) => {
+  const job = decodeRegistrationJob(record, {
+    id,
+    accountHash: context.sessionScope.accountHash,
+    summaryOnly,
+  });
+  assertJobAccount(job, context);
+
+  if (job.id !== id) throw new Error('Identity registration record does not match its ID.');
+  return job;
 };
 
 // Use an allowlist: reservation preimages, signed reveal bytes, approval data,
@@ -103,44 +137,75 @@ const publishCollection = (jobs, context) => {
   return summaries;
 };
 
-export const getRegistrationJobs = async requestContext => {
-  const context = assertRegistrationSession(requestContext);
+const readRegistrationData = async (context, read) => {
+  const resetRevision = registrationResetRevision;
   const data = await requestServiceStoredData(VERUSID_SERVICE_ID);
   assertRegistrationSession(context);
 
-  const jobs = readCollection(data);
-  Object.values(jobs).forEach(job => assertJobAccount(job, context));
+  // A protected read may finish with a snapshot captured before a reset.
+  // Read and publish synchronously after this check so old notices cannot return.
+  if (resetRevision !== registrationResetRevision) {
+    const error = new Error('Identity registration data was cleared. Please reload.');
+    error.code = 'REGISTRATION_CHANGED';
+    throw error;
+  }
 
-  return jobs;
+  return read(data);
+};
+
+const loadCollection = (context, read) =>
+  readRegistrationData(context, data => read(readCollection(data, context)));
+
+export const getRegistrationJobs = async requestContext => {
+  const context = assertRegistrationSession(requestContext);
+
+  return loadCollection(context, ({storedJobs}) => Object.keys(storedJobs).reduce((result, id) => {
+    result[id] = readStoredJob(storedJobs[id], id, context);
+    return result;
+  }, {}));
+};
+
+// Name searches and list screens need only public metadata. Decode the selected
+// full job separately when a user opens it or an operation needs its receipt.
+export const getRegistrationJobSummaries = async requestContext => {
+  const context = assertRegistrationSession(requestContext);
+
+  return loadCollection(context, ({jobs}) => Object.keys(jobs).reduce((result, id) => {
+    result[id] = summarizeRegistrationJob(jobs[id]);
+    return result;
+  }, {}));
 };
 
 export const getRegistrationJob = async (jobId, requestContext) => {
-  const jobs = await getRegistrationJobs(requestContext);
-  if (!Object.prototype.hasOwnProperty.call(jobs, jobId)) {
-    throw new Error('Identity registration was not found in this wallet.');
-  }
-  return jobs[jobId];
+  const context = assertRegistrationSession(requestContext);
+
+  return loadCollection(context, ({storedJobs}) => {
+    if (!Object.prototype.hasOwnProperty.call(storedJobs, jobId)) {
+      throw new Error('Identity registration was not found in this wallet.');
+    }
+
+    return readStoredJob(storedJobs[jobId], jobId, context);
+  });
 };
 
 export const publishRegistrationJobs = async requestContext => {
   const context = assertRegistrationSession(requestContext);
-  const jobs = await getRegistrationJobs(context);
-  return publishCollection(jobs, context);
+  return loadCollection(context, ({jobs}) => publishCollection(jobs, context));
 };
 
 export const publishRegistrationState = async requestContext => {
   const context = assertRegistrationSession(requestContext);
-  const data = await requestServiceStoredData(VERUSID_SERVICE_ID);
-  assertRegistrationSession(context);
 
-  const summaries = publishCollection(readCollection(data), context);
+  return readRegistrationData(context, data => {
+    const summaries = publishCollection(readCollection(data, context).jobs, context);
 
-  store.dispatch(scopeSessionAction({
-    type: SET_WATCHED_VERUSIDS,
-    payload: {watchedVerusIds: data.linked_ids || {}},
-  }, context.sessionScope));
+    store.dispatch(scopeSessionAction({
+      type: SET_WATCHED_VERUSIDS,
+      payload: {watchedVerusIds: data.linked_ids || {}},
+    }, context.sessionScope));
 
-  return summaries;
+    return summaries;
+  });
 };
 
 const rejectSigningSecrets = value => {
@@ -184,7 +249,7 @@ const validateJob = (job, previous, context) => {
 
     if (
       previous.commitment?.txid &&
-      (JSON.stringify(previous.reservation) !== JSON.stringify(job.reservation) ||
+      (!registrationStorageEqual(previous.reservation, job.reservation) ||
         previous.saltHex !== job.saltHex)
     ) {
       const {authorizationID: previousAuthorization, ...previousReservation} = previous.reservation || {};
@@ -199,8 +264,8 @@ const validateJob = (job, previous, context) => {
         !job.commitment.txid &&
         !job.commitment.signedHex &&
         previous.saltHex === job.saltHex &&
-        JSON.stringify(previousReservation) === JSON.stringify(nextReservation) &&
-        JSON.stringify(job.previousCommitments) === JSON.stringify([
+        registrationStorageEqual(previousReservation, nextReservation) &&
+        registrationStorageEqual(job.previousCommitments, [
           ...(previous.previousCommitments || []),
           previous.commitment,
         ]);
@@ -221,9 +286,9 @@ const writeRegistrationJob = async (jobId, updater, requestContext, create) => {
   // Validate the revision inside the serialized write against the latest job.
   const data = await modifyServiceStoredDataForUser(current => {
     assertRegistrationSession(context);
-    const jobs = readCollection(current);
-    const previous = Object.prototype.hasOwnProperty.call(jobs, jobId)
-      ? jobs[jobId]
+    const {storedJobs} = readCollection(current, context);
+    const previous = Object.prototype.hasOwnProperty.call(storedJobs, jobId)
+      ? readStoredJob(storedJobs[jobId], jobId, context)
       : undefined;
 
     if (!previous && !create)
@@ -244,7 +309,7 @@ const writeRegistrationJob = async (jobId, updater, requestContext, create) => {
 
     savedJob = {
       ...proposed,
-      version: VERSION,
+      version: JOB_VERSION,
       revision: (previous?.revision || 0) + 1,
       createdAt: previous?.createdAt || proposed.createdAt || Date.now(),
       updatedAt: Date.now(),
@@ -253,14 +318,15 @@ const writeRegistrationJob = async (jobId, updater, requestContext, create) => {
     return {
       ...current,
       registration_jobs: {
-        version: VERSION,
-        jobs: {...jobs, [jobId]: savedJob},
+        version: COLLECTION_VERSION,
+        accountHash: context.sessionScope.accountHash,
+        jobs: {...storedJobs, [jobId]: encodeRegistrationJob(savedJob)},
       },
     };
   }, VERUSID_SERVICE_ID, context.sessionScope.accountHash, context);
 
   assertRegistrationSession(context);
-  publishCollection(readCollection(data), context);
+  publishCollection(readCollection(data, context).jobs, context);
 
   return savedJob;
 };
@@ -278,13 +344,37 @@ export const updateRegistrationJob = (jobId, update, requestContext) =>
     typeof update === 'function' ? update(previous) : {...previous, ...update},
   requestContext, false);
 
+// Recovery for an unreadable collection must not decode its receipts. Remove
+// only registration data through the same queue used by all service writers.
+export const clearRegistrationJobs = async requestContext => {
+  const context = assertRegistrationSession(requestContext);
+
+  await modifyServiceStoredDataForUser(current => {
+    assertRegistrationSession(context);
+    const remaining = {...current};
+    delete remaining.registration_jobs;
+    return remaining;
+  }, VERUSID_SERVICE_ID, context.sessionScope.accountHash, context);
+
+  assertRegistrationSession(context);
+  registrationResetRevision++;
+
+  const scopePrefix = `${context.sessionScope.accountHash}:${context.sessionScope.sessionEpoch}:`;
+  for (const key of reconciliationChecks.keys()) {
+    if (key.startsWith(scopePrefix)) reconciliationChecks.delete(key);
+  }
+
+  // Keep notices and list entries until their removal is safely persisted.
+  return publishCollection({}, context);
+};
+
 export const removeRegistrationJob = async (jobId, expectedRevision, requestContext) => {
   const context = assertRegistrationSession(requestContext);
   const data = await modifyServiceStoredDataForUser(current => {
     assertRegistrationSession(context);
-    const jobs = readCollection(current);
-    const job = Object.prototype.hasOwnProperty.call(jobs, jobId)
-      ? jobs[jobId]
+    const {storedJobs} = readCollection(current, context);
+    const job = Object.prototype.hasOwnProperty.call(storedJobs, jobId)
+      ? readStoredJob(storedJobs[jobId], jobId, context)
       : undefined;
 
     if (!job) throw new Error('Identity registration was not found in this wallet.');
@@ -302,14 +392,21 @@ export const removeRegistrationJob = async (jobId, expectedRevision, requestCont
       throw error;
     }
 
-    const remaining = {...jobs};
+    const remaining = {...storedJobs};
     delete remaining[jobId];
 
-    return {...current, registration_jobs: {version: VERSION, jobs: remaining}};
+    return {
+      ...current,
+      registration_jobs: {
+        version: COLLECTION_VERSION,
+        accountHash: context.sessionScope.accountHash,
+        jobs: remaining,
+      },
+    };
   }, VERUSID_SERVICE_ID, context.sessionScope.accountHash, context);
 
   assertRegistrationSession(context);
-  publishCollection(readCollection(data), context);
+  publishCollection(readCollection(data, context).jobs, context);
   reconciliationChecks.delete(`${context.sessionScope.accountHash}:${context.sessionScope.sessionEpoch}:${jobId}`);
 
   return {jobId};
@@ -329,8 +426,10 @@ export const refreshRegistrationJobs = async requestContext => {
   reconciliationInFlight.add(scopeKey);
 
   try {
-    const jobs = await getRegistrationJobs(context);
-    publishCollection(jobs, context);
+    const jobs = await loadCollection(context, collection => {
+      publishCollection(collection.jobs, context);
+      return collection.jobs;
+    });
 
     const now = Date.now();
     const candidates = Object.values(jobs).filter(job => {

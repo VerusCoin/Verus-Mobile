@@ -32,6 +32,27 @@ const assertSessionCurrent = (sessionScope, requestContext) => {
   }
 };
 
+const updateRegistrationSummaries = async (update, requestContext) => {
+  try {
+    await update(requestContext);
+  } catch (error) {
+    // Registration receipts are separate from linked and pending identities.
+    // An unreadable receipt must not prevent wallet access or rewrite its data.
+    assertSessionCurrent(requestContext.sessionScope, requestContext);
+    if (
+      error?.code === 'SESSION_CHANGED' ||
+      error?.name === 'AbortError' ||
+      error?.code === 'ABORT_ERR' ||
+      error?.code === 'ERR_CANCELED'
+    ) {
+      throw error;
+    }
+
+    // Errors can contain protected receipt data; log only a generic message.
+    console.warn('Unable to refresh saved identity registration summaries.');
+  }
+};
+
 export const initVerusIdWallet = async (coinObj, requestedContext) => {
   const sessionScope = getSessionScope(requestedContext);
   const requestContext = {...(requestedContext || {}), sessionScope};
@@ -53,7 +74,7 @@ export const initVerusIdWallet = async (coinObj, requestedContext) => {
     },
   }, sessionScope));
 
-  await publishRegistrationJobs(requestContext);
+  await updateRegistrationSummaries(publishRegistrationJobs, requestContext);
   assertSessionCurrent(sessionScope, requestContext);
 
   return
@@ -75,7 +96,7 @@ export const updateVerusIdWallet = async requestContext => {
     },
   }, sessionScope));
 
-  await refreshRegistrationJobs(requestContext);
+  await updateRegistrationSummaries(refreshRegistrationJobs, requestContext);
   assertSessionCurrent(sessionScope, requestContext);
 
   return;

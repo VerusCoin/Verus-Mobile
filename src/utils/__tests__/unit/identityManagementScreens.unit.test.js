@@ -48,7 +48,7 @@ const model = {
 };
 const makePlan = (changes = {}) => ({review: {
   ...model, mode: 'transfer', before: fields,
-  after: {...fields, primaryaddresses: ['Rrecipient'], recoveryauthority: 'iAlice', revocationauthority: 'iAlice'},
+  after: {...fields, primaryaddresses: ['Rrecipient'], privateaddress: '', recoveryauthority: 'iAlice', revocationauthority: 'iAlice'},
   fee: '0.0001', feeCurrency: 'VRSCTEST', nativeTotalCost: '0.0001',
   returnFunds: true, returnAddress: 'Rwallet', changeAddress: 'iTreasury', changeName: 'treasury@',
   returnedFunds: [{currencyId: 'test-system', label: 'VRSCTEST', amount: '10'}],
@@ -244,7 +244,7 @@ test.each([
   expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();
 });
 
-test('review displays the exact fee, self authorities and retained private-payment consequences', async () => {
+test('review displays the exact fee, self authorities and cleared private receiving address', async () => {
   const view = await mount(IdentityUpdateReview);
   const text = textContent(view.root);
   expect(text).toContain('0.0001 VRSCTEST');
@@ -253,8 +253,9 @@ test('review displays the exact fee, self authorities and retained private-payme
   expect(text).toContain('This identity (alice.VRSCTEST@)');
   expect(text).toContain('Previous external authorities will no longer be able to revoke or recover it');
   expect(text).not.toContain('An external authority can still revoke or recover');
-  expect(text).toContain('Private payments still go to this address’s existing owner');
-  expect(text).toContain('zsOriginal');
+  expect(text).toContain('The private receiving address will be cleared. Existing private funds are not moved.');
+  expect(text).not.toContain('Private receiving address retained');
+  expect(text).not.toContain('zsOriginal');
   expect(text).not.toContain('iRecovery');
   expect(text).not.toContain('iRevocation');
   await press(button(view, 'Previous authorities'));

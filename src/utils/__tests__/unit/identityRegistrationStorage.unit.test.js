@@ -39,13 +39,21 @@ jest.mock('../../api/channels/vrpc/requests/verifyIdProvisioningResponse', () =>
 jest.mock('../../CoinData/CoinsList', () => ({coinsList: {}}));
 jest.mock('../../keys', () => ({deriveKeyPair: jest.fn()}));
 jest.mock('../../identityRegistration/registration', () => ({reconcileRegistration: mockReconcile}));
+jest.mock('../../identityRegistration/storage', () => {
+  const codec = jest.requireActual('../../identityRegistration/storage');
+  return {...codec, decodeRegistrationJob: jest.fn(codec.decodeRegistrationJob)};
+});
 
 const {
   saveRegistrationJob,
+  getRegistrationJobs,
   getRegistrationJob,
+  getRegistrationJobSummaries,
   updateRegistrationJob,
+  clearRegistrationJobs,
   removeRegistrationJob,
   refreshRegistrationJobs,
+  publishRegistrationJobs,
   publishRegistrationState,
 } = require('../../../actions/actions/services/dispatchers/verusid/registration');
 const {
@@ -57,36 +65,40 @@ const {
 } = require('../../../actions/actions/services/dispatchers/verusid/verusid');
 const {VERUSID_SERVICE_ID} = require('../../constants/services');
 const {SET_IDENTITY_REGISTRATION_JOBS, SET_WATCHED_VERUSIDS, SIGN_OUT_COMPLETE, INIT_VERUSID_CHANNEL_START} = require('../../constants/storeType');
-const {initVerusIdWallet} = jest.requireActual('../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager');
+const {initVerusIdWallet, updateVerusIdWallet} = jest.requireActual('../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager');
 const {channelStore_verusid} = require('../../../reducers/channelStores/verusid');
 const {requestServiceStoredData} = require('../../auth/authBox');
 const {loadServiceStoredDataForUser, storeServiceStoredDataForUser} = require('../../asyncStore/serviceStoredDataStorage');
 const {registrationNotifications} = require('../../identityRegistration/notifications');
+const {decodeRegistrationJob, encodeRegistrationJob} = require('../../identityRegistration/storage');
+const {makeRegistrationJob, makePreparedRegistration} = require('../../../../debug/fixtures/identityRegistration');
 
 const context = () => ({sessionScope: {
   sessionScoped: true,
   accountHash: mockState.authentication.activeAccount.accountHash,
   sessionEpoch: mockState.authentication.sessionEpoch,
 }});
-const job = (id = 'job-a') => ({
-  id,
-  accountHash: 'account-a',
-  systemId: 'system-a',
-  chainTicker: 'VRSC',
-  name: 'alice',
-  displayName: 'alice@',
-  identityAddress: 'iAlice',
-  signingAddress: 'R-wallet',
-  linked: false,
-  status: 'commitment_broadcast',
-  reservation: {salt: 'private-salt', bytes: 'private-reservation'},
-  commitment: {signedHex: 'private-commitment', txid: 'public-commitment-txid'},
-  registration: {signedHex: 'private-reveal'},
+const job = (id = 'job-a') => makeRegistrationJob(id, {
   lastError: {rpcData: 'must-never-escape'},
 });
+const collection = (jobs = {'job-a': job()}) => ({
+  version: 2,
+  accountHash: 'account-a',
+  jobs: Object.fromEntries(Object.entries(jobs).map(([id, value]) => [id, encodeRegistrationJob(value)])),
+});
 const data = () => JSON.parse(mockStoredData[VERUSID_SERVICE_ID]);
+const storedJob = id => decodeRegistrationJob(data().registration_jobs.jobs[id], {
+  id,
+  accountHash: 'account-a',
+});
 const lastSummary = () => mockDispatch.mock.calls.map(([action]) => action)
   .filter(action => action.type === SET_IDENTITY_REGISTRATION_JOBS).pop();
+const identityUpdates = [
+  ['initialization', requestContext => initVerusIdWallet({
+    id: 'VRSC', system_id: job().systemId, vrpc_endpoints: ['https://rpc.example'],
+  }, requestContext), INIT_VERUSID_CHANNEL_START],
+  ['refresh', updateVerusIdWallet, SET_WATCHED_VERUSIDS],
+];
 
 describe('durable identity registration storage', () => {
   let epoch = 0;
@@ -110,7 +122,7 @@ describe('durable identity registration storage', () => {
     const existing = {
       linked_ids: {[chain]: {iExisting: 'Existing.Parent@'}},
       pending_ids: {[chain]: {iPending: {createdAt: 1}}},
-      registration_jobs: {version: 1, jobs: {'job-a': job()}},
+      registration_jobs: collection(),
     };
     mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify(existing);
 
@@ -135,11 +147,120 @@ describe('durable identity registration storage', () => {
       deleteAllProvisionedIds(context()),
     ]);
 
-    expect(data().registration_jobs.version).toBe(1);
+    expect(data().registration_jobs.version).toBe(2);
+    expect(data().registration_jobs.accountHash).toBe('account-a');
     expect(Object.keys(data().registration_jobs.jobs)).toEqual(['job-a', 'job-b']);
-    expect(data().registration_jobs.jobs['job-a'].reservation.salt).toBe('private-salt');
+    const compact = data().registration_jobs.jobs['job-a'];
+    expect(compact.pools.plans.every(plan => !Object.prototype.hasOwnProperty.call(plan, 'literal'))).toBe(true);
+    expect(JSON.stringify(compact)).not.toContain(job().commitment.signedHex);
+    expect(storedJob('job-a').reservation).toEqual(job().reservation);
     expect(data().linked_ids.VRSC).toEqual({});
     expect(data().pending_ids).toEqual({});
+  });
+
+  it('reads compact jobs without rewriting them and changes only the job explicitly updated', async () => {
+    const original = {...job(), revision: 3, createdAt: 1, updatedAt: 2};
+    const untouched = {...job('job-b'), version: 1, revision: 5, createdAt: 3, updatedAt: 4};
+    const initial = {
+      linked_ids: {VRSC: {iLinked: 'linked@'}},
+      pending_ids: {VRSC: {iPending: {createdAt: 1}}},
+      registration_jobs: collection({[original.id]: original, [untouched.id]: untouched}),
+    };
+    mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify(initial);
+
+    expect(await getRegistrationJob(original.id, context())).toEqual(original);
+    await publishRegistrationJobs(context());
+    expect(data()).toEqual(initial);
+    expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+
+    const saved = await updateRegistrationJob(original.id, {status: 'commitment_confirmed'}, context());
+
+    expect(data().registration_jobs).toMatchObject({version: 2, accountHash: 'account-a'});
+    expect(data().registration_jobs.jobs[original.id].format).toBe(2);
+    expect(data().registration_jobs.jobs[untouched.id]).toEqual(initial.registration_jobs.jobs[untouched.id]);
+    expect(saved).toMatchObject({version: 1, revision: 4, createdAt: 1, status: 'commitment_confirmed'});
+    expect(await getRegistrationJob(original.id, context())).toEqual(saved);
+    expect(await getRegistrationJobs(context())).toEqual({[original.id]: saved, [untouched.id]: untouched});
+    expect(data().linked_ids).toEqual(initial.linked_ids);
+    expect(data().pending_ids).toEqual(initial.pending_ids);
+  });
+
+  it('lists, publishes, and chooses reconciliation candidates without expanding full jobs', async () => {
+    await saveRegistrationJob(job(), context());
+    await saveRegistrationJob(job('job-b'), context());
+    decodeRegistrationJob.mockClear();
+    storeServiceStoredDataForUser.mockClear();
+
+    const summaries = await getRegistrationJobSummaries(context());
+    await publishRegistrationJobs(context());
+    await publishRegistrationState(context());
+    await refreshRegistrationJobs(context());
+
+    expect(Object.keys(summaries)).toEqual(['job-a', 'job-b']);
+    expect(summaries['job-a'].commitmentTxid).toBe(job().commitment.txid);
+    expect(JSON.stringify(summaries)).not.toMatch(/private|rpcData|must-never-escape/);
+    expect(decodeRegistrationJob).toHaveBeenCalled();
+    expect(decodeRegistrationJob.mock.calls.every(([, options]) => options.summaryOnly)).toBe(true);
+    expect(mockReconcile).toHaveBeenCalledTimes(2);
+    expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+  });
+
+  it('expands only the selected job during a protected read or update', async () => {
+    const saved = await saveRegistrationJob(job(), context());
+    await saveRegistrationJob(job('job-b'), context());
+    const untouched = data().registration_jobs.jobs['job-b'];
+    decodeRegistrationJob.mockClear();
+
+    expect(await getRegistrationJob(saved.id, context())).toEqual(saved);
+    expect(decodeRegistrationJob.mock.calls.filter(([, options]) => !options.summaryOnly)
+      .map(([, options]) => options.id)).toEqual([saved.id]);
+    decodeRegistrationJob.mockClear();
+
+    await updateRegistrationJob(saved.id, {status: 'commitment_confirmed'}, context());
+
+    expect(decodeRegistrationJob.mock.calls.filter(([, options]) => !options.summaryOnly)
+      .map(([, options]) => options.id)).toEqual([saved.id]);
+    expect(data().registration_jobs.jobs['job-b']).toEqual(untouched);
+  });
+
+  it.each([1, 2])('rejects unencoded jobs inside version %i collections on both read and write', async version => {
+    const initial = {
+      linked_ids: {},
+      pending_ids: {},
+      registration_jobs: {
+        version,
+        ...(version === 2 ? {accountHash: 'account-a'} : {}),
+        jobs: {'job-a': job(), 'job-b': {...job('job-b'), accountHash: 'account-b'}},
+      },
+    };
+    mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify(initial);
+
+    await expect(getRegistrationJob('job-a', context())).rejects.toThrow(/registration/i);
+    await expect(saveRegistrationJob(job('job-c'), context())).rejects.toThrow(/registration/i);
+
+    expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+    expect(mockDispatch).not.toHaveBeenCalled();
+    expect(data()).toEqual(initial);
+  });
+
+  it('rejects a collection bound to another account and mismatched compact job bindings', async () => {
+    mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify({
+      registration_jobs: {...collection(), accountHash: 'account-b'},
+    });
+    await expect(getRegistrationJob('job-a', context())).rejects.toThrow(/account/i);
+
+    const wrongId = collection();
+    wrongId.jobs['job-a'].values.id = 'job-b';
+    mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify({registration_jobs: wrongId});
+    await expect(getRegistrationJob('job-a', context())).rejects.toThrow(/ID|match/i);
+
+    const wrongAccount = collection();
+    wrongAccount.jobs['job-a'].values.accountHash = 'account-b';
+    mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify({registration_jobs: wrongAccount});
+    await expect(getRegistrationJob('job-a', context())).rejects.toThrow(/account/i);
+    await expect(saveRegistrationJob(job('job-c'), context())).rejects.toThrow(/account/i);
+    expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+    expect(mockDispatch).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -157,7 +278,7 @@ describe('durable identity registration storage', () => {
     const stored = {
       linked_ids: {VRSC: {iLinked: 'linked@'}},
       pending_ids: pendingIds,
-      registration_jobs: {version: 1, jobs: {'job-a': job()}},
+      registration_jobs: collection(),
     };
     mockStoredData = {[VERUSID_SERVICE_ID]: JSON.stringify(stored)};
 
@@ -174,12 +295,114 @@ describe('durable identity registration storage', () => {
     expect(lastSummary().payload.registrationJobs['job-a'].status).toBe('commitment_broadcast');
   });
 
+  describe.each(identityUpdates)('optional registration summaries during identity %s', (_name, update, actionType) => {
+    it.each(['unsupported collection', 'invalid compact receipt'])('retains all saved data and keeps identities available with an %s', async failure => {
+      const saved = {
+        linked_ids: {VRSC: {iLinked: 'linked@'}},
+        pending_ids: {VRSC: {iPending: {createdAt: 1, status: 'pending'}}},
+        registration_jobs: failure === 'unsupported collection'
+          ? {version: 1, jobs: {'job-a': {privateReceipt: 'protected registration data'}}}
+          : collection(),
+      };
+      if (failure === 'invalid compact receipt') {
+        const record = saved.registration_jobs.jobs['job-a'];
+        record.pools.transactions[record.commitment.signedHex] = 'private-receipt-data';
+      }
+      mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify(saved);
+      const protectedData = mockStoredData[VERUSID_SERVICE_ID];
+      const warning = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        await expect(update(context())).resolves.toBeUndefined();
+
+        expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({
+          type: actionType,
+          payload: expect.objectContaining({watchedVerusIds: saved.linked_ids}),
+        }));
+        if (actionType === INIT_VERUSID_CHANNEL_START) {
+          expect(mockDispatch.mock.calls.find(([action]) => action.type === actionType)[0].payload.pendingIds)
+            .toEqual(saved.pending_ids);
+        }
+        expect(lastSummary()).toBeUndefined();
+        expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+        expect(mockStoredData[VERUSID_SERVICE_ID]).toBe(protectedData);
+        expect(warning.mock.calls).toEqual([['Unable to refresh saved identity registration summaries.']]);
+        await expect(getRegistrationJob('job-a', context())).rejects.toThrow();
+      } finally {
+        warning.mockRestore();
+      }
+    });
+
+    it('publishes supported compact registrations normally', async () => {
+      mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify({
+        linked_ids: {VRSC: {iLinked: 'linked@'}}, pending_ids: {}, registration_jobs: collection(),
+      });
+      const warning = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        await update(context());
+
+        expect(lastSummary().payload.registrationJobs['job-a'].commitmentTxid).toBe(job().commitment.txid);
+        expect(warning).not.toHaveBeenCalled();
+        expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+      } finally {
+        warning.mockRestore();
+      }
+    });
+
+    it('still rejects the mandatory service-data read before initializing identities', async () => {
+      const readError = new Error('Unable to decrypt service data');
+      requestServiceStoredData.mockRejectedValueOnce(readError);
+
+      await expect(update(context())).rejects.toBe(readError);
+
+      expect(mockDispatch).not.toHaveBeenCalled();
+      expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+    });
+
+    it.each(['account change', 'abort signal'])('still rejects an %s during optional summary loading', async reason => {
+      const signal = {aborted: false};
+      const requestContext = {...context(), signal};
+      let finishRead;
+      requestServiceStoredData
+        .mockResolvedValueOnce(data())
+        .mockReturnValueOnce(new Promise(resolve => {finishRead = resolve;}));
+      const pending = update(requestContext);
+      await new Promise(resolve => setImmediate(resolve));
+      mockDispatch.mockClear();
+
+      if (reason === 'account change') {
+        mockState.authentication.activeAccount = {accountHash: 'account-b'};
+        mockState.authentication.sessionEpoch++;
+      } else {
+        signal.aborted = true;
+      }
+      finishRead({registration_jobs: collection()});
+
+      await expect(pending).rejects.toMatchObject({code: 'SESSION_CHANGED'});
+      expect(mockDispatch).not.toHaveBeenCalled();
+      expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+    });
+
+    it('propagates an AbortError raised by optional summary loading', async () => {
+      const aborted = Object.assign(new Error('Aborted'), {name: 'AbortError'});
+      requestServiceStoredData.mockResolvedValueOnce(data()).mockRejectedValueOnce(aborted);
+
+      await expect(update(context())).rejects.toBe(aborted);
+
+      expect(lastSummary()).toBeUndefined();
+      expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+    });
+  });
+
   it('publishes only public fields and clears them on sign-out', async () => {
     await saveRegistrationJob(job(), context());
     const action = lastSummary();
     expect(action.meta.accountHash).toBe('account-a');
     expect(JSON.stringify(action)).not.toMatch(/private|rpcData|must-never-escape/);
-    expect(action.payload.registrationJobs['job-a'].commitmentTxid).toBe('public-commitment-txid');
+    expect(JSON.stringify(action)).not.toContain(job().reservation.reservationHex);
+    expect(JSON.stringify(action)).not.toContain(job().commitment.signedHex);
+    expect(action.payload.registrationJobs['job-a'].commitmentTxid).toBe(job().commitment.txid);
     const state = channelStore_verusid(undefined, action);
     expect(channelStore_verusid(state, {type: SIGN_OUT_COMPLETE}).registrationJobs).toEqual({});
   });
@@ -194,15 +417,27 @@ describe('durable identity registration storage', () => {
     expect((await getRegistrationJob(saved.id, context())).status).toBe('commitment_confirmed');
   });
 
+  it('accepts an unchanged reservation reconstructed in a different object-key order', async () => {
+    const reservation = {...job().reservation, authorizationID: 'issuer'};
+    await saveRegistrationJob({...job(), reservation}, context());
+
+    const saved = await updateRegistrationJob('job-a', {
+      reservation: Object.fromEntries(Object.entries(reservation).reverse()),
+    }, context());
+
+    expect(saved.reservation).toEqual(reservation);
+    expect((await getRegistrationJob(saved.id, context())).reservation).toEqual(reservation);
+  });
+
   it('replaces expired commitment authorization while retaining the complete signed receipt and reservation secret', async () => {
-    const expired = {...job(), status: 'commitment_expired', saltHex: 'private-secret',
+    const expired = {...job(), status: 'commitment_expired',
       reservation: {...job().reservation, authorizationID: 'old-issuer'},
-      previousCommitments: [{txid: 'older-txid', signedHex: 'private-older-transaction'}],
+      previousCommitments: [{...job().commitment, height: 3}],
     };
     await saveRegistrationJob(expired, context());
     const saved = await updateRegistrationJob(expired.id, {
       status: 'commitment_prepared',
-      commitment: {prepared: {txHex: 'private-new-unsigned'}, vout: 0},
+      commitment: {prepared: makePreparedRegistration(), vout: 0},
       reservation: {...expired.reservation, authorizationID: 'new-issuer'},
       previousCommitments: [...expired.previousCommitments, expired.commitment],
     }, context());
@@ -226,14 +461,14 @@ describe('durable identity registration storage', () => {
     ['a different reservation salt', {reservation: {salt: 'different-salt'}}],
     ['a different saved salt', {saltHex: 'different-secret'}],
   ])('rejects changed authorization with %s', async (_description, change) => {
-    const expired = {...job(), status: change.previousStatus || 'commitment_expired', saltHex: 'private-secret',
+    const expired = {...job(), status: change.previousStatus || 'commitment_expired',
       reservation: {...job().reservation, name: 'alice', authorizationID: 'old-issuer'},
     };
     await saveRegistrationJob(expired, context());
     const replacement = {
       status: 'commitment_prepared',
       commitment: change.keepCommitment ? expired.commitment : {
-        prepared: {txHex: 'private-new-unsigned'}, vout: 0,
+        prepared: makePreparedRegistration(), vout: 0,
         ...(change.txid ? {txid: change.txid} : {}),
         ...(change.signedHex ? {signedHex: change.signedHex} : {}),
       },
@@ -253,9 +488,206 @@ describe('durable identity registration storage', () => {
     await expect(updateRegistrationJob('job-a', {systemId: 'other-system'}, context())).rejects.toThrow('cannot be changed');
   });
 
+  it.each([
+    ['unsupported', {version: 1, jobs: {'old-job': {privateReceipt: 'retain-until-confirmed'}}}],
+    ['corrupt', {version: 2, accountHash: 'account-a', jobs: {'broken-job': {format: 2}}}],
+  ])('explicitly clears an %s registration collection without decoding or clearing other service data', async (_label, registrationJobs) => {
+    const remaining = {
+      linked_ids: {VRSC: {iKeep: 'keep@'}},
+      pending_ids: {VRSCTEST: {iPending: {createdAt: 1}}},
+      other_settings: {enabled: true},
+    };
+    mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify({...remaining, registration_jobs: registrationJobs});
+    mockStoredData.otherService = 'unrelated encrypted service data';
+
+    await expect(clearRegistrationJobs(context())).resolves.toEqual({});
+
+    expect(decodeRegistrationJob).not.toHaveBeenCalled();
+    expect(data()).toEqual(remaining);
+    expect(mockStoredData.otherService).toBe('unrelated encrypted service data');
+    expect(storeServiceStoredDataForUser).toHaveBeenCalledWith(mockStoredData, 'account-a');
+    expect(lastSummary()).toEqual({
+      type: SET_IDENTITY_REGISTRATION_JOBS,
+      payload: {registrationJobs: {}},
+      meta: context().sessionScope,
+    });
+    expect(mockDispatch.mock.calls.some(([action]) => action.type === SET_WATCHED_VERUSIDS)).toBe(false);
+    expect(mockReconcile).not.toHaveBeenCalled();
+  });
+
+  it('can save and resume a new compact registration after clearing an unsupported collection', async () => {
+    mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify({
+      linked_ids: {}, pending_ids: {}, registration_jobs: {version: 1, jobs: {}},
+    });
+
+    await clearRegistrationJobs(context());
+    const saved = await saveRegistrationJob(job(), context());
+
+    expect(data().registration_jobs).toMatchObject({
+      version: 2,
+      accountHash: 'account-a',
+      jobs: {'job-a': {format: 2}},
+    });
+    await expect(getRegistrationJob(saved.id, context())).resolves.toEqual(saved);
+    expect(lastSummary().payload.registrationJobs[saved.id]).toMatchObject({id: saved.id});
+  });
+
+  it('serializes registration reset with identity link and provider-request writes', async () => {
+    mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify({
+      linked_ids: {}, pending_ids: {}, registration_jobs: {version: 1, jobs: {}},
+    });
+
+    await Promise.all([
+      linkVerusId('iKeep', 'keep@', 'VRSC', context()),
+      clearRegistrationJobs(context()),
+      setRequestedVerusId('iPending', {createdAt: 1}, 'VRSC', context()),
+    ]);
+
+    expect(data()).toEqual({
+      linked_ids: {VRSC: {iKeep: 'keep@'}},
+      pending_ids: {VRSC: {iPending: {createdAt: 1}}},
+    });
+  });
+
+  it('publishes an empty registration list only after the reset is durable', async () => {
+    await saveRegistrationJob(job(), context());
+    const original = mockStoredData[VERUSID_SERVICE_ID];
+    let finishWrite;
+    storeServiceStoredDataForUser.mockImplementationOnce(next => new Promise(resolve => {
+      finishWrite = () => {
+        mockStoredData = {...next};
+        resolve(next);
+      };
+    }));
+    mockDispatch.mockClear();
+
+    const clearing = clearRegistrationJobs(context());
+    await new Promise(resolve => setImmediate(resolve));
+    expect(mockStoredData[VERUSID_SERVICE_ID]).toBe(original);
+    expect(mockDispatch).not.toHaveBeenCalled();
+
+    finishWrite();
+    await clearing;
+    expect(data().registration_jobs).toBeUndefined();
+    expect(lastSummary().payload.registrationJobs).toEqual({});
+  });
+
+  it('preserves registration data and summaries when reset persistence fails', async () => {
+    await saveRegistrationJob(job(), context());
+    const original = mockStoredData[VERUSID_SERVICE_ID];
+    storeServiceStoredDataForUser.mockRejectedValueOnce(new Error('Storage unavailable'));
+    mockDispatch.mockClear();
+
+    await expect(clearRegistrationJobs(context())).rejects.toThrow('Storage unavailable');
+
+    expect(mockStoredData[VERUSID_SERVICE_ID]).toBe(original);
+    expect(mockDispatch).not.toHaveBeenCalled();
+  });
+
+  it.each(['account switch', 'abort'])('abandons reset after a protected read interrupted by %s', async interruption => {
+    await saveRegistrationJob(job(), context());
+    const original = mockStoredData[VERUSID_SERVICE_ID];
+    let finishRead;
+    loadServiceStoredDataForUser.mockReturnValueOnce(new Promise(resolve => {finishRead = resolve;}));
+    storeServiceStoredDataForUser.mockClear();
+    mockDispatch.mockClear();
+    const requestContext = {...context(), signal: {aborted: false}};
+
+    const clearing = clearRegistrationJobs(requestContext);
+    await new Promise(resolve => setImmediate(resolve));
+    if (interruption === 'account switch') {
+      mockState.authentication.activeAccount = {accountHash: 'account-b'};
+      mockState.authentication.sessionEpoch++;
+    } else {
+      requestContext.signal.aborted = true;
+    }
+    finishRead({...mockStoredData});
+
+    await expect(clearing).rejects.toMatchObject({code: 'SESSION_CHANGED'});
+    expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
+    expect(mockDispatch).not.toHaveBeenCalled();
+    expect(mockStoredData[VERUSID_SERVICE_ID]).toBe(original);
+  });
+
+  it('never publishes reset results into an account switched during persistence', async () => {
+    await saveRegistrationJob(job(), context());
+    let finishWrite;
+    storeServiceStoredDataForUser.mockImplementationOnce(next => new Promise(resolve => {
+      finishWrite = () => {
+        mockStoredData = {...next};
+        resolve(next);
+      };
+    }));
+    mockDispatch.mockClear();
+
+    const clearing = clearRegistrationJobs(context());
+    await new Promise(resolve => setImmediate(resolve));
+    mockState.authentication.activeAccount = {accountHash: 'account-b'};
+    mockState.authentication.sessionEpoch++;
+    finishWrite();
+
+    await expect(clearing).rejects.toMatchObject({code: 'SESSION_CHANGED'});
+    expect(storeServiceStoredDataForUser).toHaveBeenLastCalledWith(mockStoredData, 'account-a');
+    expect(mockDispatch).not.toHaveBeenCalled();
+  });
+
+  it('does not recreate cleared jobs when an earlier background lookup completes', async () => {
+    await saveRegistrationJob(job(), context());
+    let finishLookup;
+    mockReconcile.mockImplementationOnce(async (jobId, requestContext) => {
+      await new Promise(resolve => {finishLookup = resolve;});
+      await updateRegistrationJob(jobId, {status: 'commitment_confirmed'}, requestContext);
+    });
+    const refreshing = refreshRegistrationJobs(context());
+    await new Promise(resolve => setImmediate(resolve));
+
+    await clearRegistrationJobs(context());
+    finishLookup();
+    await refreshing;
+
+    expect(data().registration_jobs).toBeUndefined();
+    expect(lastSummary().payload.registrationJobs).toEqual({});
+    expect(registrationNotifications(lastSummary().payload.registrationJobs, 'account-a')).toEqual([]);
+  });
+
+  it.each([
+    ['all jobs', getRegistrationJobs],
+    ['selected job', requestContext => getRegistrationJob('job-a', requestContext)],
+    ['summaries', getRegistrationJobSummaries],
+    ['publication', publishRegistrationJobs],
+    ['combined publication', publishRegistrationState],
+    ['refresh', refreshRegistrationJobs],
+  ])('rejects an earlier %s read completed after registration reset', async (_label, read) => {
+    await saveRegistrationJob(job(), context());
+    const previous = data();
+    let finishRead;
+    requestServiceStoredData.mockReturnValueOnce(new Promise(resolve => {finishRead = resolve;}));
+
+    const pending = read(context());
+    await clearRegistrationJobs(context());
+    mockDispatch.mockClear();
+    decodeRegistrationJob.mockClear();
+    finishRead(previous);
+
+    await expect(pending).rejects.toMatchObject({code: 'REGISTRATION_CHANGED'});
+    expect(mockDispatch).not.toHaveBeenCalled();
+    expect(decodeRegistrationJob).not.toHaveBeenCalled();
+    expect(data().registration_jobs).toBeUndefined();
+  });
+
+  it('clears reconciliation backoff with the registration collection', async () => {
+    await saveRegistrationJob(job(), context());
+    await refreshRegistrationJobs(context());
+    await clearRegistrationJobs(context());
+    await saveRegistrationJob(job(), context());
+    await refreshRegistrationJobs(context());
+
+    expect(mockReconcile).toHaveBeenCalledTimes(2);
+  });
+
   it('deletes an unpaid draft without changing other registrations or linked identities', async () => {
     const saved = await saveRegistrationJob({...job(), status: 'commitment_prepared', registration: undefined,
-      commitment: {prepared: {quote: {commitmentFee: '10000'}}}}, context());
+      commitment: {prepared: makePreparedRegistration()}}, context());
     await saveRegistrationJob(job('job-b'), context());
     expect(lastSummary().payload.registrationJobs['job-a']).toMatchObject({deletionKind: 'draft', commitmentFee: '10000'});
     await Promise.all([
@@ -269,8 +701,7 @@ describe('durable identity registration storage', () => {
   });
 
   it('deletes a saved commitment and removes its home notice without unlinking the wallet identity', async () => {
-    const saved = await saveRegistrationJob({...job(), registration: undefined,
-      commitment: {...job().commitment, prepared: {quote: {commitmentFee: '10000'}}}}, context());
+    const saved = await saveRegistrationJob({...job(), registration: undefined}, context());
     await linkVerusId('iKeep', 'keep@', 'VRSC', context());
     expect(registrationNotifications(lastSummary().payload.registrationJobs, 'account-a')).toHaveLength(1);
     expect(lastSummary().payload.registrationJobs['job-a']).toMatchObject({deletionKind: 'commitment', commitmentFee: '10000'});
@@ -284,7 +715,7 @@ describe('durable identity registration storage', () => {
 
   it.each(['registered', 'complete'])('deletes a confirmed %s receipt without deleting its existing wallet link', async status => {
     const saved = await saveRegistrationJob({...job(), status, linked: status === 'complete',
-      registration: {signedHex: 'private-confirmed-reveal', txid: 'registration-txid', height: 5, blockHash: 'a'.repeat(64)}}, context());
+      registration: {...job().commitment, height: 5, blockHash: 'a'.repeat(64)}}, context());
     await linkVerusId(saved.identityAddress, saved.displayName, 'VRSC', context());
     expect(lastSummary().payload.registrationJobs['job-a'].deletionKind).toBe('completed');
     await removeRegistrationJob(saved.id, saved.revision, context());
@@ -293,20 +724,28 @@ describe('durable identity registration storage', () => {
   });
 
   it.each(['registered', 'complete'])('retains a malformed %s receipt without its signed commitment', async status => {
-    const saved = await saveRegistrationJob({...job(), status, commitment: {txid: 'commitment-txid'},
-      registration: {signedHex: 'private-confirmed-reveal', txid: 'registration-txid', height: 5, blockHash: 'a'.repeat(64)}}, context());
+    const saved = await saveRegistrationJob({...job(), status,
+      registration: {...job().commitment, height: 5, blockHash: 'a'.repeat(64)}}, context());
+    const corrupted = data();
+    const commitment = corrupted.registration_jobs.jobs[saved.id].commitment;
+    commitment.values.txid = saved.commitment.txid;
+    delete commitment.signedHex;
+    mockStoredData[VERUSID_SERVICE_ID] = JSON.stringify(corrupted);
+    await publishRegistrationJobs(context());
     expect(lastSummary().payload.registrationJobs['job-a'].deletionKind).toBeNull();
     storeServiceStoredDataForUser.mockClear();
     await expect(removeRegistrationJob(saved.id, saved.revision, context()))
       .rejects.toMatchObject({code: 'REGISTRATION_NOT_DELETABLE'});
     expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
-    expect(await getRegistrationJob(saved.id, context())).toEqual(saved);
+    expect(await getRegistrationJob(saved.id, context())).toEqual({
+      ...saved, commitment: {...saved.commitment, signedHex: undefined},
+    });
   });
 
   it.each(['current', 'historical'])('refuses to delete an unconfirmed %s signed registration', async source => {
-    const signedRegistration = {signedHex: 'private-reveal', txid: 'possibly-broadcast'};
+    const signedRegistration = job().commitment;
     const saved = await saveRegistrationJob({...job(), status: 'registration_prepared',
-      registration: source === 'current' ? signedRegistration : {prepared: {}},
+      registration: source === 'current' ? signedRegistration : {prepared: makePreparedRegistration()},
       previousRegistrations: source === 'historical' ? [signedRegistration] : [],
     }, context());
     storeServiceStoredDataForUser.mockClear();
@@ -338,7 +777,7 @@ describe('durable identity registration storage', () => {
     await expect(deleting).rejects.toMatchObject({code: 'SESSION_CHANGED'});
     expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
     expect(mockDispatch).not.toHaveBeenCalled();
-    expect(data().registration_jobs.jobs[saved.id]).toEqual(saved);
+    expect(storedJob(saved.id)).toEqual(saved);
   });
 
   it('drops a protected read completed after the user switches accounts', async () => {
@@ -347,7 +786,7 @@ describe('durable identity registration storage', () => {
     const read = getRegistrationJob('job-a', context());
     mockState.authentication.activeAccount = {accountHash: 'account-b'};
     mockState.authentication.sessionEpoch++;
-    completeRead({registration_jobs: {version: 1, jobs: {'job-a': job()}}});
+    completeRead({registration_jobs: collection()});
     await expect(read).rejects.toMatchObject({code: 'SESSION_CHANGED'});
     expect(mockDispatch).not.toHaveBeenCalled();
   });
@@ -360,7 +799,7 @@ describe('durable identity registration storage', () => {
     await refreshRegistrationJobs(context());
     expect(mockReconcile).toHaveBeenCalledTimes(1);
     expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
-    expect(data().registration_jobs.jobs['job-a'].status).toBe('commitment_broadcast');
+    expect(storedJob('job-a').status).toBe('commitment_broadcast');
     expect(JSON.stringify(lastSummary())).not.toContain('RPC payload');
   });
 

@@ -14,7 +14,7 @@ import {
   sessionScopeIsCurrent,
 } from '../../actions/actions/updates/sessionRequests';
 import {
-  getRegistrationJobs,
+  getRegistrationJobSummaries,
   getRegistrationJob,
   saveRegistrationJob,
   updateRegistrationJob,
@@ -535,7 +535,7 @@ const buildCommitment = async (request, saltHex, approvedCosts, context, replace
 // that this wallet has already registered. No RPC or funding check is needed.
 export const findExistingRegistration = async (request, requestContext) => {
   const context = createRegistrationContext(requestContext);
-  const jobs = Object.values(await guarded(context, () => getRegistrationJobs(context)))
+  const jobs = Object.values(await guarded(context, () => getRegistrationJobSummaries(context)))
     .filter(job => job.systemId === request.systemId);
 
   if (!jobs.length) return null;
@@ -546,7 +546,7 @@ export const findExistingRegistration = async (request, requestContext) => {
     ? nameAndParentAddrToIAddr(resolvedName.name, request.systemId)
     : resolvedName.identityID;
   const existing = jobs.find(job => job.identityAddress === identityAddress);
-  return existing ? registrationReview(existing) : null;
+  return existing ? registrationReview(await readJob(existing.id, context)) : null;
 };
 
 export const prepareCommitment = async ({request, approvedCosts}, requestContext) => {
@@ -562,11 +562,11 @@ export const prepareCommitment = async ({request, approvedCosts}, requestContext
 
   // Serialize creation by identity so concurrent reviews share one commitment.
   return exclusive(`name:${request.systemId}:${identityAddress}`, context, async () => {
-    const jobs = await guarded(context, () => getRegistrationJobs(context));
+    const jobs = await guarded(context, () => getRegistrationJobSummaries(context));
     const existing = Object.values(jobs).find(job =>
       job.systemId === request.systemId && job.identityAddress === identityAddress
     );
-    if (existing) return registrationReview(existing);
+    if (existing) return registrationReview(await readJob(existing.id, context));
 
     const salt = await guarded(context, () => randomBytes(32));
     if (!Buffer.isBuffer(salt) || salt.length !== 32 || salt.equals(Buffer.alloc(32)))
@@ -1163,10 +1163,10 @@ export const linkRegisteredIdentity = async (jobId, requestContext) => {
     refreshActiveChainLifecycles(action.payload.activeCoinsForUser);
     assertRegistrationContext(context);
 
-    // Leave the action retryable if storage or wallet refresh failed after the
-    // idempotent link write. No retry signs or sends another transaction.
-    job = await patchJob(job, {status: 'complete', linked: true, lastError: null}, context);
-    return registrationReview(job);
+    // Remove the receipt only after linking and refreshing succeed. If deletion
+    // fails, the saved job allows retrying this idempotent action without payment.
+    await guarded(context, () => removeRegistrationJob(job.id, job.revision, context));
+    return registrationReview({...job, status: 'complete', linked: true, lastError: null});
   });
 };
 
@@ -1203,20 +1203,19 @@ const broadcastSaved = async (job, stage, context) => {
 
   // Funding and signature verification is deliberately offline in the SDK.
   // Refresh spendability separately on every first submission and retry.
-  const prevouts = transaction.prepared.prevouts;
-  for (let offset = 0; offset < prevouts.length; offset += 4) {
-    await Promise.all(prevouts.slice(offset, offset + 4).map(async prevout => {
-      const unspent = registrationRpcResult(await guarded(context, () =>
-        client.interface.getTxOut(prevout.txid, prevout.vout, true)), 'Check registration input');
+  // Check one input at a time to avoid a burst against the server's concurrency
+  // limit. Each completed check immediately allows the next, with no timer delay.
+  for (const prevout of transaction.prepared.prevouts) {
+    const unspent = registrationRpcResult(await guarded(context, () =>
+      client.interface.getTxOut(prevout.txid, prevout.vout, true)), 'Check registration input');
 
-      if (
-        !unspent ||
-        unspent.bestblock !== tip.hash ||
-        (prevout.scriptHex && unspent.scriptPubKey?.hex !== prevout.scriptHex)
-      ) {
-        throw errorWithCode('REVIEW_CHANGED', 'Registration funds changed or could not be verified. Your saved transaction and reservation have been retained.');
-      }
-    }));
+    if (
+      !unspent ||
+      unspent.bestblock !== tip.hash ||
+      (prevout.scriptHex && unspent.scriptPubKey?.hex !== prevout.scriptHex)
+    ) {
+      throw errorWithCode('REVIEW_CHANGED', 'Registration funds changed or could not be verified. Your saved transaction and reservation have been retained.');
+    }
   }
   assertRegistrationContext(context);
   verifyRegistrationFundingSource(transaction.prepared, job, transaction.signedHex);

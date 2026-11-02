@@ -40,6 +40,25 @@ export const resolveAuthenticationAccount = (
   );
 };
 
+const passwordValidationMessages = new Set([
+  'Incorrect password',
+  'Please select an existing user',
+  'Please enter a password',
+]);
+
+const loginFailureMessage = error => {
+  // Channel initialization wraps the underlying failure. Show its message,
+  // without serializing error objects that may contain protected account data.
+  const failures = Array.isArray(error?.failures) ? error.failures : [];
+  const cause = failures.find(failure =>
+    typeof failure?.message === 'string' && failure.message.trim(),
+  ) || error?.cause || error;
+
+  return typeof cause?.message === 'string' && cause.message.trim()
+    ? cause.message
+    : 'Unable to unlock this profile. Please try again.';
+};
+
 const AuthenticateUserPassword = props => {
   const dispatch = useDispatch();
   const [password, setPassword] = useState("")
@@ -80,7 +99,13 @@ const AuthenticateUserPassword = props => {
     } catch(e) {
       setInternalLoading(false);
       await props.setPreventExit(false);
-      console.warn(e)
+
+      // Password validation already displays its own alert. Initialization
+      // failures can roll back the session and unmount this form, so use the
+      // app-wide alert queue to keep their explanation visible after rollback.
+      if (!passwordValidationMessages.has(e?.message)) {
+        await createAlert('Unable to log in', loginFailureMessage(e));
+      }
     }
   }
 

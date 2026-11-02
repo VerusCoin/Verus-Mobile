@@ -1,11 +1,52 @@
 // Keep the installed RPC client, primitives, transaction builder, signer and
 // Mobile orchestration real. Only device storage/authentication and RPC I/O are
-// replaced; persisted records still use the wallet's actual encryption codec.
+// replaced; persisted records use the wallet's actual compact storage and
+// encryption codecs, then restore the full SDK transaction before each action.
 const mockState = {authentication: {activeAccount: {accountHash: 'sdk-account', id: 'sdk-profile'}, sessionEpoch: 1}, coins: {activeCoinList: []}};
 const mockEncryptedJobs = new Map();
 const mockPassword = 'offline-registration-test-password';
 let mockClient;
 let mockWif;
+
+const mockReadRecord = id => {
+  const {decryptkey} = require('../../seedCrypt');
+
+  return JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(id)));
+};
+
+const mockWriteRecord = async (id, record) => {
+  const {encryptkey} = require('../../seedCrypt');
+  const encrypted = await encryptkey(mockPassword, JSON.stringify(record));
+
+  mockEncryptedJobs.set(id, encrypted);
+  return encrypted;
+};
+
+const mockWriteJob = job => {
+  const {encodeRegistrationJob} = require('../../identityRegistration/storage');
+
+  return mockWriteRecord(job.id, encodeRegistrationJob(job));
+};
+
+const mockReadJob = id => {
+  const {decodeRegistrationJob} = require('../../identityRegistration/storage');
+
+  return decodeRegistrationJob(mockReadRecord(id), {
+    id,
+    accountHash: mockState.authentication.activeAccount.accountHash,
+    summaryOnly: false,
+  });
+};
+
+const assertCompactPlans = id => {
+  const record = mockReadRecord(id);
+
+  // Supported plans store shared references rather than a full SDK object.
+  // Check the actual size reduction as well as lossless reconstruction.
+  expect(record.pools.plans.length).toBeGreaterThan(0);
+  expect(record.pools.plans.every(plan => !Object.prototype.hasOwnProperty.call(plan, 'literal'))).toBe(true);
+  expect(JSON.stringify(record).length).toBeLessThan(JSON.stringify(mockReadJob(id)).length);
+};
 
 jest.mock('../../../store', () => ({__esModule: true, default: {getState: () => mockState, dispatch: jest.fn()}}));
 jest.mock('../../auth/authBox', () => ({requestPrivKey: async () => mockWif}));
@@ -25,19 +66,34 @@ jest.mock('../../../actions/actions/intervals/dispatchers/lifecycleManager', () 
   clearChainLifecycle: jest.fn(), refreshActiveChainLifecycles: jest.fn(),
 }));
 jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', () => {
-  const read = id => {
-    const {decryptkey} = require('../../seedCrypt');
-    return JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(id)));
-  };
+  const read = mockReadJob;
   const save = async job => {
     const {encryptkey} = require('../../seedCrypt');
+    const {encodeRegistrationJob, decodeRegistrationJob} = require('../../identityRegistration/storage');
+    const {registrationApprovalToken} = require('../../identityRegistration/approval');
     const previous = mockEncryptedJobs.has(job.id) ? read(job.id) : null;
     const saved = {...job, revision: (previous?.revision || 0) + 1};
-    mockEncryptedJobs.set(job.id, await encryptkey(mockPassword, JSON.stringify(saved)));
+    const fullJson = JSON.stringify(saved);
+    const encoded = encodeRegistrationJob(saved);
+    const storageJson = JSON.stringify(encoded);
+    const restored = decodeRegistrationJob(JSON.parse(storageJson), {
+      id: saved.id,
+      accountHash: saved.accountHash,
+      summaryOnly: false,
+    });
+
+    // Every SDK stage, including native and reserve-currency payments, must
+    // survive disk serialization without changing its approved intent or bytes.
+    expect(encoded.format).toBe(2);
+    expect(restored).toEqual(JSON.parse(fullJson));
+    expect(registrationApprovalToken(restored)).toBe(registrationApprovalToken(saved));
+    expect(JSON.stringify(saved)).toBe(fullJson);
+
+    mockEncryptedJobs.set(job.id, await encryptkey(mockPassword, storageJson));
     return read(job.id);
   };
   return {
-    getRegistrationJobs: async () => Object.fromEntries([...mockEncryptedJobs.keys()].map(id => [id, read(id)])),
+    getRegistrationJobSummaries: async () => Object.fromEntries([...mockEncryptedJobs.keys()].map(id => [id, read(id)])),
     getRegistrationJob: async id => read(id),
     saveRegistrationJob: save,
     updateRegistrationJob: async (id, update) => save(update(read(id))),
@@ -56,7 +112,6 @@ const {
   OptCCParams, SmartTransactionScript, TokenOutput, TxDestination, nameAndParentAddrToIAddr,
 } = require('verus-typescript-primitives');
 const {VerusIdInterface} = require('verusid-ts-client');
-const {decryptkey, encryptkey} = require('../../seedCrypt');
 const {
   createRegistrationContext, resolveRegistration, prepareCommitment, approveCommitment,
   reconcileRegistration, prepareRegistration, approveRegistration,
@@ -72,9 +127,9 @@ test.each([
   {description: 'preserves the wallet private address through a commitment broadcast retry', branch: 'native', tokenProof: null, privateAddress: PRIVATE_ADDRESS, broadcastFailure: 'timeout'},
   {description: 'registers the wallet private address when paying from a linked identity', branch: 'native', tokenProof: null, privateAddress: PRIVATE_ADDRESS, identityFunding: true},
   {description: 'reviews the calculated fee for large reserve change', branch: 'native', tokenProof: null, reserveCurrencyCount: 75},
-  ...['confirmed', 'expired', 'unsent', 'signature', 'change-address', 'intent'].map(legacyReceipt => ({
-    description: `checks a legacy low-fee ${legacyReceipt} receipt without relaxing broadcast validation`,
-    branch: 'native', tokenProof: null, reserveCurrencyCount: 75, legacyReceipt,
+  ...['confirmed', 'expired', 'unsent', 'signature', 'change-address', 'intent'].map(historicalReceipt => ({
+    description: `checks a historical low-fee ${historicalReceipt} receipt without relaxing broadcast validation`,
+    branch: 'native', tokenProof: null, reserveCurrencyCount: 75, historicalReceipt,
   })),
   {description: 'completes token-burn registration', branch: 'token-burn', tokenProof: 1},
   {description: 'completes token-payment registration', branch: 'token-payment', tokenProof: 2},
@@ -99,7 +154,7 @@ test.each([
     branch: guardAttack === 'lost-reserve' ? 'token-burn' : 'native',
     tokenProof: guardAttack === 'lost-reserve' ? 1 : null, guardAttack,
   })),
-])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, legacyReceipt, privateAddress, deleteCompleted}) => {
+])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, historicalReceipt, privateAddress, deleteCompleted}) => {
   jest.clearAllMocks();
   mockEncryptedJobs.clear();
   const system = nameAndParentAddrToIAddr('VRSC');
@@ -296,7 +351,7 @@ test.each([
       case 'sendrawtransaction': {
         broadcastCount += 1;
         const transaction = Transaction.fromHex(first, networks.verus);
-        const persisted = JSON.parse(decryptkey(mockPassword, [...mockEncryptedJobs.values()][0]));
+        const persisted = mockReadJob([...mockEncryptedJobs.keys()][0]);
         const stage = persisted.registration?.signedHex === first ? 'registration' : 'commitment';
         expect(persisted[stage].signedHex).toBe(first);
         expect(persisted[stage].txid).toBe(transaction.getId());
@@ -362,13 +417,18 @@ test.each([
     await expect(approve(paymentReview.jobId, paymentReview.approvalToken, context))
       .rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
     expect(broadcastCount).toBe(broadcastBefore);
-    const saved = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(paymentReview.jobId)));
-    expect(saved[stage].signedHex).toBeUndefined();
-    // The first attempt rejects before persistence. Independently restore a
-    // corrupt receipt to ensure it is also blocked on retry.
-    saved[stage] = {...saved[stage], ...corruptReceipt};
-    saved.status = `${stage}_signed`;
-    mockEncryptedJobs.set(paymentReview.jobId, await encryptkey(mockPassword, JSON.stringify(saved)));
+    expect(mockReadJob(paymentReview.jobId)[stage].signedHex).toBeUndefined();
+    // The first attempt rejects before persistence. Corrupt the actual compact
+    // bytes independently to ensure retries still verify all approved spending.
+    const record = mockReadRecord(paymentReview.jobId);
+    const receipt = record[stage];
+    const plan = record.pools.plans[receipt.plan];
+    record.pools.transactions[plan.transaction] = Buffer.from(corruptReceipt.prepared.txHex, 'hex').toString('base64');
+    receipt.signedHex = record.pools.transactions.push(Buffer.from(corruptReceipt.signedHex, 'hex').toString('base64')) - 1;
+    delete receipt.values.txid;
+    if (guardAttack === 'redirected-change') plan.data.changeAddress = corruptReceipt.prepared.changeAddress;
+    record.values.status = `${stage}_signed`;
+    await mockWriteRecord(paymentReview.jobId, record);
     await expect(retryBroadcast(paymentReview.jobId, context))
       .rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
     expect(broadcastCount).toBe(broadcastBefore);
@@ -409,7 +469,8 @@ test.each([
   expect(review.quote.commitmentFee).toBe(commitmentFee);
   expect(broadcastCount).toBe(0);
   const encrypted = mockEncryptedJobs.get(review.jobId);
-  const persisted = JSON.parse(decryptkey(mockPassword, encrypted));
+  const persisted = mockReadJob(review.jobId);
+  assertCompactPlans(review.jobId);
   expect(review.identity.parent).toBe(tokenProof == null ? system : token);
   expect(persisted.reservation.parentID).toBe(tokenProof == null ? system : token);
   expect(persisted.identity.privateaddress).toBe(privateAddress);
@@ -435,7 +496,7 @@ test.each([
   expect(mockClient.validateIdentityRegistrationTransaction(persisted.commitment.prepared))
     .toMatchObject({valid: true, signingStatus: 'unsigned'});
 
-  if (legacyReceipt) {
+  if (historicalReceipt) {
     // Recreate the pre-upgrade SDK's 10,000-unit commitment with real source
     // transactions and signatures. Only this historical fixture uses its raw
     // signer; the public SDK must continue rejecting that fee for new sends.
@@ -459,47 +520,46 @@ test.each([
     persisted.commitment = {...persisted.commitment, signedHex: signed.hex, txid: signed.txid};
     persisted.status = 'commitment_signed';
 
-    if (legacyReceipt === 'signature' || legacyReceipt === 'intent') {
+    if (historicalReceipt === 'signature' || historicalReceipt === 'intent') {
       const changed = Transaction.fromHex(signed.hex, networks.verus);
-      if (legacyReceipt === 'signature') changed.ins[0].script[20] ^= 1;
+      if (historicalReceipt === 'signature') changed.ins[0].script[20] ^= 1;
       else changed.outs[changeIndex].value -= 1;
       persisted.commitment.signedHex = changed.toHex();
       persisted.commitment.txid = changed.getId();
-    } else if (legacyReceipt === 'change-address') {
+    } else if (historicalReceipt === 'change-address') {
       persisted.fundingAddress = ECPair.fromPrivateKeyBuffer(Buffer.alloc(32, 8), networks.verus).getAddress();
-    } else if (legacyReceipt === 'confirmed') {
+    } else if (historicalReceipt === 'confirmed') {
       transactions.set(signed.txid, {transaction: Transaction.fromHex(signed.hex, networks.verus), height: 0});
       mine(signed.txid);
       spent.add(`${source.getId()}:0`);
-    } else if (legacyReceipt === 'expired') {
+    } else if (historicalReceipt === 'expired') {
       tip = prepared.snapshot.expiryHeight;
     }
-    const receipt = await encryptkey(mockPassword, JSON.stringify(persisted));
-    mockEncryptedJobs.set(review.jobId, receipt);
+    const receipt = await mockWriteJob(persisted);
 
-    if (legacyReceipt === 'confirmed') {
+    if (historicalReceipt === 'confirmed') {
       expect(await reconcileRegistration(review.jobId, context)).toMatchObject({status: 'commitment_confirmed'});
       expect(await prepareRegistration({jobId: review.jobId}, context)).toMatchObject({
         status: 'registration_prepared', quote: {commitmentFee: '10000'},
       });
-    } else if (legacyReceipt === 'expired') {
+    } else if (historicalReceipt === 'expired') {
       expect(await reconcileRegistration(review.jobId, context)).toMatchObject({status: 'commitment_expired'});
       expect(await refreshRegistrationReview(review.jobId, context)).toMatchObject({
         status: 'commitment_prepared', quote: {commitmentFee: '20000'},
       });
-      const rebuilt = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
+      const rebuilt = mockReadJob(review.jobId);
       expect(rebuilt.saltHex).toBe(persisted.saltHex);
       expect(rebuilt.previousCommitments[0].signedHex).toBe(signed.hex);
-    } else if (legacyReceipt === 'unsent') {
+    } else if (historicalReceipt === 'unsent') {
       await expect(retryBroadcast(review.jobId, context)).rejects.toMatchObject({code: 'INSUFFICIENT_RELAY_FEE'});
-      const retained = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
+      const retained = mockReadJob(review.jobId);
       expect(retained.status).toBe('commitment_signed');
       expect(JSON.stringify(retained.commitment) === JSON.stringify(persisted.commitment)).toBe(true);
       expect(retained.saltHex).toBe(persisted.saltHex);
     } else {
       const result = expect(reconcileRegistration(review.jobId, context)).rejects;
-      if (legacyReceipt === 'change-address') await result.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
-      else if (legacyReceipt === 'intent') await result.toMatchObject({code: 'TRANSACTION_CHANGED'});
+      if (historicalReceipt === 'change-address') await result.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
+      else if (historicalReceipt === 'intent') await result.toMatchObject({code: 'TRANSACTION_CHANGED'});
       else await result.toThrow();
       expect(mockEncryptedJobs.get(review.jobId) === receipt).toBe(true);
     }
@@ -527,8 +587,7 @@ test.each([
     expect(signed.signingStatus).toBe('complete');
     persisted.commitment = {prepared: built.transaction, vout: built.commitmentVout, signedHex: signed.hex, txid: signed.txid};
     persisted.status = 'commitment_signed';
-    const receipt = await encryptkey(mockPassword, JSON.stringify(persisted));
-    mockEncryptedJobs.set(review.jobId, receipt);
+    const receipt = await mockWriteJob(persisted);
     await expect(retryBroadcast(review.jobId, context)).rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
     expect(mockEncryptedJobs.get(review.jobId)).toBe(receipt);
     expect(broadcastCount).toBe(0);
@@ -539,8 +598,10 @@ test.each([
     if (sourceFailure === 'tampered') {
       const changedSource = Transaction.fromHex(source.toHex(), networks.verus);
       changedSource.outs[0].value += 1;
-      persisted.commitment.prepared.prevouts[0].rawTransaction = changedSource.toHex();
-      mockEncryptedJobs.set(review.jobId, await encryptkey(mockPassword, JSON.stringify(persisted)));
+      const record = mockReadRecord(review.jobId);
+      const plan = record.pools.plans[record.commitment.plan];
+      record.pools.transactions[plan.prevouts[0].transaction] = Buffer.from(changedSource.toHex(), 'hex').toString('base64');
+      await mockWriteRecord(review.jobId, record);
     } else {
       // Address discovery can race a spend. Keep its response unchanged so the
       // refreshed builder must detect unavailability through live gettxout.
@@ -549,8 +610,9 @@ test.each([
     const encryptedBeforeApproval = mockEncryptedJobs.get(review.jobId);
     const signing = jest.spyOn(mockClient, 'signIdentityRegistrationTransaction');
     rpcCalls.length = 0;
-    await expect(approveCommitment(review.jobId, review.approvalToken, context))
-      .rejects.toMatchObject({code: sourceFailure === 'tampered' ? 'PREVOUT_MISMATCH' : 'FUNDING_SPENT'});
+    const approval = expect(approveCommitment(review.jobId, review.approvalToken, context)).rejects;
+    if (sourceFailure === 'tampered') await approval.toThrow();
+    else await approval.toMatchObject({code: 'FUNDING_SPENT'});
     expect(signing).not.toHaveBeenCalled();
     expect(broadcastCount).toBe(0);
     expect(mockEncryptedJobs.get(review.jobId)).toBe(encryptedBeforeApproval);
@@ -570,12 +632,12 @@ test.each([
 
   expect(submitted.status).toBe('commitment_broadcast');
   expect(broadcastCount).toBe(1);
-  const saved = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
+  const saved = mockReadJob(review.jobId);
   if (broadcastFailure) {
     expect(saved.commitment.broadcastStatus).toBe('unknown');
     await retryBroadcast(review.jobId, context);
     expect(broadcastCount).toBe(1);
-    expect(JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId))).commitment.signedHex)
+    expect(mockReadJob(review.jobId).commitment.signedHex)
       .toBe(saved.commitment.signedHex);
   }
   expect(saved.reservation.reservationHex).toBe(persisted.reservation.reservationHex);
@@ -610,7 +672,8 @@ test.each([
   expect(registrationReview.quote.totalOperationRequired[system])
     .toBe(new BN(registrationCosts[system]).add(new BN(commitmentFee)).toString(10));
   expect(broadcastCount).toBe(1);
-  const preparedReveal = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
+  const preparedReveal = mockReadJob(review.jobId);
+  assertCompactPlans(review.jobId);
   // Check the actual reveal output against the daemon's current registeridentity
   // defaults, including the optional content omitted by Mobile's makeIdentity.
   const revealTransaction = Transaction.fromHex(preparedReveal.registration.prepared.txHex, networks.verus);
@@ -666,7 +729,7 @@ test.each([
   expect(registered.status).toBe('registration_broadcast');
   expect(broadcastCount).toBe(2);
   expect(linkVerusId).not.toHaveBeenCalled();
-  const signedReveal = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
+  const signedReveal = mockReadJob(review.jobId);
   expect(signedReveal.reservation.reservationHex).toBe(persisted.reservation.reservationHex);
   expect(mockClient.validateIdentityRegistrationTransaction(signedReveal.registration.prepared, signedReveal.registration.signedHex))
     .toMatchObject({valid: true, signingStatus: 'complete', txid: signedReveal.registration.txid});
@@ -677,27 +740,28 @@ test.each([
   expect(completed).toMatchObject({status: 'registered', linked: false});
   expect(linkVerusId).not.toHaveBeenCalled();
   expect(publishRegistrationState).not.toHaveBeenCalled();
-  expect(await linkRegisteredIdentity(review.jobId, context)).toMatchObject({status: 'complete', linked: true});
-  expect(linkVerusId).toHaveBeenCalledTimes(1);
-  expect(linkVerusId).toHaveBeenCalledWith(review.identityAddress, signedReveal.reservation.fullName, 'VRSC', context);
-  expect(publishRegistrationState).toHaveBeenCalledWith(context);
-  await reconcileRegistration(review.jobId, context);
-  expect(linkVerusId).toHaveBeenCalledTimes(1);
   if (deleteCompleted) {
-    const receipt = JSON.parse(decryptkey(mockPassword, mockEncryptedJobs.get(review.jobId)));
+    // A confirmed identity awaiting linking remains available for manual removal.
+    const record = mockReadRecord(review.jobId);
     // Deliberately make historical approval metadata incompatible with the
     // current verifier, while retaining the exact confirmed signed bytes.
-    delete receipt.registration.prepared.commitment;
-    mockEncryptedJobs.set(review.jobId, await encryptkey(mockPassword, JSON.stringify(receipt)));
+    delete record.pools.plans[record.registration.plan].commitment;
+    await mockWriteRecord(review.jobId, record);
+    const receipt = mockReadJob(review.jobId);
     expect(() => mockClient.validateIdentityRegistrationTransaction(
       receipt.registration.prepared, receipt.registration.signedHex, receipt.fundingAddress,
     )).toThrow(expect.objectContaining({code: 'REGISTRATION_FUNDING_MISMATCH'}));
     await expect(reconcileRegistration(review.jobId, context))
       .rejects.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
     expect(await deleteRegistration(review.jobId, 'completed', context)).toEqual({jobId: review.jobId});
-    expect(mockEncryptedJobs.has(review.jobId)).toBe(false);
+    expect(linkVerusId).not.toHaveBeenCalled();
+  } else {
+    expect(await linkRegisteredIdentity(review.jobId, context)).toMatchObject({status: 'complete', linked: true});
     expect(linkVerusId).toHaveBeenCalledTimes(1);
+    expect(linkVerusId).toHaveBeenCalledWith(review.identityAddress, signedReveal.reservation.fullName, 'VRSC', context);
+    expect(publishRegistrationState).toHaveBeenCalledWith(context);
   }
+  expect(mockEncryptedJobs.has(review.jobId)).toBe(false);
   expect(broadcastCount).toBe(2);
   expect(rpcCalls).not.toContain('registernamecommitment');
   expect(rpcCalls).not.toContain('registeridentity');

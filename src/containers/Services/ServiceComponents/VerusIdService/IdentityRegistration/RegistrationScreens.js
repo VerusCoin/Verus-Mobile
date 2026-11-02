@@ -41,6 +41,10 @@ import {
   registrationFundingSources,
 } from './fundingSources';
 import {formatRegistrationAmount} from '../../../../../utils/identityRegistration/costs';
+import {
+  clearRegistrationJobs,
+  publishRegistrationJobs,
+} from '../../../../../actions/actions/services/dispatchers/verusid/registration';
 import Colors from '../../../../../globals/colors';
 
 // A ref closes the double-tap window before React renders a disabled button.
@@ -133,10 +137,31 @@ const confirmRegistrationDeletion = (record, remove, close) => {
 
 export function IdentityRegistrationStart({navigation, route}) {
   const jobs = useSelector(state => state.channelStore_verusid.registrationJobs || {});
+  const [loaded, setLoaded] = useState(false);
   const [openingJobId, setOpeningJobId] = useState(null);
   const [deletingJobId, setDeletingJobId] = useState(null);
   const deletePromptOpen = useRef(false);
-  const {busy, error, run} = useRegistrationAction();
+  const {busy, error, run, running} = useRegistrationAction();
+
+  const refresh = useCallback(() => {
+    if (running.current) return;
+    setLoaded(false);
+
+    return run(async context => {
+      try {
+        // Login can proceed without these optional summaries. Read them again
+        // here so a storage failure cannot masquerade as an empty registration list.
+        return await publishRegistrationJobs(context);
+      } catch (failure) {
+        if (failure?.code === 'SESSION_CHANGED') throw failure;
+        throw new Error('Saved registrations could not be loaded. Your registration data has not been changed. Please try again.');
+      }
+    }, () => setLoaded(true));
+  }, [run, running]);
+
+  useFocusEffect(useCallback(() => {
+    refresh();
+  }, [refresh]));
 
   const visible = Object.values(jobs)
     .sort((left, right) => (right.updatedAt || right.createdAt) - (left.updatedAt || left.createdAt));
@@ -172,10 +197,40 @@ export function IdentityRegistrationStart({navigation, route}) {
     });
   };
 
+  const confirmClearRegistrations = () => {
+    if (running.current || loaded || !error || deletePromptOpen.current) return;
+
+    deletePromptOpen.current = true;
+    const close = () => {
+      deletePromptOpen.current = false;
+    };
+
+    Alert.alert(
+      'Clear all registration data?',
+      'Are you sure? This permanently deletes all saved registration records and commitment secrets for this profile. ' +
+        'Unfinished registrations may become impossible to complete, and fees already paid will not be refunded. ' +
+        'Registered identities and linked wallets are kept. This cannot be undone.',
+      [
+        {text: 'Cancel', style: 'cancel', onPress: close},
+        {
+          text: 'Clear all registration data',
+          style: 'destructive',
+          onPress: () => {
+            close();
+            // The captured profile context is checked again by the storage
+            // writer. Only show the fresh state after the reset is saved.
+            return run(clearRegistrationJobs, () => setLoaded(true));
+          },
+        },
+      ],
+      {cancelable: true, onDismiss: close},
+    );
+  };
+
   const renderJob = job => <RegistrationListItem
     key={job.id}
     job={job}
-    disabled={busy}
+    disabled={busy || !loaded}
     busy={busy && openingJobId === job.id}
     onPress={() => open(job)}
     onDelete={job.deletionKind ? () => confirmDelete(job) : undefined}
@@ -184,9 +239,11 @@ export function IdentityRegistrationStart({navigation, route}) {
 
   return <RegistrationPage
     error={error}
+    onRefresh={refresh}
+    refreshing={busy && !loaded}
     footer={
       <ActionButton
-        disabled={busy}
+        disabled={busy || !loaded}
         onPress={() => navigation.navigate(
           'IdentityRegistrationCreate',
           route.params?.coinId ? {coinId: route.params.coinId} : undefined,
@@ -198,7 +255,15 @@ export function IdentityRegistrationStart({navigation, route}) {
       <Text style={styles.title}>Your registrations</Text>
       <Text style={styles.muted}>Create a VerusID or continue where you left off.</Text>
     </View>
-    {!active.length && !completed.length && <View style={styles.card}>
+    {!loaded && !!error && <View style={styles.section}>
+      <ActionButton secondary disabled={busy} onPress={refresh}>
+        Retry loading registrations
+      </ActionButton>
+      <ActionButton secondary disabled={busy} onPress={confirmClearRegistrations}>
+        Clear all registration data
+      </ActionButton>
+    </View>}
+    {loaded && !busy && !error && !active.length && !completed.length && <View style={styles.card}>
       <View style={styles.badge}><Icon name="at" size={28} color={Colors.primaryColor} accessible={false} /></View>
       <Text style={styles.subtitle}>A name that’s yours</Text>
       <Text style={styles.body}>Commit a name, then register it after confirmation. You review and approve each payment.</Text>
@@ -673,7 +738,8 @@ export function IdentityRegistrationProgress({navigation, route}) {
           text: 'Link identity',
           onPress: () => {
             closePrompt();
-            return runForeground(requestContext => linkRegisteredIdentity(jobId, requestContext));
+            // Linking finishes and removes the saved registration.
+            return runForeground(requestContext => linkRegisteredIdentity(jobId, requestContext), openOverview);
           },
         },
       ], {cancelable: true, onDismiss: closePrompt});

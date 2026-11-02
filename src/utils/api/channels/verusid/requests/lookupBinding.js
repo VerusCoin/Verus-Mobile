@@ -67,7 +67,20 @@ const getResponseAddressCandidates = (systemId, fullyQualifiedName) => {
 
   const candidates = new Set();
   const normalizedName = fullyQualifiedName.trim();
-  const rootSystemName = getRootSystemName(systemId);
+  let rootSystemName = getRootSystemName(systemId);
+
+  if (rootSystemName == null) {
+    try {
+      // PBaaS responses can omit the global root (e.g. CHIPS instead of
+      // CHIPS.VRSC). Read local metadata lazily to avoid the directory's RPC
+      // initialization cycle; no additional network request is needed.
+      const { CoinDirectory } = require("../../../../CoinData/CoinDirectory");
+      const system = CoinDirectory.getBasicCoinObj(systemId);
+      if (system.system_id === systemId) {
+        rootSystemName = system.testnet ? "VRSCTEST" : "VRSC";
+      }
+    } catch (_) {} // Unknown systems still require a fully qualified response.
+  }
 
   candidates.add(toIAddress(normalizedName));
 
