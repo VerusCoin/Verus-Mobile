@@ -59,6 +59,7 @@ class Overview extends Component {
       parsedTxList: [],
       coinRates: {},
       loading: false,
+      refreshing: false,
       txDetailsModalOpen: false,
       txDetailProps: {
         parsedAmount: "0",
@@ -84,7 +85,11 @@ class Overview extends Component {
     this._unsubscribeFocus()
   }
 
-  refresh = () => {
+  refresh = (showLoading = false) => {
+    // Only a pull-to-refresh shows the native spinner. A pull during an
+    // automatic refresh shares its completion without starting another cycle.
+    if (showLoading) this.setState({ refreshing: true });
+
     if (!this.state.loading) {
       this.setState({ loading: true }, async () => {
         const serviceUpdates = [
@@ -126,7 +131,7 @@ class Overview extends Component {
         }
 
         await walletRefresh;
-        this.setState({ loading: false });
+        this.setState({ loading: false, refreshing: false });
       });
     }
   };
@@ -143,7 +148,7 @@ class Overview extends Component {
     this.props.dispatch(expireServiceData(API_GET_SERVICE_RATES));
     this.props.dispatch(expireServiceData(API_GET_SERVICE_NOTIFICATIONS));
     
-    this.refresh();
+    this.refresh(true);
   };
 
   _openDetails = item => {
@@ -355,7 +360,7 @@ class Overview extends Component {
           </View>
         }
         keyExtractor={(item, index) => index}
-        refreshing={this.state.loading}
+        refreshing={this.state.refreshing}
         onRefresh={this.forceUpdate}
         renderItem={this.renderTransactionItem}
         //extraData={this.props.balances}

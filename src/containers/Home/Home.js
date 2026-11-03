@@ -250,8 +250,10 @@ const Home = () => {
   }, [widgetOrder, sortWidgets]);
 
   const refresh = useCallback(
-    async (showLoading = true) => {
-      setLoading(showLoading);
+    async (showLoading = false) => {
+      // Only pull-to-refresh controls the spinner. Background refreshes must
+      // neither reveal it nor dismiss a manual refresh that is still running.
+      if (showLoading) setLoading(true);
 
       const serviceUpdates = [
         API_GET_SERVICE_ACCOUNT,
@@ -285,7 +287,7 @@ const Home = () => {
       }
 
       await walletRefresh;
-      setLoading(false);
+      if (showLoading) setLoading(false);
     },
     [activeCoinsForUser, dispatch],
   );
@@ -315,7 +317,7 @@ const Home = () => {
     dispatch(expireServiceData(API_GET_SERVICE_RATES));
     dispatch(expireServiceData(API_GET_SERVICE_NOTIFICATIONS));
 
-    refresh();
+    refresh(true);
   };
 
   const getTotalBalances = () => {
