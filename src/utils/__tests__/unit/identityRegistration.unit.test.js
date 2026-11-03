@@ -209,9 +209,10 @@ beforeEach(() => {
     bestblock: mockTipHash, confirmations: 1, scriptPubKey: {hex: 'commit-script'},
   }});
   mockRequestMany.mockImplementation(requests => Promise.all(requests.map(request => {
-    expect(request.cmd).toBe('gettxout');
     expect(request.chain).toBe('system');
-    return mockGetTxOut(...request.getParams());
+    const methods = {getblock: mockGetBlock, gettxout: mockGetTxOut};
+    expect(methods).toHaveProperty(request.cmd);
+    return methods[request.cmd](...request.getParams());
   })));
   mockSend.mockImplementation(async hex => {
     const txid = hex === 'commit-signed' ? mockCommitTxid : mockRevealTxid;
@@ -346,6 +347,27 @@ test('preparing from the create screen resolves one quote without requiring a se
   expect(mockResolve).toHaveBeenCalledTimes(1);
   expect(mockBuildCommitment.mock.calls[0][0].approvedCosts).toEqual(mockQuote.totalOperationRequired);
   expect(mockSign).not.toHaveBeenCalled();
+});
+
+test('commitment refresh and reveal preparation use the builder policy without another preliminary resolve', async () => {
+  const context = createRegistrationContext();
+  let review = await build();
+  mockResolve.mockClear();
+  mockBuildCommitment.mockClear();
+
+  review = await refreshRegistrationReview(review.jobId, context);
+  expect(mockBuildCommitment).toHaveBeenCalledTimes(1);
+  expect(mockResolve).not.toHaveBeenCalled();
+
+  await approveCommitment(review.jobId, review.approvalToken, context);
+  confirm(mockCommitTxid);
+  review = await prepareRegistration({jobId: review.jobId}, context);
+  expect(mockBuildRegistration).toHaveBeenCalledTimes(1);
+  expect(mockResolve).not.toHaveBeenCalled();
+
+  await refreshRegistrationReview(review.jobId, context);
+  expect(mockBuildRegistration).toHaveBeenCalledTimes(2);
+  expect(mockResolve).not.toHaveBeenCalled();
 });
 
 const calculatedFeeError = (quote, stage = 'commitment') => Object.assign(new Error('Calculated fee exceeds estimate'), {
@@ -517,7 +539,7 @@ test('missing broadcast is retried with identical saved bytes and no signing', a
   expect(mockSend.mock.calls.map(call => call[0])).toEqual(['commit-signed', 'commit-signed']);
 });
 
-test.each(['first submission', 'retry'])('registration %s checks all batched inputs before sending', async attempt => {
+test.each(['first submission', 'retry'])('registration %s batches the tip block with all inputs before sending', async attempt => {
   const context = createRegistrationContext();
   let review = await build();
   await approveCommitment(review.jobId, review.approvalToken, context);
@@ -558,7 +580,10 @@ test.each(['first submission', 'retry'])('registration %s checks all batched inp
   expect(result.status).toBe('registration_broadcast');
   expect(peak).toBe(inputs.length);
   expect(mockRequestMany).toHaveBeenCalledTimes(1);
-  expect(mockRequestMany.mock.calls[0][0].map(request => request.getParams()))
+  const requests = mockRequestMany.mock.calls[0][0];
+  expect(requests.map(request => request.cmd)).toEqual(['getblock', ...inputs.map(() => 'gettxout')]);
+  expect(requests[0].getParams()).toEqual(['100', 1]);
+  expect(requests.slice(1).map(request => request.getParams()))
     .toEqual(inputs.map(input => [input.txid, input.vout, true]));
   expect(mockGetTxOut).toHaveBeenCalledTimes(expectedChecks);
   expect(mockGetTxOut.mock.calls.slice(-inputs.length)).toEqual(inputs.map(input => [input.txid, input.vout, true]));
@@ -593,6 +618,22 @@ test.each([
     });
   },
 );
+
+test.each([
+  ['RPC rejection', {error: {code: 429, message: 'Server busy'}}, 'Server busy'],
+  ['wrong height', {result: {hash: mockTipHash, height: 99, confirmations: 1}}, 'active chain tip'],
+  ['orphaned tip', {result: {hash: mockTipHash, height: 100, confirmations: -1}}, 'active chain tip'],
+])('a %s in the batched tip response prevents broadcasting', async (_label, response, message) => {
+  const context = createRegistrationContext();
+  const review = await build();
+  mockGetBlock.mockResolvedValueOnce(response);
+
+  await expect(approveCommitment(review.jobId, review.approvalToken, context)).rejects.toThrow(message);
+
+  expect(mockRequestMany).toHaveBeenCalledTimes(1);
+  expect(mockSendRegistration).not.toHaveBeenCalled();
+  expect(mockJobs[review.jobId].commitment.signedHex).toBe('commit-signed');
+});
 
 test.each(['commitment', 'registration'])('independent funding verification gates signing and sending %s', async stage => {
   const context = createRegistrationContext();
@@ -809,11 +850,58 @@ test('refreshed costs require renewed review, preserving the original salt', asy
   const review = await build();
   const salt = mockJobs[review.jobId].saltHex;
   mockQuote = {...mockQuote, registrationOffer: '20000000000', nativeFee: '20000000000', totalRequired: {system: '20000000000'}, totalOperationRequired: {system: '20000010000'}};
+  // The authoritative builder reports a changed policy price before funding;
+  // the app may rebuild a new unsigned review but must not approve it silently.
+  mockBuildCommitment.mockRejectedValueOnce(calculatedFeeError(mockQuote));
+  mockResolve.mockClear();
   await expect(approveCommitment(review.jobId, review.approvalToken, createRegistrationContext())).rejects.toMatchObject({code: 'REVIEW_CHANGED'});
+  expect(mockResolve).not.toHaveBeenCalled();
   expect(mockSign).not.toHaveBeenCalled();
   const refreshed = await getRegistrationReview(review.jobId, createRegistrationContext());
   expect(refreshed.quote.totalRequired.system).toBe('20000000000');
   expect(mockJobs[review.jobId].saltHex).toBe(salt);
+});
+
+test('a policy price change followed by a calculated fee change creates a new review without signing', async () => {
+  const context = createRegistrationContext();
+  const review = await build();
+  const policyQuote = {...mockQuote, registrationOffer: '20000000000', nativeFee: '20000000000',
+    totalRequired: {system: '20000000000'}, totalOperationRequired: {system: '20000010000'}};
+  const finalQuote = {...policyQuote, commitmentFee: '20000', totalOperationRequired: {system: '20000020000'}};
+  mockBuildCommitment.mockClear();
+  mockBuildCommitment.mockRejectedValueOnce(calculatedFeeError(policyQuote))
+    .mockRejectedValueOnce(calculatedFeeError(finalQuote))
+    .mockResolvedValueOnce({
+      reservation: mockJobs[review.jobId].reservation,
+      commitmentVout: 0, transaction: {...prepared('commitment'), quote: finalQuote},
+    });
+  mockResolve.mockClear();
+
+  await expect(approveCommitment(review.jobId, review.approvalToken, context))
+    .rejects.toMatchObject({code: 'REVIEW_CHANGED'});
+
+  expect(mockBuildCommitment.mock.calls.map(([args]) => args.approvedCosts))
+    .toEqual([mockQuote.totalOperationRequired, policyQuote.totalOperationRequired, finalQuote.totalOperationRequired]);
+  expect(mockJobs[review.jobId].commitment.prepared.quote).toEqual(finalQuote);
+  expect(mockResolve).not.toHaveBeenCalled();
+  expect(mockSign).not.toHaveBeenCalled();
+  expect(mockSend).not.toHaveBeenCalled();
+});
+
+test('repeated cost changes stop after two recalculations and retain the original review', async () => {
+  const context = createRegistrationContext();
+  const review = await build();
+  const saved = JSON.parse(JSON.stringify(mockJobs[review.jobId]));
+  mockBuildCommitment.mockClear();
+  mockBuildCommitment.mockRejectedValue(calculatedFeeError(higherCommitmentQuote()));
+
+  await expect(approveCommitment(review.jobId, review.approvalToken, context))
+    .rejects.toMatchObject({code: 'COST_LIMIT_EXCEEDED'});
+
+  expect(mockBuildCommitment).toHaveBeenCalledTimes(3);
+  expect(mockJobs[review.jobId]).toEqual(saved);
+  expect(mockSign).not.toHaveBeenCalled();
+  expect(mockSend).not.toHaveBeenCalled();
 });
 
 test('same-price authorization changes are saved together and require approval before signing', async () => {
@@ -980,8 +1068,10 @@ test('expired commitment is rebuilt for review with the same salt, conflicting f
   review = await reconcileRegistration(review.jobId, context);
   expect(review.status).toBe('commitment_expired');
   mockBuildCommitment.mockClear();
+  mockResolve.mockClear();
   review = await refreshRegistrationReview(review.jobId, context);
   expect(mockBuildCommitment).toHaveBeenCalledTimes(1);
+  expect(mockResolve).not.toHaveBeenCalled();
   expect(review.status).toBe('commitment_prepared');
   expect(review.commitmentTxid).toBeUndefined();
   expect(mockJobs[review.jobId].saltHex).toBe(salt);
@@ -1075,7 +1165,7 @@ test('public review includes the committed referral and verified currency displa
   expect(JSON.stringify(review)).not.toMatch(/saltHex|reservationHex/);
 });
 
-test('payment identity ownership is rechecked after review and before any signature', async () => {
+test('fresh builder authority evidence rechecks payment identity ownership before any signature', async () => {
   const context = createRegistrationContext();
   const review = await prepareCommitment({
     request: {...request, fundingAddress: 'i-payment', signingAddress: mockAddress, fundingName: 't1@'},
@@ -1088,13 +1178,40 @@ test('payment identity ownership is rechecked after review and before any signat
   expect(review.identity.primaryaddresses).toEqual([mockAddress]);
   expect(mockGetFunding).toHaveBeenCalledWith('system', 'i-payment');
 
-  mockGetIdentity.mockResolvedValue({result: {identity: {
-    identityaddress: 'i-payment', minimumsignatures: 1, primaryaddresses: ['R-new-owner'], flags: 0,
-  }}});
+  // The SDK verifies the current identity authority when rebuilding funding;
+  // Mobile uses those fresh signature requirements without another ID lookup.
+  mockGetIdentity.mockClear();
+  mockBuildCommitment.mockResolvedValueOnce({
+    reservation: mockJobs[review.jobId].reservation,
+    commitmentVout: 0,
+    transaction: {...prepared('commitment'), requiredSignatures: [{
+      threshold: 1, requirements: [{threshold: 1, eligibleKeyIDs: ['R-new-owner']}],
+    }]},
+  });
   await expect(approveCommitment(review.jobId, review.approvalToken, context))
-    .rejects.toMatchObject({code: 'FUNDING_AUTHORIZATION_REQUIRED'});
+    .rejects.toMatchObject({code: 'EXTERNAL_AUTHORIZATION_REQUIRED'});
+  expect(mockGetIdentity).not.toHaveBeenCalled();
   expect(mockSign).not.toHaveBeenCalled();
   expect(mockSend).not.toHaveBeenCalled();
+});
+
+test.each(['recoveryAuthority', 'revocationAuthority'])('a revoked external %s still prevents commitment payment after review', async field => {
+  const context = createRegistrationContext();
+  const authority = toIAddress('authority.VRSC@', 'VRSC');
+  mockGetIdentity.mockResolvedValue({result: {
+    fullyqualifiedname: 'authority.VRSC@', identity: {identityaddress: authority, flags: 0},
+  }});
+  const review = await prepareCommitment({request: {...request, [field]: authority}}, context);
+  mockGetIdentity.mockResolvedValue({result: {identity: {identityaddress: authority, flags: 0x8000}}});
+  mockResolve.mockClear();
+
+  await expect(approveCommitment(review.jobId, review.approvalToken, context))
+    .rejects.toThrow('Recovery and revocation authorities must be existing, unrevoked identity i-addresses.');
+
+  expect(mockResolve).not.toHaveBeenCalled();
+  expect(mockSign).not.toHaveBeenCalled();
+  expect(mockSend).not.toHaveBeenCalled();
+  expect(mockJobs[review.jobId].status).toBe('commitment_prepared');
 });
 
 test('insufficient funding identifies the selected source and keeps approval separate', async () => {

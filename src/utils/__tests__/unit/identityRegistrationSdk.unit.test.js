@@ -155,12 +155,16 @@ test.each([
     branch: 'native', tokenProof: null, identityFunding: true, authorityStatus,
   })),
   {description: 'accepts an identity countdown elapsed at the candidate block', branch: 'native', tokenProof: null, identityFunding: true, authorityStatus: 'elapsed-countdown'},
+  ...[false, true].flatMap(batchUnsupported => ['commitment', 'registration'].map(authoritySpendStage => ({
+    description: `blocks ${authoritySpendStage} approval when its cached authority is spent, with ${batchUnsupported ? 'fallback' : 'batch'} transport`,
+    branch: 'native', tokenProof: null, identityFunding: true, authoritySpendStage, batchUnsupported,
+  }))),
   ...['excess-fee', 'redirected-change', 'lost-reserve'].map(guardAttack => ({
     description: `independently blocks ${guardAttack} with coordinated signed bytes and a faulty SDK validator`,
     branch: guardAttack === 'lost-reserve' ? 'token-burn' : 'native',
     tokenProof: guardAttack === 'lost-reserve' ? 1 : null, guardAttack,
   })),
-])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, historicalReceipt, privateAddress, deleteCompleted, batchUnsupported}) => {
+])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, authoritySpendStage, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, historicalReceipt, privateAddress, deleteCompleted, batchUnsupported}) => {
   jest.clearAllMocks();
   mockEncryptedJobs.clear();
   const system = nameAndParentAddrToIAddr('VRSC');
@@ -285,6 +289,8 @@ test.each([
   }
   const spent = new Set();
   let liveSourceSpent = false;
+  let spendAuthorityDuringPreparation = false;
+  let authorityChecks = 0;
   const mine = txid => {
     tip += 1;
     transactions.get(txid).height = tip;
@@ -343,9 +349,17 @@ test.each([
       case 'gettxout': {
         const entry = transactions.get(first);
         const output = entry?.transaction.outs[second];
+        const checkingAuthority = spendAuthorityDuringPreparation &&
+          first === fundingAuthority?.txid && second === fundingAuthority.vout;
+        if (checkingAuthority) authorityChecks++;
         if (!output || spent.has(`${first}:${second}`) ||
           (liveSourceSpent && first === source.getId() && second === 0)) return ok(null);
         const atomic = String(output.value).padStart(9, '0');
+
+        // Model an identity update entering the mempool after the first proof.
+        // The tip and funding outputs remain unchanged; only a fresh authority
+        // outpoint check can reject the cached identity before signing.
+        if (checkingAuthority) spent.add(`${first}:${second}`);
         return ok({
           bestblock: hashAt(tip), confirmations: entry.height ? tip - entry.height + 1 : 0,
           value: `${atomic.slice(0, -8)}.${atomic.slice(-8)}`, coinbase: false,
@@ -415,6 +429,37 @@ test.each([
   const commitmentBuilder = jest.spyOn(mockClient, 'createNameReservationTransaction');
 
   const context = createRegistrationContext();
+  const assertAuthorityChangeBlocksApproval = async (stage, paymentReview) => {
+    const encryptedBefore = mockEncryptedJobs.get(paymentReview.jobId);
+    const broadcastsBefore = broadcastCount;
+    const tipBefore = tip;
+    const readStart = rpcReads.length;
+    const batchStart = batchCalls.length;
+    const signing = jest.spyOn(mockClient, 'signIdentityRegistrationTransaction');
+    const approve = stage === 'commitment' ? approveCommitment : approveRegistration;
+    spendAuthorityDuringPreparation = true;
+
+    await expect(approve(paymentReview.jobId, paymentReview.approvalToken, context))
+      .rejects.toMatchObject({code: 'AUTHORITY_CHANGED'});
+    expect(authorityChecks).toBe(2);
+    expect(tip).toBe(tipBefore);
+    expect(signing).not.toHaveBeenCalled();
+    expect(broadcastCount).toBe(broadcastsBefore);
+    expect(mockEncryptedJobs.get(paymentReview.jobId)).toBe(encryptedBefore);
+    expect(mockReadJob(paymentReview.jobId)[stage].signedHex).toBeUndefined();
+
+    // Canonical identity bytes are still reused; the final snapshot batch adds
+    // only a live spendability check for its defining output.
+    expect(rpcReads.slice(readStart).filter(request => request.method === 'getrawtransaction' &&
+      request.params[0] === fundingAuthority.txid)).toHaveLength(1);
+    if (!batchUnsupported) {
+      expect(batchCalls.slice(batchStart).some(requests =>
+        requests.some(request => request.method === 'getinfo') &&
+        requests.some(request => request.method === 'getblock') &&
+        requests.some(request => request.method === 'gettxout' && request.params[0] === fundingAuthority.txid)
+      )).toBe(true);
+    }
+  };
   const assertGuardBlocksCorruptedSignature = async (stage, paymentReview) => {
     const originalSign = mockClient.signIdentityRegistrationTransaction.bind(mockClient);
     const broadcastBefore = broadcastCount;
@@ -685,6 +730,11 @@ test.each([
     return;
   }
 
+  if (authoritySpendStage === 'commitment') {
+    await assertAuthorityChangeBlocksApproval('commitment', review);
+    return;
+  }
+
   const submitted = await approveCommitment(review.jobId, review.approvalToken, context);
 
   expect(submitted.status).toBe('commitment_broadcast');
@@ -782,6 +832,11 @@ test.each([
     return;
   }
 
+  if (authoritySpendStage === 'registration') {
+    await assertAuthorityChangeBlocksApproval('registration', registrationReview);
+    return;
+  }
+
   const registered = await approveRegistration(review.jobId, registrationReview.approvalToken, context);
   expect(registered.status).toBe('registration_broadcast');
   expect(broadcastCount).toBe(2);
@@ -826,8 +881,9 @@ test.each([
     expect(batchCalls).toHaveLength(1);
     expect(peakSingleTxOuts).toBe(1);
   } else {
-    // Reveal submission checks every input together before broadcasting.
+    // Submission binds every input to the active block in the same read group.
     expect(batchCalls.some(requests => requests.length >= 2 &&
-      requests.every(request => request.method === 'gettxout'))).toBe(true);
+      requests[0].method === 'getblock' &&
+      requests.slice(1).every(request => request.method === 'gettxout'))).toBe(true);
   }
 }, 10000);

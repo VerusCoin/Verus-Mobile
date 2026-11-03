@@ -2,6 +2,7 @@ import {Buffer} from 'buffer';
 import {ECPair, Transaction, networks} from '@bitgo/utxo-lib';
 import {
   fromBase58Check,
+  GetBlockRequest,
   GetTxOutRequest,
   I_ADDR_VERSION,
   nameAndParentAddrToIAddr,
@@ -422,6 +423,23 @@ const makeIdentity = (request, resolvedName) => ({
   revocationauthority: request.revocationAuthority || resolvedName.identityID,
 });
 
+// The commitment builder does not receive the eventual identity definition.
+// Check its external authorities before paying, including on later rebuilds.
+const checkIdentityAuthorities = async (request, identityAddress, context, responses = {}) => {
+  const rpc = VrpcProvider.getVerusIdInterface(request.systemId).interface;
+  for (const id of new Set([request.recoveryAuthority, request.revocationAuthority].filter(Boolean))) {
+    if (id === identityAddress) continue;
+    const response = responses[id] || registrationRpcResult(
+      await guarded(context, () => rpc.getIdentity(id)), 'Get identity authority',
+    );
+    responses[id] = response;
+    const identity = response?.identity;
+    if (identity?.identityaddress !== id || (identity.flags & 0x8000)) {
+      throw new Error('Recovery and revocation authorities must be existing, unrevoked identity i-addresses.');
+    }
+  }
+};
+
 export const resolveRegistration = async (request, requestContext) => {
   const context = createRegistrationContext(requestContext);
   request = await normalizeRegistrationRequest(request, context);
@@ -444,16 +462,7 @@ export const resolveRegistration = async (request, requestContext) => {
     // defining transaction, locks and each funding output before signing.
   }
 
-  // Fail invalid external recovery/revocation choices before the first charge.
-  for (const id of new Set([request.recoveryAuthority, request.revocationAuthority].filter(Boolean))) {
-    if (id === result.policy.resolvedName.identityID) continue;
-    const response = registrationRpcResult(await guarded(context, () => client.interface.getIdentity(id)), 'Get identity authority');
-    identityResponses[id] = response;
-    const identity = response?.identity;
-    if (identity?.identityaddress !== id || (identity.flags & 0x8000)) {
-      throw new Error('Recovery and revocation authorities must be existing, unrevoked identity i-addresses.');
-    }
-  }
+  await checkIdentityAuthorities(request, result.policy.resolvedName.identityID, context, identityResponses);
 
   const currencyNames = [result.policy.nativeDefinition, result.policy.parentDefinition]
     .filter(Boolean)
@@ -478,16 +487,19 @@ const withSavedFundingTransactions = (funding, prevouts = []) => {
     ? {...input, rawTransaction: transactions.get(input.txid)} : input);
 };
 
-// Output sizes are known only after funding. Rebuild an unsigned estimate once
-// with the calculated fee; the resulting quote still needs the user's approval.
+// A saved estimate can need a fresh policy price, then a size-based relay fee.
+// Bound retries to those two adjustments; every rebuilt quote still needs review.
 const withCalculatedFee = async (build, estimatedCosts) => {
-  try {
-    return await build(estimatedCosts);
-  } catch (error) {
-    if (error.code !== 'COST_LIMIT_EXCEEDED' || !error.details?.quote || !error.details?.requiredCosts) throw error;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await build(estimatedCosts);
+    } catch (error) {
+      if (attempt === 2 || error.code !== 'COST_LIMIT_EXCEEDED' ||
+          !error.details?.quote || !error.details?.requiredCosts) throw error;
 
-    validateRegistrationQuote(error.details.quote);
-    return build(copy(error.details.requiredCosts));
+      validateRegistrationQuote(error.details.quote);
+      estimatedCosts = copy(error.details.requiredCosts);
+    }
   }
 };
 
@@ -670,9 +682,11 @@ const refreshUnsigned = async (job, context, persist = true) => {
   const stage = stageFor(job);
   if (job[stage].signedHex) return job;
 
-  const resolved = await resolveRegistration(job.request, context);
+  // The builder refreshes policy and fees itself. Seed it with the saved quote;
+  // changed costs produce a new unsigned review, never an implicit approval.
   let patch;
   if (stage === 'commitment') {
+    await checkIdentityAuthorities(job.request, job.identityAddress, context);
     // Reuse the original salt and its exact reservation bytes on every review.
     const built = await withCalculatedFee(costs => buildCommitment(
       job.request,
@@ -681,7 +695,7 @@ const refreshUnsigned = async (job, context, persist = true) => {
       context,
       job.replacementFunding,
       job.commitment.prepared.prevouts,
-    ), resolved.quote.totalOperationRequired);
+    ), job.commitment.prepared.quote.totalOperationRequired);
     assertSameReservation(job.reservation, built.reservation);
     patch = {
       reservation: built.reservation,
@@ -694,7 +708,7 @@ const refreshUnsigned = async (job, context, persist = true) => {
       lastError: null,
     };
   } else {
-    const prepared = await buildRegistration(job, job.identity, resolved.quote.totalRequired, context);
+    const prepared = await buildRegistration(job, job.identity, job.registration.prepared.quote.totalRequired, context);
     patch = {
       registration: {...job.registration, prepared},
       status: 'registration_prepared',
@@ -704,11 +718,10 @@ const refreshUnsigned = async (job, context, persist = true) => {
 
   const identityNames = await resolveIdentityNames({
     ...job,
-    ...resolved,
     ...patch,
     quote: patch[stage].prepared.quote,
   }, context);
-  patch = {...patch, currencyNames: resolved.currencyNames, identityNames};
+  patch = {...patch, identityNames};
   return persist ? patchJob(job, patch, context) : {...job, ...patch};
 };
 
@@ -719,7 +732,7 @@ export const refreshRegistrationReview = async (jobId, requestContext) => {
     if (job.status === 'commitment_expired') {
       job = await reconcileJob(job, context);
       if (job.status !== 'commitment_expired') return registrationReview(job);
-      const resolved = await resolveRegistration(job.request, context);
+      await checkIdentityAuthorities(job.request, job.identityAddress, context);
       const built = await withCalculatedFee(costs => buildCommitment(
         job.request,
         job.saltHex,
@@ -727,8 +740,11 @@ export const refreshRegistrationReview = async (jobId, requestContext) => {
         context,
         job.commitment.prepared.prevouts,
         job.commitment.prepared.prevouts,
-      ), resolved.quote.totalOperationRequired);
+      ), job.commitment.prepared.quote.totalOperationRequired);
       assertSameReservation(job.reservation, built.reservation);
+      const identityNames = await resolveIdentityNames({
+        ...job, reservation: built.reservation, quote: built.transaction.quote,
+      }, context);
       job = await patchJob(job, {
         reservation: built.reservation,
         previousCommitments: [...(job.previousCommitments || []), job.commitment],
@@ -739,8 +755,7 @@ export const refreshRegistrationReview = async (jobId, requestContext) => {
         ],
         commitment: {prepared: built.transaction, vout: built.commitmentVout},
         registration: undefined,
-        currencyNames: resolved.currencyNames,
-        identityNames: resolved.identityNames,
+        identityNames,
         status: 'commitment_prepared',
         lastError: null,
       }, context);
@@ -763,13 +778,14 @@ export const prepareRegistration = async ({jobId, identity}, requestContext) => 
     if (!['commitment_confirmed', 'registration_prepared', 'registration_expired'].includes(job.status)) {
       throw new Error('Wait for your name commitment to confirm before continuing registration.');
     }
-    const resolved = await resolveRegistration(job.request, context);
     const definition = identity || job.identity;
-    const prepared = await buildRegistration(job, definition, resolved.quote.totalRequired, context);
+    const prepared = await buildRegistration(
+      job, definition, job[stageFor(job)].prepared.quote.totalRequired, context,
+    );
+    const identityNames = await resolveIdentityNames({...job, identity: definition, quote: prepared.quote}, context);
     job = await patchJob(job, {
       identity: definition,
-      currencyNames: resolved.currencyNames,
-      identityNames: resolved.identityNames,
+      identityNames,
       previousRegistrations: [
         ...(job.previousRegistrations || []),
         ...(job.registration?.signedHex ? [job.registration] : []),
@@ -970,7 +986,7 @@ const transactionEvidence = async (job, stage, context) => {
   return {found: true, confirmed: true, height: block.height, blockHash: block.hash};
 };
 
-const currentTip = async (job, context) => {
+const currentChainInfo = async (job, context) => {
   const rpc = VrpcProvider.getVerusIdInterface(job.systemId).interface;
   const info = registrationRpcResult(await guarded(context, () => rpc.getInfo()), 'Check chain height');
   if (info.chainid !== job.systemId) {
@@ -979,11 +995,21 @@ const currentTip = async (job, context) => {
   if (!Number.isSafeInteger(info.blocks) || info.blocks < 1 || info.longestchain > info.blocks) {
     throw new Error('Registration requires a synchronized RPC endpoint.');
   }
-  const tip = registrationRpcResult(await guarded(context, () => rpc.getBlock(String(info.blocks), 1)), 'Check active chain tip');
+  return info;
+};
+
+const checkedTip = (info, response) => {
+  const tip = registrationRpcResult(response, 'Check active chain tip');
   if (tip.height !== info.blocks || tip.confirmations !== 1 || !/^[0-9a-f]{64}$/i.test(tip.hash))
     throw new Error('Could not verify the active chain tip.');
 
   return tip;
+};
+
+const currentTip = async (job, context) => {
+  const rpc = VrpcProvider.getVerusIdInterface(job.systemId).interface;
+  const info = await currentChainInfo(job, context);
+  return checkedTip(info, await guarded(context, () => rpc.getBlock(String(info.blocks), 1)));
 };
 
 const reconcileJob = async (job, context) => {
@@ -1197,19 +1223,21 @@ const broadcastSaved = async (job, stage, context) => {
   // A local rejection must escape the uncertain-broadcast recovery path below.
   // Recheck even when signature validation has a cached result for these bytes.
   assertRegistrationContext(context);
-  const tip = await currentTip(job, context);
-  if (tip.height + 1 >= transaction.prepared.snapshot.expiryHeight) {
+  const info = await currentChainInfo(job, context);
+  if (info.blocks + 1 >= transaction.prepared.snapshot.expiryHeight) {
     throw errorWithCode('REVIEW_CHANGED', 'This saved registration transaction has expired. Check its status before reviewing a replacement.');
   }
 
   // Funding and signature verification is deliberately offline in the SDK.
   // Refresh spendability separately on every first submission and retry.
-  // Send the known inputs together. The shared transport bounds batches and
-  // falls back to sequential singles; every result must pass before broadcast.
+  // Once the height is known, its block and all input checks are independent.
+  // Send them together and bind every unspent result to that verified tip.
   const prevouts = transaction.prepared.prevouts;
-  const responses = await guarded(context, () => client.interface.requestMany(
-    prevouts.map(prevout => new GetTxOutRequest(job.systemId, prevout.txid, prevout.vout, true)),
-  ));
+  const [blockResponse, ...responses] = await guarded(context, () => client.interface.requestMany([
+    new GetBlockRequest(job.systemId, String(info.blocks), 1),
+    ...prevouts.map(prevout => new GetTxOutRequest(job.systemId, prevout.txid, prevout.vout, true)),
+  ]));
+  const tip = checkedTip(info, blockResponse);
 
   for (let index = 0; index < prevouts.length; index++) {
     const prevout = prevouts[index];
