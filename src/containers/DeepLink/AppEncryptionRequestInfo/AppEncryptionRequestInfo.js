@@ -5,7 +5,7 @@
  * Once approved, derives encryption keys and returns response.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -26,9 +26,9 @@ import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/di
 import { SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
 import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { unixToDate } from '../../../utils/math';
-import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { getIdentity } from '../../../utils/api/channels/verusid/callCreators';
+import VrpcProvider from '../../../utils/vrpc/vrpcInterface';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
 import { copyToClipboard } from '../../../utils/clipboard/clipboard';
 import { requestServiceStoredData } from '../../../utils/auth/authBox';
@@ -36,6 +36,12 @@ import { VERUSID_SERVICE_ID } from '../../../utils/constants/services';
 import { VERUSID_NETWORK_DEFAULT } from '../../../../env/index';
 import { processAppEncryptionRequest } from '../../../utils/deeplink/handlers/appEncryptionRequestHandler';
 import { ensureGenericResponseSigner } from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
+import { getAppEncryptionSessionKey } from '../../../utils/deeplink/appEncryptionSession';
+import {
+  appEncryptionIdentityMatchesConstraints,
+  getAppEncryptionIdentityConstraints,
+} from '../../../utils/deeplink/validator/appEncryptionIdentityConstraints';
+import store from '../../../store';
 import styles from '../../../styles/appEncryption.styles';
 import { convertFqnToDisplayFormat } from '../../../utils/fullyqualifiedname';
 
@@ -46,29 +52,36 @@ const truncateAddress = (addr) => {
   return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
 };
 
-const truncateZAddress = (addr) => {
-  if (!addr || addr.length <= 20) return addr;
-  return `${addr.slice(0, 10)}...${addr.slice(-10)}`;
-};
+const getDaemonChainArg = systemID => {
+  const coin = getIdentityCoin(systemID);
+  if (coin?.id === 'VRSC') return '';
+  if (coin?.id === 'VRSCTEST') return ' -chain=vrsctest';
 
-const getDaemonChainArg = (systemName, requestIsTestnet) => {
-  if (requestIsTestnet || systemName === 'VRSCTEST') return ' -chain=vrsctest';
-  if (systemName && systemName !== 'VRSC') return ` -chain=${systemName.toLowerCase()}`;
-  return '';
+  // PBaaS chain identifiers are case-sensitive and independent of display names.
+  return systemID ? ` -chain=${systemID}` : '';
 };
 
 const buildDaemonDecryptCommand = ({
   encryptedDescriptorJson,
-  signerSystemName,
-  requestIsTestnet,
+  signerSystemID,
 }) => {
-  const chainArg = getDaemonChainArg(signerSystemName, requestIsTestnet);
+  const chainArg = getDaemonChainArg(signerSystemID);
   const payload = JSON.stringify({ datadescriptor: encryptedDescriptorJson });
   return `./verus${chainArg} decryptdata '${payload}'`;
 };
 
 const isTestProfile = account => {
   return Object.keys(account?.testnetOverrides || {}).length > 0;
+};
+
+const EMPTY_IDENTITIES = {};
+
+const getIdentityCoin = chainId => {
+  try {
+    return CoinDirectory.findCoinObj(chainId);
+  } catch (_) {
+    return null;
+  }
 };
 
 // ── Identity Picker Sheet ──
@@ -121,7 +134,7 @@ const IdentityPickerSheet = ({
               {!hasIdentities && (
                 <View style={styles.emptyContainer}>
                   <Text style={styles.emptyText}>
-                    No linked identities found.
+                    No linked identities match this request.
                   </Text>
                 </View>
               )}
@@ -250,30 +263,32 @@ const DetailRow = ({ title, subtitle, onPress, rightIcon, showBorder, isWarning 
 // Main Component
 // ══════════════════════════════════════════════════════════════════════════════
 
-const AppEncryptionRequestInfo = (props) => {
+const AppEncryptionRequestSession = (props) => {
   const {
     // From displayProps (handler output)
-    detailsBufferString,
     signerFqn,
     signerSystemID,
     signerSystemName,
     signerIdentityID,
     sigtime,
     derivationNumber,
+    secondaryDerivationNumber,
+    appScopeID,
+    appScopeFqn,
     derivationIdFqn,
+    derivationIdentityID,
     hasDerivationID,
     requestIdFqn,
     hasRequestID,
     encryptResponseToAddress,
-    hasEncryptResponseToAddress,
     returnESK,
     // Standard props from GenericRequestHome
     cancel,
-    navigation,
     next,
     response,
     request,
     detailIndex,
+    sessionKey,
   } = props;
 
   // ── Redux state ──
@@ -295,23 +310,77 @@ const AppEncryptionRequestInfo = (props) => {
   const [waitingForSignin, setWaitingForSignin] = useState(false);
   const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] = useState(null);
   const [selectedIdentity, setSelectedIdentity] = useState(null);
-  const [linkedIds, setLinkedIds] = useState({});
-  const [linkedIdsLoaded, setLinkedIdsLoaded] = useState(false);
-  const [sortedIds, setSortedIds] = useState({});
+  const [linkedIdentityData, setLinkedIdentityData] = useState(null);
+  const [parentData, setParentData] = useState(null);
   const [identitySheetVisible, setIdentitySheetVisible] = useState(false);
 
   // ── Encrypted response preview state ──
   const [encryptedResponseHex, setEncryptedResponseHex] = useState(null);
   const [encryptedDescriptorJson, setEncryptedDescriptorJson] = useState(null);
   const [pendingResponse, setPendingResponse] = useState(null);
+  const mounted = useRef(true);
+  const activeApproval = useRef(null);
+  const sending = useRef(false);
+  const requestHex = request.toBuffer().toString('hex');
+  const linkedIdsVersion = JSON.stringify(encryptedIds);
+  const linkedIdsLoaded = signedIn && linkedIdentityData != null &&
+    linkedIdentityData.source === encryptedIds;
+  const linkedIds = linkedIdsLoaded ? linkedIdentityData.ids : EMPTY_IDENTITIES;
+  const constraints = useMemo(() => {
+    try {
+      return getAppEncryptionIdentityConstraints(request);
+    } catch (_) {
+      // Malformed signed constraints cannot authorize an identity selection.
+      return null;
+    }
+  }, [request, requestHex]);
+  const parentScope = useMemo(() => ({ linkedIds, constraints }), [linkedIds, constraints]);
+  const sortedIds = useMemo(() => {
+    const sorted = {};
+
+    if (!linkedIdsLoaded || !constraints) return sorted;
+    if (constraints.parentIDs.size > 0 && parentData?.scope !== parentScope) return sorted;
+
+    for (const chainId of Object.keys(linkedIds)) {
+      const coin = getIdentityCoin(chainId);
+      if (!coin || !!coin.testnet !== requestIsTestnet) continue;
+
+      sorted[chainId] = Object.keys(linkedIds[chainId] || {})
+        .filter(identityID => appEncryptionIdentityMatchesConstraints(constraints, {
+          identityID,
+          systemID: coin.system_id,
+          parentID: parentData?.ids[`${chainId}:${identityID}`],
+        }))
+        .sort((a, b) => (linkedIds[chainId][a] || '').localeCompare(linkedIds[chainId][b] || ''));
+    }
+
+    return sorted;
+  }, [linkedIds, linkedIdsLoaded, constraints, parentData, parentScope, requestIsTestnet]);
+  const selectedIdentityAllowed = selectedIdentity != null &&
+    sortedIds[selectedIdentity.chainId]?.includes(selectedIdentity.iAddress);
+  const review = useMemo(() => ({ request, requestHex, detailIndex, selectedIdentity, sortedIds }),
+    [request, requestHex, detailIndex, selectedIdentity, sortedIds]);
+  const currentReview = useRef(review);
+  currentReview.current = review;
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
+  useEffect(() => {
+    activeApproval.current = null;
+    setLoading(false);
+    setEncryptedResponseHex(null);
+    setEncryptedDescriptorJson(null);
+    setPendingResponse(null);
+  }, [review]);
 
   // ── Derived values ──
   const requesterLabel = signerFqn || 'An application';
   const requesterAddress = signerFqn ? signerIdentityID : null;
   const sigDateString = sigtime ? unixToDate(sigtime) : null;
-  const chainId = signerSystemName 
-    ? signerSystemName 
-    : getSystemNameFromSystemId(signerSystemID) || signerSystemID;
+  const chainId = signerSystemName || signerSystemID;
   const matchingAccounts = useMemo(() => {
     return (accounts || []).filter(account => isTestProfile(account) === requestIsTestnet);
   }, [accounts, requestIsTestnet]);
@@ -325,45 +394,60 @@ const AppEncryptionRequestInfo = (props) => {
 
   // ── Load linked identities (decrypt stored data) ──
   useEffect(() => {
+    let active = true;
     const loadLinkedIds = async () => {
       try {
         const verusIdServiceData = await requestServiceStoredData(
           VERUSID_SERVICE_ID,
         );
-        if (verusIdServiceData.linked_ids) {
-          setLinkedIds(verusIdServiceData.linked_ids);
-        } else {
-          setLinkedIds({});
+        if (active && getAppEncryptionSessionKey(store.getState()) === sessionKey) {
+          setLinkedIdentityData({ source: encryptedIds, ids: verusIdServiceData.linked_ids || {} });
         }
       } catch (e) {
-        setLinkedIds({});
-      } finally {
-        setLinkedIdsLoaded(true);
+        if (active) setLinkedIdentityData({ source: encryptedIds, ids: {} });
       }
     };
 
-    if (signedIn) {
-      setLinkedIdsLoaded(false);
-      loadLinkedIds();
-    } else {
-      setLinkedIdsLoaded(false);
-    }
+    if (signedIn) loadLinkedIds();
+
+    return () => { active = false; };
   }, [encryptedIds, signedIn]);
 
-  // ── Sort identities alphabetically ──
+  // Parent constraints use the current identity record, not a stored display name.
   useEffect(() => {
-    const sorted = {};
-    for (const chainId of Object.keys(linkedIds)) {
-      sorted[chainId] = linkedIds[chainId]
-        ? Object.keys(linkedIds[chainId]).sort((a, b) => {
-            const nameA = linkedIds[chainId][a] || '';
-            const nameB = linkedIds[chainId][b] || '';
-            return nameA.localeCompare(nameB);
-          })
-        : [];
-    }
-    setSortedIds(sorted);
-  }, [linkedIds]);
+    let active = true;
+
+    const loadParents = async () => {
+      const ids = {};
+      await Promise.all(Object.keys(linkedIds).map(async chainId => {
+        const coin = getIdentityCoin(chainId);
+        if (!coin?.vrpc_endpoints?.[0] || !!coin.testnet !== requestIsTestnet) return;
+
+        try {
+          VrpcProvider.initEndpoint(coin.system_id, coin.vrpc_endpoints[0]);
+        } catch (_) {
+          return;
+        }
+
+        await Promise.all(Object.keys(linkedIds[chainId] || {}).map(async identityID => {
+          try {
+            const result = await getIdentity(coin.system_id, identityID);
+            if (!result.error) ids[`${chainId}:${identityID}`] = result.result?.identity?.parent;
+          } catch (_) {
+            // Unverified parents remain ineligible until the identities reload.
+          }
+        }));
+      }));
+
+      if (active && getAppEncryptionSessionKey(store.getState()) === sessionKey) {
+        setParentData({ scope: parentScope, ids });
+      }
+    };
+
+    if (linkedIdsLoaded && constraints?.parentIDs.size > 0) loadParents();
+
+    return () => { active = false; };
+  }, [parentScope, linkedIdsLoaded, requestIsTestnet]);
 
   // ── Handle sign-in flow ──
   useEffect(() => {
@@ -374,19 +458,24 @@ const AppEncryptionRequestInfo = (props) => {
 
   // ── Auto-select first matching identity ──
   useEffect(() => {
-    if (!selectedIdentity && linkedIdsLoaded) {
-      const identityChain = requestIsTestnet ? 'VRSCTEST' : identityNetwork;
-      const chainIds = linkedIds[identityChain];
-      if (chainIds && Object.keys(chainIds).length > 0) {
-        const firstIAddress = Object.keys(chainIds)[0];
+    if (selectedIdentity && !selectedIdentityAllowed) {
+      setSelectedIdentity(null);
+    } else if (!selectedIdentity && linkedIdsLoaded) {
+      const preferredChain = requestIsTestnet ? 'VRSCTEST' : identityNetwork;
+      const identityChain = [preferredChain, ...Object.keys(sortedIds)]
+        .find(chainId => sortedIds[chainId]?.length > 0);
+
+      if (identityChain) {
+        const firstIAddress = Object.keys(linkedIds[identityChain])
+          .find(identityID => sortedIds[identityChain].includes(identityID));
         setSelectedIdentity({
           chainId: identityChain,
           iAddress: firstIAddress,
-          friendlyName: chainIds[firstIAddress] || firstIAddress,
+          friendlyName: linkedIds[identityChain][firstIAddress] || firstIAddress,
         });
       }
     }
-  }, [linkedIds, linkedIdsLoaded, selectedIdentity, requestIsTestnet, identityNetwork]);
+  }, [linkedIds, linkedIdsLoaded, sortedIds, selectedIdentity, selectedIdentityAllowed, requestIsTestnet, identityNetwork]);
 
   // ── Identity picker handlers ──
   const handleOpenIdentitySheet = () => {
@@ -394,14 +483,17 @@ const AppEncryptionRequestInfo = (props) => {
   };
 
   const handleSelectIdentity = (chainId, iAddress, friendlyName) => {
+    if (!currentReview.current.sortedIds[chainId]?.includes(iAddress)) return;
+
+    activeApproval.current = null;
     setSelectedIdentity({ chainId, iAddress, friendlyName });
     setIdentitySheetVisible(false);
   };
 
   // ── Open signer modal ──
   const openSignerModal = () => {
-    if (signerSystemName && signerIdentityID) {
-      const coinObj = CoinDirectory.getBasicCoinObj(signerSystemName);
+    if (signerSystemID && signerIdentityID) {
+      const coinObj = getIdentityCoin(signerSystemID);
       if (coinObj) {
         setVerusIdDetailsModalProps({
           loadVerusId: async () => {
@@ -436,21 +528,50 @@ const AppEncryptionRequestInfo = (props) => {
 
   // ── Handle approval ──
   const handleApprove = async () => {
+    if (!mounted.current || currentReview.current !== review || activeApproval.current) return;
+
     // Check if signed in
     if (!signedIn) {
       handleSignin();
       return;
     }
 
-    if (!selectedIdentity) {
+    if (isWrongRequestType || getAppEncryptionSessionKey(store.getState()) !== sessionKey) return;
+
+    if (!selectedIdentityAllowed) {
       createAlert('Error', 'Please select an identity to respond with.');
       return;
     }
 
+    // This guard also protects callbacks retained after the user changes their selection.
+    const approval = {
+      isActive: () => {
+        try {
+          return mounted.current && currentReview.current === review &&
+            activeApproval.current === approval &&
+            getAppEncryptionSessionKey(store.getState()) === sessionKey &&
+            JSON.stringify(store.getState().services.stored[VERUSID_SERVICE_ID]) === linkedIdsVersion &&
+            request.toBuffer().toString('hex') === requestHex;
+        } catch (e) {
+          return false;
+        }
+      },
+      assertActive: () => {
+        if (!approval.isActive()) {
+          throw Object.assign(new Error('Encryption approval is no longer current.'), { code: 'SESSION_CHANGED' });
+        }
+      },
+    };
+    activeApproval.current = approval;
     setLoading(true);
 
     try {
-      const updatedResponse = response || new GenericResponse();
+      approval.assertActive();
+      // Keep a pending response private until this approval is sent.
+      const updatedResponse = new GenericResponse({
+        ...response,
+        details: [...(response?.details || [])],
+      });
       const coinObj = CoinDirectory.findCoinObj(selectedIdentity.chainId);
 
       if (!coinObj) {
@@ -468,7 +589,10 @@ const AppEncryptionRequestInfo = (props) => {
         request,
         detailIndex,
         responseSignerID: selectedIdentity.iAddress,
+        responseSignerSystemID: coinObj.system_id,
+        assertActive: approval.assertActive,
       });
+      approval.assertActive();
 
       // Build updated response
       updatedResponse.details = updatedResponse.details || [];
@@ -480,8 +604,11 @@ const AppEncryptionRequestInfo = (props) => {
       const responseHex = updatedResponse.toBuffer().toString('hex');
       setEncryptedResponseHex(responseHex);
       setEncryptedDescriptorJson(descriptorJson);
-      setPendingResponse({ updatedResponse, handledIndices: [detailIndex] });
+      setPendingResponse({ updatedResponse, handledIndices: [detailIndex], approval, review });
     } catch (e) {
+      if (!approval.isActive() || e.code === 'SESSION_CHANGED') return;
+
+      activeApproval.current = null;
       const isZSeedMissing = e.message && e.message.includes('No Z (shielded address) seed');
       createAlert(
         isZSeedMissing ? 'Z Seed Required' : 'Error',
@@ -491,7 +618,7 @@ const AppEncryptionRequestInfo = (props) => {
         cancel();
       }
     } finally {
-      setLoading(false);
+      if (mounted.current && currentReview.current === review) setLoading(false);
     }
   };
 
@@ -515,55 +642,52 @@ const AppEncryptionRequestInfo = (props) => {
 
   // ── Send the pending response (after reviewing debug info) ──
   const handleSendResponse = async () => {
-    if (!pendingResponse) return;
+    if (!pendingResponse?.approval.isActive() || sending.current) return;
+    sending.current = true;
     setLoading(true);
     try {
+      pendingResponse.approval.assertActive();
       await next(pendingResponse.updatedResponse, pendingResponse.handledIndices);
     } catch (e) {
+      if (!pendingResponse.approval.isActive() || e.code === 'SESSION_CHANGED') return;
       createAlert('Error', e.message || 'Failed to send response.');
     } finally {
-      setLoading(false);
+      sending.current = false;
+      if (pendingResponse.approval.isActive()) setLoading(false);
     }
   };
 
   // ── Debug dropdown state ──
   const [debugExpanded, setDebugExpanded] = useState(false);
   const approveDisabled =
-    waitingForSignin || isWrongRequestType || (signedIn && !selectedIdentity);
+    waitingForSignin || isWrongRequestType || (signedIn && !selectedIdentityAllowed);
   const daemonDecryptCommand = useMemo(() => {
     if (!encryptedDescriptorJson) return null;
 
     return buildDaemonDecryptCommand({
       encryptedDescriptorJson,
-      signerSystemName,
-      requestIsTestnet,
+      signerSystemID,
     });
-  }, [encryptedDescriptorJson, requestIsTestnet, signerSystemName]);
+  }, [encryptedDescriptorJson, signerSystemID]);
 
   // ── Render response preview screen ──
-  if (encryptedResponseHex && pendingResponse) {
-    const responseIsEncrypted = encryptedDescriptorJson != null;
-
+  if (encryptedResponseHex && pendingResponse?.review === review) {
     return (
       <SafeAreaView style={styles.root}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={styles.readyHeader}>
             <View style={styles.readyIconCircle}>
               <MaterialCommunityIcons
-                name={responseIsEncrypted ? 'lock-check' : 'check-circle'}
+                name="lock-check"
                 size={48}
                 color={Colors.verusGreenColor}
               />
             </View>
             <Text style={styles.readyTitle}>
-              {responseIsEncrypted
-                ? 'Your encrypted response is ready to send'
-                : 'Your response is ready to send'}
+              Your encrypted response is ready to send
             </Text>
             <Text style={styles.readySubtitle}>
-              {responseIsEncrypted
-                ? 'The encryption was successful. Press continue to send it back to the requesting app.'
-                : 'Press continue to send it back to the requesting app.'}
+              The encryption was successful. Press continue to send it back to the requesting app.
             </Text>
           </View>
 
@@ -643,6 +767,7 @@ const AppEncryptionRequestInfo = (props) => {
             style={styles.continueCta}
             onPress={handleSendResponse}
             activeOpacity={0.8}
+            disabled={loading}
           >
             <Text style={styles.continueCtaText}>Continue</Text>
           </TouchableOpacity>
@@ -719,8 +844,9 @@ const AppEncryptionRequestInfo = (props) => {
               <Text style={styles.warningTitle}>Extended Spending Key Requested</Text>
             </View>
             <Text style={styles.warningText}>
-              This app is also requesting your Extended Spending Key for this derived address.
-              This grants spending capability to this specific derived address.
+              {hasDerivationID
+                ? 'This app is requesting the Extended Spending Key for the final nested channel. It can decrypt data, spend funds, and derive further keys from this channel. The app-scope key stays private.'
+                : 'This app is requesting the Extended Spending Key for the app-scope channel. It can decrypt data, spend funds, and derive every nested channel for your selected identity, app scope, and primary key number.'}
             </Text>
             <Text style={styles.warningEmphasis}>
               Only approve if you fully trust this application.
@@ -747,7 +873,7 @@ const AppEncryptionRequestInfo = (props) => {
             </View>
             <View style={styles.identitySelectTextContainer}>
               <Text style={styles.identitySelectLabel}>
-                {selectedIdentity ? 'You are Responding as' : 'Select identity to respond'}
+                {selectedIdentity ? 'Your selected identity' : 'Select identity to respond'}
               </Text>
               <Text style={[
                 styles.identitySelectName,
@@ -761,7 +887,7 @@ const AppEncryptionRequestInfo = (props) => {
               </Text>
               {selectedIdentity && (
                 <Text style={styles.identitySelectAddress}>
-                  {truncateAddress(selectedIdentity.iAddress)}
+                  {selectedIdentity.iAddress}
                 </Text>
               )}
             </View>
@@ -783,8 +909,8 @@ const AppEncryptionRequestInfo = (props) => {
           <DetailRow
             title={requesterLabel}
             subtitle={`Requesting App${requesterAddress ? ` • ${truncateAddress(requesterAddress)}` : ''}`}
-            onPress={signerSystemName && signerIdentityID ? openSignerModal : undefined}
-            rightIcon={signerSystemName && signerIdentityID ? 'chevron-right' : undefined}
+            onPress={signerSystemID && signerIdentityID ? openSignerModal : undefined}
+            rightIcon={signerSystemID && signerIdentityID ? 'chevron-right' : undefined}
             showBorder={false}
           />
 
@@ -806,19 +932,33 @@ const AppEncryptionRequestInfo = (props) => {
             />
           )}
 
-          {/* Derivation Number */}
+          {/* App scope is always the first derivation target, even when nested. */}
           <DetailRow
-            title={`#${derivationNumber}`}
-            subtitle="Key Number • Used to generate a unique encryption key for this app"
+            title={appScopeFqn || appScopeID}
+            subtitle={`App Scope${appScopeFqn && appScopeFqn !== appScopeID ? ` • ${appScopeID}` : ''}`}
             showBorder={true}
           />
 
-          {/* Linked Identity */}
           <DetailRow
-            title={hasDerivationID ? derivationIdFqn : 'Your signing identity'}
-            subtitle="Identity to Encrypt to"
+            title={`#${derivationNumber}`}
+            subtitle="Primary Key Number • Within the app scope"
             showBorder={true}
           />
+
+          {hasDerivationID && (
+            <>
+              <DetailRow
+                title={derivationIdFqn || derivationIdentityID}
+                subtitle={`Nested Identity${derivationIdFqn && derivationIdFqn !== derivationIdentityID ? ` • ${derivationIdentityID}` : ''}`}
+                showBorder={true}
+              />
+              <DetailRow
+                title={`#${secondaryDerivationNumber}`}
+                subtitle="Secondary Key Number • Within the nested identity"
+                showBorder={true}
+              />
+            </>
+          )}
 
           {/* Request ID */}
           {hasRequestID && (
@@ -829,16 +969,14 @@ const AppEncryptionRequestInfo = (props) => {
             />
           )}
 
-          {/* Encrypt Response To */}
-          {hasEncryptResponseToAddress && (
-            <DetailRow
-              title={truncateZAddress(encryptResponseToAddress)}
-              subtitle="Encrypt Reply To"
-              onPress={() => copyZAddress(encryptResponseToAddress)}
-              rightIcon="content-copy"
-              showBorder={true}
-            />
-          )}
+          {/* Every app encryption response requires this recipient. */}
+          <DetailRow
+            title={encryptResponseToAddress}
+            subtitle="Response Encryption Recipient"
+            onPress={() => copyZAddress(encryptResponseToAddress)}
+            rightIcon="content-copy"
+            showBorder={true}
+          />
         </View>
 
         {/* Identity Picker Sheet */}
@@ -882,6 +1020,11 @@ const AppEncryptionRequestInfo = (props) => {
       </View>
     </SafeAreaView>
   );
+};
+
+const AppEncryptionRequestInfo = props => {
+  const sessionKey = useSelector(getAppEncryptionSessionKey);
+  return <AppEncryptionRequestSession key={sessionKey} {...props} sessionKey={sessionKey} />;
 };
 
 export default AppEncryptionRequestInfo;

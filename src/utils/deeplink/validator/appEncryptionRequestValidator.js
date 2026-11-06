@@ -1,19 +1,29 @@
 /*
  * appEncryptionRequestValidator.js
- * 
+ *
  * Validates AppEncryptionRequest details before processing.
- * Implements validation per docs/encrypteddatarequsthandling.md specification.
  * Throws on any error, returns nothing on success.
  */
 
-import { GenericRequest, AppEncryptionRequestOrdinalVDXFObject } from "verus-typescript-primitives";
-import { CoinDirectory } from "../../CoinData/CoinDirectory";
-import VrpcProvider from "../../vrpc/vrpcInterface";
-import { getIdentity } from "../../api/channels/verusid/callCreators";
+import {
+  GenericRequest,
+  AppEncryptionRequestOrdinalVDXFObject,
+  decodeDestination,
+  I_ADDR_VERSION,
+} from "verus-typescript-primitives";
 import { BN } from "bn.js";
 
+const MAX_NATIVE_INDEX = new BN("2147483647");
 
-// validateAppEncryptionRequestVDXFObject
+// Both native bridges use signed 32-bit indices. Check the BN before narrowing.
+export const checkedNativeIndex = (index, name = "derivation number") => {
+  if (!BN.isBN(index) || index.isNeg() || index.gt(MAX_NATIVE_INDEX)) {
+    throw new Error(`Invalid ${name}: expected a number from 0 to 2147483647.`);
+  }
+
+  return index.toNumber();
+};
+
 // Entry point for envelope validator - validates detail at specific index
 
 /**
@@ -22,21 +32,17 @@ import { BN } from "bn.js";
  */
 export const validateAppEncryptionRequestVDXFObject = async (request, detailIndex) => {
   const detail = request.getDetails(detailIndex);
-  
+
   if (!detail) {
     throw new Error(`No detail found at index ${detailIndex}`);
   }
-  
+
   if (!(detail instanceof AppEncryptionRequestOrdinalVDXFObject)) {
     throw new Error("Detail at specified index is not an AppEncryptionRequest");
   }
-  
+
   return validateAppEncryptionRequestDetails(request, detail.data, detailIndex);
 };
-
-
-// validateAppEncryptionRequestDetails
-// Validates the AppEncryptionRequestDetails object per specification
 
 /**
  * @param {GenericRequest} request - the parent request (for signature info)
@@ -44,43 +50,28 @@ export const validateAppEncryptionRequestVDXFObject = async (request, detailInde
  * @param {number} detailIndex
  */
 export const validateAppEncryptionRequestDetails = async (request, details, detailIndex) => {
-  
-  // Validate Derivation Number is present and non-negative
-  const derivationNumber = details.derivationNumber;
-  if (!derivationNumber || derivationNumber.isNeg()) {
-    throw new Error("Invalid request: derivation number is missing or negative.");
-  }
+  checkedNativeIndex(details.derivationNumber);
+  checkedNativeIndex(details.secondaryDerivationNumber, "secondary derivation number");
 
-  if (details.returnESK() && !details.hasEncryptResponseToAddress()) {
+  // Viewing keys are sensitive too; every channel response must be encrypted.
+  if (!details.hasEncryptResponseToAddress()) {
     throw new Error(
-      "Extended spending key requests must specify encryptResponseToAddress.",
+      "App encryption requests must specify encryptResponseToAddress.",
     );
   }
- 
-  // Validate encryptResponseToAddress is a valid z-address if present
-  if (details.hasEncryptResponseToAddress()) {
-    try {
-      const zAddr = details.encryptResponseToAddress;
 
-      if (!zAddr || !(zAddr.d.length > 0) || !(zAddr.pkD.length > 0)) {
-        throw new Error("Invalid encryptResponseToAddress: not a valid Sapling z-address.");
-      }
-    } catch (e) {
-      throw new Error("Invalid encryptResponseToAddress: " + (e.message || "unable to parse z-address"));
-    }
+  const zAddr = details.encryptResponseToAddress;
+
+  if (!zAddr || zAddr.d?.length !== 11 || zAddr.pkD?.length !== 32) {
+    throw new Error("Invalid encryptResponseToAddress: not a valid Sapling z-address.");
   }
 
-  // Validate derivationID is a valid i-address if present
+  // Nested targets only need a valid identity identifier, not an on-chain record.
   if (details.hasDerivationID()) {
     try {
-      const derivationIdAddr = details.derivationID.toIAddress();
-      const coinObj = CoinDirectory.getBasicCoinObj(request.signature.systemID.toIAddress());
-      const checkedIdentity = await getIdentity(coinObj.system_id, derivationIdAddr);
-      if (!checkedIdentity || checkedIdentity.error || !checkedIdentity.result) {
-        throw new Error("Invalid derivationID: not a valid i-address.");
-      }
+      decodeDestination(details.derivationID.toIAddress(), I_ADDR_VERSION);
     } catch (e) {
       throw new Error("Invalid derivationID: " + (e.message || "unable to parse i-address"));
     }
-  } 
+  }
 };

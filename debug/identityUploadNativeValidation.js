@@ -16,6 +16,7 @@ import {getKey} from '../src/utils/keyGenerator/keyGenerator';
 import {zGetEncryptionAddress} from '../src/utils/api/channels/dlight/requests/zGetEncryptionAddress';
 import {encryptData} from '../src/utils/api/channels/dlight/requests/encrypt';
 import {decryptData} from '../src/utils/api/channels/dlight/requests/decrypt';
+import {validateAppEncryptionNativeEncoding} from './appEncryptionNativeValidation';
 
 let updateStatus;
 
@@ -68,6 +69,9 @@ const run = async () => {
   );
 
   let mnemonic = await getKey(256);
+
+  progress('Checking native nested app encryption and spending-key encoding');
+  const appEncryption = await validateAppEncryptionNativeEncoding(mnemonic);
 
   progress('Deriving a disposable native recipient');
   requireTrue(mnemonic.split(' ').length === 24, 'Expected fresh 256-bit mnemonic');
@@ -188,6 +192,7 @@ const run = async () => {
     taggedPlaintextLengths: lengths,
     freshRecipients: 2,
     encryptions: epks.size,
+    appEncryption,
   };
 };
 

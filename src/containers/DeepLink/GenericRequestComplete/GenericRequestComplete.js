@@ -28,7 +28,7 @@ import { resetDeeplinkData } from '../../../actions/actionCreators';
 import { openUrl } from '../../../utils/linking';
 import store from '../../../store';
 import {captureSessionScope, sessionScopeIsCurrent} from '../../../actions/actions/updates/sessionRequests';
-import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
+import { getAppEncryptionSessionKey } from '../../../utils/deeplink/appEncryptionSession';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { signGenericResponse } from '../../../utils/api/channels/vrpc/callCreators';
 import {
@@ -47,7 +47,7 @@ import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeep
 import { prepareGenericResponseForSigning } from '../../../utils/deeplink/genericResponse/prepareGenericResponseForSigning';
 import { encryptGenericResponseDetails } from '../../../utils/deeplink/genericResponse/encryptGenericResponseDetails';
 import {
-  assertNoPlaintextExtendedSpendingKey,
+  assertNoPlaintextAppEncryptionResponse,
   assertSecurePostResponseUri,
 } from '../../../utils/deeplink/genericResponse/responseDeliverySecurity';
 import {
@@ -56,7 +56,7 @@ import {
 } from '../../../utils/deeplink/validator/authenticationRequestValidator';
 
 const GenericRequestComplete = props => {
-  const { requestBufferString, responseBufferString } = props.route.params;
+  const { requestBufferString, responseBufferString, appEncryptionSessionKey } = props.route.params;
   const insets = useSafeAreaInsets();
   const bottomNavigationInset = Math.max(
     insets.bottom,
@@ -76,12 +76,15 @@ const GenericRequestComplete = props => {
   const source = useMemo(() => ({
     requestId: store.getState().deeplink.requestId,
     sessionScope: captureSessionScope(store.getState()),
-  }), [requestBufferString, responseBufferString]);
+    appEncryptionSessionKey,
+  }), [requestBufferString, responseBufferString, appEncryptionSessionKey]);
   const currentSource = useRef(source);
   currentSource.current = source;
   const isCurrent = () => mounted.current && currentSource.current === source &&
     store.getState().deeplink.requestId === source.requestId &&
-    sessionScopeIsCurrent(store.getState(), source.sessionScope);
+    sessionScopeIsCurrent(store.getState(), source.sessionScope) &&
+    (source.appEncryptionSessionKey == null ||
+      source.appEncryptionSessionKey === getAppEncryptionSessionKey(store.getState()));
 
   useEffect(() => {
     mounted.current = true;
@@ -145,7 +148,7 @@ const GenericRequestComplete = props => {
 
     if (responseUri == null) return;
 
-    assertNoPlaintextExtendedSpendingKey(response);
+    assertNoPlaintextAppEncryptionResponse(response);
 
     if (isPostUri(responseUri)) {
       const responseBuffer = response.toBuffer();
@@ -331,12 +334,19 @@ const GenericRequestComplete = props => {
       }
 
       const signerSystemID = response.signature.systemID.toIAddress();
-      const signerSystemName = getSystemNameFromSystemId(signerSystemID);
-      const coinObj = CoinDirectory.getBasicCoinObj(signerSystemName);
+      // Canonical system IDs also resolve registered PBaaS signing chains.
+      const coinObj = CoinDirectory.getBasicCoinObj(signerSystemID);
 
       const signedResponse = await signAfterAuthenticationExpiryCheck(
         request,
-        () => signGenericResponse(coinObj, response),
+        () => {
+          assertActive();
+          return signGenericResponse(coinObj, response, {
+            request,
+            sessionScope: source.sessionScope,
+            assertActive,
+          });
+        },
       );
       assertActive();
       const verification = await verifyGenericResponse(coinObj, signedResponse);
@@ -348,7 +358,10 @@ const GenericRequestComplete = props => {
 
       await performAfterAuthenticationExpiryCheck(
         request,
-        () => handleResponseUri(request, signedResponse),
+        () => {
+          assertActive();
+          return handleResponseUri(request, signedResponse);
+        },
       );
       assertActive();
       await markSavedPendingRequestComplete();

@@ -33,10 +33,10 @@ jest.mock('verusid-ts-client', () => ({primitives: {
         : [];
     }
     isTestnet() { return false; }
-    isSigned() { return ['delegated', 'upload'].includes(this.marker); }
-    hasAppOrDelegatedID() { return this.marker === 'delegated'; }
-    appOrDelegatedID = {toAddress: () => 'delegated-user'};
-    signature = {identityID: {toAddress: () => 'signing-app'}};
+    isSigned() { return ['delegated', 'self-scoped', 'upload'].includes(this.marker); }
+    hasAppOrDelegatorID() { return ['delegated', 'self-scoped', 'unsigned-scoped'].includes(this.marker); }
+    appOrDelegatorID = {toIAddress: () => this.marker === 'self-scoped' ? 'signing-app' : 'delegated-user'};
+    signature = {identityID: {toIAddress: () => 'signing-app'}};
   },
 }}));
 jest.mock('../../../actions/actions/alert/dispatchers/alert', () => ({createAlert: (...args) => mockAlert(...args)}));
@@ -134,7 +134,7 @@ it.each(['replace', 'unmount'])('cancels the delegated sign-in timer on %s', asy
   if (change === 'replace') expect(view.root.findByType('GenericRequestHome').props.deeplinkData).toBe(hex('replacement'));
 });
 
-it.each(['delegated', 'upload'])('opens the current %s sign-in prompt once and validates after sign-in', async marker => {
+it.each(['delegated', 'self-scoped', 'upload'])('opens the current %s sign-in prompt once and validates after sign-in', async marker => {
   jest.useFakeTimers();
   mockState.authentication.signedIn = false;
   mockState.deeplink.data = hex(marker);
@@ -147,6 +147,23 @@ it.each(['delegated', 'upload'])('opens the current %s sign-in prompt once and v
   expect(mockValidate).toHaveBeenCalledTimes(1);
   expect(view.root.findByType('GenericRequestHome').props.deeplinkData).toBe(hex(marker));
   expectNoOldEffects();
+});
+
+it('rejects an unsigned explicit scope without requesting sign-in', async () => {
+  jest.useFakeTimers();
+  mockState.authentication.signedIn = false;
+  mockState.deeplink.data = hex('unsigned-scoped');
+  mockValidate.mockRejectedValueOnce(new Error('This type of request requires a signature'));
+  const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+  try {
+    await mount();
+    act(() => jest.advanceTimersByTime(1000));
+    expect(mockValidate).toHaveBeenCalledTimes(1);
+    expect(mockOpenAuth).not.toHaveBeenCalled();
+    expect(mockAlert).toHaveBeenCalledWith('Error', 'This type of request requires a signature');
+  } finally {
+    error.mockRestore();
+  }
 });
 
 it('does not resume an old delegated request when sign-in and replacement arrive together', async () => {

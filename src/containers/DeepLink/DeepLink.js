@@ -117,10 +117,8 @@ const DeepLink = (props) => {
       assertRequestNetworkMatchesAccount(activeAccount, request.isTestnet());
     }
 
-    const requiresDelegatedUserCheck =
-      request.isSigned() &&
-      request.hasAppOrDelegatedID() &&
-      request.appOrDelegatedID.toAddress() !== request.signature.identityID.toAddress();
+    // An explicit app scope always requires proof of control by the active profile.
+    const requiresAppScopeCheck = request.isSigned() && request.hasAppOrDelegatorID();
     const requiresUploadSession = request.details.some(detail =>
       detail.getIAddressKey() === primitives.IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid &&
       detail.data.signDataMap?.size > 0,
@@ -128,7 +126,7 @@ const DeepLink = (props) => {
     
     assertExperimentalGenericRequestAllowed(request, store.getState());
 
-    if ((requiresDelegatedUserCheck || requiresUploadSession) && !signedIn) {
+    if ((requiresAppScopeCheck || requiresUploadSession) && !signedIn) {
       authSource.current = source;
       setWaitingForSignin(true);
 

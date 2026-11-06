@@ -1,4 +1,5 @@
 let mockState;
+let mockSignerSystemID;
 const mockDispatch = jest.fn();
 const mockEncrypt = jest.fn();
 const mockSign = jest.fn();
@@ -6,6 +7,7 @@ const mockVerify = jest.fn();
 const mockPost = jest.fn();
 const mockMarkComplete = jest.fn();
 const mockAlert = jest.fn();
+const mockCoinLookup = jest.fn();
 
 jest.mock('react-native', () => ({Platform: {OS: 'ios'}, SafeAreaView: 'SafeAreaView', View: 'View', TouchableOpacity: 'TouchableOpacity', Clipboard: {setString: jest.fn()}}));
 jest.mock('react-native-paper', () => ({Text: 'Text'}));
@@ -27,15 +29,18 @@ jest.mock('../../../styles', () => ({genericRequestCompleteStyles: {}}));
 jest.mock('axios', () => ({post: (...args) => mockPost(...args)}));
 jest.mock('react-native-url-polyfill', () => ({URL: require('url').URL}));
 jest.mock('../../linking', () => ({openUrl: jest.fn()}));
-jest.mock('../../CoinData/CoinData', () => ({getSystemNameFromSystemId: () => 'VRSC'}));
-jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {getBasicCoinObj: () => ({id: 'VRSC'})}}));
+jest.mock('../../CoinData/CoinData', () => ({getSystemNameFromSystemId: systemID => {
+  if (systemID === 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV') return 'VRSC';
+  throw new Error('Unknown root system');
+}}));
+jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {getBasicCoinObj: (...args) => mockCoinLookup(...args)}}));
 jest.mock('../../api/channels/vrpc/callCreators', () => ({signGenericResponse: (...args) => mockSign(...args)}));
 jest.mock('../../api/channels/vrpc/requests/verifyGenericResponse', () => ({verifyGenericResponse: (...args) => mockVerify(...args)}));
 jest.mock('../../../actions/actions/alert/dispatchers/alert', () => ({createAlert: (...args) => mockAlert(...args), resolveAlert: jest.fn()}));
 jest.mock('../../deeplink/pendingDeeplinkStorage', () => ({markPendingDeeplinkComplete: (...args) => mockMarkComplete(...args)}));
 jest.mock('../../deeplink/genericResponse/encryptGenericResponseDetails', () => ({encryptGenericResponseDetails: (...args) => mockEncrypt(...args)}));
 jest.mock('../../deeplink/genericResponse/prepareGenericResponseForSigning', () => ({prepareGenericResponseForSigning: jest.fn()}));
-jest.mock('../../deeplink/genericResponse/responseDeliverySecurity', () => ({assertNoPlaintextExtendedSpendingKey: jest.fn(), assertSecurePostResponseUri: value => value}));
+jest.mock('../../deeplink/genericResponse/responseDeliverySecurity', () => ({assertNoPlaintextAppEncryptionResponse: jest.fn(), assertSecurePostResponseUri: value => value}));
 jest.mock('../../deeplink/validator/authenticationRequestValidator', () => ({performAfterAuthenticationExpiryCheck: (_, operation) => operation(), signAfterAuthenticationExpiryCheck: (_, operation) => operation()}));
 jest.mock('verus-typescript-primitives', () => ({
   GenericRequest: class {
@@ -46,7 +51,7 @@ jest.mock('verus-typescript-primitives', () => ({
   GenericResponse: class {
     fromBuffer() {}
     details = [];
-    signature = {systemID: {toIAddress: () => 'system'}};
+    signature = {systemID: {toIAddress: () => mockSignerSystemID}};
     toBuffer() { return Buffer.from('synthetic-response'); }
   },
   ResponseURI: {TYPE_POST: {toNumber: () => 1}, TYPE_REDIRECT: {toNumber: () => 2}},
@@ -61,22 +66,25 @@ const Complete = require('../../../containers/DeepLink/GenericRequestComplete/Ge
 const SignedInStack = require('../../../containers/RootStack/SignedInStackScreens/SignedInStackScreens').default;
 const {GenericResponse} = require('verus-typescript-primitives');
 const {deeplink} = require('../../../reducers/deeplink');
+const {getAppEncryptionSessionKey} = require('../../deeplink/appEncryptionSession');
 const deferred = () => {
   let resolve;
   const promise = new Promise(yes => {resolve = yes;});
   return {promise, resolve};
 };
 let views;
-const mount = () => {
+const mount = (params = {}) => {
   const navigation = {dispatch: jest.fn()};
   let view;
-  act(() => {view = create(<Complete route={{params: {requestBufferString: 'aa', responseBufferString: 'bb'}}} navigation={navigation} />);});
+  act(() => {view = create(<Complete route={{params: {requestBufferString: 'aa', responseBufferString: 'bb', ...params}}} navigation={navigation} />);});
   views.add(view);
   return {view, navigation, complete: view.root.findByType('GradientButton').props.onPress};
 };
 beforeEach(() => {
   jest.clearAllMocks();
   views = new Set();
+  mockSignerSystemID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
+  mockCoinLookup.mockReturnValue({id: 'VRSC', system_id: mockSignerSystemID});
   mockState = {authentication: {signedIn: true, activeAccount: {accountHash: 'account'}, sessionEpoch: 1},
     deeplink: {id: 'generic', data: 'aa', requestId: 1, passthrough: {pendingDeeplinkId: 'saved-gift'}}};
   mockDispatch.mockImplementation(action => {mockState = {...mockState, deeplink: deeplink(mockState.deeplink, action)};});
@@ -96,6 +104,27 @@ it('delivers a current response once and clears only its request after completio
   expect(mockMarkComplete).toHaveBeenCalledWith('saved-gift');
   expect(mockState.deeplink).toMatchObject({id: null, data: {}});
   expect(navigation.dispatch).toHaveBeenCalledTimes(1);
+});
+
+it('completes an app-encryption response on the selected PBaaS chain', async () => {
+  mockSignerSystemID = jest.requireActual('verus-typescript-primitives').toIAddress('selectedchain', 'VRSC');
+  const selectedCoin = {
+    id: mockSignerSystemID,
+    system_id: mockSignerSystemID,
+    vrpc_endpoints: ['https://selected-chain.example.com'],
+  };
+  mockCoinLookup.mockImplementation(systemID => {
+    if (systemID !== mockSignerSystemID) throw new Error('Unexpected signing chain');
+    return selectedCoin;
+  });
+  const {complete} = mount({appEncryptionSessionKey: getAppEncryptionSessionKey(mockState)});
+  await act(async () => complete());
+
+  expect(mockCoinLookup).toHaveBeenCalledWith(mockSignerSystemID);
+  expect(mockSign).toHaveBeenCalledWith(selectedCoin, expect.any(GenericResponse), expect.any(Object));
+  expect(mockVerify).toHaveBeenCalledWith(selectedCoin, expect.any(GenericResponse));
+  expect(mockPost).toHaveBeenCalledTimes(1);
+  expect(mockAlert).not.toHaveBeenCalled();
 });
 
 it.each(['encrypt', 'sign', 'verify', 'post'])('stops completion after unmount while %s is pending', async phase => {
@@ -129,6 +158,29 @@ it.each(['replacement', 'session'])('does not deliver or clear an old request af
   expect(mockDispatch).not.toHaveBeenCalled();
   expect(mockAlert).not.toHaveBeenCalled();
   expect(navigation.dispatch).not.toHaveBeenCalled();
+});
+
+it.each(['profile', 'network'])('does not adopt an encryption response mounted after its originating %s changed', async change => {
+  const appEncryptionSessionKey = getAppEncryptionSessionKey(mockState);
+  if (change === 'profile') mockState.authentication.activeAccount = {accountHash: 'other'};
+  else mockState.authentication.activeAccount.testnetOverrides = {VRSC: 'VRSCTEST'};
+  const {complete} = mount({appEncryptionSessionKey});
+  await act(async () => complete());
+  expect(mockEncrypt).not.toHaveBeenCalled();
+  expect(mockSign).not.toHaveBeenCalled();
+  expect(mockPost).not.toHaveBeenCalled();
+});
+
+it('discards an encryption response if the network changes during final signing', async () => {
+  const wait = deferred();
+  mockSign.mockReturnValueOnce(wait.promise);
+  const {complete} = mount({appEncryptionSessionKey: getAppEncryptionSessionKey(mockState)});
+  let pending;
+  await act(async () => { pending = complete(); await Promise.resolve(); });
+  mockState.authentication.activeAccount.testnetOverrides = {VRSC: 'VRSCTEST'};
+  await act(async () => { wait.resolve(new GenericResponse()); await pending; });
+  expect(mockPost).not.toHaveBeenCalled();
+  expect(mockMarkComplete).not.toHaveBeenCalled();
 });
 
 it('resets a mounted replacement response while an old completion is pending', async () => {

@@ -3,7 +3,7 @@
   - Coordinates generic request detail handlers, chooses the matching deeplink
     screen, and forwards completed responses through the request flow.
 */
-import React, {useCallback, useState, useEffect, useRef} from 'react';
+import React, {useCallback, useState, useEffect, useRef, useMemo} from 'react';
 import {Linking, TouchableOpacity, View} from 'react-native';
 import { Portal, Text } from 'react-native-paper';
 import {useSelector} from 'react-redux';
@@ -48,6 +48,8 @@ import ListSelectionModal from '../../../components/ListSelectionModal/ListSelec
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import { isDeeplinkHandlerInstalled } from '../../../utils/deeplink/isDeeplinkHandlerInstalled';
 import Colors from '../../../globals/colors';
+import store from '../../../store';
+import { getAppEncryptionSessionKey } from '../../../utils/deeplink/appEncryptionSession';
 import {
   getFriendlyNameMap,
   getIdentity,
@@ -64,12 +66,16 @@ const GenericRequestSession = props => {
     deeplinkData
   } = props;
   const active = useRef(true);
+  const isActive = () => active.current && (
+    props.appEncryptionSessionKey == null ||
+    props.appEncryptionSessionKey === getAppEncryptionSessionKey(store.getState())
+  );
   useEffect(() => {
     active.current = true;
     return () => { active.current = false; };
   }, []);
   const cancel = () => {
-    if (!active.current) return;
+    if (!isActive()) return;
     active.current = false;
     props.cancel();
   };
@@ -164,7 +170,7 @@ const GenericRequestSession = props => {
         if (!processedDetailIndices.includes(i)) {
           try {
             const res = await processDetailAtIndex(i);
-            if (!active.current) return;
+            if (!isActive()) return;
             const newIndices = [...processedDetailIndices];
 
             for (const processedIndex of res.handledIndices) {
@@ -193,7 +199,7 @@ const GenericRequestSession = props => {
 
             return;
           } catch (e) {
-            if (!active.current) return;
+            if (!isActive()) return;
             createAlert("Error", e.message)
             cancel()
             console.warn(e)
@@ -211,7 +217,7 @@ const GenericRequestSession = props => {
    * @param {Array<number>} handledIndices
    */
   const next = async (response, handledIndices) => {
-    if (!active.current) return;
+    if (!isActive()) return;
     if (request.isTestnet()) response.setIsTestnet();
     let newDetailsProcessed = detailsProcessed;
 
@@ -273,7 +279,7 @@ const GenericRequestSession = props => {
 
   useEffect(() => {
     isDeeplinkHandlerInstalled(VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID).then(installed => {
-      setValuInstalled(installed);
+      if (isActive()) setValuInstalled(installed);
     }).catch(() => {});
   }, []);
 
@@ -291,6 +297,7 @@ const GenericRequestSession = props => {
 
   useEffect(() => {
     if (request != null) {
+      if (!isActive()) return;
       if (detailsProcessed < request.details.length && detailsProcessed >= 0) {
         setDisplayKey(null);
         setDisplayProps({});
@@ -303,7 +310,10 @@ const GenericRequestSession = props => {
 
         props.navigation.navigate('GenericRequestComplete', {
           requestBufferString,
-          responseBufferString
+          responseBufferString,
+          ...(props.appEncryptionSessionKey == null ? {} : {
+            appEncryptionSessionKey: props.appEncryptionSessionKey,
+          }),
         });
       }
     }
@@ -466,7 +476,24 @@ const GenericRequestSession = props => {
   );
 };
 
-// A replacement deeplink starts an independent response and review lifecycle.
-const GenericRequestHome = props => <GenericRequestSession key={props.deeplinkData} {...props} />;
+// Encryption approvals remain tied to their profile through later request details.
+const GenericRequestHome = props => {
+  const hasAppEncryption = useMemo(() => {
+    const request = new GenericRequest();
+    request.fromBuffer(Buffer.from(props.deeplinkData, 'hex'));
+    return request.details.some(detail =>
+      detail.getIAddressKey() === APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid,
+    );
+  }, [props.deeplinkData]);
+  const appEncryptionSessionKey = useSelector(state =>
+    hasAppEncryption ? getAppEncryptionSessionKey(state) : null,
+  );
+
+  return <GenericRequestSession
+    key={`${props.deeplinkData}:${appEncryptionSessionKey || ''}`}
+    {...props}
+    appEncryptionSessionKey={appEncryptionSessionKey}
+  />;
+};
 
 export default GenericRequestHome;
