@@ -4,7 +4,7 @@ import {ECPair, Transaction, TransactionBuilder, networks} from '@bitgo/utxo-lib
 import {VerusIdInterface} from 'verusid-ts-client';
 import {BigNumber as BN, CurrencyValueMap, DEST_ID, DEST_PKH, EVALS, Identity, IdentityID,
   IdentityReservationScript, IdentityScript, NameReservation, SmartTransactionScript,
-  TokenOutput, TransferDestination, TxDestination, fromBase58Check, nameAndParentAddrToIAddr} from 'verus-typescript-primitives';
+  TokenOutput, TransferDestination, TxDestination, fromBase58Check, nameAndParentAddrToIAddr, toBase58Check} from 'verus-typescript-primitives';
 import {addIdentityAmounts, identityOutputAmounts, readIdentityFunds} from '../../identityManagement/identityFunds';
 
 const SYSTEM = nameAndParentAddrToIAddr('VRSCTEST');
@@ -12,9 +12,10 @@ const SUBJECT = nameAndParentAddrToIAddr('alice', SYSTEM);
 const TOKEN = nameAndParentAddrToIAddr('token', SYSTEM);
 const OTHER = nameAndParentAddrToIAddr('other', SYSTEM);
 const WALLET = ECPair.fromPrivateKeyBuffer(Buffer.alloc(32, 31), networks.verus).getAddress();
+const TAG = toBase58Check(Buffer.alloc(20, 9), 137);
 const stringify = values => Object.fromEntries([...values].map(([id, value]) => [id, value.toFixed(0)]));
-const payment = (currencies = {[SYSTEM]: '100000'}, address = SUBJECT) => Transaction.fromHex(
-  VerusIdInterface.createUnfundedCurrencyTransferTransaction(SYSTEM, [{currencies,
+const payment = (currencies = {[SYSTEM]: '100000'}, address = SUBJECT, tagged = false) => Transaction.fromHex(
+  VerusIdInterface.createUnfundedCurrencyTransferTransaction(SYSTEM, [{currencies, ...(tagged ? {vdxftag: TAG} : {}),
     address: new TransferDestination({type: address === WALLET ? DEST_PKH : DEST_ID,
       destinationBytes: fromBase58Check(address).hash})}], 120), networks.verus).outs[0];
 const edit = (output, mutate) => {
@@ -64,6 +65,30 @@ describe('identity currency output accounting', () => {
     const output = payment({[SYSTEM]: '99'}, WALLET);
     expect(stringify(identityOutputAmounts(output, SYSTEM, WALLET))).toEqual({[SYSTEM]: '99'});
     expect(() => identityOutputAmounts(output, SYSTEM, SUBJECT)).toThrow(/destination/);
+  });
+
+  test.each([WALLET, SUBJECT].flatMap(address => [false, true].map(reserves => [address, reserves])))(
+    'accepts a tagged payment to %s while preserving its recipient and amounts (reserves=%s)', (address, reserves) => {
+      const values = {[SYSTEM]: '12345', ...(reserves ? {[TOKEN]: '9007199254740993'} : {})};
+      const output = payment(values, address, true);
+      expect(stringify(identityOutputAmounts(output, SYSTEM, address))).toEqual(values);
+      expect(() => identityOutputAmounts(output, SYSTEM, OTHER)).toThrow(/signing conditions/);
+    },
+  );
+
+  test.each([
+    ['zero threshold', parsed => { parsed.masterOptCC.m = new BN(0); }],
+    ['wrong count', parsed => { parsed.masterOptCC.n = new BN(2); }],
+    ['wrong version', parsed => { parsed.masterOptCC.version = new BN(2); }],
+    ['wrong eval', parsed => { parsed.masterOptCC.evalCode = new BN(EVALS.EVAL_RESERVE_OUTPUT); }],
+    ['master data', parsed => { parsed.masterOptCC.vData = [Buffer.from([1])]; }],
+    ['short tag', parsed => { parsed.masterOptCC.destinations[0].data.bytes = Buffer.alloc(19, 9); }],
+    ['long tag', parsed => { parsed.masterOptCC.destinations[0].data.bytes = Buffer.alloc(21, 9); }],
+    ['alternate authority', parsed => { parsed.masterOptCC.destinations = [new TxDestination(IdentityID.fromAddress(OTHER))]; }],
+    ['tag as recipient', parsed => { parsed.paramsOptCC.destinations = parsed.masterOptCC.destinations; }],
+  ])('rejects a tagged payment with %s', (_label, mutate) => {
+    const output = edit(payment({[SYSTEM]: '123', [TOKEN]: '7'}, SUBJECT, true), mutate);
+    expect(() => identityOutputAmounts(output, SYSTEM, SUBJECT)).toThrow();
   });
 
   test.each([true, false])('accepts canonical public-key funding only for its owner (compressed=%s)', compressed => {
@@ -116,6 +141,14 @@ describe('identity currency output accounting', () => {
 });
 
 describe('complete identity fund snapshots', () => {
+  test('includes tagged native and reserve receipts in the verified identity balance', async () => {
+    const f = fixture([payment({[SYSTEM]: '123'}, SUBJECT, true), payment({[TOKEN]: '9007199254740993'}, SUBJECT, true)]);
+    const actual = await f.read();
+    expect(stringify(actual.balances)).toEqual({[SYSTEM]: '123', [TOKEN]: '9007199254740993'});
+    expect(actual.utxos).toHaveLength(2);
+    expect(f.endpoint.getRawTransaction).toHaveBeenCalledTimes(1);
+  });
+
   test('verifies raw prevouts and ignores forged advertised script, value and currency metadata', async () => {
     const f = fixture([payment({[SYSTEM]: '123', [TOKEN]: '9007199254740993'}), payment({[OTHER]: '77'})]);
     Object.assign(f.entries[0], {script: '00', satoshis: 999999, currencyvalues: {[TOKEN]: 0}});

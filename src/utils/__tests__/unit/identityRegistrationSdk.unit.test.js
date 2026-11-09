@@ -109,7 +109,7 @@ jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', 
 const {crypto, ECPair, networks, script, Transaction, TransactionBuilder} = require('@bitgo/utxo-lib');
 const {
   BigNumber: BN, CurrencyOptions, CurrencyValueMap, EVALS, Identity, IdentityID, IdentityScript, KeyID,
-  OptCCParams, SmartTransactionScript, TokenOutput, TxDestination, nameAndParentAddrToIAddr,
+  OptCCParams, SmartTransactionScript, TokenOutput, TxDestination, UnknownID, nameAndParentAddrToIAddr,
 } = require('verus-typescript-primitives');
 const {VerusIdInterface} = require('verusid-ts-client');
 const VrpcRequestBatcher = require('../../vrpc/vrpcRequestBatcher').default;
@@ -136,6 +136,10 @@ test.each([
   {description: 'completes token-burn registration', branch: 'token-burn', tokenProof: 1},
   {description: 'completes token-payment registration', branch: 'token-payment', tokenProof: 2},
   {description: 'completes native registration using only a linked identity balance', branch: 'native', tokenProof: null, identityFunding: true},
+  ...[false, true].flatMap(identityFunding => [0, 75].map(reserveCurrencyCount => ({
+    description: `completes registration with tagged ${reserveCurrencyCount ? 'native and reserve' : 'native'} funds at an ${identityFunding ? 'identity' : 'R-address'}`,
+    branch: 'native', tokenProof: null, taggedFunding: true, identityFunding, reserveCurrencyCount,
+  }))),
   ...[false, true].map(identityFunding => ({
     description: `completes ${identityFunding ? 'identity-funded' : 'native'} registration after batch rejection and a lost broadcast response`,
     branch: 'native', tokenProof: null, identityFunding, batchUnsupported: true, broadcastFailure: 'timeout',
@@ -164,7 +168,7 @@ test.each([
     branch: guardAttack === 'lost-reserve' ? 'token-burn' : 'native',
     tokenProof: guardAttack === 'lost-reserve' ? 1 : null, guardAttack,
   })),
-])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, authorityStatus, authoritySpendStage, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, historicalReceipt, privateAddress, deleteCompleted, batchUnsupported}) => {
+])('real SDK $description across encrypted storage and block confirmations', async ({branch, tokenProof, identityFunding, taggedFunding, authorityStatus, authoritySpendStage, sourceFailure, guardAttack, broadcastFailure, reserveCurrencyCount, wrongSourceStage, historicalReceipt, privateAddress, deleteCompleted, batchUnsupported}) => {
   jest.clearAllMocks();
   mockEncryptedJobs.clear();
   const system = nameAndParentAddrToIAddr('VRSC');
@@ -188,8 +192,12 @@ test.each([
     version: new BN(3), evalCode: new BN(EVALS.EVAL_NONE), m: new BN(1), n: new BN(1),
     destinations: [fundingDestination], vData: [],
   });
-  let fundingScript = identityFunding
-    ? new SmartTransactionScript(nativeParams(), nativeParams()).toBuffer()
+  const fundingMaster = () => taggedFunding ? new OptCCParams({
+    ...nativeParams(),
+    destinations: [new TxDestination(new UnknownID(Buffer.alloc(20, 5)), TxDestination.TYPE_INDEX)],
+  }) : nativeParams();
+  let fundingScript = identityFunding || taggedFunding
+    ? new SmartTransactionScript(fundingMaster(), nativeParams()).toBuffer()
     : transparentFundingScript;
   if (reserveCurrencyCount) {
     // Preserving unrelated currencies makes change exceed the daemon's 2 KB
@@ -200,7 +208,7 @@ test.each([
         nameAndParentAddrToIAddr(`reserve${index}`, system), new BN(100000000),
       ]))}),
     });
-    fundingScript = new SmartTransactionScript(nativeParams(), new OptCCParams({
+    fundingScript = new SmartTransactionScript(fundingMaster(), new OptCCParams({
       ...nativeParams(), evalCode: new BN(EVALS.EVAL_RESERVE_OUTPUT), vData: [reserve.toBuffer()],
     })).toBuffer();
   }
@@ -224,7 +232,7 @@ test.each([
     return `${padded.slice(0, -8)}.${padded.slice(-8)}`;
   };
   const fundingCurrencies = output => {
-    if (output.script.equals(fundingScript)) return {};
+    if (output.script.equals(fundingScript) || (!identityFunding && output.script.equals(transparentFundingScript))) return {};
     try {
       const parsed = new SmartTransactionScript();
       parsed.fromBuffer(output.script);

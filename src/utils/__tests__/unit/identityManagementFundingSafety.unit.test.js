@@ -48,6 +48,7 @@ const SYSTEM = nameAndParentAddrToIAddr('VRSCTEST');
 const SUBJECT = nameAndParentAddrToIAddr('alice', SYSTEM);
 const RECIPIENT = nameAndParentAddrToIAddr('satoshi', SYSTEM);
 const FUNDING_ID = nameAndParentAddrToIAddr('funds', SYSTEM);
+const INVOICE_TAG = 'xA91QPpBrHZto92NCU5KEjCqRveS4dAPrf';
 const key = ECPair.fromPrivateKeyBuffer(Buffer.alloc(32, 11), networks.verus);
 const address = key.getAddress();
 const otherKey = ECPair.fromPrivateKeyBuffer(Buffer.alloc(32, 12), networks.verus);
@@ -103,8 +104,8 @@ const putFunding = (destination = address, currencies) => {
     satoshis: transaction.outs[0].value, height: 10, isspendable: true, blocktime: 100};
   return mockFunding;
 };
-const putSubjectFunds = (currencies = {[SYSTEM]: '100000000'}, options = {}) => {
-  const tx = Transaction.fromHex(VerusIdInterface.createUnfundedCurrencyTransferTransaction(SYSTEM, [{currencies,
+const putSubjectFunds = (currencies = {[SYSTEM]: '100000000'}, options = {}, vdxftag) => {
+  const tx = Transaction.fromHex(VerusIdInterface.createUnfundedCurrencyTransferTransaction(SYSTEM, [{currencies, vdxftag,
     address: new TransferDestination({type: DEST_ID, destinationBytes: fromBase58Check(SUBJECT).hash})}], mockTip + 20), networks.verus);
   tx.addInput(Buffer.alloc(32, ++mockFundingCounter), 0);
   mockTransactions.set(tx.getId(), tx);
@@ -281,6 +282,37 @@ test('unchecked transfer retains token-only and locked assets in its exact appro
   const signed = Transaction.fromHex(mockSend.mock.calls[0][0], networks.verus);
   const selected = new Set(signed.ins.map(input => Buffer.from(input.hash).reverse().toString('hex')));
   for (const asset of mockSubjectFunding) expect(selected.has(asset.txid)).toBe(false);
+});
+
+test.each([
+  ['native', true, {[SYSTEM]: '12345678'}],
+  ['native', false, {[SYSTEM]: '12345678'}],
+  ['reserve', true, {[SYSTEM]: '12345678', [RECIPIENT]: '9007199254740993'}],
+  ['reserve', false, {[SYSTEM]: '12345678', [RECIPIENT]: '9007199254740993'}],
+])('transfers an identity holding tagged %s funds (return funds: %s)', async (_label, returnFunds, currencies) => {
+  const funds = putSubjectFunds(currencies, {}, INVOICE_TAG);
+  putFunding(FUNDING_ID);
+  const plan = await prepare({mode: 'transfer', recipient: otherAddress, fundingAddress: FUNDING_ID, returnFunds});
+  const reviewedFunds = returnFunds ? plan.review.returnedFunds : plan.review.transferredFunds;
+  expect(Object.fromEntries(reviewedFunds.map(item => [item.currencyId, item.amountSatoshis]))).toEqual(currencies);
+  expect(returnFunds ? plan.review.transferredFunds : plan.review.returnedFunds).toEqual([]);
+  expect(plan.review).toMatchObject({fee: '0.0001', changeAddress: FUNDING_ID,
+    nativeTotalCost: returnFunds ? '0.0001' : '0.12355678'});
+
+  await sendIdentityUpdate(plan);
+  const signed = Transaction.fromHex(mockSend.mock.calls[0][0], networks.verus);
+  const spendsTaggedFunds = signed.ins.some(input =>
+    Buffer.from(input.hash).reverse().toString('hex') === funds.txid && input.index === funds.outputIndex);
+  expect(spendsTaggedFunds).toBe(returnFunds);
+  expect(signed.ins.every(input => input.script.length > 0)).toBe(true);
+  expect(outputAmountsAt(signed, address)).toEqual(returnFunds ? currencies : {});
+  const fundingChange = Object.fromEntries(Object.entries(outputAmountsAt(signed, FUNDING_ID))
+    .filter(([, value]) => value !== '0'));
+  expect(fundingChange).toEqual({[SYSTEM]: '99990000'});
+  expect(outputAmountsAt(signed, otherAddress)).toEqual({});
+  const definition = new IdentityScript();
+  definition.fromBuffer(signed.outs[0].script);
+  expect(definition.getIdentity().primaryAddresses.map(primary => primary.toAddress())).toEqual([otherAddress]);
 });
 
 test.each([

@@ -6,6 +6,7 @@ import {
   IdentityReservationScript,
   IdentityScript,
   TokenOutput,
+  TxDestination,
   EVALS,
   I_ADDR_VERSION,
   R_ADDR_VERSION,
@@ -110,7 +111,12 @@ export const identityOutputAmounts = (output, systemId, recipient) => {
   const sameMaster = master.m.eqn(1) && master.n.eqn(1) &&
     master.destinations.length === 1 &&
     master.destinations[0].toBuffer().equals(condition.destinations[0].toBuffer());
-  requireValue(emptyMaster || sameMaster, 'Identity funds use alternate signing conditions.');
+  // Invoice tags are metadata; the recipient condition above still controls spending.
+  const indexMaster = master.m.eqn(1) && master.n.eqn(1) &&
+    master.destinations.length === 1 &&
+    master.destinations[0].type.eq(TxDestination.TYPE_INDEX) &&
+    master.destinations[0].data.toBuffer().length === 20;
+  requireValue(emptyMaster || sameMaster || indexMaster, 'Identity funds use alternate signing conditions.');
 
   if (condition.evalCode.eqn(EVALS.EVAL_NONE)) {
     requireValue(!condition.vData.length, 'Unexpected data in identity funds output.');
