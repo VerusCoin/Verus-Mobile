@@ -571,6 +571,31 @@ it('lets a cleared referral stay empty through name edits and submission, and re
   expect(referralField(view).props.value).toBe('Verus Coin Foundation@');
 });
 
+it('clears the default referral as soon as a dot is entered, including after switching networks', async () => {
+  mockState.authentication.activeAccount.keys.VRSCTEST = {vrpc: {addresses: ['test-wallet']}};
+  mockState.coins.activeCoinsForUser.push({
+    id: 'VRSCTEST', system_id: 'test-chain', currency_id: 'test-chain', display_ticker: 'VRSCTEST', testnet: true,
+  });
+  const view = await mount(IdentityRegistrationCreate);
+  expect(referralField(view).props.value).toBe('Verus Coin Foundation@');
+
+  await enterName(view, 'alice.');
+  expect(referralField(view).props.value).toBe('');
+  await enterName(view, 'alice.community@');
+  await press(button(view, 'Review costs'));
+  expect(mockApi.prepareCommitment.mock.calls[0][0].request).not.toHaveProperty('referralID');
+
+  await press(button(view, 'Network'));
+  await press(radio(view, 'VRSCTEST · Testnet'));
+  expect(referralField(view).props.value).toBe('');
+
+  await enterReferral(view, 'friend.community@');
+  await enterName(view, 'bob.community@');
+  expect(referralField(view).props.value).toBe('friend.community@');
+  await press(button(view, 'Review costs'));
+  expect(mockApi.prepareCommitment.mock.calls[1][0].request.referralID).toBe('friend.community@');
+});
+
 it.each([false, true])('keeps the referral explanation on another chain without a foundation default or button (testnet=%s)', async testnet => {
   mockState.authentication.activeAccount.keys.CHAIN = {vrpc: {addresses: ['chain-wallet']}};
   mockState.coins.activeCoinsForUser = [{

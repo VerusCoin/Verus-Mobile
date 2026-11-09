@@ -312,7 +312,7 @@ export function IdentityRegistrationCreate({navigation, route}) {
   const foundationReferralAvailable = ['VRSC', 'VRSCTEST'].includes(selected?.id);
   // Keep each network's edits, including an explicitly cleared referral.
   const [referrals, setReferrals] = useState({});
-  const referralID = referrals[coinId] ?? (foundationReferralAvailable ? FOUNDATION_REFERRAL : '');
+  const referralID = referrals[coinId] ?? (foundationReferralAvailable && !name.includes('.') ? FOUNDATION_REFERRAL : '');
   const setReferralID = value => setReferrals(current => ({...current, [coinId]: value}));
   const [referralInfo, setReferralInfo] = useState(null);
   const [recoveryAuthority, setRecoveryAuthority] = useState('');
