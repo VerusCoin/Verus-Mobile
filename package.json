@@ -127,7 +127,7 @@
     "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#d5e3068021cfa83e3aae489403f4d63aad0c1a6c",
     "verus-zkedid-utils": "git+https://github.com/VerusCoin/verus-zkedid-utils.git",
     "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#f3dcd552d6940422e875f8f657ee3d8e2097b37b",
-    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#24b8039b27154e4687366c18f0b6bcfeaa1d8706",
+    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#e18701f69153c9eb81927a5c9dfff794bc974a26",
     "vm-browserify": "0.0.4",
     "wif": "2.0.6",
     "react-native-pager-view": "6.7.1"
@@ -256,7 +256,7 @@
     "ws@7": "7.5.11",
     "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#d5e3068021cfa83e3aae489403f4d63aad0c1a6c",
     "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#f3dcd552d6940422e875f8f657ee3d8e2097b37b",
-    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#24b8039b27154e4687366c18f0b6bcfeaa1d8706",
+    "verusid-ts-client": "github:VerusCoin/verusid-ts-client#e18701f69153c9eb81927a5c9dfff794bc974a26",
     "verus-typescript-primitives/bn.js": "5.2.3",
     "verusid-ts-client/bn.js": "5.2.3",
     "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#1603126ee9b19d922b76050ed5965b7bc9bd0fa7"
