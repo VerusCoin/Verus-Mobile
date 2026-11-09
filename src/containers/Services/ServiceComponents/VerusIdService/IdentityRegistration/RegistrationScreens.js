@@ -42,10 +42,16 @@ import {
 } from './fundingSources';
 import {formatRegistrationAmount} from '../../../../../utils/identityRegistration/costs';
 import {
+  getRegistrationReferralInfo,
+  registrationReferralNamespace,
+} from '../../../../../utils/identityRegistration/referrals';
+import {
   clearRegistrationJobs,
   publishRegistrationJobs,
 } from '../../../../../actions/actions/services/dispatchers/verusid/registration';
 import Colors from '../../../../../globals/colors';
+
+const FOUNDATION_REFERRAL = 'Verus Coin Foundation@';
 
 // A ref closes the double-tap window before React renders a disabled button.
 const useRegistrationAction = () => {
@@ -303,11 +309,54 @@ export function IdentityRegistrationCreate({navigation, route}) {
     preferredRegistrationFundingSource(fundingSources, selected, balances);
 
   const [name, setName] = useState('');
-  const [referralID, setReferralID] = useState('');
+  const foundationReferralAvailable = ['VRSC', 'VRSCTEST'].includes(selected?.id);
+  // Keep each network's edits, including an explicitly cleared referral.
+  const [referrals, setReferrals] = useState({});
+  const referralID = referrals[coinId] ?? (foundationReferralAvailable ? FOUNDATION_REFERRAL : '');
+  const setReferralID = value => setReferrals(current => ({...current, [coinId]: value}));
+  const [referralInfo, setReferralInfo] = useState(null);
   const [recoveryAuthority, setRecoveryAuthority] = useState('');
   const [revocationAuthority, setRevocationAuthority] = useState('');
   const [estimate, setEstimate] = useState(null);
   const {busy, error, run} = useRegistrationAction();
+  const systemId = selected?.system_id;
+  const rootSystemName = selected?.testnet ? 'VRSCTEST' : 'VRSC';
+  const referralNamespaceId = useMemo(() => {
+    if (!systemId) return null;
+    try {
+      return registrationReferralNamespace({systemId, rootSystemName, name});
+    } catch (_) {
+      // A partially entered qualified name may not have a valid namespace yet.
+      return null;
+    }
+  }, [systemId, rootSystemName, name]);
+
+  useEffect(() => {
+    let current = true;
+    setReferralInfo(null);
+    if (systemId && referralNamespaceId) {
+      getRegistrationReferralInfo({systemId, rootSystemName, namespaceId: referralNamespaceId})
+        .then(info => {
+          if (current) setReferralInfo({systemId, namespaceId: referralNamespaceId, info});
+        })
+        .catch(() => {
+          // Referral guidance is optional; the payment review still fetches an exact quote.
+        });
+    }
+    return () => { current = false; };
+  }, [systemId, rootSystemName, referralNamespaceId]);
+
+  const activeReferralInfo = referralInfo?.systemId === systemId && referralInfo?.namespaceId === referralNamespaceId
+    ? referralInfo.info : null;
+  let referralExplanation = 'An eligible referral can make your ID cheaper and reward the referrer. You’ll see the amounts before paying.';
+  if (activeReferralInfo) {
+    const currency = currencyLabel(activeReferralInfo.currencyID, {
+      [activeReferralInfo.currencyID]: activeReferralInfo.currencyName,
+    });
+    referralExplanation = activeReferralInfo.enabled
+      ? `Using an eligible referral makes your ID ${formatRegistrationAmount(activeReferralInfo.discount)} ${currency} cheaper and gives the referrer ${formatRegistrationAmount(activeReferralInfo.reward)} ${currency}. You’ll see the final price before paying.`
+      : 'This namespace does not offer referral discounts or referrer rewards.';
+  }
 
   useEffect(() => {
     if (wallets.length && !wallets.some(coin => coin.id === coinId)) {
@@ -426,7 +475,6 @@ export function IdentityRegistrationCreate({navigation, route}) {
     </View>
     <View style={styles.card}>
       <Text style={styles.subtitle}>Save with a referral</Text>
-      <Text style={styles.muted}>An eligible VerusID referral discounts your registration cost. You’ll see the discounted price before paying.</Text>
       <TextInput
         mode="outlined"
         label="Referral (optional)"
@@ -439,6 +487,12 @@ export function IdentityRegistrationCreate({navigation, route}) {
         disabled={busy}
         style={{backgroundColor: '#fff'}}
       />
+      {foundationReferralAvailable && <ActionButton
+        secondary
+        disabled={busy}
+        onPress={() => setReferralID(FOUNDATION_REFERRAL)}
+      >set to Verus Coin Foundation@</ActionButton>}
+      <Text style={styles.muted}>{referralExplanation}</Text>
     </View>
     <View style={styles.card}>
       <Disclosure

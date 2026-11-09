@@ -10,7 +10,13 @@ const mockAlert = jest.fn();
 const mockScrollTo = jest.fn();
 const mockPublishRegistrationJobs = jest.fn();
 const mockClearRegistrationJobs = jest.fn();
+const mockGetRegistrationReferralInfo = jest.fn();
+const mockRegistrationReferralNamespace = jest.fn();
 jest.mock('../../identityRegistration', () => mockApi);
+jest.mock('../../identityRegistration/referrals', () => ({
+  getRegistrationReferralInfo: (...args) => mockGetRegistrationReferralInfo(...args),
+  registrationReferralNamespace: (...args) => mockRegistrationReferralNamespace(...args),
+}));
 jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', () => ({
   publishRegistrationJobs: (...args) => mockPublishRegistrationJobs(...args),
   clearRegistrationJobs: (...args) => mockClearRegistrationJobs(...args),
@@ -74,6 +80,10 @@ const pullRefresh = async view => {
 const enterName = async (view, name = 'alice') => {
   await act(async () => view.root.findAllByType('TextInput').find(node => node.props.label === 'Identity name').props.onChangeText(name));
 };
+const referralField = view => view.root.findAllByType('TextInput').find(node => node.props.label === 'Referral (optional)');
+const enterReferral = async (view, referral) => {
+  await act(async () => referralField(view).props.onChangeText(referral));
+};
 let views;
 const mount = async (Component, props = {}) => {
   let view;
@@ -92,6 +102,10 @@ beforeEach(() => {
   mockClearRegistrationJobs.mockReset().mockImplementation(async () => {
     mockState.channelStore_verusid.registrationJobs = {};
   });
+  mockGetRegistrationReferralInfo.mockReset().mockResolvedValue({
+    discount: '2000000000', reward: '2000000000', currencyID: 'chain', currencyName: 'VRSC', enabled: true,
+  });
+  mockRegistrationReferralNamespace.mockReset().mockImplementation(({systemId}) => systemId);
   views = [];
   mockState = {
     authentication: {activeAccount: {keys: {VRSC: {vrpc: {addresses: ['wallet']}}}}},
@@ -523,6 +537,140 @@ it('the form quotes both stages and navigates using only a saved job ID', async 
   expect(navigation.navigate).toHaveBeenCalledWith('IdentityCommitmentReview', {jobId: 'job'});
   expect(view.root.findAllByType(CostReview)).toHaveLength(0);
   expect(mockApi.prepareCommitment.mock.calls[0][0].request.privateAddress).toBeUndefined();
+});
+
+it.each([
+  ['VRSC', 'chain', false],
+  ['VRSCTEST', 'test-chain', true],
+])('defaults %s referrals to the foundation and submits the displayed value', async (id, systemId, testnet) => {
+  mockState.authentication.activeAccount.keys[id] = {vrpc: {addresses: ['wallet']}};
+  mockState.coins.activeCoinsForUser = [{id, system_id: systemId, currency_id: systemId, display_ticker: id, testnet}];
+  mockGetRegistrationReferralInfo.mockResolvedValue({
+    discount: '2000000000', reward: '2000000000', currencyID: systemId, currencyName: id, enabled: true,
+  });
+  const view = await mount(IdentityRegistrationCreate);
+
+  expect(referralField(view).props.value).toBe('Verus Coin Foundation@');
+  expect(button(view, 'set to Verus Coin Foundation@')).toBeDefined();
+  expect(textContent(view.root)).toContain(`Using an eligible referral makes your ID 20 ${id} cheaper and gives the referrer 20 ${id}.`);
+  await enterName(view);
+  await press(button(view, 'Review costs'));
+
+  expect(mockApi.prepareCommitment.mock.calls[0][0].request.referralID).toBe('Verus Coin Foundation@');
+});
+
+it('lets a cleared referral stay empty through name edits and submission, and restores it with the foundation button', async () => {
+  const view = await mount(IdentityRegistrationCreate);
+  await enterReferral(view, '');
+  await enterName(view);
+  expect(referralField(view).props.value).toBe('');
+  await press(button(view, 'Review costs'));
+  expect(mockApi.prepareCommitment.mock.calls[0][0].request).not.toHaveProperty('referralID');
+
+  await press(button(view, 'set to Verus Coin Foundation@'));
+  expect(referralField(view).props.value).toBe('Verus Coin Foundation@');
+});
+
+it.each([false, true])('keeps the referral explanation on another chain without a foundation default or button (testnet=%s)', async testnet => {
+  mockState.authentication.activeAccount.keys.CHAIN = {vrpc: {addresses: ['chain-wallet']}};
+  mockState.coins.activeCoinsForUser = [{
+    id: 'CHAIN', system_id: 'other-chain', currency_id: 'other-chain', display_ticker: 'CHAIN', testnet,
+  }];
+  mockGetRegistrationReferralInfo.mockResolvedValue({
+    discount: '1250000000', reward: '375000000', currencyID: 'fee-currency', currencyName: 'FEE', enabled: true,
+  });
+  const view = await mount(IdentityRegistrationCreate);
+
+  expect(referralField(view).props.value).toBe('');
+  expect(button(view, 'set to Verus Coin Foundation@')).toBeUndefined();
+  expect(textContent(view.root)).toContain('Using an eligible referral makes your ID 12.5 FEE cheaper and gives the referrer 3.75 FEE.');
+  expect(textContent(view.root)).toContain('You’ll see the final price before paying.');
+  expect(mockGetRegistrationReferralInfo).toHaveBeenLastCalledWith(expect.objectContaining({
+    systemId: 'other-chain', rootSystemName: testnet ? 'VRSCTEST' : 'VRSC', namespaceId: 'other-chain',
+  }));
+});
+
+it('refreshes referral savings when the identity namespace changes', async () => {
+  mockRegistrationReferralNamespace.mockImplementation(({systemId, name}) =>
+    name.endsWith('.community@') ? 'community-id' : systemId);
+  mockGetRegistrationReferralInfo.mockImplementation(async ({namespaceId}) => ({
+    discount: namespaceId === 'community-id' ? '250000000' : '2000000000',
+    reward: namespaceId === 'community-id' ? '125000000' : '2000000000',
+    currencyID: 'chain', currencyName: 'VRSC', enabled: true,
+  }));
+  const view = await mount(IdentityRegistrationCreate);
+  expect(textContent(view.root)).toContain('makes your ID 20 VRSC cheaper');
+  await enterName(view, 'alice.community@');
+  expect(mockGetRegistrationReferralInfo).toHaveBeenLastCalledWith(expect.objectContaining({
+    systemId: 'chain', rootSystemName: 'VRSC', namespaceId: 'community-id',
+  }));
+  expect(textContent(view.root)).toContain('makes your ID 2.5 VRSC cheaper and gives the referrer 1.25 VRSC');
+});
+
+it('explains when a namespace has no referral discount or reward', async () => {
+  mockGetRegistrationReferralInfo.mockResolvedValue({
+    discount: '0', reward: '0', currencyID: 'chain', currencyName: 'VRSC', enabled: false,
+  });
+  const view = await mount(IdentityRegistrationCreate);
+  expect(textContent(view.root)).toContain('This namespace does not offer referral discounts or referrer rewards.');
+  expect(textContent(view.root)).not.toContain('makes your ID');
+});
+
+it('keeps the referral explanation and form available when referral amounts cannot be loaded', async () => {
+  mockGetRegistrationReferralInfo.mockRejectedValue(new Error('RPC unavailable'));
+  const view = await mount(IdentityRegistrationCreate);
+  expect(textContent(view.root)).toContain('An eligible referral can make your ID cheaper and reward the referrer. You’ll see the amounts before paying.');
+  await enterName(view);
+  expect(button(view, 'Review costs').props.disabled).toBe(false);
+});
+
+it('preserves cleared and custom referrals separately when changing networks', async () => {
+  mockState.authentication.activeAccount.keys.VRSCTEST = {vrpc: {addresses: ['test-wallet']}};
+  mockState.authentication.activeAccount.keys.CHAIN = {vrpc: {addresses: ['chain-wallet']}};
+  mockState.coins.activeCoinsForUser.push(
+    {id: 'VRSCTEST', system_id: 'test-chain', currency_id: 'test-chain', display_ticker: 'VRSCTEST', testnet: true},
+    {id: 'CHAIN', system_id: 'other-chain', currency_id: 'other-chain', display_ticker: 'CHAIN'},
+  );
+  const view = await mount(IdentityRegistrationCreate);
+  await enterReferral(view, '');
+  await press(button(view, 'Network'));
+  await press(radio(view, 'VRSCTEST · Testnet'));
+  expect(referralField(view).props.value).toBe('Verus Coin Foundation@');
+  await enterReferral(view, 'friend@');
+  await press(button(view, 'Network'));
+  await press(radio(view, 'CHAIN'));
+  expect(referralField(view).props.value).toBe('');
+  expect(button(view, 'set to Verus Coin Foundation@')).toBeUndefined();
+  await press(button(view, 'Network'));
+  await press(radio(view, 'VRSC'));
+  expect(referralField(view).props.value).toBe('');
+  await press(button(view, 'Network'));
+  await press(radio(view, 'VRSCTEST · Testnet'));
+  expect(referralField(view).props.value).toBe('friend@');
+  await enterName(view);
+  await press(button(view, 'Review costs'));
+  expect(mockApi.prepareCommitment.mock.calls[0][0].request).toMatchObject({systemId: 'test-chain', referralID: 'friend@'});
+});
+
+it('ignores referral amounts returned for a previously selected network', async () => {
+  let finishMainnet;
+  mockGetRegistrationReferralInfo
+    .mockReturnValueOnce(new Promise(resolve => {finishMainnet = resolve;}))
+    .mockResolvedValue({
+      discount: '500000000', reward: '250000000', currencyID: 'other-chain', currencyName: 'CHAIN', enabled: true,
+    });
+  mockState.authentication.activeAccount.keys.CHAIN = {vrpc: {addresses: ['chain-wallet']}};
+  mockState.coins.activeCoinsForUser.push({id: 'CHAIN', system_id: 'other-chain', currency_id: 'other-chain', display_ticker: 'CHAIN'});
+  const view = await mount(IdentityRegistrationCreate);
+  await press(button(view, 'Network'));
+  await press(radio(view, 'CHAIN'));
+
+  expect(textContent(view.root)).toContain('makes your ID 5 CHAIN cheaper and gives the referrer 2.5 CHAIN');
+  await act(async () => finishMainnet({
+    discount: '2000000000', reward: '2000000000', currencyID: 'chain', currencyName: 'VRSC', enabled: true,
+  }));
+  expect(textContent(view.root)).toContain('makes your ID 5 CHAIN cheaper and gives the referrer 2.5 CHAIN');
+  expect(textContent(view.root)).not.toContain('20 VRSC');
 });
 
 it('uses the selected network wallet’s private address when creating an identity', async () => {
