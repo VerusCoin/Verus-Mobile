@@ -27,10 +27,11 @@ export default class StandardButton extends Component {
       <Button 
         onPress={this._onPress}
         disabled={this.state.onPressingInProgress || this.props.disabled}
-        titleStyle={Styles.fullWidthButtonTitle}
-        buttonStyle={{...Styles.defaultButton, backgroundColor: this.props.color || Styles.fullWidthButton.backgroundColor}}
         title={this.props.title}
         {...this.props}
+        titleStyle={[Styles.fullWidthButtonTitle, this.props.titleStyle]}
+        buttonStyle={[Styles.defaultButton, {backgroundColor: this.props.color || Styles.fullWidthButton.backgroundColor}, this.props.buttonStyle]}
+        containerStyle={[Styles.roundedButton, this.props.containerStyle]}
       />
     );
   }

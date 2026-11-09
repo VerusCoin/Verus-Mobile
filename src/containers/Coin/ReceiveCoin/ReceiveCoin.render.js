@@ -9,7 +9,8 @@ import {
 import Styles from '../../../styles/index'
 import QRModal from '../../../components/QRModal'
 import Colors from '../../../globals/colors';
-import { Portal, Button, TextInput, Checkbox } from "react-native-paper"
+import { Portal, TextInput, Checkbox } from "react-native-paper"
+import Button from "../../../components/Button"
 import TextInputModal from "../../../components/TextInputModal/TextInputModal"
 import NumberPadModal from "../../../components/NumberPadModal/NumberPadModal"
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
@@ -289,7 +290,7 @@ export const RenderReceiveCoin = function() {
                   }
                 : () => this.validateFormData(0)
             }>
-            {'Generate Invoice'}
+            {'Generate invoice'}
           </Button>
         </View>
       </ScrollView>

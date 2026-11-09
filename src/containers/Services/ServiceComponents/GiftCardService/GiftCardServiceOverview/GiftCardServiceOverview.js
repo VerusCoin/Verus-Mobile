@@ -7,7 +7,6 @@ import {
 } from 'react-native';
 import {
   ActivityIndicator,
-  Button,
   Card,
   Dialog,
   Divider,
@@ -15,6 +14,7 @@ import {
   Portal,
   Text,
 } from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useDispatch, useSelector} from 'react-redux';
 import {
@@ -46,6 +46,7 @@ import {writeDeeplinkUriToNfc} from '../../../../../utils/walletBackup/walletBac
 import {SET_DEEPLINK_DATA} from '../../../../../utils/constants/storeType';
 import Colors from '../../../../../globals/colors';
 import Styles from '../../../../../styles';
+import {convertFqnToDisplayFormat} from '../../../../../utils/fullyqualifiedname';
 
 const fieldWidth = 320;
 const GIFT_CARD_REFRESH_INTERVAL_MS = 30000;
@@ -181,14 +182,14 @@ const ShareGiftCardDialog = ({card, onCancel, onCopy, onNfc, onQr}) => {
               icon="qrcode"
               onPress={() => onQr(card)}
               style={{marginBottom: 8}}>
-              QR Code
+              QR code
             </Button>
             <Button
               mode="contained"
               icon="content-copy"
               onPress={() => onCopy(card)}
               style={{marginBottom: 8}}>
-              Copy Link
+              Copy link
             </Button>
             <Button
               mode="contained"
@@ -443,7 +444,7 @@ const GiftCardServiceOverview = ({
                 },
               },
             });
-            navigation.navigate('DeepLink');
+            navigation.navigate('DeepLink', {screen: 'VerifyDeepLink'});
           },
         },
       ],
@@ -766,7 +767,7 @@ const GiftCardServiceOverview = ({
                 ))}
                 {(system.identities || []).map(identity => (
                   <Text key={identity.identityAddress}>
-                    {identity.fullyQualifiedName || identity.identityAddress}
+                    {identity.fullyQualifiedName ? convertFqnToDisplayFormat(identity.fullyQualifiedName) : identity.identityAddress}
                   </Text>
                 ))}
               </View>
@@ -795,7 +796,7 @@ const GiftCardServiceOverview = ({
                         fontSize: 12,
                         marginTop: 2,
                       }}>
-                      Waiting for {identity.fullyQualifiedName || identity.identityAddress}
+                      Waiting for {identity.fullyQualifiedName ? convertFqnToDisplayFormat(identity.fullyQualifiedName) : identity.identityAddress}
                     </Text>
                   ))}
                   {(entry.txids || []).map(txid => (

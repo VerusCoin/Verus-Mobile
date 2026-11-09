@@ -1,0 +1,38 @@
+{
+  "startedAt": "2026-10-23T17:46:42.927Z",
+  "daemonVersion": "1.2.18-gab74a94",
+  "chainId": "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq",
+  "activeHeightAtStart": 1287939,
+  "testSuitesPassed": 2,
+  "testsPassed": 68,
+  "testsSkipped": 0,
+  "sourceSha256": {
+    "debug/identityUploadDaemonCrypto.c": "e3f07a93c766118955b59d6085678281851b6dbf4e8af1039aa3c7ea7d149fed",
+    "debug/identityUploadDaemonRpc.cjs": "9d0dc8d3b3d29310fb4a8eca3b02f90c229685bbc395e6dc8bc2874eeebe7463",
+    "debug/runIdentityUploadDaemonTests.cjs": "7c1ec8657282f0a047e85a13fff36257da3ecf0b0573ca84a119aca5b39e851c",
+    "src/utils/__tests__/integration/identityUploadDaemon.integration.test.js": "ee6e3ab38a0eb3289f6d295678b5f5dc9ae1dd0f2b01803904d2f8af7c13433e",
+    "src/utils/__tests__/integration/identityUploadDaemonContainers.integration.test.js": "1e07f5c777de8d1ae2f0458c3d00f9d1aa782cf9fa2ab5eb31b074e73d3b21e2",
+    "src/utils/identityUpdate/localUploadCrypto.js": "a4f8b8d7603d417246803cf8ad129ce8d5857d8a4f7477db24720e356e63bde3",
+    "src/utils/identityUpdate/uploadDecryption.js": "ffb1fb68a67864cd1ccf15dc23ee4bc33856453c47a6728b6e01a11afbb3dede"
+  },
+  "primitiveRevision": "381bb5803dbeaeb16029fbfe7cac810f989bb5c6",
+  "sdkRevision": "d091835a3bddad701a281736a55f69242212a4ba",
+  "nativeBoundary": "Standalone helper linked to VerusCoin librustzcash/libsodium; actual Mobile JS adapter; no React Native runtime",
+  "payloads": "Synthetic only; fresh non-wallet recipients; existing source identity read only",
+  "oracleRpcMethods": [
+    "getinfo",
+    "getidentity",
+    "getrawtransaction",
+    "z_validateaddress",
+    "signdata",
+    "decryptdata",
+    "decoderawtransaction",
+    "getvdxfid"
+  ],
+  "builderRpcCalls": 0,
+  "walletFunding": false,
+  "signing": false,
+  "broadcast": false,
+  "onChainAcceptance": false,
+  "note": "Daemon decryptdata may consult wallet viewing keys internally after failed authentication. No wallet keys are exported. This record is run metadata, not an offline substitute for the live tests."
+}

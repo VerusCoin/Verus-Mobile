@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { SafeAreaView, ScrollView, Dimensions } from 'react-native';
-import { Button, Dialog, Portal, Text } from 'react-native-paper';
+import { Dialog, Portal, Text } from 'react-native-paper';
+import Button from './Button';
 import { connect } from 'react-redux';
 import Colors from '../globals/colors';
 

@@ -14,11 +14,29 @@ import {I_ADDRESS_VERSION, R_ADDRESS_VERSION} from '../../../../constants/consta
 import {getSendCurrencyTransaction} from './getSendCurrencyTransaction';
 import {getSingleSendCurrencyOutput} from './sendCurrencyOutputValidation';
 
+const VDXF_TAG_ADDRESS_VERSION = 137;
+const VDXF_TAG_HASH_LENGTH = 20;
+
 const fractional = definition => (definition.options & IS_FRACTIONAL_FLAG) !== 0;
 const reserveOf = (definition, currency) =>
   fractional(definition) && Array.isArray(definition.currencies) && definition.currencies.includes(currency);
 const systemOf = (id, definition) =>
   (definition.options & IS_GATEWAY_FLAG) !== 0 ? definition.gatewayid || id : definition.systemid;
+
+export const validateCurrencyTransferTag = vdxfTag => {
+  if (vdxfTag == null) return;
+
+  try {
+    if (typeof vdxfTag !== 'string') throw new Error();
+    const {hash, version} = fromBase58Check(vdxfTag);
+    if (version !== VDXF_TAG_ADDRESS_VERSION || hash.length !== VDXF_TAG_HASH_LENGTH ||
+      toBase58Check(hash, version) !== vdxfTag) {
+      throw new Error();
+    }
+  } catch (_) {
+    throw new Error('Transaction VDXF tag must be a valid X-address.');
+  }
+};
 
 const refundDestination = value => {
   let destination = value;
@@ -48,9 +66,10 @@ export const getCurrencyTransferIntentContext = async (
   systemId, output, source, currencyDefs, loadCurrency,
 ) => {
   if (['burn', 'burnweight', 'mintnew'].some(key => output[key]) ||
-    ['mapto', 'vdxftag'].some(key => output[key] != null)) {
+    output.mapto != null) {
     throw new Error('Unsupported requested RPC transfer operation.');
   }
+  validateCurrencyTransferTag(output.vdxftag);
   const refundto = refundDestination(output.refundto == null ? source : output.refundto);
   const definition = async id => {
     if (!currencyDefs.has(id)) {

@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "checks": 49,
+  "taggedPlaintextLengths": [
+    90,
+    90,
+    12062,
+    12062,
+    20062,
+    20062
+  ],
+  "freshRecipients": 2,
+  "encryptions": 6,
+  "date": "2026-10-23",
+  "platform": "iOS",
+  "runtime": "iOS 17.2 simulator, iPhone 15 Pro",
+  "bundleId": "org.reactjs.native.verusmobile",
+  "diagnosticEntry": "debug/identityUploadNativeValidation.js",
+  "diagnosticSha256": "246348f46357ee46a9bbee0e3eb2ded6e2e80a05cdfdfccd90928f9922062811",
+  "scope": "Existing installed native bridge; fresh synthetic disposable mnemonic and recipient generation, encryption, IVK/SSK authenticated decryption, malformed ciphertext and incorrect key rejection. No wallet data accessed; no transaction signed or broadcast.",
+  "notes": "Independent diagnostic bundle served transiently on localhost; normal app entry and packaged bundle unchanged. Diagnostic app and server stopped after validation."
+}

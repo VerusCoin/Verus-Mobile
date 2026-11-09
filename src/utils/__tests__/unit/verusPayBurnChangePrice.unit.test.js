@@ -45,7 +45,6 @@ import {
   getVerusPayInvoicePaymentDestination,
   validateVerusPayBurnChangePrice,
 } from "../../deeplink/verusPayBurnChangePrice";
-import { validateVerusPayInvoiceDetails } from "../../deeplink/validator/verusPayInvoiceDetailsValidator";
 import { IS_GATEWAY_FLAG, IS_TOKEN_FLAG } from "../../constants/currencies";
 
 const DEFAULT_SYSTEM_ID = "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV";
@@ -127,23 +126,6 @@ describe("VerusPay burn-change-price support", () => {
         ),
       ).toThrow("cannot burn gateway currencies");
     });
-
-    // it("allows tagged burn invoices through generic-request validation", async () => {
-    //   await expect(
-    //     validateVerusPayInvoiceDetails(
-    //       makeDetails({ isTagged: () => true }),
-    //     ),
-    //   ).resolves.toBeUndefined();
-
-    //   await expect(
-    //     validateVerusPayInvoiceDetails(
-    //       makeDetails({
-    //         isBurnChangePrice: () => false,
-    //         isTagged: () => true,
-    //       }),
-    //     ),
-    //   ).rejects.toThrow("Tagged invoices not yet supported");
-    // });
 
     it("rejects non-transparent explicit burn destinations", () => {
       expect(() =>
@@ -335,7 +317,7 @@ describe("VerusPay burn-change-price support", () => {
           },
           100,
         ),
-      ).toThrow("valid X-address");
+      ).toThrow("Invalid destination address");
     });
 
     it("matches sendcurrency fee calculation for burn output destinations", () => {

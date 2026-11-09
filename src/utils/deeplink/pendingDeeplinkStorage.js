@@ -1,7 +1,5 @@
 import {
   GenericRequest,
-  PROVISION_IDENTITY_DETAILS_VDXF_KEY,
-  ProvisionIdentityDetailsOrdinalVDXFObject,
   SPENDABLE_KEY_DETAILS_VDXF_KEY,
   SpendableKeyDetailsOrdinalVDXFObject,
 } from 'verus-typescript-primitives';
@@ -9,7 +7,6 @@ import {DEEPLINK_STORAGE_INTERNAL_KEY} from '../../../env/index';
 import {sha256} from '../crypto/hash';
 import {SecureStorage} from '../keychain/secureStore';
 
-export const PENDING_REQUEST_KIND_PROVISIONING = PROVISION_IDENTITY_DETAILS_VDXF_KEY.vdxfid;
 export const PENDING_REQUEST_KIND_SPENDABLE_KEY = SPENDABLE_KEY_DETAILS_VDXF_KEY.vdxfid;
 
 const loadRawRequests = async () => {
@@ -64,59 +61,17 @@ const updatePendingRequests = updater => {
   });
 };
 
-const getDisplayAddress = addressObj => {
-  if (!addressObj) return null;
-
-  if (typeof addressObj.toAddress === 'function') {
-    return addressObj.toAddress();
-  }
-
-  if (typeof addressObj.toIAddress === 'function') {
-    return addressObj.toIAddress();
-  }
-
-  return null;
-};
-
-const truncateAddress = address => {
-  if (!address || address.length <= 18) return address;
-  return `${address.slice(0, 8)}...${address.slice(-6)}`;
-};
-
-const getProvisioningTitle = detail => {
-  const identityId = getDisplayAddress(detail.data?.identityID);
-  if (identityId) return `Provision ${truncateAddress(identityId)}`;
-
-  const parentId = getDisplayAddress(detail.data?.parentID);
-  if (parentId) return `Provision VerusID under ${truncateAddress(parentId)}`;
-
-  return 'VerusID provisioning request';
-};
-
-const getSpendableKeyTitle = () => {
-  return 'Claim spendable key';
-};
-
+// Imported spendable material may not be recoverable from the wallet seed.
 const getPendingRequestInfo = request => {
-  const provisioningDetail = request.details.find(
-    detail => detail instanceof ProvisionIdentityDetailsOrdinalVDXFObject,
-  );
-
-  if (provisioningDetail) {
-    return {
-      requestKind: PENDING_REQUEST_KIND_PROVISIONING,
-      title: getProvisioningTitle(provisioningDetail),
-    };
-  }
-
   const spendableKeyDetail = request.details.find(
-    detail => detail instanceof SpendableKeyDetailsOrdinalVDXFObject,
+    detail => detail instanceof SpendableKeyDetailsOrdinalVDXFObject &&
+      Buffer.isBuffer(detail.data?.data) && detail.data.data.length > 0,
   );
 
   if (spendableKeyDetail) {
     return {
       requestKind: PENDING_REQUEST_KIND_SPENDABLE_KEY,
-      title: getSpendableKeyTitle(),
+      title: 'Claim spendable key',
     };
   }
 
@@ -139,11 +94,12 @@ const normalizeRequest = request => {
   if (!request || typeof request !== 'object' || !request.id) return null;
 
   const parsedInfo = getPendingRequestInfoFromBuffer(request.requestBufferString);
+  if (!parsedInfo) return null;
 
   return {
     ...request,
-    requestKind: request.requestKind || parsedInfo?.requestKind || null,
-    title: request.title || parsedInfo?.title || 'Pending request',
+    requestKind: parsedInfo.requestKind,
+    title: request.title || parsedInfo.title,
     completed: request.completed === true,
   };
 };
@@ -170,16 +126,10 @@ export const getPendingDeeplinkRequestCount = async () => {
 export const getPendingDeeplinkPassthrough = request => {
   if (!request?.id) return null;
 
-  const passthrough = {
+  return {
     pendingDeeplinkId: request.id,
     pendingRequestKind: request.requestKind || null,
   };
-
-  if (request.requestKind === PENDING_REQUEST_KIND_PROVISIONING) {
-    passthrough.pendingProvisioningDeeplinkId = request.id;
-  }
-
-  return passthrough;
 };
 
 export const savePendingDeeplinkRequest = async ({

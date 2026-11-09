@@ -16,7 +16,8 @@ import {
   Keyboard,
   Dimensions,
 } from "react-native";
-import { TextInput, Button, Paragraph } from "react-native-paper";
+import { TextInput, Paragraph } from "react-native-paper";
+import Button from "../../../Button";
 import Styles from "../../../../styles";
 import { useObjectSelector } from "../../../../hooks/useObjectSelector";
 

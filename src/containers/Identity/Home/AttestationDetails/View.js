@@ -65,6 +65,8 @@ const AttestationDetails = (props) => {
               onPress={pinToHome}
               color={Colors.secondaryColor}
               buttonStyle={Styles.greenButton}
+              containerStyle={Styles.roundedButton}
+              titleStyle={Styles.fullWidthButtonTitle}
               title={attestation.get('showOnHomeScreen', false) ? 'Unpin from home' : 'Pin to home'}
             />
           </View>
@@ -73,7 +75,7 @@ const AttestationDetails = (props) => {
           <View style={[Styles.alignItemsCenter, Styles.paddingTop]}>
             <StandardButton
               buttonColor={Colors.warningButtonColor}
-              title="CLOSE"
+              title="Close"
               onPress={cancelHandler}
             />
           </View>

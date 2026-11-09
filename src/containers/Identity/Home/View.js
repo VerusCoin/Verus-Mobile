@@ -53,7 +53,7 @@ const Home = (props) => {
       </View>
       <View>
         <TouchableOpacity onPress={handleScanToVerify} style={Styles.linkButton}>
-          <Text style={Styles.textButton}>SCAN TO VERIFY</Text>
+          <Text style={Styles.textButton}>Scan to verify</Text>
         </TouchableOpacity>
       </View>
       {pinnedAttestations.size > 0 ? (
@@ -91,6 +91,9 @@ const Home = (props) => {
           </Text>
           <Button
             style={[Styles.centralHeader, Styles.paddingTop]}
+            buttonStyle={Styles.roundedButton}
+            containerStyle={Styles.roundedButton}
+            titleStyle={Styles.fullWidthButtonTitle}
             title="Go to personal information"
             onPress={() => navigation.navigate('Identity', { selectedScreen: 'Personal Information' })}
           />

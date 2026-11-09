@@ -7,7 +7,8 @@ import {
   Platform,
   Keyboard,
 } from 'react-native';
-import {Text, Button, Paragraph, TextInput} from 'react-native-paper';
+import {Text, Paragraph, TextInput} from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import { createAlert } from '../../../../../actions/actions/alert/dispatchers/alert';
 import TallButton from '../../../../../components/LargerButton';
 import ScanSeed from '../../../../../components/ScanSeed';
@@ -103,7 +104,7 @@ export default function ImportText({
             onPress={() => setShowSeed(!showSeed)}
             disabled={importedSeed == null || importedSeed.length == 0}>{`${
             showSeed ? 'Hide' : 'Show'
-          } Seed`}</Button>
+          } seed`}</Button>
           <Button
             textColor={Colors.primaryColor}
             style={{marginTop: 8}}

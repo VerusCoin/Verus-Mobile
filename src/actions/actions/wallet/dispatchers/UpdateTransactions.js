@@ -15,7 +15,7 @@ const fetchChannels = activeUser => {
     [ETH]: coinObj => updateEthTransactions(activeUser, coinObj),
     [ERC20]: coinObj => updateErc20Transactions(activeUser, coinObj),
     [WYRE_SERVICE]: coinObj => updateWyreTransactions(coinObj),
-    [VRPC]: (coinObj, channelId) => updateVrpcTransactions(coinObj, channelId)
+    [VRPC]: (coinObj, channelId, context) => updateVrpcTransactions(coinObj, channelId, context)
   };
 };
 
@@ -27,7 +27,7 @@ const fetchChannels = activeUser => {
  * @param {String[]} channels The enabled channels for the information request e.g. ['electrum', 'dlight']
  * @param {String} chainTicker Chain ticker id for chain to fetch balances for
  */
-export const updateTransactions = (state, dispatch, channels, chainTicker) =>
+export const updateTransactions = (state, dispatch, channels, chainTicker, requestContext) =>
   updateLedgerValue(
     state,
     dispatch,
@@ -35,5 +35,6 @@ export const updateTransactions = (state, dispatch, channels, chainTicker) =>
     chainTicker,
     SET_TRANSACTIONS,
     ERROR_TRANSACTIONS,
-    fetchChannels
+    fetchChannels,
+    requestContext,
   );

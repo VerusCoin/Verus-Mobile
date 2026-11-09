@@ -1,26 +1,22 @@
-import { primitives } from "verusid-ts-client";
-import { blocksToTime } from "../math";
+import { blocksToTime } from '../math';
 
-export const getVerusIdStatus = (verusIdJson, chainInfo, blocktime) => {
-  const verusId = primitives.PartialIdentity.fromJson(verusIdJson);
-
-  const isTimelockDelay = verusId.isLocked();
-  const isBlockheightUnlock = chainInfo &&
-                              verusId.unlockAfter &&
-                              verusId.unlockAfter.gt(new primitives.BigNumber(chainInfo.longestchain));
-
-  if (isTimelockDelay && !verusId.unlockAfter) {
-    throw new Error("Cannot determine unlock time for timelock delay.");
-  }
-
-  if (verusId.isRevoked()) return "Revoked";
-  else if (isTimelockDelay) {
-    const blockDelay = verusId.unlockAfter.toNumber() + 20;
-
+// Presentation uses scalar fields only: opaque binary content may deliberately
+// have no daemon-JSON roundtrip. Transaction validity is checked by the SDK.
+export const getVerusIdStatus = (identity, chainInfo, blocktime) => {
+  const flags = Number(identity.flags || 0);
+  const timelock = Number(identity.timelock || 0);
+  const activeHeight = chainInfo?.blocks;
+  if (flags & 0x8000) return 'Revoked';
+  if (flags & 2) {
+    const blockDelay = timelock + 20;
     return `Locked, will unlock about ${blocksToTime(blockDelay, blocktime)} (${blockDelay} blocks) after unlock is requested.`;
-  } else if (isBlockheightUnlock) {
-    const unlockFromNow = verusId.unlockAfter.sub(new primitives.BigNumber(chainInfo.longestchain)).toNumber();
-
-    return `Locked, will unlock in about ${blocksToTime(unlockFromNow, blocktime)} (${unlockFromNow} blocks, at block ${verusId.unlockAfter.toNumber()}).`;
-  } else return "Active and unlocked";
-}
+  }
+  if (timelock > 0) {
+    if (!Number.isSafeInteger(activeHeight) || activeHeight < 0) return 'Unlock height set — current height unavailable.';
+    if (timelock > activeHeight) {
+      const unlockFromNow = timelock - activeHeight;
+      return `Locked, will unlock in about ${blocksToTime(unlockFromNow, blocktime)} (${unlockFromNow} blocks, spending from block ${timelock + 1}).`;
+    }
+  }
+  return 'Active and unlocked';
+};

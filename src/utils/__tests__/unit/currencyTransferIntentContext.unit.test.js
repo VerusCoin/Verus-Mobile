@@ -8,7 +8,10 @@ import {
   TransferDestination,
   toBase58Check,
 } from 'verus-typescript-primitives';
-import {getCurrencyTransferIntentContext} from '../../api/channels/vrpc/requests/currencyTransferIntent';
+import {
+  getCurrencyTransferIntentContext,
+  validateCurrencyTransferTag,
+} from '../../api/channels/vrpc/requests/currencyTransferIntent';
 import {getSendCurrencyTransaction} from '../../api/channels/vrpc/requests/getSendCurrencyTransaction';
 import VrpcProvider from '../../vrpc/vrpcInterface';
 
@@ -31,6 +34,8 @@ const own = new TransferDestination({type: DEST_PKH, destinationBytes: Buffer.al
 const source = own.getAddressString();
 const recipient = new TransferDestination({type: DEST_PKH, destinationBytes: Buffer.alloc(20, 7)});
 const zeroCode = id(0);
+const tag = toBase58Check(Buffer.alloc(20, 9), 137);
+const bs58check = require('bs58check');
 
 const definitions = () => new Map([
   [system, {currencyid: system, systemid: system, options: 256, gatewayconverterid: converter}],
@@ -120,6 +125,40 @@ it('pins an explicit refund independently of the fee quote refund', async () => 
   expect(result.refundto).toBe(recipient);
   expect(result.context.auxiliaryDestinations).toEqual([recipient]);
   expect(getSendCurrencyTransaction.mock.calls[0][10]).toEqual({preconvert: undefined, refundto: recipient.getAddressString()});
+});
+
+it('preserves an invoice tag in the fee quote without looking it up as a currency', async () => {
+  const result = await getContext({exportto: remote, vdxftag: tag});
+
+  expect(result.context.route).toEqual({
+    importCurrency: converter, system, gateway: {system: remote, code: zeroCode},
+  });
+  expect(result.context.fees).toEqual({currency: system, transferSatoshis: '20010', destinationSatoshis: '1000'});
+  expect(loadCurrency).not.toHaveBeenCalledWith(tag);
+  expect(getSendCurrencyTransaction.mock.calls[0][9]).toBe(tag);
+});
+
+it.each([
+  ['empty tag', ''],
+  ['unresolved data key', 'vrsc::invoice.payment'],
+  ['PKH address', source],
+  ['identity address', system],
+  ['bad checksum', tag.slice(0, -1) + (tag.endsWith('1') ? '2' : '1')],
+  ['whitespace', ` ${tag}`],
+  ['short hash', bs58check.encode(Buffer.concat([Buffer.from([137]), Buffer.alloc(19)]))],
+  ['long hash', bs58check.encode(Buffer.concat([Buffer.from([137]), Buffer.alloc(21)]))],
+  ['noncanonical version', bs58check.encode(Buffer.concat([Buffer.from([0, 137]), Buffer.alloc(20, 9)]))],
+  ['non-string tag', 1],
+])('rejects an invoice %s before currency or fee lookups', async (_, vdxftag) => {
+  currencyDefs.clear();
+
+  await expect(getContext({exportto: remote, vdxftag})).rejects.toThrow('valid X-address');
+  expect(loadCurrency).not.toHaveBeenCalled();
+  expect(getSendCurrencyTransaction).not.toHaveBeenCalled();
+});
+
+it.each([undefined, null, tag])('accepts an absent or canonical invoice tag (%s)', vdxftag => {
+  expect(() => validateCurrencyTransferTag(vdxftag)).not.toThrow();
 });
 
 it.each([

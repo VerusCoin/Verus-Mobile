@@ -138,7 +138,13 @@ const NonAnimatedList = ({
 
 const List = props => {
   return props.animate ? (
-    <AnimatedList {...props} />
+    <AnimatedList
+      // Positions and gesture state belong to this exact set/order of cards.
+      // Home initially renders no cards and can replace them after a profile
+      // change. Reusing the old shared value leaves new cards without a position.
+      key={JSON.stringify(props.children.map(child => child.props.id))}
+      {...props}
+    />
   ) : (
     <NonAnimatedList {...props} />
   );

@@ -16,7 +16,6 @@ import {
   DataDescriptorKey,
   FqnVdxfUniValue,
   IDENTITY_CREDENTIAL,
-  IdentityUpdateRequestDetails,
   VdxfUniValue,
   fromBase58Check,
   toBase58Check,
@@ -29,6 +28,7 @@ import { Tools } from "react-native-verus";
 import { zGetEncryptionAddress } from "../api/channels/dlight/requests/zGetEncryptionAddress";
 import { getKeyMaterial } from "./getKeyMaterial";
 import { encryptCredentialToDescriptor } from "./encryptDataDescriptor";
+import {cloneIdentityUpdateRequest} from "../identityUpdate/cloneRequest";
 
 /**
  * Offline replication of C++ CCrossChainRPCData::GetConditionID(uint160, uint256).
@@ -68,8 +68,10 @@ export const processEncryptedKeys = async (
   systemId,
   details,
   subjectIdentity,
-  coinObj
+  coinObj,
+  assertActive = () => {},
 ) => {
+  assertActive();
   const credentialKey = IDENTITY_CREDENTIAL.vdxfid;
 
   if (
@@ -96,6 +98,7 @@ export const processEncryptedKeys = async (
 
   // Get key material (extended spending key)
   const keyMaterial = await getKeyMaterial(systemId);
+  assertActive();
 
   // Validate that the identity's z-address matches the account's dlight seed.
   // If they differ the account cannot decrypt the stored credentials.
@@ -103,6 +106,7 @@ export const processEncryptedKeys = async (
   // Tools.deriveShieldedAddress directly rather than getAddresses (which
   // expects bech32).
   const derivedAddress = await Tools.deriveShieldedAddress(keyMaterial.extsk, "", coinObj.id);
+  assertActive();
   if (!derivedAddress || derivedAddress !== privateAddress) {
     throw new Error(
       "The z-address on this identity does not match the z-address linked to your account. " +
@@ -122,6 +126,7 @@ export const processEncryptedKeys = async (
     toId: idHex,
   });
 
+  assertActive();
   if (!keys.address || !keys.ivk) {
     throw new Error("Failed to derive encryption address for credential encryption.");
   }
@@ -139,7 +144,9 @@ export const processEncryptedKeys = async (
         if (iaddr !== CredentialKey.vdxfid) throw new Error("No inner credential key found in credential")
         else {
           const cred = innerUniValue[1];
-          const encryptedDescriptorRes = (await encryptCredentialToDescriptor(encryptionAddress, cred));
+          assertActive();
+          const encryptedDescriptorRes = await encryptCredentialToDescriptor(encryptionAddress, cred);
+          assertActive();
 
           const val = new VdxfUniValue({
             values: [{
@@ -157,12 +164,11 @@ export const processEncryptedKeys = async (
   const hashedKeyHash = getConditionID(credentialKey, ivkHex);
   const hashedKeyIAddr = toBase58Check(hashedKeyHash, I_ADDR_VERSION);
 
-  const modifiedDetails = new IdentityUpdateRequestDetails();
-  modifiedDetails.fromBuffer(details.toBuffer());
+  const modifiedDetails = cloneIdentityUpdateRequest(details);
 
-  modifiedDetails.identity.contentMultiMap.kvContent.deleteByAddress(credentialKey);;
+  modifiedDetails.identity.contentMultiMap.kvContent.deleteByAddress(credentialKey);
   modifiedDetails.identity.contentMultiMap.kvContent.setByAddress(hashedKeyIAddr, encryptedUniValues);
 
-  // Reconstruct IdentityUpdateRequestDetails from modified CLI JSON
+  // Preserve every other request field and binary upload payload.
   return modifiedDetails;
 };

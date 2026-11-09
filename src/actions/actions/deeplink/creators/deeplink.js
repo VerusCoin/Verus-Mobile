@@ -19,9 +19,10 @@ export const setDeeplinkData = (
   }
 }
 
-export const resetDeeplinkData = () => {
+export const resetDeeplinkData = expectedRequestId => {
   return {
     type: SET_DEEPLINK_DATA,
-    payload: { id: null, data: {}, fromService: null, passthrough: null}
+    payload: {id: null, data: {}, fromService: null, passthrough: null,
+      ...(expectedRequestId == null ? {} : {expectedRequestId})}
   }
 }

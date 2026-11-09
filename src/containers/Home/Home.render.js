@@ -105,9 +105,7 @@ export const HomeRenderCoinsList = ({
 }) => {
   const dragDetection = dragDetectionEnabled();
 
-  return widgets.length == 0 ? (
-    <View />
-  ) : (
+  return (
     <View
       style={{
         height: '100%',

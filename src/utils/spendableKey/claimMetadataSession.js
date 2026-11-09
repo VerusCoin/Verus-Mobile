@@ -3,7 +3,6 @@ import {
   scopeSessionAction,
   sessionScopeIsCurrent,
 } from '../../actions/actions/updates/sessionRequests';
-import {convertFqnToDisplayFormat} from '../fullyqualifiedname';
 
 const getSessionScope = requestContext =>
   requestContext?.sessionScope ||
@@ -67,13 +66,16 @@ export const linkClaimedIdentitiesForSession = async ({
 
   for (const result of identityResults) {
     assertClaimMetadataSessionCurrent(requestContext);
-    const displayName = result.identity.fullyQualifiedName
-      ? convertFqnToDisplayFormat(result.identity.fullyQualifiedName)
-      : result.identity.identityAddress;
+    const fullName = result.identity.fullyQualifiedName;
+    if (typeof fullName !== 'string' || !fullName.trim()) {
+      throw new Error(
+        `The full name for claimed identity ${result.identity.identityAddress} is unavailable. Link it manually.`,
+      );
+    }
 
     await linkIdentity(
       result.identity.identityAddress,
-      displayName,
+      fullName,
       result.coinObj.id,
       requestContext,
     );

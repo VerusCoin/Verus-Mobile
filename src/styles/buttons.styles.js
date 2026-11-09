@@ -1,30 +1,40 @@
 import Colors from '../globals/colors';
 
-export default buttons = {
+export const roundedButton = {borderRadius: 24};
+export const buttonLabel = {
+  fontSize: 16,
+  fontWeight: '700',
+  letterSpacing: 0,
+  textAlign: 'center',
+  flexShrink: 1,
+};
+
+const buttons = {
+  roundedButton,
   fullWidthButton: {
+    ...roundedButton,
     width: '100%',
     alignSelf: 'center',
     backgroundColor: Colors.linkButtonColor,
   },
   defaultButton: {
+    ...roundedButton,
     alignSelf: 'center',
     backgroundColor: Colors.linkButtonColor,
     minWidth: 104,
   },
   redButton: {
+    ...roundedButton,
     alignSelf: 'center',
     minWidth: 104,
   },
   greenButton: {
+    ...roundedButton,
     alignSelf: 'center',
     minWidth: 104,
     backgroundColor: Colors.verusGreenColor,
   },
-  fullWidthButtonTitle: {
-    fontSize: 16,
-    fontFamily: 'Avenir-Black',
-    fontWeight: '600',
-  },
+  fullWidthButtonTitle: buttonLabel,
   inlineXButton: {
     marginRight: 16,
     color: Colors.warningButtonColor,
@@ -34,7 +44,7 @@ export default buttons = {
     paddingVertical: 10,
     marginVertical: '2%',
     alignItems: 'center',
-    borderRadius: 5,
+    ...roundedButton,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -50,7 +60,7 @@ export default buttons = {
     backgroundColor:Colors.lightGrey,
     marginVertical: '2%',
     paddingVertical: 10,
-    borderRadius: 5,
+    ...roundedButton,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -63,7 +73,7 @@ export default buttons = {
   linkButtonWithMarginRight: {
     flexDirection: 'row',
     backgroundColor: Colors.linkButtonColor,
-    borderRadius: 4,
+    ...roundedButton,
     padding: 10,
     alignItems: 'center',
     shadowColor: '#000',
@@ -76,7 +86,7 @@ export default buttons = {
   buttonWithSuccessColor: {
     backgroundColor: Colors.verusGreenColor,
     paddingHorizontal: '16%',
-    borderRadius: 5,
+    ...roundedButton,
     paddingVertical: 16,
   },
 
@@ -84,7 +94,7 @@ export default buttons = {
     backgroundColor:Colors.linkButtonColor,
     marginVertical: '2%',
     paddingVertical: 10,
-    borderRadius: 5,
+    ...roundedButton,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -104,3 +114,5 @@ export default buttons = {
     opacity: 0.4,
   },
 };
+
+export default buttons;

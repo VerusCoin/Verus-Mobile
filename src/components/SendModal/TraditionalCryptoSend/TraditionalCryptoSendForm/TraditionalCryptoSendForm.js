@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import BigNumber from "bignumber.js";
 import { Alert, ScrollView, View, TouchableWithoutFeedback, Keyboard, Dimensions } from "react-native";
-import { TextInput, Button, Text } from "react-native-paper";
+import { TextInput, Text } from "react-native-paper";
+import Button from "../../../Button";
 import { useSelector } from 'react-redux';
 import { traditionalCryptoSend, TraditionalCryptoSendFee } from "../../../../actions/actionDispatchers";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";

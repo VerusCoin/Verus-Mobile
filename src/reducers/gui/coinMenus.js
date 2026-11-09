@@ -26,11 +26,28 @@ export const coinMenus = (state = {
         ...state,
         activeSubWallets: {...state.activeSubWallets, [action.payload.chainTicker]: action.payload.subWallet},
       };
-    case SET_USER_COINS_COMPLETE:
+    case SET_USER_COINS_COMPLETE: {
+      const allSubWallets = action.payload.allSubWallets;
+      const activeSubWallets = {};
+
+      // A rebuild can remove an unlinked identity or refresh a wallet's
+      // channels. Never keep using the old object as a payment source.
+      for (const chainTicker of Object.keys(state.activeSubWallets)) {
+        const wallets = allSubWallets[chainTicker];
+        if (!wallets?.length) continue;
+        const selected = state.activeSubWallets[chainTicker];
+        activeSubWallets[chainTicker] = selected == null
+          ? selected
+          : wallets.find(wallet => wallet.id === selected.id) ||
+            wallets.find(wallet => wallet.id === 'MAIN_WALLET') || wallets[0];
+      }
+
       return {
         ...state,
-        allSubWallets: action.payload.allSubWallets,
+        activeSubWallets,
+        allSubWallets,
       };
+    }
     case DISABLE_CLAIM_BUTTON:
       return {
         ...state,
@@ -39,6 +56,8 @@ export const coinMenus = (state = {
     case SIGN_OUT_COMPLETE:
       return {
         ...state,
+        activeSubWallets: {},
+        allSubWallets: {},
         claimDisabled: false
       };
     default:

@@ -13,7 +13,8 @@ import {
 } from "react-native";
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { Button, List, Divider } from "react-native-paper"
+import { List, Divider } from "react-native-paper"
+import Button from "../Button"
 import SemiModal from "../SemiModal";
 import { connect } from 'react-redux';
 import { copyToClipboard } from "../../utils/clipboard/clipboard";

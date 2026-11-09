@@ -1,7 +1,8 @@
 import React from 'react';
 import {Alert, KeyboardAvoidingView, ScrollView} from 'react-native';
 import AppIntroSlider from 'react-native-app-intro-slider';
-import {Button, Text} from 'react-native-paper';
+import {Text} from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../../../../globals/colors';
 
@@ -65,7 +66,7 @@ const GiftCardServiceIntroSlider = ({onDone}) => {
           textColor={Colors.primaryColor}
           style={{marginTop: 24}}
           onPress={finishIntro}>
-          Open Gift Cards
+          Open gift cards
         </Button>
       )}
     </ScrollView>

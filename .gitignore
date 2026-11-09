@@ -70,6 +70,8 @@ keystore.properties
 # Bundle artifact
 *.jsbundle
 /android/app/src/main/assets/index.android.bundle
+/android/app/src/main/res/drawable-*/node_modules_*
+/android/app/src/main/res/drawable-*/src_images_*
 
 # Local package/cache and dependency-inspection artifacts
 /.pnpm-store/

@@ -9,6 +9,7 @@
 */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import {AppState} from 'react-native';
 import {
   setActiveCoin,
   setActiveApp,
@@ -33,7 +34,7 @@ import {
 import { USD } from '../../utils/constants/currencies';
 import {
   conditionallyUpdateService,
-  conditionallyUpdateWallet,
+  conditionallyUpdateWallets,
   dispatchAddWidget,
 } from '../../actions/actionDispatchers';
 import BigNumber from 'bignumber.js';
@@ -58,6 +59,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import store from '../../store';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
+import {refreshRegistrationJobs} from '../../actions/actions/services/dispatchers/verusid/registration';
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -67,7 +69,7 @@ const Home = () => {
 
   const activeAccount = useObjectSelector((state) => state.authentication.activeAccount);
   const testnetOverrides = useObjectSelector(
-    (state) => state.authentication.activeAccount.testnetOverrides,
+    (state) => state.authentication.activeAccount?.testnetOverrides || {},
   );
   const balances = useObjectSelector((state) =>
     extractLedgerData(state, 'balances', API_GET_BALANCES),
@@ -116,6 +118,9 @@ const Home = () => {
 
   const getWidgets = useCallback(async () => {
     setWidgets([]);
+    // The previous Home can remain mounted while its navigator exits. Account
+    // teardown must not read or save widgets for the next login session.
+    if (!activeAccount?.accountHash) return;
     let widgetsList = [...Object.keys(widgetOrder)].sort((a, b) => {
       return widgetOrder[a] <= widgetOrder[b] ? -1 : 1;
     });
@@ -163,9 +168,10 @@ const Home = () => {
     }
 
     setWidgets(widgetsList);
-  }, [activeAccount.accountHash, activeCoinsForUser, widgetOrder]);
+  }, [activeAccount?.accountHash, activeCoinsForUser, widgetOrder]);
 
   const handleWidgetPress = (widgetId) => {
+    if (!activeAccount?.accountHash) return;
     const widgetSplit = widgetId.split(':');
     const widgetType = widgetSplit[0];
 
@@ -175,12 +181,14 @@ const Home = () => {
         const coinObj = activeCoinsForUser.find((x) => x.id === coinId);
 
         if (coinObj) {
-          const subWallets = allSubWallets[coinId];
+          const subWallets = allSubWallets[coinId] || [];
+          const selectedWallet = subWallets.find(wallet =>
+            wallet.id === activeSubWallets[coinId]?.id,
+          ) || subWallets[0];
 
-          openCoin(
-            coinObj,
-            activeSubWallets[coinId] ? activeSubWallets[coinId] : subWallets[0],
-          );
+          // Unlinking can remove the selected identity, and a profile change
+          // can temporarily leave a coin without initialized wallets.
+          if (selectedWallet) openCoin(coinObj, selectedWallet);
         }
       },
       [TOTAL_UNI_BALANCE_WIDGET_TYPE]: () => {
@@ -209,7 +217,17 @@ const Home = () => {
   useFocusEffect(
     useCallback(() => {
       refresh(false);
-      return () => {};
+      const resumeRegistrations = () => {
+        if (!store.getState().authentication.activeAccount) return;
+        // A suspended app may miss polling intervals. Reconcile protected jobs
+        // when Home is shown again; failed lookups retain their durable state.
+        refreshRegistrationJobs().catch(() => {});
+      };
+      resumeRegistrations();
+      const subscription = AppState.addEventListener('change', state => {
+        if (state === 'active') resumeRegistrations();
+      });
+      return () => subscription.remove();
     }, []),
   );
 
@@ -232,8 +250,10 @@ const Home = () => {
   }, [widgetOrder, sortWidgets]);
 
   const refresh = useCallback(
-    async (showLoading = true) => {
-      setLoading(showLoading);
+    async (showLoading = false) => {
+      // Only pull-to-refresh controls the spinner. Background refreshes must
+      // neither reveal it nor dismiss a manual refresh that is still running.
+      if (showLoading) setLoading(true);
 
       const serviceUpdates = [
         API_GET_SERVICE_ACCOUNT,
@@ -244,35 +264,30 @@ const Home = () => {
 
       const coinUpdates = [API_GET_FIATPRICE, API_GET_BALANCES, API_GET_INFO];
 
-      const updates = [
-        {
-          keys: serviceUpdates,
-          update: conditionallyUpdateService,
-          params: [[dispatch]],
-        },
-        {
-          keys: coinUpdates,
-          update: conditionallyUpdateWallet,
-          params: activeCoinsForUser.map((coinObj) => {
-            return [dispatch, coinObj.id];
-          }),
-        },
-      ];
+      // Plan the whole wallet refresh together so address requests can share a
+      // batch. Service work runs alongside it without delaying wallet requests.
+      const walletRefresh = conditionallyUpdateWallets(
+        store.getState(),
+        dispatch,
+        coinUpdates.flatMap(updateId =>
+          activeCoinsForUser.map(coin => ({chainTicker: coin.id, updateId})),
+        ),
+      ).catch(e => {
+        console.warn('Error forcing wallet updates');
+        console.warn(e);
+      });
 
-      for (const update of updates) {
-        for (const key of update.keys) {
-          try {
-            for (const paramList of update.params) {
-              await update.update(store.getState(), ...paramList, key);
-            }
-          } catch (e) {
-            console.warn('Error forcing update to ' + key);
-            console.warn(e);
-          }
+      for (const updateId of serviceUpdates) {
+        try {
+          await conditionallyUpdateService(store.getState(), dispatch, updateId);
+        } catch (e) {
+          console.warn('Error forcing update to ' + updateId);
+          console.warn(e);
         }
       }
 
-      setLoading(false);
+      await walletRefresh;
+      if (showLoading) setLoading(false);
     },
     [activeCoinsForUser, dispatch],
   );
@@ -302,7 +317,7 @@ const Home = () => {
     dispatch(expireServiceData(API_GET_SERVICE_RATES));
     dispatch(expireServiceData(API_GET_SERVICE_NOTIFICATIONS));
 
-    refresh();
+    refresh(true);
   };
 
   const getTotalBalances = () => {
@@ -313,7 +328,7 @@ const Home = () => {
       const key = coinObj.id;
       coinBalances[coinObj.id] = BigNumber(0);
 
-      allSubWallets[coinObj.id].forEach((wallet) => {
+      (allSubWallets[coinObj.id] || []).forEach((wallet) => {
         if (balances[coinObj.id] != null && balances[coinObj.id][wallet.id] != null) {
           coinBalances[coinObj.id] = coinBalances[coinObj.id].plus(
             balances[key] &&

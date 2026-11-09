@@ -83,7 +83,7 @@ class SemiModal extends Component {
           transparent={true}
           visible={this.props.visible}
           onRequestClose={effectiveOnRequestClose}
-          onDismiss={effectiveOnRequestClose}
+          onDismiss={this.props.onDismiss || effectiveOnRequestClose}
         >
           <TouchableWithoutFeedback onPress={effectiveOnRequestClose}>
             <View style={{ flex: 1 }} />

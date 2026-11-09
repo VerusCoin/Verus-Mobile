@@ -32,6 +32,7 @@ const mockNfcManager = {
   start: jest.fn(),
   requestTechnology: jest.fn(),
   cancelTechnologyRequest: jest.fn(),
+  unregisterTagEvent: jest.fn(),
   ndefHandler: {
     getNdefStatus: jest.fn(),
     getNdefMessage: jest.fn(),
@@ -71,6 +72,7 @@ jest.mock('react-native-nfc-manager', () => {
 });
 
 const {Ndef, NdefStatus} = require('react-native-nfc-manager');
+const {Platform} = require('react-native');
 const {
   CreateWalletBackupDetails,
   CreateWalletBackupDetailsOrdinalVDXFObject,
@@ -85,6 +87,8 @@ const {
   createDeeplinkUriNdefBytes,
   getWalletBackupOrdinalFromTag,
   readWalletBackupFromNfc,
+  readDeeplinkUriFromNfc,
+  NFC_DEEPLINK_WALLET_BACKUP_DETECTED,
   tagContainsCreateWalletBackupRequest,
   tagContainsVerusDeeplink,
   tagContainsWalletBackup,
@@ -136,11 +140,13 @@ const createSpendableKeyTag = () => {
 describe('wallet backup NFC writer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.replaceProperty(Platform, 'OS', 'ios');
     mockNfcManager.isSupported.mockResolvedValue(true);
     mockNfcManager.isEnabled.mockResolvedValue(true);
     mockNfcManager.start.mockResolvedValue();
     mockNfcManager.requestTechnology.mockResolvedValue('Ndef');
     mockNfcManager.cancelTechnologyRequest.mockResolvedValue();
+    mockNfcManager.unregisterTagEvent.mockResolvedValue();
     mockNfcManager.ndefHandler.getNdefStatus.mockResolvedValue({
       status: NdefStatus.ReadWrite,
       capacity: 1024,
@@ -159,6 +165,11 @@ describe('wallet backup NFC writer', () => {
       systems: [{identityLookupError: null}],
     });
     mockLoadPendingDeeplinkRequests.mockResolvedValue([]);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
   });
 
   it('detects an existing wallet backup MIME record', () => {
@@ -618,5 +629,166 @@ describe('wallet backup NFC writer', () => {
       expect.any(Object),
     );
     expect(mockNfcManager.cancelTechnologyRequest).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['backup', writeWalletBackupToNfc],
+    ['deeplink', writeDeeplinkUriToNfc],
+  ])('checks NFC availability before validating a %s payload', async (_, write) => {
+    mockNfcManager.isSupported.mockResolvedValueOnce(false);
+    await expect(write(null)).rejects.toThrow('NFC is not supported on this device.');
+    expect(mockNfcManager.isEnabled).not.toHaveBeenCalled();
+
+    mockNfcManager.isEnabled.mockResolvedValueOnce(false);
+    await expect(write(null)).rejects.toThrow('NFC is disabled on this device.');
+    expect(mockNfcManager.start).not.toHaveBeenCalled();
+    expect(mockNfcManager.cancelTechnologyRequest).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['backup', options => writeWalletBackupToNfc(walletBackupOrdinal, options)],
+    ['deeplink', options => writeDeeplinkUriToNfc('verus://1/test', options)],
+  ])('does not cancel a %s request when starting the NFC manager fails', async (_, write) => {
+    const error = new Error('NFC startup failed');
+    mockNfcManager.start.mockRejectedValueOnce(error);
+    const onStatus = jest.fn();
+
+    await expect(write({onStatus})).rejects.toBe(error);
+    expect(onStatus.mock.calls).toEqual([['Preparing NFC writer...']]);
+    expect(mockNfcManager.requestTechnology).not.toHaveBeenCalled();
+    expect(mockNfcManager.cancelTechnologyRequest).not.toHaveBeenCalled();
+  });
+
+  it.each(['Ndef', 'NdefFormatable'])(
+    'does not yield between the account guard and the native %s write',
+    async technology => {
+      mockNfcManager.requestTechnology.mockResolvedValueOnce(technology);
+      const events = [];
+      const beforeWrite = () => {
+        events.push('guard');
+        Promise.resolve().then(() => events.push('next microtask'));
+      };
+      const nativeWrite = technology === 'Ndef'
+        ? mockNfcManager.ndefHandler.writeNdefMessage
+        : mockNfcManager.ndefFormatableHandlerAndroid.formatNdef;
+      nativeWrite.mockImplementationOnce(async () => events.push('native write'));
+
+      await writeWalletBackupToNfc(walletBackupOrdinal, {beforeWrite});
+
+      expect(events).toEqual(['guard', 'native write', 'next microtask']);
+    },
+  );
+
+  it.each([
+    ['backup', options => writeWalletBackupToNfc(walletBackupOrdinal, options),
+      'Hold your NFC wallet backup request card against the device.',
+      'Writing wallet backup...', 'Backup written. Move the card away from the device.'],
+    ['deeplink', options => writeDeeplinkUriToNfc('verus://1/test', options),
+      'Hold the NFC card against the device.',
+      'Writing gift card...', 'Gift card written. Move the card away from the device.'],
+  ])('preserves %s write statuses and waits for cancellation before resolving',
+    async (_, write, holdMessage, writeMessage, successMessage) => {
+      let releaseCancellation;
+      let signalCancellation;
+      const cancellationStarted = new Promise(resolve => { signalCancellation = resolve; });
+      mockNfcManager.cancelTechnologyRequest.mockImplementationOnce(() => {
+        signalCancellation();
+        return new Promise(resolve => { releaseCancellation = resolve; });
+      });
+      const onStatus = jest.fn();
+      const settled = jest.fn();
+      const writing = write({onStatus}).then(settled);
+
+      await cancellationStarted;
+      expect(onStatus.mock.calls.flat()).toEqual([
+        'Preparing NFC writer...', holdMessage, 'Checking NFC card...',
+        writeMessage, successMessage,
+      ]);
+      expect(mockNfcManager.cancelTechnologyRequest).toHaveBeenCalledWith();
+      expect(settled).not.toHaveBeenCalled();
+
+      releaseCancellation();
+      await writing;
+      expect(settled).toHaveBeenCalledWith({written: true});
+    },
+  );
+
+  it.each([
+    ['Card communication failed', 5000],
+    ['User cancelled request', 0],
+    ['Timed out waiting for an NFC card', 0],
+  ])('preserves Android release handling for %s', async (message, releaseDelayMs) => {
+    jest.replaceProperty(Platform, 'OS', 'android');
+    const error = new Error(message);
+    mockNfcManager.requestTechnology.mockRejectedValueOnce(error);
+    mockNfcManager.cancelTechnologyRequest.mockRejectedValueOnce(new Error('cleanup failed'));
+    const onStatus = jest.fn();
+
+    await expect(writeDeeplinkUriToNfc('verus://1/test', {onStatus})).rejects.toBe(error);
+    expect(mockNfcManager.cancelTechnologyRequest).toHaveBeenCalledWith({delayMsAndroid: releaseDelayMs});
+    expect(onStatus.mock.calls.flat().includes('Move the NFC card away from the device.'))
+      .toBe(releaseDelayMs > 0);
+  });
+
+  it('releases a preregistered Android backup session after the card-removal delay', async () => {
+    jest.replaceProperty(Platform, 'OS', 'android');
+    jest.useFakeTimers();
+    const writing = writeWalletBackupToNfc(walletBackupOrdinal, {sessionPreRegistered: true});
+
+    await jest.advanceTimersByTimeAsync(0);
+    expect(mockNfcManager.cancelTechnologyRequest).toHaveBeenCalledWith({delayMsAndroid: 0});
+    expect(mockNfcManager.unregisterTagEvent).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(5000);
+    await expect(writing).resolves.toEqual({written: true});
+    expect(mockNfcManager.unregisterTagEvent).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps preregistered backup cleanup a no-op on iOS', async () => {
+    await writeWalletBackupToNfc(walletBackupOrdinal, {sessionPreRegistered: true});
+    expect(mockNfcManager.cancelTechnologyRequest).not.toHaveBeenCalled();
+    expect(mockNfcManager.unregisterTagEvent).not.toHaveBeenCalled();
+  });
+
+  it('ignores backup-only options for deeplink writes', async () => {
+    jest.replaceProperty(Platform, 'OS', 'android');
+    const beforeWrite = jest.fn(() => { throw new Error('Backup-only guard'); });
+
+    await writeDeeplinkUriToNfc('verus://1/test', {beforeWrite, sessionPreRegistered: true});
+
+    expect(beforeWrite).not.toHaveBeenCalled();
+    expect(mockNfcManager.cancelTechnologyRequest).toHaveBeenCalledWith({delayMsAndroid: 5000});
+    expect(mockNfcManager.unregisterTagEvent).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['backup read', () => readWalletBackupFromNfc(), 300000],
+    ['deeplink read', () => readDeeplinkUriFromNfc(), 60000],
+    ['backup write', () => writeWalletBackupToNfc(walletBackupOrdinal), 300000],
+    ['deeplink write', () => writeDeeplinkUriToNfc('verus://1/test'), 300000],
+  ])('preserves the default %s timeout', async (_, operation, timeoutMs) => {
+    jest.useFakeTimers();
+    mockNfcManager.requestTechnology.mockImplementationOnce(() => new Promise(() => {}));
+    const result = operation();
+    const rejection = expect(result).rejects.toThrow('Timed out waiting for an NFC card.');
+
+    await jest.advanceTimersByTimeAsync(timeoutMs - 1);
+    expect(mockNfcManager.cancelTechnologyRequest).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(1);
+    await rejection;
+    expect(mockNfcManager.cancelTechnologyRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves the wallet-backup error code when reading a deeplink', async () => {
+    const backup = new WalletBackupOrdinalVDXFObject({
+      data: new WalletBackup({data: Buffer.alloc(32)}),
+    });
+    mockNfcManager.ndefHandler.getNdefMessage.mockResolvedValueOnce({
+      ndefMessage: [Ndef.mimeMediaRecord(WALLET_BACKUP_NDEF_MIME, Array.from(backup.toBuffer()))],
+    });
+
+    await expect(readDeeplinkUriFromNfc()).rejects.toMatchObject({
+      code: NFC_DEEPLINK_WALLET_BACKUP_DETECTED,
+    });
+    expect(mockNfcManager.cancelTechnologyRequest).toHaveBeenCalledTimes(1);
   });
 });

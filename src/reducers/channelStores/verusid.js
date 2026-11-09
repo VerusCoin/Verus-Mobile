@@ -3,13 +3,15 @@ import {
   SIGN_OUT_COMPLETE,
   SET_WATCHED_VERUSIDS,
   INIT_VERUSID_CHANNEL_FINISH,
-  SET_PENDING_VERUSIDS
+  SET_PENDING_VERUSIDS,
+  SET_IDENTITY_REGISTRATION_JOBS,
 } from '../../utils/constants/storeType'
 
 export const channelStore_verusid = (state = {
   openCoinChannels: {},
   watchedVerusIds: {},
   pendingIds: {},
+  registrationJobs: {},
   serviceChannelOpen: true,
 }, action) => {
   switch (action.type) {
@@ -35,6 +37,7 @@ export const channelStore_verusid = (state = {
         openCoinChannels: {},
         watchedVerusIds: {},
         pendingIds: {},
+        registrationJobs: {},
         serviceChannelOpen: false,
       }
     case SET_WATCHED_VERUSIDS:
@@ -46,6 +49,11 @@ export const channelStore_verusid = (state = {
       return {
         ...state,
         pendingIds: action.payload.pendingIds
+      }
+    case SET_IDENTITY_REGISTRATION_JOBS:
+      return {
+        ...state,
+        registrationJobs: action.payload.registrationJobs,
       }
     default:
       return state;

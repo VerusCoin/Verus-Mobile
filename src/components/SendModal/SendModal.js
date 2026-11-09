@@ -20,7 +20,6 @@ import {
   ADD_ERC20_TOKEN_MODAL,
   REVOKE_IDENTITY_SEND_MODAL,
   RECOVER_IDENTITY_SEND_MODAL,
-  UPDATE_IDENTITY_SEND_MODAL,
 } from "../../utils/constants/sendModal";
 import { SendModalRender } from "./SendModal.render"
 import { DEVICE_WINDOW_HEIGHT } from "../../utils/constants/constants";
@@ -43,7 +42,6 @@ class SendModal extends Component {
       [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: 696,
       [REVOKE_IDENTITY_SEND_MODAL]: 442,
       [RECOVER_IDENTITY_SEND_MODAL]: 624,
-      [UPDATE_IDENTITY_SEND_MODAL]: 624
     };
 
     for (const key in this.DEFAULT_MODAL_HEIGHTS) {
@@ -79,8 +77,11 @@ class SendModal extends Component {
     }
 
     if (lastProps.alertActive != this.props.alertActive) {
+      // Failed account initialization may have signed out and cleared the
+      // dialog while its error alert was open. Only restore a live request.
       const shouldRestoreVisibility =
         !this.props.alertActive &&
+        this.props.sendModal.requestId != null &&
         !(
           this.props.sendModal.type === AUTHENTICATE_USER_SEND_MODAL &&
           this.props.hasAuthenticatedSession

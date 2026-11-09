@@ -1,10 +1,13 @@
 const mockHandleAuthentication = jest.fn();
+const mockHandleEncryption = jest.fn();
+let mockState;
 
 jest.mock('react-native', () => ({View: 'View', TouchableOpacity: 'TouchableOpacity'}));
 jest.mock('react-native-paper', () => ({Portal: 'Portal', Text: 'Text'}));
 jest.mock('react-redux', () => ({
-  useSelector: selector => selector({deeplink: {passthrough: {}}}),
+  useSelector: selector => selector(mockState),
 }));
+jest.mock('../../../store', () => ({getState: () => mockState}));
 jest.mock('react-native-safe-area-context', () => ({useSafeAreaInsets: () => ({top: 0})}));
 jest.mock('verusid-ts-client', () => ({primitives: require('verus-typescript-primitives')}));
 jest.mock('../../../styles', () => ({}));
@@ -26,7 +29,9 @@ jest.mock('../../deeplink/handlers/authenticationRequestDetailsHandler', () => (
 jest.mock('../../deeplink/handlers/verusPayInvoiceDetailsHandler', () => ({}));
 jest.mock('../../deeplink/handlers/identityUpdateRequestDetailsHandler', () => ({}));
 jest.mock('../../deeplink/handlers/provisionIdentityDetailsHandler', () => ({}));
-jest.mock('../../deeplink/handlers/appEncryptionRequestHandler', () => ({}));
+jest.mock('../../deeplink/handlers/appEncryptionRequestHandler', () => ({
+  handleAppEncryptionRequestVDXFObject: mockHandleEncryption,
+}));
 jest.mock('../../deeplink/handlers/createWalletBackupDetailsHandler', () => ({}));
 jest.mock('../../deeplink/handlers/spendableKeyDetailsHandler', () => ({}));
 jest.mock('../../deeplink/handlers/userDataRequestHandler', () => ({}));
@@ -47,23 +52,130 @@ const {
   CompactIAddressObject,
   GenericRequest,
   GenericResponse,
+  AppEncryptionRequestDetails,
+  AppEncryptionRequestOrdinalVDXFObject,
 } = require('verus-typescript-primitives');
 const GenericRequestHome = require('../../../containers/DeepLink/GenericRequestHome/GenericRequestHome').default;
+const {createAlert} = require('../../../actions/actions/alert/dispatchers/alert');
+const {getAppEncryptionSessionKey} = require('../../deeplink/appEncryptionSession');
+const requestHex = (name = 'original', count = 1) => new GenericRequest({
+  details: Array.from({length: count}, () => new AuthenticationRequestOrdinalVDXFObject({
+    data: new AuthenticationRequestDetails({requestID: CompactIAddressObject.fromFQN(`${name}@`, 'VRSC')}),
+  })),
+}).toBuffer().toString('hex');
 
 describe('generic response network context during request handling', () => {
   let renderer;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockState = {
+      deeplink: {passthrough: {}, requestId: 1},
+      authentication: {signedIn: true, activeAccount: {accountHash: 'profile'}, sessionEpoch: 1},
+      settings: {generalWalletSettings: {enableExperimentalGenericRequests: true}},
+    };
     mockHandleAuthentication.mockImplementation(async (_request, response) => ({
       response,
       displayProps: {},
       handledIndices: [],
     }));
+    mockHandleEncryption.mockImplementation(async (_request, response) => ({
+      response, displayProps: {}, handledIndices: [],
+    }));
   });
 
   afterEach(() => {
     if (renderer) act(() => renderer.unmount());
+  });
+
+  it('stops processing later request details after a failed handler cancels the flow', async () => {
+    mockHandleAuthentication.mockRejectedValueOnce(new Error('Invalid first detail'));
+    const cancel = jest.fn();
+    const warning = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    await act(async () => {
+      renderer = create(<GenericRequestHome deeplinkData={requestHex('original', 2)} navigation={{navigate: jest.fn()}} cancel={cancel} />);
+    });
+    expect(mockHandleAuthentication).toHaveBeenCalledTimes(1);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(createAlert).toHaveBeenCalledWith('Error', 'Invalid first detail');
+    warning.mockRestore();
+  });
+
+  it('ignores old handler completion when a new deeplink replaces a pending request', async () => {
+    let release;
+    mockHandleAuthentication.mockImplementationOnce((_request, response) => new Promise(resolve => {
+      release = () => resolve({response, displayProps: {marker: 'old-result'}, handledIndices: []});
+    })).mockImplementationOnce(async (_request, response) => ({response, displayProps: {marker: 'new-result'}, handledIndices: []}));
+    const props = {navigation: {navigate: jest.fn()}, cancel: jest.fn()};
+    await act(async () => { renderer = create(<GenericRequestHome {...props} deeplinkData={requestHex()} />); });
+    await act(async () => { renderer.update(<GenericRequestHome {...props} deeplinkData={requestHex('replacement')} />); });
+    expect(mockHandleAuthentication).toHaveBeenCalledTimes(2);
+    expect(renderer.root.findByType('AuthenticationRequestInfo').props.marker).toBe('new-result');
+    await act(async () => { release(); });
+    expect(renderer.root.findByType('AuthenticationRequestInfo').props.marker).toBe('new-result');
+    expect(props.cancel).not.toHaveBeenCalled();
+  });
+
+  it('does not advance a canceled request when its former child later completes', async () => {
+    const props = {navigation: {navigate: jest.fn()}, cancel: jest.fn()};
+    await act(async () => { renderer = create(<GenericRequestHome {...props} deeplinkData={requestHex()} />); });
+    const screen = renderer.root.findByType('AuthenticationRequestInfo');
+    act(() => screen.props.cancel());
+    act(() => screen.props.cancel());
+    await act(async () => screen.props.next(new GenericResponse(), [0]));
+    expect(props.cancel).toHaveBeenCalledTimes(1);
+    expect(props.navigation.navigate).not.toHaveBeenCalled();
+  });
+
+  it('ignores a former child cancel after replacing its request', async () => {
+    const props = {navigation: {navigate: jest.fn()}, cancel: jest.fn()};
+    await act(async () => { renderer = create(<GenericRequestHome {...props} deeplinkData={requestHex()} />); });
+    const oldCancel = renderer.root.findByType('AuthenticationRequestInfo').props.cancel;
+    await act(async () => { renderer.update(<GenericRequestHome {...props} deeplinkData={requestHex('replacement')} />); });
+    act(() => oldCancel());
+    expect(props.cancel).not.toHaveBeenCalled();
+    expect(renderer.root.findAllByType('AuthenticationRequestInfo')).toHaveLength(1);
+  });
+
+  it.each(['profile', 'epoch', 'network'])('discards an approved encryption response between request details when the %s changes', async change => {
+    const request = new GenericRequest({details: [
+      new AppEncryptionRequestOrdinalVDXFObject({data: new AppEncryptionRequestDetails()}),
+      new AuthenticationRequestOrdinalVDXFObject({data: new AuthenticationRequestDetails()}),
+    ]});
+    const props = {deeplinkData: request.toBuffer().toString('hex'), navigation: {navigate: jest.fn()}, cancel: jest.fn()};
+    await act(async () => { renderer = create(<GenericRequestHome {...props} />); });
+    const encryptionScreen = renderer.root.findByType('AppEncryptionRequestInfo');
+    const response = new GenericResponse({details: [new AuthenticationResponseOrdinalVDXFObject({
+      data: new AuthenticationResponseDetails(),
+    })]});
+    await act(async () => encryptionScreen.props.next(response, [0]));
+    const nextDetail = renderer.root.findByType('AuthenticationRequestInfo');
+    expect(nextDetail.props.response.details).toHaveLength(1);
+
+    if (change === 'profile') mockState.authentication.activeAccount = {accountHash: 'other'};
+    if (change === 'epoch') mockState.authentication.sessionEpoch++;
+    if (change === 'network') mockState.authentication.activeAccount.testnetOverrides = {VRSC: 'VRSCTEST'};
+    await act(async () => nextDetail.props.next(response, [1]));
+    expect(props.navigation.navigate).not.toHaveBeenCalled();
+    await act(async () => renderer.update(<GenericRequestHome {...props} />));
+    expect(renderer.root.findByType('AppEncryptionRequestInfo').props.response.details).toEqual([]);
+    expect(mockHandleEncryption).toHaveBeenCalledTimes(2);
+  });
+
+  it('carries the originating encryption approval session into the completion route', async () => {
+    const request = new GenericRequest({details: [
+      new AppEncryptionRequestOrdinalVDXFObject({data: new AppEncryptionRequestDetails()}),
+    ]});
+    const props = {deeplinkData: request.toBuffer().toString('hex'), navigation: {navigate: jest.fn()}, cancel: jest.fn()};
+    await act(async () => { renderer = create(<GenericRequestHome {...props} />); });
+    const screen = renderer.root.findByType('AppEncryptionRequestInfo');
+    const response = new GenericResponse({details: [new AuthenticationResponseOrdinalVDXFObject({
+      data: new AuthenticationResponseDetails(),
+    })]});
+    await act(async () => screen.props.next(response, [0]));
+    expect(props.navigation.navigate).toHaveBeenCalledWith('GenericRequestComplete', expect.objectContaining({
+      appEncryptionSessionKey: getAppEncryptionSessionKey(mockState),
+    }));
   });
 
   it.each([

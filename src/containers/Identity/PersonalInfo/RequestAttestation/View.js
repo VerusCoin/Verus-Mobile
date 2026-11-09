@@ -119,6 +119,9 @@ const RequestAttestation = (props) => {
             <Text style={[Styles.centralHeader, Styles.containerVerticalPadding]}>Request attestation from</Text>
             <Button
               style={Styles.centralHeader}
+              buttonStyle={Styles.roundedButton}
+              containerStyle={Styles.roundedButton}
+              titleStyle={Styles.fullWidthButtonTitle}
               title={formattedSearchValue(searchValue)}
               onPress={() => openRequestDialog(formattedSearchValue(searchValue))}
             />
@@ -135,7 +138,7 @@ const RequestAttestation = (props) => {
         <View style={[Styles.alignItemsCenter, Styles.paddingTop]}>
           <StandardButton
             buttonColor={Colors.warningButtonColor}
-            title="CLOSE"
+            title="Close"
             onPress={cancelHandler}
           />
         </View>

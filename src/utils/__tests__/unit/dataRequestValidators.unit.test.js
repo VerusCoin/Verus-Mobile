@@ -252,7 +252,7 @@ describe('generic data request validators', () => {
       details: [detail],
       getDetails: index => detail,
       isSigned: () => false,
-      hasAppOrDelegatedID: () => false,
+      hasAppOrDelegatorID: () => false,
       hasEncryptResponseToAddress: () => true,
       encryptResponseToAddress: {
         toAddressString: () => 'zs1exampleencryptedresponseaddress',

@@ -23,6 +23,7 @@ jest.mock('../../../store', () => ({
 }));
 
 jest.mock('verus-typescript-primitives', () => ({
+  ...jest.requireActual('verus-typescript-primitives'),
   LOGIN_CONSENT_REQUEST_VDXF_KEY: {vdxfid: 'login'},
   VERUSPAY_INVOICE_VDXF_KEY: {vdxfid: 'invoice'},
   toLowerCaseCLocale: value => value.toLowerCase(),

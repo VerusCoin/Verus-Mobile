@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
-import { Card, Button, List, IconButton } from 'react-native-paper';
+import { Card, List, IconButton } from 'react-native-paper';
+import Button from '../../components/Button';
 import styles from '../../styles';
 import Colors from '../../globals/colors';
 import TallButton from '../../components/LargerButton';

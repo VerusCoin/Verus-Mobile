@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Button, Dialog, Portal } from 'react-native-paper';
+import { Dialog, Portal } from 'react-native-paper';
+import Button from './Button';
 import { checkPinForUser } from '../utils/asyncStore/asyncStore';
 import { getSupportedBiometryType } from '../utils/keychain/keychain';
 import PasswordInput from './PasswordInput';

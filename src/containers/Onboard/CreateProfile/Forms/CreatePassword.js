@@ -5,7 +5,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import {Text, Paragraph, Button, TextInput} from 'react-native-paper';
+import {Text, Paragraph, TextInput} from 'react-native-paper';
+import Button from '../../../../components/Button';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import TallButton from '../../../../components/LargerButton';
 import Colors from '../../../../globals/colors';

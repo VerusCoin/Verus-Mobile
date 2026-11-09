@@ -3,11 +3,12 @@
   - Shared styles for the gradient button component.
 */
 import { StyleSheet } from 'react-native';
+import {buttonLabel, roundedButton} from '../buttons.styles';
 
 // keep the gradient button layout centralized without altering button behavior.
 export default StyleSheet.create({
   gradientButtonWrapper: {
-    borderRadius: 24,
+    ...roundedButton,
     overflow: 'hidden',
     position: 'relative',
     height: 52,
@@ -39,9 +40,7 @@ export default StyleSheet.create({
     justifyContent: 'center',
   },
   gradientButtonLabel: {
-    fontSize: 16,
-    fontWeight: '700',
+    ...buttonLabel,
     color: 'white',
-    letterSpacing: 0,
   },
 });

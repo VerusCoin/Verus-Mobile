@@ -20,6 +20,7 @@ import { coinsList } from '../../../utils/CoinData/CoinsList';
 import { requestSeeds } from '../../../utils/auth/authBox';
 import { deriveKeyPair } from '../../../utils/keys';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
+import { convertFqnToDisplayFormat } from '../../../utils/fullyqualifiedname';
 
 const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
@@ -202,7 +203,8 @@ const LoginRequestIdentity = props => {
                 <React.Fragment key={iAddr}>
                   <Divider />
                   <List.Item
-                    title={linkedIds[chainId][iAddr]}
+                    title={linkedIds[chainId][iAddr] && linkedIds[chainId][iAddr] !== iAddr
+                      ? convertFqnToDisplayFormat(linkedIds[chainId][iAddr]) : iAddr}
                     description={iAddr}
                     descriptionNumberOfLines={1}
                     titleNumberOfLines={1}

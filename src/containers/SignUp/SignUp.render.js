@@ -11,7 +11,8 @@ import {
   SafeAreaView,
   KeyboardAvoidingView
 } from "react-native";
-import { TextInput, Button, Checkbox, Portal } from "react-native-paper";
+import { TextInput, Checkbox, Portal } from "react-native-paper";
+import Button from "../../components/Button";
 import SetupSeedModal from "../../components/SetupSeedModal/SetupSeedModal";
 import Styles from "../../styles/index";
 import Colors from "../../globals/colors";
@@ -220,7 +221,7 @@ export const SignUpRender = function() {
               buttonColor={Colors.verusGreenColor}
               textColor={Colors.secondaryColor}
             >
-              {"Add Profile"}
+              {"Add profile"}
             </Button>
           </View>
         </View>

@@ -1,6 +1,7 @@
 import Colors from '../globals/colors';
+import {buttonLabel} from './buttons.styles';
 
-export default text = {
+const text = {
   centralHeader: {
     fontSize: 20,
     color: Colors.quaternaryColor,
@@ -243,9 +244,8 @@ export default text = {
     paddingRight: 10,
   },
   textButton:{
-    fontSize: 16,
+    ...buttonLabel,
     color: Colors.secondaryColor,
-    fontWeight: 'bold',
   },
   textWithTopMargin: {
     marginTop: '10%',
@@ -293,3 +293,5 @@ export default text = {
     textAlign: 'center',
   },
 };
+
+export default text;

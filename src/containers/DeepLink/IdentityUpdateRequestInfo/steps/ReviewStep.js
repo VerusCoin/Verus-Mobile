@@ -1,27 +1,13 @@
-/*
-  ReviewStep (Step 1)
-  - 2026-02-05: Extracted from IdentityUpdateRequestInfo into its own component.
-    Shows requester card, target identity, summary (split into high-risk vs content
-    counts), and identity changes accordion with badges.
-  - 2026-02-05: Trimmed to overview-only. Removed VerusIdObjectData accordion --
-    content changes now live in their own dedicated ContentStep for more space.
-*/
 import React from 'react';
-import { ScrollView, TouchableOpacity, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import {ScrollView, TouchableOpacity, View} from 'react-native';
+import {Text} from 'react-native-paper';
 import Colors from '../../../../globals/colors';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import VerusIdAtIcon from '../../../../images/customIcons/verusid-at-icon.svg';
-import { reviewStepStyles } from '../../../../styles';
+import {reviewStepStyles as localStyles} from '../../../../styles';
 import IdentityStateChangeCard from '../components/IdentityStateChangeCard';
+import {convertFqnToDisplayFormat} from '../../../../utils/fullyqualifiedname';
 
-const Connector = () => (
-  <View style={reviewStepStyles.connectorContainer}>
-    <View style={reviewStepStyles.connectorLine} />
-    <View style={reviewStepStyles.connectorArrow} />
-  </View>
-);
-
+// Keep the request context compact so the proposed content is the main task.
 const ReviewStep = ({
   signerFqn,
   canOpenSignerModal,
@@ -31,109 +17,65 @@ const ReviewStep = ({
   details,
   fullyqualifiedname,
   highRiskCount,
-  contentCount,
   identityStateChange,
   openVerusIdDetailsModal,
   signerIdentityID,
   styles,
-}) => {
-  return (
-    <ScrollView
-      style={styles.scrollView}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.mainTitle}>Update request</Text>
-        <Text style={styles.subtitle}>Review the requested changes to your identity</Text>
-      </View>
+  children,
+}) => (
+  <ScrollView
+    style={styles.scrollView}
+    contentContainerStyle={styles.scrollContent}
+    showsVerticalScrollIndicator
+  >
+    <View style={styles.header}>
+      <Text allowFontScaling accessibilityRole="header" style={styles.mainTitle}>Review identity update</Text>
+      <Text allowFontScaling selectable style={localStyles.identityName}>{convertFqnToDisplayFormat(fullyqualifiedname)}</Text>
+    </View>
 
-      {/* Requester Card */}
+    <View style={localStyles.requestContext}>
       {signerFqn ? (
         <TouchableOpacity
-          style={styles.requesterCard}
-          onPress={canOpenSignerModal ? () => openVerusIdDetailsModal(chainId, signerIdentityID) : undefined}
-          activeOpacity={canOpenSignerModal ? 0.7 : 1}
+          accessibilityRole="button"
+          accessibilityLabel={`View requester ${signerFqn}`}
+          disabled={!canOpenSignerModal}
+          onPress={() => openVerusIdDetailsModal(chainId, signerIdentityID)}
+          style={localStyles.requester}
         >
-          <View style={styles.requesterHeaderRow}>
-            <View style={styles.requesterIconContainer}>
-              <MaterialCommunityIcons name="shield-check" size={28} color={Colors.verusGreenColor} />
-            </View>
-            <View style={styles.requesterTextContainer}>
-              <Text style={styles.requesterLabel}>Request from</Text>
-              <Text style={styles.requesterName}>{signerFqn}</Text>
-            </View>
-            {canOpenSignerModal && (
-              <MaterialCommunityIcons name="chevron-right" size={24} color={Colors.verusDarkGray} />
-            )}
+          <View style={localStyles.requesterText}>
+            <Text allowFontScaling style={styles.subtitle}>Request from</Text>
+            <Text allowFontScaling style={localStyles.requesterName}>{signerFqn}</Text>
           </View>
-          <View style={styles.requesterDetailsRow}>
-            <View style={styles.chipContainer}>
-              <Text style={styles.chipText}>{chainId}</Text>
-            </View>
-            <View style={styles.chipContainer}>
-              <Text style={styles.chipText}>{sigDateString}</Text>
-            </View>
-            {details.expires() && (
-              <View style={[styles.chipContainer, styles.expiryChip]}>
-                <MaterialCommunityIcons name="clock-outline" size={12} color={Colors.infoButtonColor} style={{ marginRight: 4 }} />
-                <Text style={[styles.chipText, { color: Colors.infoButtonColor }]}>{expiryLabel}</Text>
-              </View>
-            )}
-          </View>
+          {canOpenSignerModal && <MaterialCommunityIcons name="chevron-right" size={22} color={Colors.primaryColor} />}
         </TouchableOpacity>
       ) : (
-        <View style={styles.unsignedCard}>
-          <View style={styles.requesterIconContainer}>
-            <MaterialCommunityIcons name="shield-alert-outline" size={28} color={Colors.infoButtonColor} />
-          </View>
-          <View style={styles.requesterInfo}>
-            <Text style={[styles.requesterLabel, { color: Colors.infoButtonColor }]}>Unsigned Request</Text>
-            <Text style={styles.unsignedText}>
-              This request was not cryptographically signed.
-            </Text>
+        <View style={localStyles.unsignedRequest}>
+          <MaterialCommunityIcons name="shield-alert-outline" size={22} color={Colors.infoButtonColor} />
+          <View style={localStyles.requesterText}>
+            <Text allowFontScaling style={localStyles.requesterName}>Unsigned request</Text>
+            <Text allowFontScaling style={styles.subtitle}>The sender of this request has not been verified.</Text>
           </View>
         </View>
       )}
+      <Text allowFontScaling style={localStyles.requestMetadata}>
+        {[chainId, sigDateString, details.expires() ? `Expires in ${expiryLabel}` : null].filter(Boolean).join(' · ')}
+      </Text>
+    </View>
 
-      <Connector />
+    {children}
 
-      {/* Target Identity Card */}
-      <View style={styles.targetCard}>
-        <View style={styles.targetRow}>
-          <View style={styles.targetIconContainer}>
-            <VerusIdAtIcon width={24} height={24} fill="#3165D4" />
-          </View>
-          <View style={styles.targetInfo}>
-            <Text style={styles.targetLabel}>Updating identity</Text>
-            <Text style={styles.targetName}>{fullyqualifiedname}</Text>
-          </View>
-        </View>
+    <IdentityStateChangeCard change={identityStateChange} />
+    {highRiskCount > 0 && (
+      <View style={localStyles.controlsNotice}>
+        <Text allowFontScaling accessibilityRole="header" style={localStyles.requesterName}>Also review sensitive changes</Text>
+        <Text allowFontScaling style={styles.subtitle}>
+          {highRiskCount} {highRiskCount === 1 ? 'change requires' : 'changes require'} your acknowledgement on the next screen.
+        </Text>
       </View>
-
-      <IdentityStateChangeCard change={identityStateChange} />
-
-      {/* Summary Card -- split into high-risk vs content */}
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Summary</Text>
-        <View style={styles.summaryRow}>
-          {highRiskCount > 0 && (
-            <View style={styles.summaryItem}>
-              <Text style={[styles.summaryCount, { color: Colors.warningButtonColor }]}>{highRiskCount}</Text>
-              <Text style={styles.summaryLabel}>High-risk</Text>
-            </View>
-          )}
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryCount}>{contentCount}</Text>
-            <Text style={styles.summaryLabel}>{contentCount === 1 ? 'Content change' : 'Content changes'}</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={reviewStepStyles.bottomSpacer} />
-    </ScrollView>
-  );
-};
+    )}
+    <Text allowFontScaling style={localStyles.continueNote}>Continuing does not update your identity. You’ll confirm the update and fee before signing.</Text>
+    <View style={localStyles.bottomSpacer} />
+  </ScrollView>
+);
 
 export default ReviewStep;

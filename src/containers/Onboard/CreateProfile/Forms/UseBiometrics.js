@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Dimensions, TouchableWithoutFeedback, Keyboard} from 'react-native';
-import {Text, Paragraph, Button, TextInput} from 'react-native-paper';
+import {Text, Paragraph, TextInput} from 'react-native-paper';
+import Button from '../../../../components/Button';
 import Colors from '../../../../globals/colors';
 import { canEnableBiometry } from '../../../../actions/actions/channels/dlight/dispatchers/AlertManager';
 import { Biometrics } from '../../../../images/customIcons';

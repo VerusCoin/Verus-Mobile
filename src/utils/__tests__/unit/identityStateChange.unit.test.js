@@ -156,8 +156,8 @@ describe('identity state change review', () => {
       .toBe('20 blocks unlock delay + 20-block default expiry window = 40 blocks estimated wait after requesting unlock');
   });
 
-  it('uses the daemon default expiry window for a faster chain', () => {
+  it('uses the local SDK 20-block expiry window for a faster chain', () => {
     const change = buildChange({flags: 0}, {flags: 2, timelock: 20}, {secondsPerBlock: 10});
-    expect(change.after.timelock).toContain('20 blocks unlock delay + 60-block default expiry window = 80 blocks');
+    expect(change.after.timelock).toContain('20 blocks unlock delay + 20-block default expiry window = 40 blocks');
   });
 });

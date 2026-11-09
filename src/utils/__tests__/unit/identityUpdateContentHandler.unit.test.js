@@ -16,7 +16,10 @@ jest.mock('../../api/channels/verusid/requests/updateIdentity', () => ({
   getUpdatableIdentity: jest.fn(),
 }));
 jest.mock('../../api/channels/vrpc/callCreators', () => ({
-  getInfo: jest.fn(async () => ({result: {longestchain: 100}})),
+  getInfo: jest.fn(async () => ({result: {blocks: 100, longestchain: 1000, chainid: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV'}})),
+}));
+jest.mock('../../identityUpdate/localUploadCrypto', () => ({
+  createLocalIdentityUploadCrypto: jest.fn(async () => ({decryptData: jest.fn(), dispose: jest.fn()})),
 }));
 jest.mock('../../CoinData/CoinDirectory', () => ({
   CoinDirectory: {getBasicCoinObj: () => ({
@@ -36,6 +39,7 @@ const {
   IdentityUpdateRequestOrdinalVDXFObject,
   toIAddress,
 } = require('verus-typescript-primitives');
+const {createLocalIdentityUploadCrypto} = require('../../identityUpdate/localUploadCrypto');
 const {getIdentity} = require('../../api/channels/verusid/callCreators');
 const {getIdentityContent} = require('../../api/channels/verusid/requests/getIdentityContent');
 const {createUpdateIdentityTx, getUpdatableIdentity} = require('../../api/channels/verusid/requests/updateIdentity');
@@ -192,9 +196,10 @@ describe('identity update content history for review', () => {
     expect(subjectIdentity.identity.contentmultimap).toEqual({});
     expect(getUpdatableIdentity).toHaveBeenCalledWith(SYSTEM_ID, subjectIdentity);
     expect(createUpdateIdentityTx).toHaveBeenCalledWith(
-      SYSTEM_ID, request.getDetails().data, SUBJECT_ID, 'canonical-identity-hex',
-      42, false, undefined, false,
+      SYSTEM_ID, expect.any(IdentityUpdateRequestDetails), SUBJECT_ID, 'canonical-identity-hex',
+      42, false, false, undefined, 100,
     );
+    expect(createUpdateIdentityTx.mock.calls[0][1].toBuffer()).toEqual(request.getDetails().data.toBuffer());
     expect(displayProps.subjectIdTxHex).toBe('canonical-identity-hex');
   });
 
@@ -234,4 +239,26 @@ describe('identity update content history for review', () => {
       'Identity content does not match the identity being updated',
     );
   });
+});
+
+it('authenticates a local upload preview and disposes its keys without exporting a reusable template', async () => {
+  const crypto = {decryptData: jest.fn(), dispose: jest.fn()};
+  createLocalIdentityUploadCrypto.mockResolvedValueOnce(crypto);
+  const {displayProps} = await handleRequest(makeRequest({[KEY]: {data: {message: 'private payload'}}}));
+  expect(createUpdateIdentityTx.mock.calls[0].slice(7)).toEqual([crypto, 100]);
+  expect(crypto.dispose).toHaveBeenCalledTimes(1);
+  expect(displayProps.identityPreviewPrepared).toBe(true);
+  expect(displayProps).not.toHaveProperty('updateIdTxHex');
+});
+
+it('disposes preview keys after failure and never falls back when local crypto is unavailable', async () => {
+  const crypto = {decryptData: jest.fn(), dispose: jest.fn()};
+  createLocalIdentityUploadCrypto.mockResolvedValueOnce(crypto);
+  createUpdateIdentityTx.mockRejectedValueOnce(new Error('Upload authentication failed'));
+  await expect(handleRequest(makeRequest({[KEY]: {data: {message: 'payload'}}}))).rejects.toThrow('authentication');
+  expect(crypto.dispose).toHaveBeenCalledTimes(1);
+  createUpdateIdentityTx.mockClear();
+  createLocalIdentityUploadCrypto.mockRejectedValueOnce(new Error('Local crypto unavailable'));
+  await expect(handleRequest(makeRequest({[KEY]: {data: {message: 'payload'}}}))).rejects.toThrow('crypto unavailable');
+  expect(createUpdateIdentityTx).not.toHaveBeenCalled();
 });

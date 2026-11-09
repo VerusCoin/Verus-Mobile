@@ -15,6 +15,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Colors from '../../../../globals/colors';
 import SemiModal from '../../../../components/SemiModal';
 import { identityPickerSheetStyles as styles } from '../../../../styles';
+import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
 
 const truncateAddress = (addr) => {
   if (!addr || addr.length <= 14) return addr;
@@ -120,7 +121,7 @@ const IdentityPickerSheet = ({
                               ]}
                               numberOfLines={1}
                             >
-                              {friendlyName}
+                              {friendlyName && friendlyName !== iAddr ? convertFqnToDisplayFormat(friendlyName) : iAddr}
                             </Text>
                             <Text
                               style={styles.identityAddress}

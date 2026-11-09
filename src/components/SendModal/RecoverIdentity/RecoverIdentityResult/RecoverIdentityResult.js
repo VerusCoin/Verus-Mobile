@@ -40,6 +40,7 @@ const RecoverIdentityResult = (props) => {
     networkObj,
     finishSend,
     txid,
+    deliveryUnknown: !!props.route.params.deliveryUnknown,
     openExplorer
   });
 };

@@ -9,35 +9,42 @@
 import { CoinDirectory } from "../CoinData/CoinDirectory";
 import { requestPrivKey } from "../auth/authBox";
 import { DLIGHT_PRIVATE } from "../constants/intervalConstants";
-import { Tools } from "react-native-verus";
+import { spendingKeyHex } from "./spendingKeyHex";
+import store from "../../store";
+
+export { spendingKeyHex } from "./spendingKeyHex";
+
+const MISSING_KEY_MESSAGE =
+  "No Z (shielded address) seed has been set up. " +
+  "Please go to Settings → Profile and set up a Z Seed before accepting encryption requests.";
 
 /**
  * Gets an extended spending key for zGetEncryptionAddress.
  * The stored key may be bech32-encoded (secret-extended-key-main...).
- * The iOS native module expects raw hex, so we decode bech32 keys here.
+ * Both native bridges expect raw hex, so we decode Bech32 keys here.
  *
  * @param {string} systemID - Coin system ID (e.g. 'VRSC')
+ * @param {object} requestContext - Optional session scope for private key access
  * @returns {Promise<{extsk: string}>} extsk as hex string
  * @throws {Error} If no key material can be retrieved
  */
-export const getKeyMaterial = async (systemID) => {
+export const getKeyMaterial = async (systemID, requestContext = null) => {
   const coinObj = CoinDirectory.getBasicCoinObj(systemID);
+  requestContext?.assertActive?.();
 
-  try {
-    const esk = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE);
-    if (esk) {
-      // The stored key is bech32-encoded; the iOS native module's
-      // zGetEncryptionAddress expects hex bytes.  Decode here so all
-      // consumers receive a hex spending key.
-      const hex = esk.startsWith("secret-extended-key-")
-        ? await Tools.bech32Decode(esk)
-        : esk;
-      return { extsk: hex };
-    }
-  } catch (e) {}
+  const { activeAccount, sessionKey } = store.getState().authentication;
 
-  throw new Error(
-    `No Z (shielded address) seed has been set up. ` +
-    `Please go to Settings → Profile and set up a Z Seed before accepting encryption requests.`
-  );
+  if (activeAccount && sessionKey && !activeAccount.keys?.[coinObj.id]?.[DLIGHT_PRIVATE]) {
+    throw new Error(MISSING_KEY_MESSAGE);
+  }
+
+  // Authentication and session errors must retain their original meaning.
+  const esk = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE, requestContext);
+  requestContext?.assertActive?.();
+
+  if (esk) {
+    return { extsk: spendingKeyHex(esk) };
+  }
+
+  throw new Error(MISSING_KEY_MESSAGE);
 };
