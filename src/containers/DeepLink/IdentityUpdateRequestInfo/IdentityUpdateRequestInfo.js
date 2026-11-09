@@ -304,7 +304,17 @@ const IdentityUpdateRequestInfo = props => {
       },
       [VERUSID_PRIVATE_INFO.key]: {
         [VERUSID_PRIVATE_ADDRESS.key]:
-          identityUpdates.privateaddress &&
+          // An explicit empty vector removes the address but is omitted from JSON.
+          identity.privateaddress &&
+          details.identity?.containsPrivateAddresses() &&
+          !details.identity.privateAddresses?.length
+            ? {
+                data: 'No private address (removed)',
+                highRisk: true,
+                highRiskTitle: 'Remove private (Z) address',
+                highRiskWarning: 'This identity will no longer have a private receiving address.',
+              }
+            : identityUpdates.privateaddress &&
           identityUpdates.privateaddress !== identity.privateaddress
             ? {
                 data: displayIdentityAddress(identityUpdates.privateaddress),

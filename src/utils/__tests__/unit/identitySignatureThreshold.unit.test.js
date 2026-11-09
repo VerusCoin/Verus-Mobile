@@ -36,7 +36,7 @@ jest.mock('../../clipboard/clipboard', () => ({copyToClipboard: jest.fn()}));
 const React = require('react');
 const {act, create} = require('react-test-renderer');
 const IdentityUpdateRequestInfo = require('../../../containers/DeepLink/IdentityUpdateRequestInfo/IdentityUpdateRequestInfo').default;
-const {ContentMultiMapRemoveKey, DataStringKey, GenericRequest, IDENTITY_CREDENTIAL, IdentityUpdateRequestDetails, IdentityUpdateRequestOrdinalVDXFObject, KvMap, PartialSignData} = require('verus-typescript-primitives');
+const {ContentMultiMapRemoveKey, DataStringKey, GenericRequest, IDENTITY_CREDENTIAL, IdentityUpdateRequestDetails, IdentityUpdateRequestOrdinalVDXFObject, KvMap, PartialIdentity, PartialSignData} = require('verus-typescript-primitives');
 const {VERUSID_CMM_INFO, VERUSID_CMM_DATA} = require('../../constants/verusidObjectData');
 const {createAlert} = require('../../../actions/actions/alert/dispatchers/alert');
 
@@ -71,6 +71,7 @@ const nextButton = renderer => renderer.root.findByType('GradientButton');
 const renderedText = renderer => renderer.root.findAllByType('Text')
   .map(node => node.children.filter(child => typeof child === 'string').join('')).join(' ');
 const goToRiskReview = renderer => act(() => nextButton(renderer).props.onPress());
+const ContentStep = jest.requireActual('../../../containers/DeepLink/IdentityUpdateRequestInfo/steps/ContentStep').default;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -82,6 +83,67 @@ beforeEach(() => {
     },
     sendModal: {type: null},
   };
+});
+
+describe('private address removal review', () => {
+  const privateAddress = 'zs1wczplx4kegw32h8g0f7xwl57p5tvnprwdmnzmdnsw50chcl26f7tws92wk2ap03ykaq6jyyztfa';
+  const removalDetails = () => {
+    const details = IdentityUpdateRequestDetails.fromCLIJson({name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV'});
+    details.identity.privateAddresses = [];
+    details.identity.contains = details.identity.contains.or(PartialIdentity.PARTIAL_ID_CONTAINS_PRIV_ADDRS);
+    return details.toBuffer().toString('hex');
+  };
+
+  it.each([false, true])('shows removal and requires acknowledgement (credential preview: %s)', hasEncryptedKeys => {
+    const identity = {...currentIdentity, privateaddress: privateAddress};
+    // Credential previews retain the old scalar value; prepared previews omit it.
+    const updates = hasEncryptedKeys ? identity : {...currentIdentity};
+    const renderer = renderRequest(updates, identity, {
+      detailsBufferString: removalDetails(), hasEncryptedKeys,
+      identityPreviewPrepared: !hasEncryptedKeys,
+    });
+    const review = renderer.root.findByType('ReviewStep');
+    expect(review.props.highRiskCount).toBe(1);
+    const content = create(<ContentStep {...review.findByType('ContentStep').props} />);
+    expect(renderedText(content)).toContain(privateAddress);
+    expect(renderedText(content)).toContain('No private address (removed)');
+    content.unmount();
+
+    goToRiskReview(renderer);
+    expect(renderedText(renderer)).toContain('Remove private (Z) address');
+    expect(nextButton(renderer).props.disabled).toBe(true);
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(0);
+    act(() => renderer.root.findByProps({accessibilityLabel: 'Acknowledge high-risk changes'}).props.onPress());
+    expect(nextButton(renderer).props.disabled).toBe(false);
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findByType('ConfirmPayStep').props.highRiskCount).toBe(1);
+    renderer.unmount();
+  });
+
+  it.each([{}, {privateaddress: privateAddress}])('does not report removal for an omitted or unchanged address: %p', updates => {
+    const details = IdentityUpdateRequestDetails.fromCLIJson({name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV', ...updates});
+    const renderer = renderRequest(updates, {...currentIdentity, privateaddress: privateAddress}, {
+      detailsBufferString: details.toBuffer().toString('hex'),
+    });
+    expect(renderer.root.findByType('ReviewStep').props.highRiskCount).toBe(0);
+    renderer.unmount();
+  });
+
+  it('does not report removal when the identity has no private address', () => {
+    const renderer = renderRequest(currentIdentity, currentIdentity, {detailsBufferString: removalDetails()});
+    expect(renderer.root.findByType('ReviewStep').props.highRiskCount).toBe(0);
+    renderer.unmount();
+  });
+
+  it.each([undefined, 'zsPreviousAddress'])('keeps additions and replacements visible (current: %s)', previous => {
+    const renderer = renderRequest({privateaddress: privateAddress}, {...currentIdentity, privateaddress: previous});
+    expect(renderer.root.findByType('ReviewStep').props.highRiskCount).toBe(1);
+    const content = create(<ContentStep {...renderer.root.findByType('ContentStep').props} />);
+    expect(renderedText(content)).toContain(privateAddress);
+    expect(renderedText(content)).not.toContain('No private address (removed)');
+    content.unmount();
+    renderer.unmount();
+  });
 });
 
 describe('identity signature-threshold review', () => {
