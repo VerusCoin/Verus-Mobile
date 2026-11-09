@@ -1,12 +1,8 @@
 import BigNumber from 'bignumber.js';
 import {captureIdentityUpdateContext, assertIdentityUpdateContext, validateIdentityUpdateContext, assertIdentityUpdateSigningAuthority} from '../identityUpdate/verifiedSubmission';
 import {
-  DEST_ID,
-  DEST_PKH,
   EVALS,
   SpendableKeyDetailsOrdinalVDXFObject,
-  TransferDestination,
-  fromBase58Check,
 } from 'verus-typescript-primitives';
 import {
   ECPair,
@@ -20,7 +16,6 @@ import {CoinDirectory} from '../CoinData/CoinDirectory';
 import {coinsList} from '../CoinData/CoinsList';
 import {deriveKeyPair} from '../keys';
 import {IS_PBAAS, VRPC} from '../constants/intervalConstants';
-import {I_ADDRESS_VERSION, R_ADDRESS_VERSION} from '../constants/constants';
 import {coinsToSats, satsToCoins} from '../math';
 import {
   getAddressDeltas,
@@ -28,7 +23,6 @@ import {
   getInfo,
 } from '../api/channels/vrpc/callCreators';
 import {
-  getCurrency,
   getFriendlyNameMap,
   getIdentity,
 } from '../api/channels/verusid/callCreators';
@@ -51,6 +45,13 @@ import {
   verifyPendingIdentityFunding,
   verifyPendingIdentityFundingAtActiveHeight,
 } from './durableBroadcast';
+import {
+  getCurrencyDisplay,
+  getIdentityFromResult,
+  getIdentityPrimaryAddresses,
+  toCurrencyTransferOutputs,
+  toTransferDestination,
+} from './claimHelpers';
 
 const {
   getFundedTxBuilder,
@@ -64,62 +65,7 @@ export const SPENDABLE_KEY_CLAIM_NON_NATIVE_FEE_COINS = 0.0002;
 export const SPENDABLE_KEY_CLAIM_IDENTITY_SWEEP_FEE_SATS = BigNumber(20000);
 export const SPENDABLE_KEY_CLAIM_IDENTITY_SWEEP_FEE_COINS = 0.0002;
 const VETH_SYSTEM_ID = 'i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X';
-const IDENTITY_DEFINITION_FIELDS = [
-  'contentmap',
-  'contentMap',
-  'contentmultimap',
-  'contentMultiMap',
-  'flags',
-  'identityaddress',
-  'identityAddress',
-  'minimumsignatures',
-  'minimumSignatures',
-  'name',
-  'parent',
-  'primaryaddresses',
-  'primaryAddresses',
-  'privateaddress',
-  'privateAddress',
-  'recoveryauthority',
-  'recoveryAuthority',
-  'revocationauthority',
-  'revocationAuthority',
-  'systemid',
-  'systemId',
-  'timelock',
-  'txid',
-  'txout',
-  'version',
-  'vout',
-];
-
 const utxoKey = utxo => `${utxo.txid}:${utxo.outputIndex}`;
-
-const getTopLevelIdentityFields = result => {
-  return IDENTITY_DEFINITION_FIELDS.reduce((fields, field) => {
-    if (result?.[field] !== undefined) fields[field] = result[field];
-    return fields;
-  }, {});
-};
-
-const toTransferDestination = address => {
-  const {hash, version} = fromBase58Check(address);
-  let type;
-
-  if (version === R_ADDRESS_VERSION) {
-    type = DEST_PKH;
-  } else if (version === I_ADDRESS_VERSION) {
-    type = DEST_ID;
-  } else {
-    throw new Error('Incompatible address type.');
-  }
-
-  return new TransferDestination({
-    destinationBytes: hash,
-    type,
-    addressVersion: version,
-  });
-};
 
 const normalizeIdentityResults = result => {
   if (result == null) return [];
@@ -142,24 +88,8 @@ const normalizeIdentityResults = result => {
     .filter(identityResult => identityResult != null);
 };
 
-const getIdentityFromResult = result => {
-  if (!result || !result.identity) return result;
-
-  return {
-    ...result.identity,
-    ...getTopLevelIdentityFields(result),
-  };
-};
-
 const getIdentityAddress = identity => {
   return identity?.identityaddress || identity?.identityAddress;
-};
-
-const getIdentityPrimaryAddresses = identity => {
-  const primaryAddresses =
-    identity?.primaryaddresses || identity?.primaryAddresses || [];
-
-  return Array.isArray(primaryAddresses) ? primaryAddresses : [];
 };
 
 const getIdentityFullName = (result, identity) =>
@@ -289,26 +219,6 @@ const getIdentityTransferUtxos = async (systemId, identityAddress, knownUtxos) =
       !knownUtxoKeys.has(utxoKey(utxo)) &&
       isTransferUtxo(systemId, utxo),
   );
-};
-
-const getCurrencyDisplay = async (systemId, currencyId) => {
-  try {
-    const currencyRes = await getCurrency(systemId, currencyId);
-
-    if (currencyRes.error) throw new Error(currencyRes.error.message);
-
-    return {
-      currencyId,
-      name: currencyRes.result.fullyqualifiedname || currencyId,
-      definition: currencyRes.result,
-    };
-  } catch (e) {
-    return {
-      currencyId,
-      name: currencyId,
-      definition: null,
-    };
-  }
 };
 
 const unpackUtxoOutput = (systemId, utxo, allowNonTransferEvals = false) => {
@@ -1270,38 +1180,6 @@ const getTransferDestinationKey = address => {
   return JSON.stringify(address);
 };
 
-const toCurrencyTransferOutputs = outputs => {
-  const outputIndexes = new Map();
-  const currencyTransferOutputs = [];
-
-  for (const {currency, satoshis, address, ...outputOptions} of outputs) {
-    const outputKey = JSON.stringify({
-      address: getTransferDestinationKey(address),
-      outputOptions,
-    });
-    let outputIndex = outputIndexes.get(outputKey);
-
-    if (outputIndex == null) {
-      outputIndex = currencyTransferOutputs.length;
-      outputIndexes.set(outputKey, outputIndex);
-      currencyTransferOutputs.push({
-        ...outputOptions,
-        currencies: {},
-        address,
-      });
-    }
-
-    const currencyOutput = currencyTransferOutputs[outputIndex];
-    const previousSatoshis = currencyOutput.currencies[currency];
-
-    currencyOutput.currencies[currency] = previousSatoshis == null
-      ? satoshis
-      : BigNumber(previousSatoshis).plus(satoshis).toString();
-  }
-
-  return currencyTransferOutputs;
-};
-
 const toOutputSummaries = outputs => {
   return outputs.map(output => ({
     currencyId: output.currency,
@@ -1357,7 +1235,7 @@ const buildSweepTransaction = async ({
 
   const unfundedTxHex = VerusIdInterface.createUnfundedCurrencyTransferTransaction(
     system.systemId,
-    toCurrencyTransferOutputs(outputs),
+    toCurrencyTransferOutputs(outputs, getTransferDestinationKey),
     Number(BigNumber(infoRes.result.longestchain).plus(100).toString()),
   );
 
@@ -1468,7 +1346,7 @@ const buildCombinedIdentityAndSweepTransaction = async ({
     changeAaddr: changeAddress,
     rawIdTx: updatableIdentity.tx,
     idHeight: identity.result.blockheight,
-    currencyTransferOutputs: toCurrencyTransferOutputs(outputs),
+    currencyTransferOutputs: toCurrencyTransferOutputs(outputs, getTransferDestinationKey),
     utxos: fundingUtxos,
     maxFee: feeCoins,
     expectedIdentityPrimaryAddress: destinationAddress,

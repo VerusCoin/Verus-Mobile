@@ -109,3 +109,40 @@ describe('password reset biometric cleanup', () => {
     expect(screen.onSuccess).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('screen navigation reset', () => {
+  it.each([true, false, undefined])('preserves the reset routes for fullReset=%s', fullReset => {
+    const {screen} = createScreen();
+    const data = {task: jest.fn()};
+    const navigation = {
+      closeDrawer: jest.fn(),
+      dispatch: jest.fn().mockReturnValue('dispatch-result'),
+    };
+    screen.props.navigation = navigation;
+
+    expect(screen.resetToScreen('SecureLoading', 'Title', data, fullReset)).toBeUndefined();
+
+    const action = navigation.dispatch.mock.calls[0][0];
+    expect(action).toEqual({
+      type: 'RESET',
+      payload: fullReset
+        ? {index: 0, routes: [{name: 'SecureLoading', params: {data}}]}
+        : {index: 1, routes: [{name: 'Home'}, {name: 'SecureLoading', params: {title: 'Title', data}}]},
+    });
+    expect(action.payload.routes[fullReset ? 0 : 1].params.data).toBe(data);
+    expect(navigation.closeDrawer.mock.invocationCallOrder[0]).toBeLessThan(
+      navigation.dispatch.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('does not dispatch a reset if closing the drawer fails', () => {
+    const {screen} = createScreen();
+    const error = new Error('drawer unavailable');
+    screen.props.navigation = {
+      closeDrawer: jest.fn(() => { throw error; }),
+      dispatch: jest.fn(),
+    };
+    expect(() => screen.resetToScreen('Home')).toThrow(error);
+    expect(screen.props.navigation.dispatch).not.toHaveBeenCalled();
+  });
+});

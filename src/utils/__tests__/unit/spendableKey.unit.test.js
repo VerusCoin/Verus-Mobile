@@ -504,6 +504,42 @@ describe('spendable key claim utilities', () => {
     ];
   });
 
+  it('keeps top-level identity overrides separate from RPC metadata during discovery', async () => {
+    const identity = {
+      identityaddress: mockClaimedIdentityAddress,
+      minimumsignatures: 1,
+      name: 'gift',
+      primaryaddresses: ['previous-owner'],
+      flags: 1,
+      contentmap: {old: 'content'},
+      nestedOnly: 'preserved',
+    };
+    mockEndpoints[mockRootCoin.system_id].getIdentitiesWithAddress.mockResolvedValue({
+      result: [{
+        identity,
+        primaryaddresses: [mockRootClaimAddress],
+        flags: 0,
+        contentmap: null,
+        status: 'active',
+        fullyqualifiedname: 'gift@',
+        unrelatedMetadata: 'outside the identity',
+      }],
+    });
+    mockGetIdentity.mockResolvedValue({result: {identity, fullyqualifiedname: 'gift@'}});
+
+    const plan = await discoverSpendableKeyClaims({
+      mnemonic: 'seed words', requestIsTestnet: false, activeCoinsForUser: [],
+    });
+
+    expect(plan.systems[0].identities).toHaveLength(1);
+    expect(plan.systems[0].identities[0].result.identity).toEqual({
+      ...identity,
+      primaryaddresses: [mockRootClaimAddress],
+      flags: 0,
+      contentmap: null,
+    });
+  });
+
   it.each(['gift.dudecoin.VRSCTEST@', undefined])(
     'uses only the full RPC name %s for a claimed identity', async fullName => {
       const identity = {

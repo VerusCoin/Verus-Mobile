@@ -16,7 +16,7 @@ import { createAlert, resolveAlert } from "../../../../../../actions/actions/ale
 import { ISO_3166_COUNTRIES } from "../../../../../../utils/constants/iso3166";
 import ListSelectionModal from "../../../../../../components/ListSelectionModal/ListSelectionModal";
 import { expireServiceData, setServiceLoading, setWyreAccountId } from "../../../../../../actions/actionCreators";
-import { CommonActions } from "@react-navigation/native";
+import {resetToScreen} from '../../../../../../utils/navigation/resetToScreen';
 import { WYRE_INDIVIDUAL_EMAIL, WYRE_SERVICE_ID } from "../../../../../../utils/constants/services";
 import { API_GET_SERVICE_ACCOUNT } from "../../../../../../utils/constants/intervalConstants";
 import { conditionallyUpdateService, modifyPersonalDataForUser } from "../../../../../../actions/actionDispatchers";
@@ -178,25 +178,7 @@ class WyreServiceAccountCreator extends Component {
   }
 
   resetToScreen = (route, title, data, fullReset) => {
-    let resetAction;
-
-    if (fullReset) {
-      resetAction = CommonActions.reset({
-        index: 0, // <-- currect active route from actions array
-        routes: [{ name: route, params: { data: data } }],
-      });
-    } else {
-      resetAction = CommonActions.reset({
-        index: 1, // <-- currect active route from actions array
-        routes: [
-          { name: "Home" },
-          { name: route, params: { title: title, data: data } },
-        ],
-      });
-    }
-
-    this.props.navigation.closeDrawer();
-    this.props.navigation.dispatch(resetAction);
+    resetToScreen(this.props.navigation, route, title, data, fullReset);
   };
 
   async tryCreateAccount() {
