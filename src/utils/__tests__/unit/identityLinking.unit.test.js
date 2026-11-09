@@ -32,18 +32,18 @@ jest.mock('../../../actions/actions/intervals/dispatchers/lifecycleManager', () 
   refreshActiveChainLifecycles: (...args) => mockRefreshLifecycles(...args),
 }));
 
-const {I_ADDR_VERSION, R_ADDR_VERSION, toBase58Check} = require('verus-typescript-primitives');
+const {R_ADDR_VERSION, toBase58Check, toIAddress} = require('verus-typescript-primitives');
 const {captureIdentityLinkContext, discoverLinkableIdentities, linkSelectedIdentities, retryIdentityLinkRefresh} = require('../../identityLinking/identityLinking');
 const {SET_WATCHED_VERUSIDS} = require('../../constants/storeType');
 const VrpcProvider = require('../../vrpc/vrpcInterface').default;
 const wallet = toBase58Check(Buffer.alloc(20, 1), R_ADDR_VERSION);
 const wallet2 = toBase58Check(Buffer.alloc(20, 2), R_ADDR_VERSION);
 const other = toBase58Check(Buffer.alloc(20, 3), R_ADDR_VERSION);
-const alice = toBase58Check(Buffer.alloc(20, 4), I_ADDR_VERSION);
-const bob = toBase58Check(Buffer.alloc(20, 5), I_ADDR_VERSION);
-const carol = toBase58Check(Buffer.alloc(20, 6), I_ADDR_VERSION);
-const rootSystem = toBase58Check(Buffer.alloc(20, 7), I_ADDR_VERSION);
-const testSystem = toBase58Check(Buffer.alloc(20, 8), I_ADDR_VERSION);
+const alice = toIAddress('Alice.VRSC@');
+const bob = toIAddress('Bob.VRSC@');
+const carol = toIAddress('Carol.VRSC@');
+const rootSystem = toIAddress('VRSC@');
+const testSystem = toIAddress('VRSCTEST@');
 const rootCoin = {id: 'VRSC', system_id: rootSystem, currency_id: rootSystem};
 const testCoin = {id: 'VRSCTEST', system_id: testSystem, currency_id: testSystem, testnet: true};
 const definition = (identityAddress = alice, extra = {}) => ({
@@ -111,21 +111,37 @@ test('discovers current address-index matches, deduplicates and marks only same-
 });
 
 test('resolves a shared non-root parent once while preserving full names for saved links', async () => {
+  const champions = toIAddress('Champions.VRSC@');
+  const nestedAlice = toIAddress('Alice.Champions.VRSC@');
+  const nestedBob = toIAddress('Bob.Champions.VRSC@');
   mockGetIdentity.mockResolvedValue({result: {
-    identity: {identityaddress: carol}, fullyqualifiedname: 'Champions.VRSC@',
+    identity: {identityaddress: champions}, fullyqualifiedname: 'Champions.VRSC@',
   }});
   const {identities} = await discover([
-    definition(alice, {parent: carol}),
-    definition(bob, {parent: carol}),
-    definition(carol, {name: ''}),
+    definition(nestedAlice, {name: 'Alice', parent: champions}),
+    definition(nestedBob, {name: 'Bob', parent: champions}),
+    definition(champions, {name: ''}),
   ]);
-  expect(identities.find(row => row.identityAddress === alice)).toMatchObject({
+  expect(identities.find(row => row.identityAddress === nestedAlice)).toMatchObject({
     displayName: 'Alice.Champions@', fullyQualifiedName: 'Alice.Champions.VRSC@',
   });
-  expect(identities.find(row => row.identityAddress === bob).displayName).toBe('Bob.Champions@');
-  expect(identities.find(row => row.identityAddress === carol).displayName).toBe('Champions@');
+  expect(identities.find(row => row.identityAddress === nestedBob).displayName).toBe('Bob.Champions@');
+  expect(identities.find(row => row.identityAddress === champions).displayName).toBe('Champions@');
   expect(mockGetIdentity).toHaveBeenCalledTimes(1);
-  expect(mockGetIdentity).toHaveBeenCalledWith(rootSystem, carol);
+  expect(mockGetIdentity).toHaveBeenCalledWith(rootSystem, champions);
+});
+
+test.each([
+  ['resolved name', () => definition(bob, {name: 'Alice'})],
+  ['identity name', () => definition(bob, {fullyqualifiedname: 'Alice.VRSC@'})],
+  ['wrapper name', () => ({identity: definition(bob), fullyqualifiedname: 'Alice.VRSC@'})],
+])('rejects a substituted address for the %s without additional RPC requests', async (_, forged) => {
+  await expect(discover([forged()])).rejects.toThrow('Unable to parse response identity address');
+  expect(mockGetInfo).toHaveBeenCalledTimes(1);
+  expect(mockGetIdentitiesWithAddress).toHaveBeenCalledTimes(1);
+  expect(mockGetIdentity).not.toHaveBeenCalled();
+  expect(mockLinkIdentity).not.toHaveBeenCalled();
+  expect(mockSaved.linked_ids.VRSC).toEqual({});
 });
 
 test('does not offer an unresolved identity address as a name to save', async () => {
@@ -137,14 +153,15 @@ test('does not offer an unresolved identity address as a name to save', async ()
 
 test('saves the full nested testnet name during linking without later name lookups', async () => {
   const subid = 'i7jpcdr29uBZAee1LC9EeYJcaFX2QPd8sb';
+  const dudecoin = toIAddress('dudecoin.VRSCTEST@');
   mockState.authentication.activeAccount.testnetOverrides = {enabled: true};
   mockGetInfo.mockResolvedValue({result: {chainid: testSystem, blocks: 100}});
   mockGetIdentity.mockResolvedValue({result: {
-    identity: {identityaddress: carol}, fullyqualifiedname: 'dudecoin.VRSCTEST@',
+    identity: {identityaddress: dudecoin}, fullyqualifiedname: 'dudecoin.VRSCTEST@',
   }});
   const {context, identities} = await discover([
     definition(subid, {
-      name: 'subid', parent: carol, systemid: testSystem, primaryaddresses: [wallet2],
+      name: 'subid', parent: dudecoin, systemid: testSystem, primaryaddresses: [wallet2],
     }),
   ]);
   expect(identities).toEqual([expect.objectContaining({
@@ -153,7 +170,7 @@ test('saves the full nested testnet name during linking without later name looku
     fullyQualifiedName: 'subid.dudecoin.VRSCTEST@',
   })]);
   expect(mockGetIdentity).toHaveBeenCalledTimes(1);
-  expect(mockGetIdentity).toHaveBeenCalledWith(testSystem, carol);
+  expect(mockGetIdentity).toHaveBeenCalledWith(testSystem, dudecoin);
   mockGetIdentity.mockClear();
 
   await expect(linkSelectedIdentities({context, identities})).resolves.toEqual({
@@ -168,14 +185,21 @@ test('saves the full nested testnet name during linking without later name looku
 });
 
 test('preserves a supplied wrapper name and reuses it for another identity’s parent', async () => {
+  const nestedAlice = toIAddress('Alice.Champions.VRSCTEST@');
+  const nestedBob = toIAddress('Bob.Alice.Champions.VRSCTEST@');
+  const testnetDefinition = {systemid: testSystem, primaryaddresses: [wallet2]};
+  mockState.authentication.activeAccount.testnetOverrides = {enabled: true};
+  mockGetInfo.mockResolvedValue({result: {chainid: testSystem, blocks: 100}});
   const {identities} = await discover([
-    {identity: definition(alice), fullyqualifiedname: 'Alice.Champions.VRSCTEST@'},
-    definition(bob, {parent: alice}),
+    {identity: definition(nestedAlice, {
+      ...testnetDefinition, name: 'Alice', parent: toIAddress('Champions.VRSCTEST@'),
+    }), fullyqualifiedname: 'Alice.Champions.VRSCTEST@'},
+    definition(nestedBob, {...testnetDefinition, name: 'Bob', parent: nestedAlice}),
   ]);
-  expect(identities.find(row => row.identityAddress === alice)).toMatchObject({
+  expect(identities.find(row => row.identityAddress === nestedAlice)).toMatchObject({
     displayName: 'Alice.Champions.VRSCTEST@', fullyQualifiedName: 'Alice.Champions.VRSCTEST@',
   });
-  expect(identities.find(row => row.identityAddress === bob).displayName).toBe('Bob.Alice.Champions.VRSCTEST@');
+  expect(identities.find(row => row.identityAddress === nestedBob).displayName).toBe('Bob.Alice.Champions.VRSCTEST@');
   expect(mockGetIdentity).not.toHaveBeenCalled();
 });
 

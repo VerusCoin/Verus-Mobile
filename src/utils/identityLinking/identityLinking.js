@@ -18,6 +18,7 @@ import { VERUSID_SERVICE_ID } from '../constants/services';
 import { SET_WATCHED_VERUSIDS } from '../constants/storeType';
 import { convertFqnToDisplayFormat } from '../fullyqualifiedname';
 import { getIdentity } from '../api/channels/verusid/requests/getIdentity';
+import { validateLookupBinding } from '../api/channels/verusid/requests/lookupBinding';
 
 // Bind saved links to the wallet context and original rows that produced them.
 const contexts = new WeakMap();
@@ -267,6 +268,14 @@ export const discoverLinkableIdentities = async context => {
     if (!fullyQualifiedName) {
       continue;
     }
+
+    validateLookupBinding(
+      context.systemId,
+      identityAddress,
+      identityAddress,
+      fullyQualifiedName,
+      'identity',
+    );
 
     const row = Object.freeze({
       identityAddress,
