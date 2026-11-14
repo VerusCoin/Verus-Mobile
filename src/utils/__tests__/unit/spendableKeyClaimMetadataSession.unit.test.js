@@ -75,6 +75,47 @@ describe('spendable-key claim metadata session isolation', () => {
     expect(addMissingRedeemedCurrencies).toHaveBeenCalledWith(options.results, options.requestContext);
   });
 
+  it.each([undefined, null, '', '   '])(
+    'links and refreshes valid identities around an unavailable full name (%p)', async fullName => {
+      const options = linkOptions('first.VRSCTEST@');
+      options.results.push(
+        {type: 'identity', coinObj: {id: 'UNLINKED'}, identity: {
+          identityAddress: 'missing-name', fullyQualifiedName: fullName,
+        }},
+        {type: 'identity', coinObj: {id: 'VRSC'}, identity: {
+          identityAddress: 'last-identity', fullyQualifiedName: 'last.VRSC@',
+        }},
+      );
+      const addMissingRedeemedCurrencies = jest.fn().mockResolvedValue();
+
+      const result = await reconcileSpendableKeyClaimResults({
+        results: options.results,
+        requestContext: options.requestContext,
+        linkClaimedIdentities: () => linkClaimedIdentitiesForSession(options),
+        addMissingRedeemedCurrencies,
+      });
+
+      expect(result.identityLinkError.message).toMatch(/missing-name.*Link it manually/);
+      expect(result.currencyAddError).toBeNull();
+      expect(options.linkIdentity.mock.calls).toEqual([
+        ['identity-address', 'first.VRSCTEST@', 'VRSCTEST', options.requestContext],
+        ['last-identity', 'last.VRSC@', 'VRSC', options.requestContext],
+      ]);
+      expect(options.updateIdentityWallet).toHaveBeenCalledWith(options.requestContext);
+      expect(options.clearLifecycle.mock.calls).toEqual([['VRSCTEST'], ['VRSC']]);
+      expect(options.createSetUserCoinsAction).toHaveBeenCalledWith(
+        options.activeCoinList, options.activeAccount.id,
+      );
+      expect(options.dispatch).toHaveBeenCalledWith({
+        type: 'SET_USER_COINS',
+        payload: {activeCoinsForUser: []},
+        meta: options.requestContext.sessionScope,
+      });
+      expect(options.refreshLifecycles).toHaveBeenCalledWith([]);
+      expect(addMissingRedeemedCurrencies).toHaveBeenCalledWith(options.results, options.requestContext);
+    },
+  );
+
   it('stops account-A identity linking after an A-to-B switch', async () => {
     const linkCompletion = deferred();
     const requestContext = {

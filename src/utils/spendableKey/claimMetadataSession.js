@@ -63,14 +63,16 @@ export const linkClaimedIdentitiesForSession = async ({
   if (identityResults.length === 0) return;
 
   const touchedCoinIds = new Set();
+  let missingNameError = null;
 
   for (const result of identityResults) {
     assertClaimMetadataSessionCurrent(requestContext);
     const fullName = result.identity.fullyQualifiedName;
     if (typeof fullName !== 'string' || !fullName.trim()) {
-      throw new Error(
+      missingNameError = missingNameError || new Error(
         `The full name for claimed identity ${result.identity.identityAddress} is unavailable. Link it manually.`,
       );
+      continue;
     }
 
     await linkIdentity(
@@ -82,6 +84,8 @@ export const linkClaimedIdentitiesForSession = async ({
     assertClaimMetadataSessionCurrent(requestContext);
     touchedCoinIds.add(result.coinObj.id);
   }
+
+  if (touchedCoinIds.size === 0 && missingNameError) throw missingNameError;
 
   await updateIdentityWallet(requestContext);
   assertClaimMetadataSessionCurrent(requestContext);
@@ -99,6 +103,8 @@ export const linkClaimedIdentitiesForSession = async ({
   dispatch(scopeSessionAction(setUserCoinsAction, sessionScope));
   assertClaimMetadataSessionCurrent(requestContext);
   refreshLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
+
+  if (missingNameError) throw missingNameError;
 };
 
 export const unlinkGiftedIdentitiesForSession = async ({
