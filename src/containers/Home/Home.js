@@ -195,8 +195,10 @@ const Home = () => {
         setDisplayCurrencyModalOpen(true);
       },
       [VERUSID_WIDGET_TYPE]: () => {
-        navigation.navigate('Service', {
-          service: VERUSID_SERVICE_ID,
+        navigation.navigate('ServicesHome', {
+          screen: 'Service',
+          params: {service: VERUSID_SERVICE_ID},
+          initial: false,
         });
       },
     };

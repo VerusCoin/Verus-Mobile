@@ -14,7 +14,9 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../../../../globals/colors';
 import Store from '../../../../../store';
+import { openLinkIdentityModal } from '../../../../../actions/actions/sendModal/dispatchers/sendModal';
 import { sessionScopeIsCurrent } from '../../../../../actions/actions/updates/sessionRequests';
+import { CoinDirectory } from '../../../../../utils/CoinData/CoinDirectory';
 import { VRPC } from '../../../../../utils/constants/intervalConstants';
 import {
   captureIdentityLinkContext,
@@ -289,6 +291,20 @@ export function LinkIdentitiesPage({ navigation, route }) {
     );
   };
 
+  const linkManually = () => {
+    if (linking.current || !current()) {
+      return;
+    }
+
+    try {
+      const coin = wallets.find(item => item.id === context.chain) ||
+        CoinDirectory.findCoinObj(context.chain);
+      openLinkIdentityModal(coin);
+    } catch (failure) {
+      setError(failure);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.page}
@@ -349,6 +365,16 @@ export function LinkIdentitiesPage({ navigation, route }) {
                   ))}
                 </Disclosure>
               )}
+            </View>
+
+            <View style={styles.section}>
+              <ActionButton secondary disabled={busy || !context} onPress={linkManually}>
+                Link identity manually
+              </ActionButton>
+              <Text style={styles.muted}>
+                Link by name or i-Address, including identities this wallet only
+                partially controls.
+              </Text>
             </View>
 
             {!!notice && (
