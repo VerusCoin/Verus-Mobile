@@ -14,7 +14,8 @@ import {
 import { CoinLogos, getCoinLogo } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { Button, Text } from "react-native-paper"
+import { Text } from "react-native-paper"
+import Button from "../Button"
 import SemiModal from "../SemiModal";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { addCoin, addKeypairs, removeExistingCoin, setUserCoins } from "../../actions/actionCreators";
@@ -243,7 +244,7 @@ class CoinDetailsModal extends Component {
                     marginTop: 32,
                   }}
                 >
-                  {added ? "Remove Currency" : "Add Currency"}
+                  {added ? "Remove currency" : "Add currency"}
                 </Button>
               </TouchableOpacity>
             )}

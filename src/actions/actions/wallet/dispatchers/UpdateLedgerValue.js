@@ -23,7 +23,8 @@ export const updateLedgerValue = async (
   chainTicker,
   successType,
   errorType,
-  fetchChannels
+  fetchChannels,
+  requestContext,
 ) => {
   const activeUser = state.authentication.activeAccount;
   const coinObj = CoinDirectory.findCoinObj(chainTicker, activeUser.id);
@@ -47,6 +48,7 @@ export const updateLedgerValue = async (
         dispatch({
           type: successType,
           payload: await channelMap[parentChannel](coinObj, channelId, {
+            ...requestContext,
             signal: request.signal,
             requestId: request.meta.requestId,
             accountHash: request.meta.accountHash,

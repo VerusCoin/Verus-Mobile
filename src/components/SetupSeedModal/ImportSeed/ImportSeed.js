@@ -16,7 +16,8 @@ import {
 import Styles from '../../../styles/index'
 import StandardButton from "../../StandardButton";
 import { Input } from 'react-native-elements'
-import { Button, TextInput, Text } from 'react-native-paper'
+import { TextInput, Text } from 'react-native-paper'
+import Button from '../../Button'
 import Colors from "../../../globals/colors";
 import ScanSeed from "../../ScanSeed";
 import { DLIGHT_PRIVATE, WYRE_SERVICE } from "../../../utils/constants/intervalConstants";
@@ -134,7 +135,7 @@ class ImportSeed extends Component {
                   onPress={() =>
                     this.setState({ showSeed: !this.state.showSeed })
                   }
-                >{`${this.state.showSeed ? "Hide" : "Show"} Seed`}</Button>
+                >{`${this.state.showSeed ? "Hide" : "Show"} seed`}</Button>
               </View>
             </View>
             <View style={Styles.footerContainer}>

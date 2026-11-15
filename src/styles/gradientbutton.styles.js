@@ -1,8 +1,9 @@
 import { StyleSheet } from 'react-native';
+import {buttonLabel, roundedButton} from './buttons.styles';
 
 const styles = StyleSheet.create({
   gradientButtonWrapper: {
-    borderRadius: 24,
+    ...roundedButton,
     overflow: 'hidden',
     position: 'relative',
     height: 52,
@@ -34,13 +35,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   gradientButtonLabel: {
-    fontSize: 16,
-    fontWeight: '700',
+    ...buttonLabel,
     color: 'white',
-    letterSpacing: 0,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
   },
 });
 

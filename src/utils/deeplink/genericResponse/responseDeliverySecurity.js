@@ -10,19 +10,17 @@ const responsePostUriError = message => {
   return error;
 };
 
-export const responseContainsPlaintextExtendedSpendingKey = response => {
-  return (response?.details || []).some(detail => {
-    return (
-      detail instanceof AppEncryptionResponseOrdinalVDXFObject &&
-      detail.data?.containsExtendedSpendingKey?.() === true
-    );
-  });
+export const responseContainsPlaintextAppEncryptionResponse = response => {
+  return (response?.details || []).some(
+    detail => detail instanceof AppEncryptionResponseOrdinalVDXFObject,
+  );
 };
 
-export const assertNoPlaintextExtendedSpendingKey = response => {
-  if (responseContainsPlaintextExtendedSpendingKey(response)) {
+export const assertNoPlaintextAppEncryptionResponse = response => {
+  // Viewing keys also grant channel access and must never be delivered in plaintext.
+  if (responseContainsPlaintextAppEncryptionResponse(response)) {
     throw new Error(
-      'Refusing to deliver an unencrypted extended spending key.',
+      'Refusing to deliver an unencrypted app encryption response.',
     );
   }
 };

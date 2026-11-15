@@ -8,7 +8,8 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import {Button, Checkbox, Text, TextInput} from 'react-native-paper';
+import {Checkbox, Text, TextInput} from 'react-native-paper';
+import Button from '../../../components/Button';
 import {useDispatch, useSelector} from 'react-redux';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -33,6 +34,7 @@ import {
   spendableKeyDetailsOrdinalToMnemonic,
 } from '../../../utils/spendableKey/spendableKey';
 import {reconcileSpendableKeyClaimResults} from '../../../utils/spendableKey/claimResultReconciliation';
+import {confirmVerifiedClaimFees} from '../../../utils/spendableKey/reviewFees';
 import {
   assertClaimMetadataSessionCurrent,
   linkClaimedIdentitiesForSession,
@@ -554,7 +556,6 @@ const SpendableKeyRequestInfo = props => {
   const [claimLoadingText, setClaimLoadingText] = useState(null);
   const [pendingRequestId, setPendingRequestId] = useState(
     deeplinkPassthrough?.pendingDeeplinkId ||
-      deeplinkPassthrough?.pendingProvisioningDeeplinkId ||
       null,
   );
   const [
@@ -1077,6 +1078,22 @@ const SpendableKeyRequestInfo = props => {
           })
         : null;
       assertClaimMetadataSessionCurrent(claimRequestContext);
+      if (preflightPlan) {
+        const approved = await confirmVerifiedClaimFees(preflightPlan, currency => {
+          const system = preflightPlan.claimPlan.systems.find(item => item.systemId === currency);
+          if (system) return system.coinObj.display_ticker || system.coinObj.id;
+          try {
+            const coin = CoinDirectory.findCoinObj(currency);
+            return coin.display_ticker || coin.id;
+          } catch (_) { return currency; }
+        });
+        assertClaimMetadataSessionCurrent(claimRequestContext);
+        if (!approved) {
+          setStatus('review');
+          setClaimLoadingText(null);
+          return;
+        }
+      }
       const persistPendingBroadcastForSession = async pendingBroadcast => {
         assertClaimMetadataSessionCurrent(claimRequestContext);
         await persistClaimBroadcast(pendingBroadcast);
@@ -1085,6 +1102,7 @@ const SpendableKeyRequestInfo = props => {
       const broadcastResult = await broadcastSpendableKeyClaim({
         preflightPlan,
         pendingBroadcast: pendingClaimBroadcast,
+        loadPendingBroadcast: loadPendingClaimBroadcast,
         ownerAccountHash: claimRequestContext.sessionScope.accountHash,
         currentOwnerWalletBinding: currentPendingClaimWalletBinding,
         persistPendingBroadcast: persistPendingBroadcastForSession,

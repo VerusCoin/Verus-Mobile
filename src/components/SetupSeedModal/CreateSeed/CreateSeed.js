@@ -11,7 +11,8 @@ import {
   Alert
 } from "react-native"
 import Styles from '../../../styles/index'
-import { Button, TextInput, Text } from 'react-native-paper'
+import { TextInput, Text } from 'react-native-paper'
+import Button from '../../Button'
 import Colors from '../../../globals/colors'
 import { DEFAULT_SEED_PHRASE_LENGTH } from "../../../utils/constants/constants"
 import { DLIGHT_PRIVATE, WYRE_SERVICE } from "../../../utils/constants/intervalConstants"

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, SafeAreaView, FlatList, TouchableOpacity } from 'react-native';
-import { List, Text, Divider, Button } from 'react-native-paper';
+import { List, Text, Divider } from 'react-native-paper';
+import Button from '../../../Button';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import { copyToClipboard } from '../../../../utils/clipboard/clipboard';

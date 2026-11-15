@@ -131,6 +131,12 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
 
 export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, output, fallbackSubtractBalance = true, amountSubmitted = null) => {
   try {
+    if (output.vdxftag != null && output.vdxftag !== '') {
+      throw new Error(
+        "Tagged invoices cannot be paid from an Ethereum bridge wallet. Select a Verus wallet.",
+      );
+    }
+
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network);
     const activeUserKeys = activeUser.keys[coinObj.id][coinObj.proto === 'erc20' ? ERC20 : ETH]
     const fromAddress = activeUserKeys.addresses[0];

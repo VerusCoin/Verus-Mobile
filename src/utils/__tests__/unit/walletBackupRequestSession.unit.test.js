@@ -156,7 +156,7 @@ describe('wallet backup account isolation', () => {
   });
 
   const writeBackupButton = () => renderer.root.findAllByType('Button')
-    .find(button => button.props.children === 'Write NFC Backup');
+    .find(button => button.props.children === 'Write NFC backup');
   const writeBackup = () => writeBackupButton().props.onPress();
 
   const switchAccount = name => {
@@ -189,7 +189,7 @@ describe('wallet backup account isolation', () => {
     };
     act(() => renderer.update(React.createElement(WalletBackupRequestInfo, props)));
     const createProfileChoice = renderer.root.findAllByType('Button')
-      .find(button => button.props.children === 'Create New Profile');
+      .find(button => button.props.children === 'Create new profile');
     act(() => createProfileChoice.props.onPress());
     act(() => {
       const inputs = renderer.root.findAllByType('TextInput');
@@ -198,7 +198,7 @@ describe('wallet backup account isolation', () => {
       inputs.find(input => input.props.label === 'Confirm profile password').props.onChangeText('password');
     });
     return () => renderer.root.findAllByType('Button')
-      .find(button => button.props.children === 'Create Profile');
+      .find(button => button.props.children === 'Create profile');
   };
 
   it('blocks repeated profile creation through seed generation and account setup', async () => {

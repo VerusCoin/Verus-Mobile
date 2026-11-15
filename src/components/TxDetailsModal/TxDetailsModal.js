@@ -18,7 +18,8 @@ import { unixToDate, truncateDecimal } from '../../utils/math';
 import { explorers } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { Button, List, Text, Divider } from "react-native-paper"
+import { List, Text, Divider } from "react-native-paper"
+import Button from "../Button"
 import SemiModal from "../SemiModal";
 import { WALLET_APP_MANAGE } from "../../utils/constants/apps";
 import { expireCoinData } from "../../actions/actionCreators";

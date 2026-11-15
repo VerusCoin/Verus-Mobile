@@ -1,6 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
-import { Button, TextInput , Text} from 'react-native-paper';
+import { TextInput , Text} from 'react-native-paper';
+import Button from '../Button';
 import Colors from '../../globals/colors';
 import Styles from '../../styles';
 

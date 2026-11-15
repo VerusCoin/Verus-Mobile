@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import Styles from "../../../styles";
-import { Button, Card, Text, TextInput } from "react-native-paper";
+import { Card, Text, TextInput } from "react-native-paper";
+import Button from "../../../components/Button";
 import Colors from "../../../globals/colors";
 import { RenderCircleCoinLogo, RenderPlainCoinLogo } from "../../../utils/CoinData/Graphics";
 import { TouchableOpacity } from "react-native";

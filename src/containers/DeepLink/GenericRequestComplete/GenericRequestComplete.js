@@ -12,7 +12,8 @@
 */
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Platform, SafeAreaView, View, TouchableOpacity, Clipboard } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import Button from '../../../components/Button';
 import { CommonActions } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,7 +26,9 @@ import GradientButton from '../../../components/GradientButton';
 import Colors from '../../../globals/colors';
 import { resetDeeplinkData } from '../../../actions/actionCreators';
 import { openUrl } from '../../../utils/linking';
-import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
+import store from '../../../store';
+import {captureSessionScope, sessionScopeIsCurrent} from '../../../actions/actions/updates/sessionRequests';
+import { getAppEncryptionSessionKey } from '../../../utils/deeplink/appEncryptionSession';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { signGenericResponse } from '../../../utils/api/channels/vrpc/callCreators';
 import {
@@ -44,7 +47,7 @@ import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeep
 import { prepareGenericResponseForSigning } from '../../../utils/deeplink/genericResponse/prepareGenericResponseForSigning';
 import { encryptGenericResponseDetails } from '../../../utils/deeplink/genericResponse/encryptGenericResponseDetails';
 import {
-  assertNoPlaintextExtendedSpendingKey,
+  assertNoPlaintextAppEncryptionResponse,
   assertSecurePostResponseUri,
 } from '../../../utils/deeplink/genericResponse/responseDeliverySecurity';
 import {
@@ -53,7 +56,7 @@ import {
 } from '../../../utils/deeplink/validator/authenticationRequestValidator';
 
 const GenericRequestComplete = props => {
-  const { requestBufferString, responseBufferString } = props.route.params;
+  const { requestBufferString, responseBufferString, appEncryptionSessionKey } = props.route.params;
   const insets = useSafeAreaInsets();
   const bottomNavigationInset = Math.max(
     insets.bottom,
@@ -67,21 +70,44 @@ const GenericRequestComplete = props => {
   const [postFailed, setPostFailed] = useState(false);
   const [txidCopied, setTxidCopied] = useState(false);
   const txidCopyTimeoutRef = useRef(null);
+  const mounted = useRef(true);
+  const pending = useRef(null);
+  // Capture ownership with the route; an old response cannot adopt a new request.
+  const source = useMemo(() => ({
+    requestId: store.getState().deeplink.requestId,
+    sessionScope: captureSessionScope(store.getState()),
+    appEncryptionSessionKey,
+  }), [requestBufferString, responseBufferString, appEncryptionSessionKey]);
+  const currentSource = useRef(source);
+  currentSource.current = source;
+  const isCurrent = () => mounted.current && currentSource.current === source &&
+    store.getState().deeplink.requestId === source.requestId &&
+    sessionScopeIsCurrent(store.getState(), source.sessionScope) &&
+    (source.appEncryptionSessionKey == null ||
+      source.appEncryptionSessionKey === getAppEncryptionSessionKey(store.getState()));
+
+  useEffect(() => {
+    mounted.current = true;
+    pending.current = null;
+    setLoading(false);
+    setPostFailed(false);
+    return () => { mounted.current = false; };
+  }, [source]);
 
   const completeRequest = () => {
+    if (!isCurrent()) return;
     const resetAction = CommonActions.reset({
       index: 0,
       routes: [{name: signedIn ? 'SignedInStack' : 'SignedOutStack'}],
     });
 
-    dispatch(resetDeeplinkData());
+    dispatch(resetDeeplinkData(source.requestId));
     props.navigation.dispatch(resetAction);
   };
 
   const markSavedPendingRequestComplete = async () => {
     const pendingRequestId =
-      passthrough?.pendingDeeplinkId ||
-      passthrough?.pendingProvisioningDeeplinkId;
+      passthrough?.pendingDeeplinkId;
 
     if (pendingRequestId) {
       try {
@@ -122,7 +148,7 @@ const GenericRequestComplete = props => {
 
     if (responseUri == null) return;
 
-    assertNoPlaintextExtendedSpendingKey(response);
+    assertNoPlaintextAppEncryptionResponse(response);
 
     if (isPostUri(responseUri)) {
       const responseBuffer = response.toBuffer();
@@ -266,13 +292,21 @@ const GenericRequestComplete = props => {
     return `${value.slice(0, start)}...${value.slice(-end)}`;
   };
 
-  // Keep the redesigned success UI while stamping and verifying the response metadata; integrated by Codex GPT-5 to match the upstream protocol path.
+  // Recheck ownership after each async step before signing, delivery, or cleanup.
   const onComplete = async () => {
+    if (!isCurrent() || pending.current) return;
+    pending.current = source;
+    const assertActive = () => {
+      if (!isCurrent() || pending.current !== source) {
+        throw Object.assign(new Error('This request was closed or replaced.'), {code: 'SESSION_CHANGED'});
+      }
+    };
     try {
       setLoading(true);
 
       if (!requestBufferString || !responseBufferString) {
         await markSavedPendingRequestComplete();
+        assertActive();
         setLoading(false);
         completeRequest();
         return;
@@ -285,6 +319,7 @@ const GenericRequestComplete = props => {
       response.fromBuffer(Buffer.from(responseBufferString, 'hex'), 0);
 
       await encryptGenericResponseDetails({ request, response });
+      assertActive();
       prepareGenericResponseForSigning({
         request,
         response,
@@ -292,20 +327,30 @@ const GenericRequestComplete = props => {
       });
       if (response.signature == null) {
         await markSavedPendingRequestComplete();
+        assertActive();
         setLoading(false);
         completeRequest();
         return;
       }
 
       const signerSystemID = response.signature.systemID.toIAddress();
-      const signerSystemName = getSystemNameFromSystemId(signerSystemID);
-      const coinObj = CoinDirectory.getBasicCoinObj(signerSystemName);
+      // Canonical system IDs also resolve registered PBaaS signing chains.
+      const coinObj = CoinDirectory.getBasicCoinObj(signerSystemID);
 
       const signedResponse = await signAfterAuthenticationExpiryCheck(
         request,
-        () => signGenericResponse(coinObj, response),
+        () => {
+          assertActive();
+          return signGenericResponse(coinObj, response, {
+            request,
+            sessionScope: source.sessionScope,
+            assertActive,
+          });
+        },
       );
+      assertActive();
       const verification = await verifyGenericResponse(coinObj, signedResponse);
+      assertActive();
 
       if (!verification) {
         throw new Error('Response failed verification, ensure the identity you selected is still under your control.');
@@ -313,10 +358,16 @@ const GenericRequestComplete = props => {
 
       await performAfterAuthenticationExpiryCheck(
         request,
-        () => handleResponseUri(request, signedResponse),
+        () => {
+          assertActive();
+          return handleResponseUri(request, signedResponse);
+        },
       );
+      assertActive();
       await markSavedPendingRequestComplete();
+      assertActive();
     } catch (e) {
+      if (!isCurrent() || e.code === 'SESSION_CHANGED') return;
       if (e?.isResponsePostError) {
         setPostFailed(true);
       }
@@ -325,6 +376,8 @@ const GenericRequestComplete = props => {
       console.warn(e);
       setLoading(false);
       return;
+    } finally {
+      if (pending.current === source) pending.current = null;
     }
 
     completeRequest();

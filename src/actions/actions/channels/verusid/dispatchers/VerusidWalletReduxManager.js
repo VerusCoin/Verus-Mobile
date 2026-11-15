@@ -7,7 +7,7 @@ import {
   SET_WATCHED_VERUSIDS,
   SET_PENDING_VERUSIDS,
 } from "../../../../../utils/constants/storeType";
-import { clearOldPendingVerusIds } from '../../../services/dispatchers/verusid/verusid';
+import {publishRegistrationJobs, refreshRegistrationJobs} from '../../../services/dispatchers/verusid/registration';
 import {
   captureSessionScope,
   getContextActionScope,
@@ -32,10 +32,30 @@ const assertSessionCurrent = (sessionScope, requestContext) => {
   }
 };
 
+const updateRegistrationSummaries = async (update, requestContext) => {
+  try {
+    await update(requestContext);
+  } catch (error) {
+    // Registration receipts are separate from linked and pending identities.
+    // An unreadable receipt must not prevent wallet access or rewrite its data.
+    assertSessionCurrent(requestContext.sessionScope, requestContext);
+    if (
+      error?.code === 'SESSION_CHANGED' ||
+      error?.name === 'AbortError' ||
+      error?.code === 'ABORT_ERR' ||
+      error?.code === 'ERR_CANCELED'
+    ) {
+      throw error;
+    }
+
+    // Errors can contain protected receipt data; log only a generic message.
+    console.warn('Unable to refresh saved identity registration summaries.');
+  }
+};
+
 export const initVerusIdWallet = async (coinObj, requestedContext) => {
   const sessionScope = getSessionScope(requestedContext);
   const requestContext = {...(requestedContext || {}), sessionScope};
-  await clearOldPendingVerusIds(requestContext);
   assertSessionCurrent(sessionScope, requestContext);
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID)
   assertSessionCurrent(sessionScope, requestContext);
@@ -54,11 +74,15 @@ export const initVerusIdWallet = async (coinObj, requestedContext) => {
     },
   }, sessionScope));
 
+  await updateRegistrationSummaries(publishRegistrationJobs, requestContext);
+  assertSessionCurrent(sessionScope, requestContext);
+
   return
 }
 
 export const updateVerusIdWallet = async requestContext => {
   const sessionScope = getSessionScope(requestContext);
+  requestContext = {...(requestContext || {}), sessionScope};
   assertSessionCurrent(sessionScope, requestContext);
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
   assertSessionCurrent(sessionScope, requestContext);
@@ -71,6 +95,9 @@ export const updateVerusIdWallet = async requestContext => {
         : {},    
     },
   }, sessionScope));
+
+  await updateRegistrationSummaries(refreshRegistrationJobs, requestContext);
+  assertSessionCurrent(sessionScope, requestContext);
 
   return;
 };

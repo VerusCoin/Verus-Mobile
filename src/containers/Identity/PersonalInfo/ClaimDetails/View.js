@@ -115,6 +115,9 @@ const ClaimDetails = (props) => {
         </View>
         <Button
           title="Request attestation"
+          buttonStyle={Styles.roundedButton}
+          containerStyle={Styles.roundedButton}
+          titleStyle={Styles.fullWidthButtonTitle}
           color={Colors.primaryColor}
           style={Styles.paddingTop}
           onPress={() => setRequestAttestationModalShown(true)}

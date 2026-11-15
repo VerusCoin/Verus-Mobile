@@ -1,41 +1,35 @@
-/*
-  ReviewStep.styles 
-  - Connector and spacer styles used by the identity update review step.
-*/
-import { StyleSheet } from 'react-native';
+import {StyleSheet} from 'react-native';
+import Colors from '../../globals/colors';
 
-// keep the review-step connector styling out of the render component.
 export default StyleSheet.create({
-  connectorContainer: {
+  identityName: {
+    color: Colors.primaryColor,
+    fontSize: 20,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  requestContext: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8E8E8',
+    paddingBottom: 16,
+    marginBottom: 20,
+  },
+  requester: {
+    flexDirection: 'row',
     alignItems: 'center',
-    height: 40,
-    justifyContent: 'center',
-    zIndex: 1,
-    marginTop: -2,
-    marginBottom: -2,
+    minHeight: 44,
   },
-  connectorLine: {
-    width: 2,
-    height: '100%',
-    backgroundColor: '#E0E0E0',
-    position: 'absolute',
+  requesterText: {flex: 1},
+  requesterName: {fontSize: 16, fontWeight: '600', color: Colors.quaternaryColor},
+  requestMetadata: {fontSize: 13, color: '#666', marginTop: 8},
+  unsignedRequest: {flexDirection: 'row', alignItems: 'flex-start', gap: 10},
+  controlsNotice: {
+    backgroundColor: '#FFF7ED',
+    borderRadius: 12,
+    padding: 16,
+    gap: 6,
+    marginBottom: 16,
   },
-  connectorArrow: {
-    width: 0,
-    height: 0,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderBottomWidth: 0,
-    borderTopWidth: 8,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: '#E0E0E0',
-    position: 'absolute',
-    bottom: 0,
-  },
-  bottomSpacer: {
-    height: 24,
-  },
+  continueNote: {fontSize: 14, lineHeight: 20, color: '#666', marginTop: 8},
+  bottomSpacer: {height: 24},
 });

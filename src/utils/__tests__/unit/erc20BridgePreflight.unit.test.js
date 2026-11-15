@@ -109,6 +109,19 @@ function setup({source = VETH, erc20 = false, systemName = 'VRSC', pastPrelaunch
 
 beforeEach(() => jest.clearAllMocks());
 
+it.each([false, true])('rejects a tagged invoice before contacting the Ethereum provider (ERC20: %s)', async erc20 => {
+  const {prepare} = setup({erc20, source: erc20 ? 'DAI.vETH' : VETH});
+
+  const response = await prepare({vdxftag: 'xA91QPpBrHZto92NCU5KEjCqRveS4dAPrf'});
+
+  expect(response).toEqual({
+    err: true,
+    result: 'Tagged invoices cannot be paid from an Ethereum bridge wallet. Select a Verus wallet.',
+  });
+  expect(getWeb3ProviderForNetwork).not.toHaveBeenCalled();
+  expect(getCurrency).not.toHaveBeenCalled();
+});
+
 it.each([
   ['mapped send to an R address', VETH, false, {}, DEST_PKH, 1, ETH_BRIDGE_NAME, null],
   ['mapped send to an identity', 'DAI.vETH', true, {}, DEST_ID, 1, ETH_BRIDGE_NAME, null],

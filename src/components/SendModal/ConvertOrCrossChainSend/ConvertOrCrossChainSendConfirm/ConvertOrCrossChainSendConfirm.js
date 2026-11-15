@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {ScrollView, View, TouchableOpacity, Alert} from 'react-native';
-import {Button, List, Divider, Text} from 'react-native-paper';
+import {List, Divider, Text} from 'react-native-paper';
+import Button from '../../../Button';
 import {useDispatch} from 'react-redux';
 import {expireCoinData} from '../../../../actions/actionCreators';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';

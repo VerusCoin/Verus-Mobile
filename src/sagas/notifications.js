@@ -97,39 +97,31 @@ function* handleFinishClearNotifications(payload) {
 }
 
 function* handleClearAccountNotifications(action) {
-  const notifications = yield select(selectNotifications);
   const acchash = action.payload.acchash;
+  if (typeof acchash !== 'string' || !acchash) return;
 
-  // Store uids to delete and remove account from account list
-  let newAccounts = {...notifications.accounts};
+  const notifications = yield select(selectNotifications);
+  const newDirectory = {...notifications.directory};
+  const removedUids = new Set();
 
-  const uids = newAccounts[acchash];
-  let toRemove = [];
-
-  delete newAccounts[acchash];
-
-  // Remove uid from directory
-  let newDirectory = {...notifications.directory};
-
-  for (const uid of uids) {
-    let keep = false;
-
-    for (const accountHash in newAccounts) {
-      const accountSet = new Set(newAccounts[accountHash]);
-
-      if (accountSet.has(uid)) {
-        keep = true;
-        break;
-      }
-    }
-
-    if (!keep) {
+  // Match the widget's ownership check instead of trusting a stale account index.
+  for (const [uid, notification] of Object.entries(newDirectory)) {
+    if (notification.acchash === acchash && !notification.persistent) {
       delete newDirectory[uid];
-      toRemove.push(uid);
+      removedUids.add(uid);
     }
   }
 
-  delete newDirectory[action.payload.uid];
+  const newAccounts = {...notifications.accounts};
+  for (const accountHash of Object.keys(newAccounts)) {
+    const remaining = newAccounts[accountHash].filter(uid => !removedUids.has(uid));
+    if (remaining.length) newAccounts[accountHash] = remaining;
+    else delete newAccounts[accountHash];
+  }
+
+  const retainedUids = Object.keys(newDirectory).filter(uid => newDirectory[uid].acchash === acchash);
+  if (retainedUids.length) newAccounts[acchash] = retainedUids;
+  else delete newAccounts[acchash];
 
   yield call(handleFinishClearAccountNotifications, {
     directory: newDirectory,

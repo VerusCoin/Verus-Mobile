@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {View, Dimensions, TouchableOpacity} from 'react-native';
-import {Text, Paragraph, Button, IconButton} from 'react-native-paper';
+import {Text, Paragraph, IconButton} from 'react-native-paper';
+import Button from '../../../components/Button';
 import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import TallButton from '../../../components/LargerButton';
 import Colors from '../../../globals/colors';
@@ -139,7 +140,7 @@ export default function WalletIntro({ navigation, setNewSeed, setTestProfile, te
           bottom: 96,
           width: 280
         }}>
-        {"New Wallet"}
+        {"New wallet"}
       </TallButton>
       <TallButton
         onPress={() => navigation.navigate("ImportWallet")}
@@ -151,7 +152,7 @@ export default function WalletIntro({ navigation, setNewSeed, setTestProfile, te
           bottom: 40,
           width: 280
         }}>
-        {"Import Wallet"}
+        {"Import wallet"}
       </TallButton>
     </View>
   );

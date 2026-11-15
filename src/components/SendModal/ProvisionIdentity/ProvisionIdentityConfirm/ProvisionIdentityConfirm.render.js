@@ -4,7 +4,8 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import {SEND_MODAL_IDENTITY_TO_PROVISION_FIELD} from '../../../../utils/constants/sendModal';
-import {Divider, List, Button} from 'react-native-paper';
+import {Divider, List} from 'react-native-paper';
+import Button from '../../../Button';
 import {primitives} from 'verusid-ts-client';
 
 export const ProvisionIdentityConfirmRender = function () {

@@ -25,7 +25,7 @@ const VerusIdWidget = props => {
             alignItems: 'center',
           }}>
           <Paragraph style={{fontSize: 16, fontWeight: 'bold'}}>
-            {'Link & manage'}
+            {'Create & manage'}
           </Paragraph>
         </View>
         <VerusIdLogo
