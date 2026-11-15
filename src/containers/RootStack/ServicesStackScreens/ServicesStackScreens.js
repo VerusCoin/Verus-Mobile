@@ -8,6 +8,9 @@ import WyreServiceAddPaymentMethod from '../../Services/ServiceComponents/WyreSe
 import WyreServiceEditPaymentMethod from '../../Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceEditPaymentMethod/WyreServiceEditPaymentMethod';
 import GiftCardCreate from '../../Services/ServiceComponents/GiftCardService/GiftCardCreate/GiftCardCreate';
 import GiftCardFund from '../../Services/ServiceComponents/GiftCardService/GiftCardFund/GiftCardFund';
+import IdentityRegistrationNavigator from '../../Services/ServiceComponents/VerusIdService/IdentityRegistration/IdentityRegistrationNavigator';
+import IdentityManagementNavigator from '../../Services/ServiceComponents/VerusIdService/IdentityManagement/IdentityManagementNavigator';
+import LinkIdentities from '../../Services/ServiceComponents/VerusIdService/IdentityLinking/LinkIdentities';
 
 const ServicesStack = createStackNavigator();
 
@@ -26,6 +29,27 @@ const ServicesStackScreens = props => {
       <ServicesStack.Screen
         name="Service"
         component={Service}
+      />
+      <ServicesStack.Screen
+        name="IdentityRegistration"
+        component={IdentityRegistrationNavigator}
+        options={{headerShown: false}}
+      />
+      <ServicesStack.Screen
+        name="IdentityManagement"
+        component={IdentityManagementNavigator}
+        options={{headerShown: false}}
+      />
+      <ServicesStack.Screen
+        name="LinkIdentities"
+        component={LinkIdentities}
+        options={{
+          title: 'Link identities',
+          headerStyle: {backgroundColor: '#fff'},
+          headerTitleStyle: {fontSize: 17, fontWeight: '600', color: '#172033'},
+          headerTintColor: '#3165d4', headerShadowVisible: false, headerBackTitleVisible: false,
+          headerRight: () => null,
+        }}
       />
       <ServicesStack.Screen
         name="WyreServiceAccountData"

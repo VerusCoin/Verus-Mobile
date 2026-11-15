@@ -27,11 +27,8 @@ const approximateDelay = (blocks, secondsPerBlock) => {
 };
 
 const describeUnlockDelay = (delay, secondsPerBlock) => {
-  // VerusCoin/src/rpc/pbaasrpc.cpp: default expiry is 20 blocks on 60s chains,
-  // scaled (and capped at 60) for faster chains. A daemon can override it.
-  const expiryWindow = Number.isFinite(secondsPerBlock) && secondsPerBlock > 0
-    ? Math.max(20, Math.min(60, Math.floor(20 * 60 / secondsPerBlock)))
-    : 20;
+  // The local SDK defaults newly constructed updates to active height + 20.
+  const expiryWindow = 20;
   const total = delay + expiryWindow;
   return `${delay} ${delay === 1 ? 'block' : 'blocks'} unlock delay + ${expiryWindow}-block default expiry window = ${total} blocks${approximateDelay(total, secondsPerBlock)} estimated wait after requesting unlock`;
 };

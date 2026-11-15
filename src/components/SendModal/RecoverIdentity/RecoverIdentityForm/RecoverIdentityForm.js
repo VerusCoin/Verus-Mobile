@@ -1,3 +1,6 @@
+import {captureIdentityUpdateContext, assertIdentityUpdateContext, validateIdentityUpdateContext} from '../../../../utils/identityUpdate/verifiedSubmission';
+import {satsToCoins} from '../../../../utils/math';
+import BigNumber from 'bignumber.js';
 import {useCallback, useEffect, useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {fromBase58Check} from '@bitgo/utxo-lib/dist/src/address';
@@ -28,6 +31,7 @@ import { decryptkey } from '../../../../utils/seedCrypt';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
+import store from '../../../../store';
 
 const RecoverIdentityForm = (props) => {
   const { height } = Dimensions.get("window");
@@ -88,7 +92,7 @@ const RecoverIdentityForm = (props) => {
     const {addresses} = keyObj;
 
     return addresses;
-  }, []);
+  }, [instanceKey, sendModal.data[SEND_MODAL_ENCRYPTED_IDENTITY_SEED]]);
 
   const handleScan = (codes) => {
     const result = codes[0] ? codes[0].value : null;
@@ -134,8 +138,15 @@ const RecoverIdentityForm = (props) => {
     let ownedAddress = '';
     let recoverableByUser = false;
 
+    let updateContext;
     try {
+      updateContext = captureIdentityUpdateContext({
+        systemId: data[SEND_MODAL_SYSTEM_ID],
+        modalRequestId: sendModal.requestId,
+        allowSignedOut: true,
+      });
       const tarRes = await getIdentity(data[SEND_MODAL_SYSTEM_ID], identity);
+      assertIdentityUpdateContext(updateContext);
       if (tarRes.error) {
         throw new Error(tarRes.error.message);
       }
@@ -149,6 +160,7 @@ const RecoverIdentityForm = (props) => {
       const recovery = tarRes.result.identity.recoveryauthority;
 
       const recRes = await getIdentity(data[SEND_MODAL_SYSTEM_ID], recovery);
+      assertIdentityUpdateContext(updateContext);
       if (recRes.error) {
         throw new Error(recRes.error.message);
       }
@@ -167,6 +179,7 @@ const RecoverIdentityForm = (props) => {
 
       let isInWallet = false;
       const addrs = await getPotentialPrimaryAddresses(coinsList.VRSC);
+      assertIdentityUpdateContext(updateContext);
 
       for (const address of recRes.result.identity.primaryaddresses) {
         if (addrs.includes(address)) {
@@ -183,7 +196,12 @@ const RecoverIdentityForm = (props) => {
         );
       }
 
+      updateContext = {...updateContext, identitySnapshots: [{
+        identityAddress: recRes.result.identity.identityaddress, txid: recRes.result.txid, vout: recRes.result.vout,
+      }]};
+
       const friendlyNames = await getFriendlyNameMap(data[SEND_MODAL_SYSTEM_ID], tarRes.result);
+      assertIdentityUpdateContext(updateContext);
 
       const targetIdAddr = tarRes.result.identity.identityaddress;
 
@@ -217,26 +235,38 @@ const RecoverIdentityForm = (props) => {
         recRes.result.identity.identityaddress
       )
 
+      await validateIdentityUpdateContext(updateContext, recoveryResult);
+      assertIdentityUpdateContext(updateContext);
       props.setModalHeight(height >= 720 ? 696 : height - 24);
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         targetId: tarRes.result,
-        recoveryAddr: recRes.result,
+        recoveryId: recRes.result,
         friendlyNames,
         ownedAddress,
         recoverableByUser,
         recoveryResult,
+        updateContext,
+        fee: satsToCoins(BigNumber(recoveryResult.fundingApproval.nativeFee)).toString(),
+        feeCurrency: networkName,
         revocationAddr,
         recoveryAddr,
         primaryAddr,
         privateAddr
       })
     } catch (e) {
+      if (e.code === 'SESSION_CHANGED') return;
+      if (updateContext) {
+        try { assertIdentityUpdateContext(updateContext); } catch (_) { return; }
+      }
       if (!showFundRawTransactionErrorAlert(e)) {
         Alert.alert('Error', e.message);
       }
+    } finally {
+      // A cancelled review must not change the busy state of a replacement dialog.
+      if (store.getState().sendModal.requestId === sendModal.requestId) {
+        props.setLoading(false);
+      }
     }
-
-    props.setLoading(false)
   }, [formHasError, getPotentialPrimaryAddresses, sendModal, dispatch, props]);
 
   return RecoverIdentityFormRender({

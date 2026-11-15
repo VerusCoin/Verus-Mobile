@@ -7,7 +7,8 @@ import {
   TouchableWithoutFeedback,
   Alert,
 } from 'react-native';
-import {Text, Button, TextInput, Checkbox} from 'react-native-paper';
+import {Text, TextInput, Checkbox} from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import TallButton from '../../../../../components/LargerButton';
 import Colors from '../../../../../globals/colors';
 import {DEFAULT_SEED_PHRASE_LENGTH} from '../../../../../utils/constants/constants';

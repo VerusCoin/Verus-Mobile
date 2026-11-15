@@ -10,12 +10,12 @@ import {
 } from 'react-native';
 import {
   ActivityIndicator,
-  Button,
   Checkbox,
   Menu,
   Text,
   TextInput,
 } from 'react-native-paper';
+import Button from '../../../components/Button';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useDispatch, useSelector} from 'react-redux';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -533,7 +533,7 @@ const WalletBackupRequestInfo = props => {
               onPress={skipBackupAndClaimSpendableKey}
               labelStyle={{fontWeight: 'bold'}}
               style={{alignSelf: 'stretch', marginBottom: 12}}>
-              Claim to Existing Profile
+              Claim to existing profile
             </Button>
             <Button
               mode="outlined"
@@ -541,7 +541,7 @@ const WalletBackupRequestInfo = props => {
               onPress={() => setBackupChoiceMade(true)}
               labelStyle={{fontWeight: 'bold'}}
               style={{alignSelf: 'stretch', marginBottom: 18}}>
-              Back Up Then Claim
+              Back up then claim
             </Button>
             <TouchableOpacity onPress={cancel} style={{padding: 12}}>
               <Text style={{color: Colors.warningButtonColor, fontWeight: 'bold'}}>
@@ -649,7 +649,7 @@ const WalletBackupRequestInfo = props => {
                   onPress={openLogin}
                   style={{marginBottom: 12}}
                   labelStyle={{fontWeight: 'bold'}}>
-                  Login to Profile
+                  Login to profile
                 </Button>
               )}
 
@@ -659,7 +659,7 @@ const WalletBackupRequestInfo = props => {
                   onPress={() => setShowCreateProfile(!showCreateProfile)}
                   textColor={Colors.primaryColor}
                   style={{marginBottom: 12}}>
-                  {showCreateProfile ? 'Hide New Profile' : 'Create New Profile'}
+                  {showCreateProfile ? 'Hide new profile' : 'Create new profile'}
                 </Button>
               )}
 
@@ -729,7 +729,7 @@ const WalletBackupRequestInfo = props => {
                       !profilePassword ||
                       !profilePasswordConfirm
                     }>
-                    Create Profile
+                    Create profile
                   </Button>
                 </View>
               )}
@@ -873,7 +873,7 @@ const WalletBackupRequestInfo = props => {
                   !useProfilePasswordForBackup &&
                   (!backupPassword || !backupPasswordConfirm)
                 }>
-                Write NFC Backup
+                Write NFC backup
               </Button>
             </View>
           )}

@@ -1,6 +1,7 @@
 import React from "react";
 import { ScrollView, View, TouchableOpacity } from "react-native";
-import { Button, List, Divider, Text } from "react-native-paper";
+import { List, Divider, Text } from "react-native-paper";
+import Button from "../../../Button";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
@@ -96,7 +97,6 @@ export const ConversionSendSuccessRender = function () {
           <Button
             textColor={Colors.primaryColor}
             style={{width: 148}}
-            labelStyle={{fontSize: 18}}
             onPress={() => this.openExplorer()}>
             Details
           </Button>
@@ -105,7 +105,6 @@ export const ConversionSendSuccessRender = function () {
           buttonColor={Colors.verusGreenColor}
           textColor={Colors.secondaryColor}
           style={{width: 148}}
-          labelStyle={{fontSize: 18}}
           onPress={() => this.finishSend()}>
           Done
         </Button>

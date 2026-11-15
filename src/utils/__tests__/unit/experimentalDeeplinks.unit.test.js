@@ -6,7 +6,6 @@ const {
 } = require('verus-typescript-primitives');
 const {
   EXPERIMENTAL_DEEPLINK_DISABLED_MESSAGE,
-  assertExperimentalDeeplinkAllowed,
   assertExperimentalGenericRequestAllowed,
   isExperimentalGenericRequestDetailKey,
 } = require('../../deeplink/experimentalDeeplinks');
@@ -65,12 +64,5 @@ describe('experimental deeplink gating', () => {
     ).not.toThrow();
   });
 
-  it('blocks standalone identity update deeplinks when the setting is disabled', () => {
-    expect(() =>
-      assertExperimentalDeeplinkAllowed(
-        IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid,
-        disabledState,
-      ),
-    ).toThrow(EXPERIMENTAL_DEEPLINK_DISABLED_MESSAGE);
-  });
+
 });

@@ -20,7 +20,7 @@ import { getSendCurrencyTransaction } from "./getSendCurrencyTransaction";
 import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../constants/constants";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { Alert } from "react-native";
-import { getCurrencyTransferIntentContext } from "./currencyTransferIntent";
+import { getCurrencyTransferIntentContext, validateCurrencyTransferTag } from "./currencyTransferIntent";
 import {
   BURN_CHANGE_PRICE_PARENT_TRANSACTION_FEE,
   calculateBurnChangePriceTransferFeeSatoshis,
@@ -196,6 +196,7 @@ export const validateCurrencyTransferOutputParams = obj => {
     }
   }
 
+  validateCurrencyTransferTag(obj.vdxftag);
   validateBurnChangePriceTransferOutput(obj);
 
   // If we made it here, the object is valid

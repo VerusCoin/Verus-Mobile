@@ -19,7 +19,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Button, Portal, Text} from 'react-native-paper';
+import {Portal, Text} from 'react-native-paper';
+import Button from '../../../components/Button';
 import {useSelector} from 'react-redux';
 import {CommonActions} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -166,8 +167,7 @@ const AuthenticationRequestInfo = props => {
   const signedIn = useSelector(state => state.authentication.signedIn);
   const passthrough = useSelector(state => state.deeplink.passthrough);
   const pendingDeeplinkId =
-    passthrough?.pendingDeeplinkId ||
-    passthrough?.pendingProvisioningDeeplinkId;
+    passthrough?.pendingDeeplinkId;
   const fromService = useSelector(state => state.deeplink.fromService);
   const sendModal = useObjectSelector(state => state.sendModal);
   const sendModalType = useSelector(state => state.sendModal.type);
@@ -1049,19 +1049,12 @@ const AuthenticationRequestInfo = props => {
         (request && request.signature
           ? request.signature.identityID.toIAddress()
           : null);
-      const requestBufferString = request
-        ? request.toBuffer().toString('hex')
-        : '';
-
       openProvisionIdentityModal(
         provisioningCoinObj,
         {
           provisioningDetailsBufferString,
           provisioningRequestID: requestId,
           provisioningSignerId: requestSignerId,
-          provisioningRequestBufferString: requestBufferString,
-          provisioningRequestType: 'generic',
-          provisioningRequestHasResponseUris: responseUris.length > 0,
         },
         fromService,
       );
@@ -1268,7 +1261,9 @@ const AuthenticationRequestInfo = props => {
                   <Text style={styles.targetLabel}>Identity</Text>
                   <Text style={styles.targetName}>
                     {selectedIdentity
-                      ? selectedIdentity.friendlyName
+                      ? selectedIdentity.friendlyName && selectedIdentity.friendlyName !== selectedIdentity.iAddress
+                        ? convertFqnToDisplayFormat(selectedIdentity.friendlyName)
+                        : selectedIdentity.iAddress
                       : 'Select VerusID'}
                   </Text>
                   <Text style={styles.targetAddress}>

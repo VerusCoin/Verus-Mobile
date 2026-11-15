@@ -2,7 +2,6 @@ import { getIdentity } from "../../api/channels/verusid/callCreators";
 import { getBlock } from "../../api/channels/vrpc/requests/getBlock";
 import { getSignatureInfo } from "../../api/channels/vrpc/requests/getSignatureInfo";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
-import { getSystemNameFromSystemId } from "../../CoinData/CoinData";
 import { convertFqnToDisplayFormat } from "../../fullyqualifiedname";
 import VrpcProvider from "../../vrpc/vrpcInterface";
 
@@ -45,18 +44,15 @@ export const getSignedRequestDisplayProps = async request => {
   return {
     signerFqn,
     signerSystemID: systemID,
-    signerSystemName: getSystemNameFromSystemId(systemID),
+    signerSystemName: coinObj.display_ticker || coinObj.display_name || systemID,
     signerIdentityID,
     sigtime,
   };
 };
 
 export const getRequestScope = request => {
-  try {
-    if (request.appOrDelegatedID) {
-      return request.appOrDelegatedID.toIAddress();
-    }
-  } catch (_) {}
-
-  return request.signature.identityID.toIAddress();
+  // A malformed explicit scope must fail, never fall back to the signer.
+  return request.hasAppOrDelegatorID()
+    ? request.appOrDelegatorID.toIAddress()
+    : request.signature.identityID.toIAddress();
 };

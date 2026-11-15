@@ -6,10 +6,8 @@
  */
 
 import {
-  AppEncryptionRequestDetails,
   AppEncryptionResponseDetails,
   AppEncryptionRequestOrdinalVDXFObject,
-  AppEncryptionResponseOrdinalVDXFObject,
   SaplingPaymentAddress,
   DataResponseDetails,
   DataResponseOrdinalVDXFObject,
@@ -22,18 +20,24 @@ import { SaplingExtendedViewingKey } from "verus-typescript-primitives/dist/pbaa
 import { SaplingExtendedSpendingKey } from "verus-typescript-primitives/dist/pbaas/SaplingExtendedSpendingKey";
 
 import { BN } from "bn.js";
-import { CoinDirectory } from "../../CoinData/CoinDirectory";
-import VrpcProvider from "../../vrpc/vrpcInterface";
 import store from "../../../store";
 import { getIdentity } from "../../api/channels/verusid/callCreators";
-import { getSystemNameFromSystemId } from "../../CoinData/CoinData";
 import { convertFqnToDisplayFormat } from "../../fullyqualifiedname";
-import { getBlock } from "../../api/channels/vrpc/requests/getBlock";
-import { getSignatureInfo } from "../../api/channels/vrpc/requests/getSignatureInfo";
 
 import { zGetEncryptionAddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
 import { encryptDataBufferToDescriptor } from "../../crypto/encryptDataDescriptor";
-import { getKeyMaterial } from "../../crypto/getKeyMaterial";
+import { getKeyMaterial, spendingKeyHex } from "../../crypto/getKeyMaterial";
+import { getRequestScope, getSignedRequestDisplayProps } from "./requestDisplayUtils";
+import {
+  checkedNativeIndex,
+  validateAppEncryptionRequestDetails,
+} from "../validator/appEncryptionRequestValidator";
+import { assertAppEncryptionAuthorization } from "../validator/appEncryptionAuthorization";
+import {
+  captureSessionScope,
+  sessionScopeIsCurrent,
+} from "../../../actions/actions/updates/sessionRequests";
+import { assertRequestNetworkMatchesAccount } from "../requestAccounts";
 
 // ============================================================================
 // Main Handler - Returns displayProps for UI
@@ -58,42 +62,20 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
   }
 
   const encryptionRequest = detail.data;
-  const systemID = request.signature.systemID.toIAddress();
-  const requestSignerID = request.signature.identityID.toIAddress();
+  await validateAppEncryptionRequestDetails(request, encryptionRequest, detailIndex);
 
-  const coinObj = CoinDirectory.getBasicCoinObj(systemID);
+  const signer = await getSignedRequestDisplayProps(request);
+  const systemID = signer.signerSystemID;
+  const appScopeID = getRequestScope(request);
+  let appScopeFqn = appScopeID;
 
-  if (!coinObj) {
-    throw new Error("Unsupported system: " + systemID);
-  }
-
-  VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
-
-  // Resolve signer identity to FQN
-  let signerFqn = requestSignerID;
-  let signerSystemName = getSystemNameFromSystemId(systemID);
-  let sigtime = null;
-
+  // Name lookup is display-only; an unregistered scope or nested ID is valid.
   try {
-    const signedBy = await getIdentity(coinObj.system_id, requestSignerID);
-    if (!signedBy.error && signedBy.result?.fullyqualifiedname) {
-      signerFqn = convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname);
+    const scopeIdentity = await getIdentity(systemID, appScopeID);
+    if (scopeIdentity.result?.fullyqualifiedname) {
+      appScopeFqn = convertFqnToDisplayFormat(scopeIdentity.result.fullyqualifiedname);
     }
-
-    // Get signature timestamp
-    const sig = await getSignatureInfo(
-      coinObj.system_id,
-      request.signature.identityID.toIAddress(),
-      request.signature.signatureAsVch.toString('base64')
-    );
-
-    if (sig && sig.height != null) {
-      const sigblock = await getBlock(coinObj.system_id, sig.height);
-      if (!sigblock.error && sigblock.result) {
-        sigtime = sigblock.result.time;
-      }
-    }
-  } catch (_) { }
+  } catch (_) {}
 
   // Resolve derivationID to FQN if present
   let derivationIdFqn = null;
@@ -101,7 +83,7 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
     const derivationIdAddr = encryptionRequest.derivationID.toIAddress();
     derivationIdFqn = derivationIdAddr;
     try {
-      const derivationIdentity = await getIdentity(coinObj.system_id, derivationIdAddr);
+      const derivationIdentity = await getIdentity(systemID, derivationIdAddr);
       if (!derivationIdentity.error && derivationIdentity.result?.fullyqualifiedname) {
         derivationIdFqn = convertFqnToDisplayFormat(derivationIdentity.result.fullyqualifiedname);
       }
@@ -114,7 +96,7 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
     const requestIdAddr = encryptionRequest.requestID.toIAddress();
     requestIdFqn = requestIdAddr;
     try {
-      const requestIdentity = await getIdentity(coinObj.system_id, requestIdAddr);
+      const requestIdentity = await getIdentity(systemID, requestIdAddr);
       if (!requestIdentity.error && requestIdentity.result?.fullyqualifiedname) {
         requestIdFqn = convertFqnToDisplayFormat(requestIdentity.result.fullyqualifiedname);
       }
@@ -123,35 +105,32 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
     }
   }
 
-  // Get encrypt response to address if present
-  let encryptResponseToAddress = null;
-  if (encryptionRequest.hasEncryptResponseToAddress()) {
-    encryptResponseToAddress = encryptionRequest.encryptResponseToAddress.toAddressString();
-  }
+  const encryptResponseToAddress = encryptionRequest.encryptResponseToAddress.toAddressString();
 
   return {
     displayProps: {
       detailsBufferString: detail.data.toBuffer().toString('hex'),
-      signerFqn,
-      signerSystemID: systemID,
-      signerSystemName,
-      signerIdentityID: requestSignerID,
-      sigtime,
-      derivationNumber: encryptionRequest.derivationNumber.toNumber(),
+      ...signer,
+      appScopeID,
+      appScopeFqn,
+      derivationNumber: checkedNativeIndex(encryptionRequest.derivationNumber),
+      secondaryDerivationNumber: encryptionRequest.hasDerivationID()
+        ? checkedNativeIndex(encryptionRequest.secondaryDerivationNumber, "secondary derivation number")
+        : null,
       derivationIdFqn,
+      derivationIdentityID: encryptionRequest.hasDerivationID()
+        ? encryptionRequest.derivationID.toIAddress()
+        : null,
       hasDerivationID: encryptionRequest.hasDerivationID(),
       requestIdFqn,
       hasRequestID: encryptionRequest.hasRequestID(),
       encryptResponseToAddress,
-      hasEncryptResponseToAddress: encryptionRequest.hasEncryptResponseToAddress(),
       returnESK: encryptionRequest.returnESK(),
     },
     response,
     handledIndices: []
   };
 };
-
-
 
 // ============================================================================
 // Processing Function - Called after user approval
@@ -175,13 +154,17 @@ export const buildEncryptedAppEncryptionResponseDetail = (
  * @param {GenericRequest} params.request - The parent GenericRequest
  * @param {number} params.detailIndex - Index of the encryption request detail
  * @param {string} params.responseSignerID - The user's signing identity i-address
- * @returns {Promise<AppEncryptionResponseOrdinalVDXFObject|DataResponseOrdinalVDXFObject>}
+ * @param {string} params.responseSignerSystemID - The selected identity's signing chain
+ * @param {Function} params.assertActive - Checks that the reviewed request and identity are still selected
+ * @returns {Promise<{responseDetail: DataResponseOrdinalVDXFObject, encryptedDescriptorJson: object}>}
  * @throws {Error} If processing fails
  */
 export const processAppEncryptionRequest = async ({
   request,
   detailIndex,
   responseSignerID,
+  responseSignerSystemID,
+  assertActive,
 }) => {
   const detail = request.getDetails(detailIndex);
 
@@ -190,80 +173,80 @@ export const processAppEncryptionRequest = async ({
   }
 
   const encryptionRequest = detail.data;
-  const systemID = request.signature.systemID.toIAddress();
-  const requestSignerID = request.signature.identityID.toIAddress();
+  await validateAppEncryptionRequestDetails(request, encryptionRequest, detailIndex);
 
-  // Get appOrDelegatedID if present
-  let appOrDelegatedID = null;
-  try {
-    if (request.appOrDelegatedID) {
-      appOrDelegatedID = request.appOrDelegatedID.toAddress();
+  const state = store.getState();
+  const sessionScope = captureSessionScope(state);
+  const approvedRequest = request.toBuffer().toString('hex');
+  const network = JSON.stringify(state.authentication.activeAccount?.testnetOverrides || {});
+  const assertCurrent = () => {
+    const current = store.getState();
+    if (
+      !sessionScopeIsCurrent(current, sessionScope) ||
+      network !== JSON.stringify(current.authentication.activeAccount?.testnetOverrides || {}) ||
+      approvedRequest !== request.toBuffer().toString('hex')
+    ) {
+      throw Object.assign(
+        new Error("Encryption approval changed. Review the request again."),
+        {code: 'SESSION_CHANGED'},
+      );
     }
-  } catch (e) {
-    // appOrDelegatedID is optional
-  }
 
-  const coinObj = CoinDirectory.getBasicCoinObj(systemID);
-
-  if (!coinObj) {
-    throw new Error("Unsupported system: " + systemID);
-  }
-
-  // Check if spending key requested via flags
-  const returnESK = encryptionRequest.returnESK();
-
-  if (returnESK && !encryptionRequest.hasEncryptResponseToAddress()) {
-    throw new Error(
-      "Extended spending keys can only be returned in an encrypted response.",
-    );
-  }
-
-  // Get extended spending key for derivation
-  const keyMaterial = await getKeyMaterial(coinObj.id);
-
-  // Use appOrDelegatedID if present, otherwise use requestSignerID
-  const appID = appOrDelegatedID || requestSignerID;
-
-  // Determine toId: the derivationID from the encryption request is the
-  // identity we derive a shared key with (matches daemon's "toid").
-  // Falls back to appOrDelegatedID or requestSignerID if no derivationID.
-  let toIdAddress;
-  if (encryptionRequest.hasDerivationID()) {
-    toIdAddress = encryptionRequest.derivationID.toIAddress();
-  } else {
-    toIdAddress = appID;
-  }
-
-  // Convert i-addresses to 20-byte hex strings for the native module.
-
-  const fromIdBytes = IdentityID.fromAddress(responseSignerID).hash;
-  const toIdBytes = IdentityID.fromAddress(toIdAddress).hash;
-  let fromIdHex = Buffer.from(fromIdBytes).toString('hex');
-  let toIdHex = Buffer.from(toIdBytes).toString('hex');
-
-  // Ensure even-length hex (native Hex.decode requires it).
-  // This should always be 40 chars from a 20-byte hash, but guard against edge cases.
-  if (fromIdHex.length % 2 !== 0) fromIdHex = '0' + fromIdHex;
-  if (toIdHex.length % 2 !== 0) toIdHex = '0' + toIdHex;
-
-
-  // Build derivation params matching ChannelKeysRequest interface.
-  let derivationParams = {
-    ...keyMaterial,
-    fromId: fromIdHex,
-    toId: toIdHex,
-    encryptionIndex: encryptionRequest.derivationNumber.toNumber(),
-    returnSecret: returnESK
+    assertRequestNetworkMatchesAccount(current.authentication.activeAccount, request.isTestnet());
+    assertActive();
   };
 
-  // Derive channel keys
-  const keys  = await zGetEncryptionAddress(coinObj.system_id, derivationParams);
-  
-  // Clear sensitive data from memory as soon as possible
-  derivationParams = null
+  assertCurrent();
+  // Reverify the signature and both signing authorities at the approval boundary.
+  const { coinObj, appScopeID } = await assertAppEncryptionAuthorization(
+    request,
+    {identityID: responseSignerID, systemID: responseSignerSystemID},
+    {sessionScope, assertActive: assertCurrent},
+  );
+  assertCurrent();
+
+  const nested = encryptionRequest.hasDerivationID();
+  const returnESK = encryptionRequest.returnESK();
+  const fromId = IdentityID.fromAddress(responseSignerID).hash.toString('hex');
+  const primaryIndex = checkedNativeIndex(encryptionRequest.derivationNumber);
+  const secondaryIndex = nested
+    ? checkedNativeIndex(encryptionRequest.secondaryDerivationNumber, "secondary derivation number")
+    : null;
+  const keyMaterial = await getKeyMaterial(coinObj.id, {sessionScope, assertActive: assertCurrent});
+  assertCurrent();
+
+  let keys;
+  try {
+    // Always establish the app scope before deriving an optional nested channel.
+    keys = await zGetEncryptionAddress(coinObj.system_id, {
+      ...keyMaterial,
+      fromId,
+      toId: IdentityID.fromAddress(appScopeID).hash.toString('hex'),
+      hdIndex: -1,
+      encryptionIndex: primaryIndex,
+      returnSecret: nested || returnESK,
+    });
+    assertCurrent();
+
+    if (nested) {
+      const extsk = spendingKeyHex(keys?.spendingKey);
+      keys = await zGetEncryptionAddress(coinObj.system_id, {
+        extsk,
+        fromId,
+        toId: IdentityID.fromAddress(encryptionRequest.derivationID.toIAddress()).hash.toString('hex'),
+        hdIndex: -1,
+        encryptionIndex: secondaryIndex,
+        returnSecret: returnESK,
+      });
+      assertCurrent();
+    }
+  } catch (error) {
+    if (error?.code === 'SESSION_CHANGED') throw error;
+    // Native failures must not leak input keys or return the intermediate result.
+    throw new Error("Unable to derive encryption channel keys.");
+  }
 
   // Build response details
-  let responseDetails;
   let responseFlags = new BN(0);
 
   // Set flags based on what we're returning
@@ -274,50 +257,36 @@ export const processAppEncryptionRequest = async ({
     responseFlags = responseFlags.or(AppEncryptionResponseDetails.FLAG_HAS_EXTENDED_SPENDING_KEY);
   }
 
-  if (!keys.ivk || !keys.extfvk || !keys.address) {
+  if (!keys || !/^[0-9a-f]{64}$/i.test(keys.ivk) || !keys.extfvk || !keys.address) {
     throw new Error("Incomplete key derivation result");
   }
 
   if (returnESK && !keys.spendingKey) {
     throw new Error("Spending key requested but not returned");
   }
-  responseDetails = new AppEncryptionResponseDetails({
-    version: new BN(1),
-    flags: responseFlags,
-    incomingViewingKey: Buffer.from(keys.ivk, 'hex'),
-    extendedViewingKey: SaplingExtendedViewingKey.fromKeyString(keys.extfvk),
-    address: SaplingPaymentAddress.fromAddressString(keys.address),
-    extendedSpendingKey: returnESK
-      ? SaplingExtendedSpendingKey.fromKeyString(keys.spendingKey)
-      : undefined,
-    requestID: encryptionRequest.hasRequestID() ? encryptionRequest.requestID : undefined,
-  });
 
-
-  // Get the encrypt to address or return null as it's optional
-  const encryptTo = encryptionRequest.hasEncryptResponseToAddress()
-    ? encryptionRequest.encryptResponseToAddress.toAddressString()
-    : null;
-
-  if (!encryptTo) {
-    if (returnESK) {
-      throw new Error(
-        "Extended spending keys can only be returned in an encrypted response.",
-      );
-    }
-
-    // Return unencrypted response
-    return {
-      responseDetail: new AppEncryptionResponseOrdinalVDXFObject({
-        data: responseDetails
-      }),
-      encryptedDescriptorJson: null,
-    };
+  let responseDetails;
+  try {
+    responseDetails = new AppEncryptionResponseDetails({
+      version: new BN(1),
+      flags: responseFlags,
+      incomingViewingKey: Buffer.from(keys.ivk, 'hex'),
+      extendedViewingKey: SaplingExtendedViewingKey.fromKeyString(keys.extfvk),
+      address: SaplingPaymentAddress.fromAddressString(keys.address),
+      extendedSpendingKey: returnESK
+        ? SaplingExtendedSpendingKey.fromKeyString(keys.spendingKey)
+        : undefined,
+      requestID: encryptionRequest.hasRequestID() ? encryptionRequest.requestID : undefined,
+    });
+  } catch (_) {
+    throw new Error("Invalid encryption channel keys.");
   }
 
-  // Encrypt response
+  // Every final channel response is encrypted, including viewing-only responses.
+  const encryptTo = encryptionRequest.encryptResponseToAddress.toAddressString();
   const { encryptedDescriptor, encryptedDescriptorJson } =
     await encryptDataBufferToDescriptor(encryptTo, responseDetails.toBuffer());
+  assertCurrent();
 
   return {
     responseDetail: buildEncryptedAppEncryptionResponseDetail(

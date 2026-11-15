@@ -1,24 +1,43 @@
 import {
   AppEncryptionResponseDetails,
   AppEncryptionResponseOrdinalVDXFObject,
+  DataDescriptor,
+  DataResponseDetails,
+  DataResponseOrdinalVDXFObject,
 } from 'verus-typescript-primitives';
 import {SaplingExtendedSpendingKey} from 'verus-typescript-primitives/dist/pbaas/SaplingExtendedSpendingKey';
 import {
-  assertNoPlaintextExtendedSpendingKey,
+  assertNoPlaintextAppEncryptionResponse,
   assertSecurePostResponseUri,
 } from '../../deeplink/genericResponse/responseDeliverySecurity';
 
 describe('generic response delivery security', () => {
-  it('rejects plaintext app-encryption spending keys', () => {
+  it.each([false, true])('rejects plaintext app encryption responses with spending key %s', returnESK => {
     const detail = new AppEncryptionResponseOrdinalVDXFObject({
       data: new AppEncryptionResponseDetails({
-        extendedSpendingKey: new SaplingExtendedSpendingKey(),
+        extendedSpendingKey: returnESK ? new SaplingExtendedSpendingKey() : undefined,
       }),
     });
 
     expect(() =>
-      assertNoPlaintextExtendedSpendingKey({details: [detail]}),
-    ).toThrow('unencrypted extended spending key');
+      assertNoPlaintextAppEncryptionResponse({details: [detail]}),
+    ).toThrow('unencrypted app encryption response');
+  });
+
+  it('allows an encrypted app encryption response wrapper', () => {
+    const detail = new DataResponseOrdinalVDXFObject({
+      data: new DataResponseDetails({
+        data: new DataDescriptor({
+          flags: DataDescriptor.FLAG_ENCRYPTED_DATA,
+          objectdata: Buffer.from('encrypted'),
+          epk: Buffer.alloc(32, 1),
+        }),
+      }),
+    });
+
+    expect(() =>
+      assertNoPlaintextAppEncryptionResponse({details: [detail]}),
+    ).not.toThrow();
   });
 
   it('requires HTTPS for POST response URIs', () => {

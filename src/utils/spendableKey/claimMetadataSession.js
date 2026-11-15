@@ -3,7 +3,6 @@ import {
   scopeSessionAction,
   sessionScopeIsCurrent,
 } from '../../actions/actions/updates/sessionRequests';
-import {convertFqnToDisplayFormat} from '../fullyqualifiedname';
 
 const getSessionScope = requestContext =>
   requestContext?.sessionScope ||
@@ -64,22 +63,29 @@ export const linkClaimedIdentitiesForSession = async ({
   if (identityResults.length === 0) return;
 
   const touchedCoinIds = new Set();
+  let missingNameError = null;
 
   for (const result of identityResults) {
     assertClaimMetadataSessionCurrent(requestContext);
-    const displayName = result.identity.fullyQualifiedName
-      ? convertFqnToDisplayFormat(result.identity.fullyQualifiedName)
-      : result.identity.identityAddress;
+    const fullName = result.identity.fullyQualifiedName;
+    if (typeof fullName !== 'string' || !fullName.trim()) {
+      missingNameError = missingNameError || new Error(
+        `The full name for claimed identity ${result.identity.identityAddress} is unavailable. Link it manually.`,
+      );
+      continue;
+    }
 
     await linkIdentity(
       result.identity.identityAddress,
-      displayName,
+      fullName,
       result.coinObj.id,
       requestContext,
     );
     assertClaimMetadataSessionCurrent(requestContext);
     touchedCoinIds.add(result.coinObj.id);
   }
+
+  if (touchedCoinIds.size === 0 && missingNameError) throw missingNameError;
 
   await updateIdentityWallet(requestContext);
   assertClaimMetadataSessionCurrent(requestContext);
@@ -97,6 +103,8 @@ export const linkClaimedIdentitiesForSession = async ({
   dispatch(scopeSessionAction(setUserCoinsAction, sessionScope));
   assertClaimMetadataSessionCurrent(requestContext);
   refreshLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
+
+  if (missingNameError) throw missingNameError;
 };
 
 export const unlinkGiftedIdentitiesForSession = async ({

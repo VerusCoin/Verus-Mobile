@@ -66,7 +66,7 @@ export default function LandingScreen(props) {
           bottom: 96,
           width: 280
         }}>
-        {"Get Started"}
+        {"Get started"}
       </TallButton>
       <TallButton
         onPress={() =>

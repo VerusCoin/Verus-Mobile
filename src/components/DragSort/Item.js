@@ -185,7 +185,10 @@ const AnimatedItem = ({
     },
     onEnd: () => {
       const newPosition = getPosition(config, positions.value[id]);
-      translateX.value = withTiming(newPosition.x, animationConfig, () => {
+      translateX.value = withTiming(newPosition.x, animationConfig, finished => {
+        // A card/profile change can cancel this animation. Never persist the
+        // removed grid's order after its replacement has already mounted.
+        if (!finished) return;
         isGestureActive.value = false;
         runOnJS(onDragEnd)(positions.value);
       });

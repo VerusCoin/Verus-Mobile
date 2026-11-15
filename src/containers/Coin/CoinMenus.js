@@ -23,11 +23,11 @@ import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInf
 import { WALLET_APP_CONVERT, WALLET_APP_MANAGE, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from "../../utils/constants/apps";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
-class CoinMenus extends Component {
+export class CoinMenus extends Component {
   constructor(props) {
     super(props);
     let stateObj = this.generateTabs();
-    const subWallets = props.allSubWallets;
+    const subWallets = props.allSubWallets || [];
 
     //CoinMenus can be passed data, which will be passed to
     //the app section components as props
@@ -37,11 +37,10 @@ class CoinMenus extends Component {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
       activeTabIndex: stateObj.activeTabIndex,
-      subWallets,
-      filteredSubWallets: null,
+      filterForTab: null,
     };
 
-    if (subWallets.length == 1)
+    if (props.activeAccount != null && subWallets.length == 1)
       props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]));
 
     this.Routes = {
@@ -64,11 +63,11 @@ class CoinMenus extends Component {
 
     if (
       lastProps.selectedSubWallet != this.props.selectedSubWallet &&
-      this.state.filteredSubWallets != null &&
+      this.state.filterForTab != null &&
       this.props.selectedSubWallet != null
     ) {
       this.setState({
-        filteredSubWallets: null,
+        filterForTab: null,
       });
     }
   }
@@ -148,14 +147,14 @@ class CoinMenus extends Component {
   };
 
   findCompatibleSubwallet = (tabKey) => {
-    const subwalletsForTab = this.state.subWallets.filter((wallet) =>
+    const subwalletsForTab = (this.props.allSubWallets || []).filter((wallet) =>
       wallet.compatible_apps.includes(tabKey)
     );
 
     if (subwalletsForTab.length > 0) {
       this.setState(
         {
-          filteredSubWallets: subwalletsForTab,
+          filterForTab: tabKey,
         },
         () => this.props.dispatch(setCoinSubWallet(this.props.activeCoin.id, null))
       );
@@ -181,18 +180,30 @@ class CoinMenus extends Component {
   //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
   //bug comes up and it seems like a bug in rn
   render() {
-    const { selectedSubWallet, activeCoin } = this.props;
-    const { subWallets, filteredSubWallets } = this.state;
+    const { selectedSubWallet, activeCoin, activeAccount, isFocused } = this.props;
+    const { filterForTab } = this.state;
+    // Wallet definitions change after linking, unlinking, and profile changes.
+    // A saved list would offer identities that are no longer in this wallet.
+    const subWallets = this.props.allSubWallets || [];
+    const matchingWallets = filterForTab == null ? subWallets : subWallets.filter(
+      wallet => wallet.compatible_apps.includes(filterForTab),
+    );
+    // The last compatible identity may have been unlinked while the chooser
+    // was open. Keep a way to select another current card instead of trapping
+    // touches in an empty native modal.
+    const selectableWallets = matchingWallets.length > 0 ? matchingWallets : subWallets;
+    const showWalletSelector = isFocused && activeAccount != null &&
+      selectedSubWallet == null && selectableWallets.length > 0;
 
     return (
       <Portal.Host>
         <View style={{ flex: 1, display: "flex" }}>
-          {selectedSubWallet == null && (
+          {showWalletSelector && (
             <SubWalletSelectorModal
-              visible={selectedSubWallet == null}
+              visible={showWalletSelector}
               cancel={this.goBack}
               animationType="slide"
-              subWallets={filteredSubWallets == null ? subWallets : filteredSubWallets}
+              subWallets={selectableWallets}
               chainTicker={activeCoin.id}
               displayTicker={activeCoin.display_ticker}
             />
@@ -217,6 +228,7 @@ class CoinMenus extends Component {
 
 const mapStateToProps = (state) => {
   return {
+    activeAccount: state.authentication.activeAccount,
     activeCoin: state.coins.activeCoin,
     activeApp: state.coins.activeApp,
     activeSection: state.coins.activeSection,

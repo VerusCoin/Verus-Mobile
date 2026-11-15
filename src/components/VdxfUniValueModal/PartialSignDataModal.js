@@ -6,6 +6,7 @@ import Colors from '../../globals/colors';
 import { VdxfUniValueModalInnerAreaRender } from './VdxfUniValueModalInnerArea.render';
 import MissingInfoRedirect from '../MissingInfoRedirect/MissingInfoRedirect';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import {identityUploadToDisplayJson} from '../../utils/identityUpdate/uploadDisplay';
 
 const TopTabs = createMaterialTopTabNavigator();
 
@@ -14,7 +15,7 @@ const PartialSignDataModal = (props, navigator) => {
    * @type {import('verus-typescript-primitives').PartialSignData}
    */
   const data = props.data;
-  const dataJson = data.toCLIJson();
+  const dataJson = identityUploadToDisplayJson(data) || {};
 
   const [dataSectionExpanded, setDataSectionExpanded] = useState(true);
   const [additionalSectionExpanded, setAdditionalSectionExpanded] = useState(true);
@@ -49,6 +50,7 @@ const PartialSignDataModal = (props, navigator) => {
   }
 
   const renderDataSection = () => {
+    if (dataJson.binarydata) return renderField('Upload request (hex)', dataJson.binarydata);
     if (data.isVdxfData()) {
       return renderVdxfUniValue(dataJson.vdxfdata);
     } else if (data.isMMRData()) {
@@ -137,7 +139,7 @@ const PartialSignDataModal = (props, navigator) => {
               {renderField('Address', dataJson.address)}
               {renderField('Prefix String', dataJson.prefixstring)}
               {renderField('Hash Type', dataJson.hashtype)}
-              {renderField('Address to Encrypt To', dataJson.encrypttoaddress)}
+              {renderField('Upload access', dataJson.encrypttoaddress ? `Private: ${dataJson.encrypttoaddress}` : 'Publicly readable')}
               {renderField('Signature', dataJson.signature)}
               {renderField('Create MMR', dataJson.createmmr?.toString())}
               {Array.isArray(dataJson.vdxfkeys) && renderField('VDXF Keys', dataJson.vdxfkeys.join(', '))}

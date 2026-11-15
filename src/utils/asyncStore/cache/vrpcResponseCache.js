@@ -1,12 +1,5 @@
-import { Cache } from "react-native-cache";
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiRequest, fromBase58Check } from "verus-typescript-primitives";
-import {
-  clearCacheNamespace,
-  getCacheEntriesSafely,
-  initializeCacheSafely,
-} from './cacheIntegrity';
+import {createPersistentCache} from './createPersistentCache';
 const crypto = require('react-native-crypto');
 
 export const VRPC_RESPONSE_CACHE_CAP = 1000
@@ -17,13 +10,19 @@ const validVrpcResponse = value => {
   return true;
 };
 
-const vrpcResponseCache = new Cache({
+const {
+  cache: vrpcResponseCache,
+  initialize: initVrpcResponseCache,
+  getAll: getAllCachedVrpcResponses,
+  clear: clearCachedVrpcResponses,
+} = createPersistentCache({
   namespace: VRPC_RESPONSE_CACHE_NAMESPACE,
-  policy: {
-      maxEntries: VRPC_RESPONSE_CACHE_CAP
-  },
-  backend: AsyncStorage
-})
+  maxEntries: VRPC_RESPONSE_CACHE_CAP,
+  validateValue: validVrpcResponse,
+  name: 'vrpc',
+});
+
+export {initVrpcResponseCache, getAllCachedVrpcResponses, clearCachedVrpcResponses};
 
 /**
  * @param {string} systemId 
@@ -38,18 +37,6 @@ export const getVrpcResponseCacheKey = (systemId, endpoint, request) => {
                 .update(Buffer.from(JSON.stringify(request.prepare()), 'utf8'))
                 .digest()
                 .toString('hex');
-}
-
-export const initVrpcResponseCache = () => {
-  return initializeCacheSafely(
-    vrpcResponseCache,
-    VRPC_RESPONSE_CACHE_NAMESPACE,
-    VRPC_RESPONSE_CACHE_CAP,
-    validVrpcResponse,
-  ).catch(e => {
-    console.log("Error while initializing vrpc cache")
-    throw e
-  });
 }
 
 /**
@@ -78,25 +65,6 @@ export const setCachedVrpcResponse = (systemId, endpoint, request, response) => 
 
   return vrpcResponseCache.setItem(key, JSON.stringify(response)).catch(e => {
     console.log("Error while setting vrpc cache")
-    throw e
-  })
-}
-
-export const clearCachedVrpcResponses = () => {
-  return clearCacheNamespace(vrpcResponseCache, VRPC_RESPONSE_CACHE_NAMESPACE).catch(e => {
-    console.log("Error while clearing vrpc cache")
-    throw e
-  })
-}
-
-export const getAllCachedVrpcResponses = () => {
-  return getCacheEntriesSafely(
-    vrpcResponseCache,
-    VRPC_RESPONSE_CACHE_NAMESPACE,
-    VRPC_RESPONSE_CACHE_CAP,
-    validVrpcResponse,
-  ).catch(e => {
-    console.log("Error while getting all vrpc cache")
     throw e
   })
 }

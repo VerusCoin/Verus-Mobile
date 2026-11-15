@@ -11,6 +11,7 @@ import {
   compile,
   decompile,
   fromBase58Check,
+  toBase58Check,
 } from 'verus-typescript-primitives';
 import {preflightCurrencyTransfer} from '../../api/channels/vrpc/requests/preflight';
 import {getAddressBalances} from '../../api/channels/vrpc/requests/getAddressBalances';
@@ -39,9 +40,12 @@ const SYSTEM = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
 const REMOTE = 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq';
 const GATEWAY = 'i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X';
 const CONVERTER = 'iECDGNNufPkSa9aHfbnQUjvhRN6YGR8eKM';
+const TOKEN = 'iQP7TeWNDNsF7aaaCkQzNyS4jDjdKncNWf';
 const ZERO_CODE = 'i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk';
 const SOURCE = 'RTqQe58LSj2yr5CrwYFwcsAQ1edQwmrkUU';
 const REFUND = 'R9J8E2no2HVjQmzX6Ntes2ShSGcn7WiRcx';
+const TAG = toBase58Check(Buffer.alloc(20, 8), 137);
+const OTHER_TAG = toBase58Check(Buffer.alloc(20, 9), 137);
 const CHANNEL = `vrpc.${SOURCE}.${SYSTEM}`;
 const COIN = {id: 'VRSC', system_id: SYSTEM};
 const ACCOUNT = {id: 'test', keys: {VRSC: {[CHANNEL]: {addresses: [SOURCE]}}}};
@@ -56,6 +60,7 @@ const definitions = {
   [REMOTE]: {options: 256, systemid: REMOTE, launchsystemid: SYSTEM},
   [GATEWAY]: {options: 128, systemid: SYSTEM, gatewayid: GATEWAY, gatewayconverterid: CONVERTER},
   [CONVERTER]: {options: 1, systemid: SYSTEM, launchsystemid: SYSTEM, currencies: [SYSTEM, GATEWAY]},
+  [TOKEN]: {options: 32, systemid: SYSTEM, launchsystemid: SYSTEM},
 };
 
 const makeOutput = kind => ({
@@ -86,6 +91,12 @@ const makeTransaction = (output, kind, principal) => {
     feecurrency: SYSTEM, feesatoshis: '20000',
   }], networks.verus, 200);
   const tx = Transaction.fromHex(hex, networks.verus);
+  if (output.vdxftag) {
+    const chunks = decompile(tx.outs[0].script);
+    // Independent protocol fixture: v3, EVAL_NONE, 1-of-1 master with one TYPE_INDEX.
+    chunks[0] = Buffer.from('04030001011505' + fromBase58Check(output.vdxftag).hash.toString('hex'), 'hex');
+    tx.outs[0].script = compile(chunks);
+  }
   tx.outs[0].value = Number(principal) + (gateway ? 50000 : 20000);
   return tx.toHex();
 };
@@ -103,8 +114,8 @@ const rewriteTransfer = (hex, mutate) => {
   return tx.toHex();
 };
 
-const prepareRpc = (kind, mutate) => {
-  const output = makeOutput(kind);
+const prepareRpc = (kind, mutate, outputOverrides = {}) => {
+  const output = {...makeOutput(kind), ...outputOverrides};
   const quote = makeTransaction(output, kind, '0');
   let candidate = makeTransaction(output, kind, output.satoshis);
   if (mutate) candidate = rewriteTransfer(candidate, mutate);
@@ -161,6 +172,122 @@ describe('RPC currency transfer intent validation', () => {
     for (const call of getSendCurrencyTransaction.mock.calls) {
       expect(call[10]).toMatchObject({refundto: SOURCE});
     }
+  });
+
+  it.each(['gateway', 'direct', 'preconvert'])('validates and funds the approved tagged %s invoice payment', async kind => {
+    const output = prepareRpc(kind, undefined, {vdxftag: TAG});
+    const result = await preflightCurrencyTransfer(COIN, CHANNEL, ACCOUNT, output);
+
+    expect(result).toMatchObject({err: false, result: {
+      output: {vdxftag: TAG}, validation: {valid: true, sent: {[SYSTEM]: '100000000'}},
+    }});
+    expect(fundRawTransaction).toHaveBeenCalledTimes(1);
+    expect(getCurrency.mock.calls.every(call => call[1] !== TAG)).toBe(true);
+    expect(getSendCurrencyTransaction.mock.calls.map(call => call[2])).toEqual([0, 1]);
+    expect(getSendCurrencyTransaction.mock.calls.map(call => call[9])).toEqual([TAG, TAG]);
+    const tx = Transaction.fromHex(result.result.hex, networks.verus);
+    expect(decompile(tx.outs[0].script)[0].toString('hex')).toBe(
+      '04030001011505' + fromBase58Check(TAG).hash.toString('hex'),
+    );
+  });
+
+  it.each([['native', SYSTEM], ['token', TOKEN]])('preserves a tagged %s invoice through local construction and funding', async (_, currency) => {
+    const output = {currency, satoshis: '100000000', address: pkh(REFUND), vdxftag: TAG};
+    if (currency === TOKEN) {
+      const tokenTx = Transaction.fromHex(smarttxs.createUnfundedCurrencyTransfer(SYSTEM, [{
+        currency: TOKEN, satoshis: output.satoshis, address: pkh(SOURCE),
+      }], networks.verus, 200), networks.verus);
+      const tokenInput = {
+        ...INPUT, txid: 'cd'.repeat(32), satoshis: tokenTx.outs[0].value,
+        script: tokenTx.outs[0].script.toString('hex'),
+      };
+      getSpendableUtxos.mockResolvedValue([INPUT, tokenInput]);
+      const fund = fundRawTransaction.getMockImplementation();
+      fundRawTransaction.mockImplementation(async (...args) => {
+        const response = await fund(...args);
+        const tx = Transaction.fromHex(response.result.hex, networks.verus);
+        tx.addInput(Buffer.from(tokenInput.txid, 'hex').reverse(), tokenInput.outputIndex);
+        response.result.hex = tx.toHex();
+        return response;
+      });
+    }
+
+    const result = await preflightCurrencyTransfer(COIN, CHANNEL, ACCOUNT, output);
+
+    expect(result).toMatchObject({err: false, result: {
+      output: {vdxftag: TAG}, validation: {valid: true, sent: {[currency]: output.satoshis}},
+    }});
+    expect(getSendCurrencyTransaction).not.toHaveBeenCalled();
+    const tx = Transaction.fromHex(result.result.hex, networks.verus);
+    const chunks = decompile(tx.outs[0].script);
+    expect(chunks[0].toString('hex')).toBe('04030001011505' + fromBase58Check(TAG).hash.toString('hex'));
+    const payment = OptCCParams.fromChunk(chunks[2]);
+    expect(payment.destinations[0].type.eq(DEST_PKH)).toBe(true);
+    expect(payment.destinations[0].data.toBuffer()).toEqual(fromBase58Check(REFUND).hash);
+  });
+
+  it.each(['', 'vrsc::invoice.payment', SOURCE])('rejects an unresolved or malformed tag (%s) before RPC lookups', async vdxftag => {
+    const output = {...prepareRpc('gateway'), vdxftag};
+
+    const result = await preflightCurrencyTransfer(COIN, CHANNEL, ACCOUNT, output);
+
+    expect(result).toEqual({err: true, result: 'Transaction VDXF tag must be a valid X-address.'});
+    expect(getCurrency).not.toHaveBeenCalled();
+    expect(getSendCurrencyTransaction).not.toHaveBeenCalled();
+    expect(fundRawTransaction).not.toHaveBeenCalled();
+  });
+
+  it('still rejects a substituted gateway route on a tagged invoice payment', async () => {
+    const output = prepareRpc('gateway', transfer => {
+      transfer.transferDestination.gatewayID = REMOTE;
+    }, {vdxftag: TAG});
+
+    const result = await preflightCurrencyTransfer(COIN, CHANNEL, ACCOUNT, output);
+
+    expect(result.err).toBe(true);
+    expect(result.result).toMatch(/match/i);
+    expect(fundRawTransaction).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['missing', TAG, undefined],
+    ['substituted', TAG, OTHER_TAG],
+    ['unexpected', undefined, TAG],
+  ])('rejects an RPC candidate with a %s invoice tag before funding', async (_, approvedTag, candidateTag) => {
+    const output = prepareRpc('gateway', undefined, approvedTag ? {vdxftag: approvedTag} : {});
+    const quote = getSendCurrencyTransaction.getMockImplementation();
+    getSendCurrencyTransaction.mockImplementation(async (...args) => {
+      const response = await quote(...args);
+      if (args[2] !== 0) {
+        response.result.hextx = makeTransaction({...output, vdxftag: candidateTag}, 'gateway', output.satoshis);
+      }
+      return response;
+    });
+
+    const result = await preflightCurrencyTransfer(COIN, CHANNEL, ACCOUNT, output);
+
+    expect(result.err).toBe(true);
+    expect(fundRawTransaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invoice tag changed during funding', async () => {
+    const output = prepareRpc('gateway', undefined, {vdxftag: TAG});
+    const fund = fundRawTransaction.getMockImplementation();
+    fundRawTransaction.mockImplementation(async (...args) => {
+      const response = await fund(...args);
+      const tx = Transaction.fromHex(response.result.hex, networks.verus);
+      const chunks = decompile(tx.outs[0].script);
+      chunks[0] = Buffer.from('04030001011505' + fromBase58Check(OTHER_TAG).hash.toString('hex'), 'hex');
+      tx.outs[0].script = compile(chunks);
+      response.result.hex = tx.toHex();
+      return response;
+    });
+
+    const result = await preflightCurrencyTransfer(COIN, CHANNEL, ACCOUNT, output);
+
+    expect(result.err).toBe(true);
+    expect(result.result).toMatch(/does not match unfunded component/i);
+    expect(fundRawTransaction).toHaveBeenCalledTimes(1);
   });
 
   it.each([

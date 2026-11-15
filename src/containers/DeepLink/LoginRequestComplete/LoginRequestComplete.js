@@ -3,7 +3,8 @@ import {ScrollView, View, TouchableOpacity} from 'react-native';
 import Styles from '../../../styles/index';
 import {primitives} from 'verusid-ts-client';
 import {createAlert} from '../../../actions/actions/alert/dispatchers/alert';
-import {Button, Text} from 'react-native-paper';
+import {Text} from 'react-native-paper';
+import Button from '../../../components/Button';
 import {handleRedirect} from '../../../utils/deeplink/handleRedirect';
 import AnimatedSuccessCheckmark from '../../../components/AnimatedSuccessCheckmark';
 import {copyToClipboard} from '../../../utils/clipboard/clipboard';
@@ -150,7 +151,6 @@ const LoginRequestComplete = props => {
           <Button
             textColor={Colors.warningButtonColor}
             style={{width: 148}}
-            labelStyle={{fontSize: 18}}
             disabled={loading}
             onPress={() => cancel()}>
             Cancel
@@ -159,7 +159,6 @@ const LoginRequestComplete = props => {
             buttonColor={Colors.verusGreenColor}
             textColor={Colors.secondaryColor}
             style={{width: 148}}
-            labelStyle={{fontSize: 18}}
             disabled={loading}
             onPress={() => completeDeeplink()}>
             Done

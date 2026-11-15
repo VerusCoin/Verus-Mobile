@@ -2,7 +2,8 @@ import React, { useRef, useState } from "react";
 import BigNumber from "bignumber.js";
 import { Alert, View, TouchableWithoutFeedback, Keyboard, FlatList, Animated, TouchableOpacity, Dimensions } from "react-native";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { TextInput, Button, Divider, Checkbox, List, Text, IconButton } from "react-native-paper";
+import { TextInput, Divider, Checkbox, List, Text, IconButton } from "react-native-paper";
+import Button from "../../../Button";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { API_SEND, DLIGHT_PRIVATE, ERC20, ETH, VRPC } from "../../../../utils/constants/intervalConstants";
 import {

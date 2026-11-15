@@ -5,7 +5,8 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import {ActivityIndicator, Button, Text, TextInput} from 'react-native-paper';
+import {ActivityIndicator, Text, TextInput} from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {createAlert} from '../../../../../actions/actions/alert/dispatchers/alert';
 import Colors from '../../../../../globals/colors';
@@ -253,7 +254,7 @@ export default function ImportNfc({
                 disabled={decrypting || backupPassword.length === 0}
                 labelStyle={{fontWeight: 'bold'}}
                 style={{marginBottom: 8}}>
-                {'Decrypt and Import'}
+                {'Decrypt and import'}
               </Button>
               {decrypting && (
                 <Text
@@ -275,7 +276,7 @@ export default function ImportNfc({
                   setWalletBackupOrdinal(null);
                   setBackupPassword('');
                 }}>
-                {'Scan Different Card'}
+                {'Scan different card'}
               </Button>
             </View>
           ) : (
@@ -296,7 +297,7 @@ export default function ImportNfc({
                 icon="credit-card-wireless"
                 labelStyle={{fontWeight: 'bold'}}
                 contentStyle={{height: 48}}>
-                {'Scan NFC Backup'}
+                {'Scan NFC backup'}
               </Button>
             </View>
           )}

@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "checks": 49,
+  "taggedPlaintextLengths": [
+    90,
+    90,
+    12062,
+    12062,
+    20062,
+    20062
+  ],
+  "freshRecipients": 2,
+  "encryptions": 6,
+  "date": "2026-10-23",
+  "platform": "Android",
+  "runtime": "Android 15 / API 35 emulator, Pixel_8_API_35, arm64-v8a",
+  "applicationId": "com.verusmobile",
+  "apk": "android/app/build/outputs/apk/debug/VerusWallet-1.0.31.apk",
+  "apkSha256": "f0e2c3b37d8a940c5946bc3a91945adf0f7d01159f0851fc7518126cd58296d0",
+  "diagnosticEntry": "debug/identityUploadNativeValidation.js",
+  "diagnosticSha256": "246348f46357ee46a9bbee0e3eb2ded6e2e80a05cdfdfccd90928f9922062811",
+  "scope": "Actual native bridge; fresh synthetic disposable mnemonic and recipient generation, encryption, IVK/SSK authenticated decryption, malformed ciphertext and incorrect key rejection. No wallet data accessed; no transaction signed or broadcast.",
+  "notes": "Existing stale installed app lacked VerusLightClient, so the workspace debug APK was installed with data preserved. A separately bundled synthetic entry was served on localhost:8082 through adb reverse. The temporary developer-setting file and port mapping were removed, and app, server and emulator stopped. Normal app entry and packaged bundle unchanged."
+}

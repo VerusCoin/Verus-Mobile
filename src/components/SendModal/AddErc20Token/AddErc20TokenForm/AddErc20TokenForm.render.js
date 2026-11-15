@@ -1,6 +1,7 @@
 import React from "react";
 import { ScrollView, View, TouchableWithoutFeedback, Keyboard } from "react-native";
-import { TextInput, Button, Checkbox } from "react-native-paper";
+import { TextInput, Checkbox } from "react-native-paper";
+import Button from "../../../Button";
 import Styles from "../../../../styles";
 import { SEND_MODAL_CONTRACT_ADDRESS_FIELD } from "../../../../utils/constants/sendModal";
 import Colors from "../../../../globals/colors";

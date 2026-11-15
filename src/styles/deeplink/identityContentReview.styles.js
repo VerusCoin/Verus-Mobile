@@ -1,0 +1,30 @@
+import {StyleSheet} from 'react-native';
+import Colors from '../../globals/colors';
+
+export default StyleSheet.create({
+  section: {marginBottom: 8},
+  sectionTitle: {fontSize: 20, fontWeight: '700', color: Colors.quaternaryColor, marginBottom: 8},
+  introduction: {fontSize: 14, lineHeight: 21, color: '#595959', marginBottom: 14},
+  card: {borderRadius: 16, padding: 16, backgroundColor: Colors.secondaryColor, borderWidth: 1, borderColor: '#E8E8E8', marginBottom: 12},
+  cardTitle: {fontSize: 18, fontWeight: '700', color: Colors.quaternaryColor, marginBottom: 12},
+  badges: {flexDirection: 'row', flexWrap: 'wrap', marginBottom: 4},
+  badge: {alignSelf: 'flex-start', backgroundColor: '#F2F2F2', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 5, marginRight: 8, marginBottom: 8},
+  badgeText: {fontSize: 12, fontWeight: '600', color: '#595959'},
+  additionBadge: {backgroundColor: '#EBF6FF'},
+  additionText: {color: Colors.primaryColor},
+  removalBadge: {backgroundColor: '#FFF1EF'},
+  removalText: {color: '#A12622'},
+  body: {fontSize: 15, lineHeight: 23, color: Colors.quaternaryColor, marginBottom: 12},
+  field: {marginBottom: 14, minWidth: 0},
+  fieldLabel: {fontSize: 13, color: '#595959', lineHeight: 20, marginBottom: 4},
+  fieldValue: {fontSize: 16, color: Colors.quaternaryColor, lineHeight: 24, flexShrink: 1},
+  secondaryValue: {fontSize: 14, color: '#595959', lineHeight: 21, flexShrink: 1},
+  valueGroup: {marginBottom: 4},
+  valueTitle: {fontSize: 15, fontWeight: '600', color: Colors.quaternaryColor, marginBottom: 10},
+  notice: {borderLeftWidth: 3, borderLeftColor: Colors.infoButtonColor, backgroundColor: '#FFF7ED', padding: 12, borderRadius: 6, marginBottom: 14},
+  noticeText: {fontSize: 14, color: '#75430F', lineHeight: 21},
+  keySection: {borderTopWidth: 1, borderTopColor: '#E8E8E8', paddingTop: 12},
+  detailsButton: {minHeight: 44, justifyContent: 'center', paddingVertical: 10, borderRadius: 8},
+  detailsButtonPressed: {backgroundColor: '#EBF6FF'},
+  detailsLabel: {fontSize: 15, lineHeight: 22, color: Colors.primaryColor, fontWeight: '600'},
+});

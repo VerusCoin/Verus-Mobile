@@ -28,6 +28,7 @@ import { copyToClipboard } from "../../utils/clipboard/clipboard";
 import { getVDXFKeyLabel } from "../../utils/vdxf/vdxfTypeLabels";
 import { vdxfUniValueModalInnerAreaStyles as localStyles } from "../../styles";
 import Colors from "../../globals/colors";
+import {identityUploadToDisplayJson} from '../../utils/identityUpdate/uploadDisplay';
 
 const COPY_FEEDBACK_MS = 1500;
 
@@ -206,8 +207,8 @@ const RawInspectorContent = ({ item }) => {
 
 const SignDataInspectorContent = ({ item }) => {
   const data = item.data;
-  const dataJson =
-    data && typeof data.toCLIJson === 'function' ? data.toCLIJson() : null;
+  const dataJson = data && typeof data.toCLIJson === 'function'
+    ? identityUploadToDisplayJson(data) : null;
   const [dataSectionExpanded, setDataSectionExpanded] = useState(true);
   const [additionalSectionExpanded, setAdditionalSectionExpanded] =
     useState(true);
@@ -285,6 +286,10 @@ const SignDataInspectorContent = ({ item }) => {
   };
 
   const renderDataSection = () => {
+    if (dataJson.binarydata) {
+      return <CopyableField label="Upload request (hex)" value={dataJson.binarydata}
+        copyStateKey="binarydata" copiedKey={copiedKey} onCopy={handleCopy} />;
+    }
     if (data.isVdxfData()) {
       return renderVdxfUniValue(dataJson.vdxfdata);
     }
@@ -531,8 +536,8 @@ const SignDataInspectorContent = ({ item }) => {
             onCopy={handleCopy}
           />
           <CopyableField
-            label="Address to Encrypt To"
-            value={dataJson.encrypttoaddress}
+            label="Upload access"
+            value={dataJson.encrypttoaddress ? `Private: ${dataJson.encrypttoaddress}` : 'Publicly readable'}
             copyStateKey="encrypttoaddress"
             copiedKey={copiedKey}
             onCopy={handleCopy}

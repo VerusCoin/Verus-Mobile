@@ -3,14 +3,41 @@ import {
   getElectrumVersions,
   initElectrumCache,
   setElectrumVersion,
+  clearCachedVersions,
 } from '../../asyncStore/cache/electrumVersions';
 import {
   getCachedHeader,
   getHeaderCache,
   initHeaderCache,
   setCachedHeader,
+  clearCachedHeaders,
 } from '../../asyncStore/cache/blockHeaders';
+import {
+  clearCachedEthTxReceipts,
+  getCachedEthTxReceipt,
+  getEthTxReceiptCache,
+  initEthTxReceiptCache,
+  setCachedEthTxReceipt,
+} from '../../asyncStore/cache/ethTxReceipts';
+import {
+  clearCachedVrpcResponses,
+  getAllCachedVrpcResponses,
+  getCachedVrpcResponse,
+  getVrpcResponseCacheKey,
+  initVrpcResponseCache,
+  setCachedVrpcResponse,
+} from '../../asyncStore/cache/vrpcResponseCache';
 import {initCache} from '../../asyncStore/cache/cache';
+
+const systemId = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
+const endpoint = 'https://rpc.example';
+const request = {prepare: () => ({method: 'getinfo', params: []})};
+const caches = [
+  ['header', initHeaderCache, getHeaderCache, clearCachedHeaders, 'block_header', 'getting all', 'Clearing block header cache'],
+  ['electrum', initElectrumCache, getElectrumVersions, clearCachedVersions, 'server_version', 'getting', 'Clearing electrum version cache'],
+  ['ethTxReceipt', initEthTxReceiptCache, getEthTxReceiptCache, clearCachedEthTxReceipts, 'eth_tx_receipts', 'getting all', 'Clearing block ethTxReceipt cache'],
+  ['vrpc', initVrpcResponseCache, getAllCachedVrpcResponses, clearCachedVrpcResponses, 'vrpc_response', 'getting all', null],
+];
 
 describe('persistent cache integrity', () => {
   beforeEach(async () => {
@@ -79,5 +106,77 @@ describe('persistent cache integrity', () => {
     AsyncStorage.getAllKeys.mockRejectedValueOnce(storageError);
 
     await expect(initHeaderCache()).rejects.toBe(storageError);
+  });
+
+  it('retains receipt hex encoding and the distinct parsed/snapshot VRPC results across reloads', async () => {
+    await initCache();
+    const receipt = {gasUsed: BigInt(21), cumulativeGasUsed: BigInt(42), status: 1};
+    const response = {result: {height: 10}, error: null};
+    await setCachedEthTxReceipt(receipt, 'txid');
+    await setCachedVrpcResponse(systemId, endpoint, request, response);
+    await initCache();
+
+    const encodedReceipt = {gasUsed: '0x15', cumulativeGasUsed: '0x2a', status: 1};
+    expect(await getCachedEthTxReceipt('txid')).toEqual(encodedReceipt);
+    expect((await getEthTxReceiptCache()).txid.value).toEqual(encodedReceipt);
+    expect(await getCachedVrpcResponse(systemId, endpoint, request)).toEqual(response);
+    const key = getVrpcResponseCacheKey(systemId, endpoint, request);
+    expect((await getAllCachedVrpcResponses())[key].value).toBe(JSON.stringify(response));
+    expect(receipt.gasUsed).toBe(BigInt(21));
+  });
+
+  it.each(caches)('clears only the %s namespace and retains its clear log', async (
+    _name, initialize, getAll, clear, namespace, _getOperation, clearMessage,
+  ) => {
+    await AsyncStorage.multiSet([
+      [`${namespace}:orphan`, 'corrupt'],
+      [`${namespace}:_lru`, '{malformed'],
+      [`${namespace}_other:keep`, 'untouched'],
+    ]);
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+    await expect(clear()).resolves.toBeUndefined();
+
+    expect(log.mock.calls).toEqual(clearMessage == null ? [] : [[clearMessage]]);
+    expect(await AsyncStorage.getItem(`${namespace}:orphan`)).toBeNull();
+    expect(await AsyncStorage.getItem(`${namespace}:_lru`)).toBe('[]');
+    expect(await AsyncStorage.getItem(`${namespace}_other:keep`)).toBe('untouched');
+    await expect(initialize()).resolves.toBeUndefined();
+    await expect(getAll()).resolves.toEqual({});
+  });
+
+  it.each(caches)('preserves %s lifecycle errors and diagnostic messages', async (
+    name, initialize, getAll, clear, _namespace, getOperation, clearMessage,
+  ) => {
+    const error = new Error('backend unavailable');
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    for (const [operation, method] of [
+      ['initializing', initialize], [getOperation, getAll], ['clearing', clear],
+    ]) {
+      log.mockClear();
+      AsyncStorage.getAllKeys.mockRejectedValueOnce(error);
+      await expect(method()).rejects.toBe(error);
+      expect(log.mock.calls).toEqual([
+        ...(operation === 'clearing' && clearMessage != null ? [[clearMessage]] : []),
+        [`Error while ${operation} ${name} cache`],
+      ]);
+    }
+  });
+
+  it.each([
+    ['block_header', initHeaderCache, getHeaderCache, '[]'],
+    ['server_version', initElectrumCache, getElectrumVersions, '1.4'],
+    ['eth_tx_receipts', initEthTxReceiptCache, getEthTxReceiptCache, []],
+    ['vrpc_response', initVrpcResponseCache, getAllCachedVrpcResponses, '{invalid'],
+  ])('keeps the %s validator when loading a structurally valid cache entry', async (
+    namespace, initialize, getAll, invalidValue,
+  ) => {
+    await AsyncStorage.multiSet([
+      [`${namespace}:_lru`, '["entry"]'],
+      [`${namespace}:entry`, JSON.stringify({value: invalidValue})],
+    ]);
+    await initialize();
+    await expect(getAll()).resolves.toEqual({});
+    expect(await AsyncStorage.getItem(`${namespace}:entry`)).toBeNull();
   });
 });

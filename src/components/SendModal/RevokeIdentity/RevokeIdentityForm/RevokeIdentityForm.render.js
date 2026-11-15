@@ -1,6 +1,7 @@
 import React from "react";
 import { ScrollView, View, TouchableWithoutFeedback, Keyboard } from "react-native";
-import { TextInput, Button, Paragraph } from "react-native-paper";
+import { TextInput, Paragraph } from "react-native-paper";
+import Button from "../../../Button";
 import Styles from "../../../../styles";
 import { SEND_MODAL_IDENTITY_TO_REVOKE_FIELD } from "../../../../utils/constants/sendModal";
 import Colors from "../../../../globals/colors";

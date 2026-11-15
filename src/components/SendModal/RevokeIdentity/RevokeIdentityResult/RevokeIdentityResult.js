@@ -40,6 +40,7 @@ const RevokeIdentityResult = (props) => {
     networkObj,
     finishSend,
     txid,
+    deliveryUnknown: !!props.route.params.deliveryUnknown,
     openExplorer
   });
 };

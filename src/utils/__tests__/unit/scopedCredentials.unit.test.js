@@ -68,8 +68,8 @@ const buildStoredCredentialEntry = (credential, descriptorOverrides = {}) => {
 
   const encryptedDescriptor = new DataDescriptor({
     flags: DataDescriptor.FLAG_ENCRYPTED_DATA,
-    objectdata: Buffer.from('aabbcc', 'hex'),
-    epk: Buffer.from('ddeeff', 'hex'),
+    objectdata: Buffer.alloc(32, 0xaa),
+    epk: Buffer.alloc(32, 0xdd),
     ...descriptorOverrides,
   });
 
@@ -123,8 +123,8 @@ describe('scoped credential retrieval', () => {
     );
     expect(mockDecryptData).toHaveBeenCalledWith({
       ivkHex: '11'.repeat(32),
-      ephemeralPublicKeyHex: 'ddeeff',
-      ciphertextHex: 'aabbcc',
+      ephemeralPublicKeyHex: 'dd'.repeat(32),
+      ciphertextHex: 'aa'.repeat(32),
       symmetricKeyHex: null,
     });
     expect(credentials).toHaveLength(1);
@@ -225,8 +225,8 @@ describe('scoped credential retrieval', () => {
 
     expect(mockDecryptData).toHaveBeenCalledWith({
       ivkHex: '22'.repeat(32),
-      ephemeralPublicKeyHex: 'ddeeff',
-      ciphertextHex: 'aabbcc',
+      ephemeralPublicKeyHex: 'dd'.repeat(32),
+      ciphertextHex: 'aa'.repeat(32),
       symmetricKeyHex: null,
     });
     expect(credentials).toHaveLength(1);

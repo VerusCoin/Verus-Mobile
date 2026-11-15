@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {View, Dimensions} from 'react-native';
-import {Text, Paragraph, Button, Checkbox, List} from 'react-native-paper';
+import {Text, Paragraph, Checkbox, List} from 'react-native-paper';
+import Button from '../../../../../components/Button';
 import {MnemonicSeed} from '../../../../../images/customIcons';
 import Colors from '../../../../../globals/colors';
 import TallButton from '../../../../../components/LargerButton';
