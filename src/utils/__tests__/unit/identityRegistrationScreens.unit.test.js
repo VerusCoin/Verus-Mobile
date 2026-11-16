@@ -70,6 +70,7 @@ const {
 } = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/RegistrationScreens');
 const {CostReview, AmountRows} = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/RegistrationComponents');
 const AppButton = require('../../../components/AppButton').default;
+const {RegistrationSummary} = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/RegistrationFlowComponents');
 const SlideToConfirm = require('../../../components/SlideToConfirm').default;
 const ProgressHeader = require('../../../components/ProgressHeader').default;
 const RegistrationTabRows = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/RegistrationTabRows').default;
@@ -131,7 +132,7 @@ const quoteFor = systemId => ({
 const nameReadFor = (request, extra = {}) => ({
   request: {name: request.name}, policy: {resolvedName: {identityID: 'identity', parent: request.systemId}},
   quote: quoteFor(request.systemId), referralQuote: null, referralsAllowed: false, referralRequired: false,
-  currencyNames: {[request.systemId]: 'VRSC'}, ...extra,
+  currencyNames: {[request.systemId]: request.rootSystemName}, ...extra,
 });
 const referralField = view => view.root.findAllByType('TextInput').find(node => node.props.label === 'Referral (optional)');
 const enterReferral = async (view, referral) => {
@@ -184,7 +185,7 @@ beforeEach(() => {
   mockApi.findExistingRegistration.mockResolvedValue(null);
   mockReadRegistrationName.mockReset().mockImplementation(async request => nameReadFor(request));
   mockApi.resolveRegistration.mockReset().mockImplementation(async request => ({
-    quote: quoteFor(request.systemId), currencyNames: {[request.systemId]: 'VRSC'}, identityNames: {},
+    quote: quoteFor(request.systemId), currencyNames: {[request.systemId]: request.rootSystemName}, identityNames: {},
     request: {fundingAddress: request.fundingAddress, signingAddress: request.signingAddress, referralID: request.referralID,
       privateAddress: request.privateAddress},
     policy: {resolvedName: {identityID: 'identity'}},
@@ -880,20 +881,29 @@ it('scrolls each failed attempt to its error and shows only the button spinner w
   expect(footerAction(view, 'Slide to start').props.loading).toBeFalsy();
 });
 
+const openPayers = async view => act(async () => view.root.findByType(RegistrationSummary).props.onPayer());
+const payerRows = view => radioRows(view).filter(node => typeof node.props.accessibilityLabel === 'string');
+
 it('uses the friendly selected linked VerusID for payment while keeping the wallet key as controller', async () => {
+  jest.useFakeTimers();
   mockState.authentication.activeAccount.keys.VRSCTEST = {vrpc: {addresses: ['test-wallet']}};
   mockState.coins.activeCoinsForUser = [{id: 'VRSCTEST', system_id: 'test-chain', currency_id: 'test-chain', display_ticker: 'VRSCTEST', testnet: true}];
   mockState.channelStore_verusid.watchedVerusIds = {VRSCTEST: {'test-id': 't1.VRSCTEST@'}, VRSC: {'main-id': 'main@'}};
-  mockState.ledger = {balances: {'vrpc.test-id.test-chain': {VRSCTEST: {confirmed: '1000'}}}};
+  mockReadRegistrationBalances.mockImplementation(async (coin, source) => ({
+    status: 'ready', amounts: {[coin.system_id]: source.address === 'test-id' ? '1000' : '0'},
+  }));
+  mockApi.prepareCommitment.mockResolvedValue({...review});
   const view = await mount(IdentityRegistrationCreate);
-  await press(button(view, 'Pay from'));
-  expect(radio(view, 't1.VRSCTEST@')).toBeDefined();
-  expect(radio(view, 'main@')).toBeUndefined();
-  expect(textContent(view.root)).toContain('1000 VRSCTEST confirmed');
-  expect(radio(view, 't1.VRSCTEST@').props.accessibilityState.selected).toBe(true);
-  await press(radio(view, 't1.VRSCTEST@'));
-  await enterName(view);
-  await press(button(view, 'Review costs'));
+  await typeName(view);
+  await goToCheck(view);
+  expect(textContent(view.root).replace(/\u200B/g, '')).toContain('Pay fromt1.VRSCTEST@');
+  await openPayers(view);
+  const labels = payerRows(view).map(node => node.props.accessibilityLabel.replace(/\u200B/g, ''));
+  expect(labels.some(label => label.startsWith('t1.VRSCTEST@'))).toBe(true);
+  expect(labels.some(label => label.startsWith('main@'))).toBe(false);
+  expect(labels.some(label => label.includes('1000 VRSCTEST'))).toBe(true);
+  expect(payerRows(view).find(node => node.props.accessibilityLabel.startsWith('t1.')).props.selected).toBe(true);
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
   expect(mockApi.prepareCommitment).toHaveBeenCalledWith({
     request: expect.objectContaining({systemId: 'test-chain', fundingAddress: 'test-id', signingAddress: 'test-wallet', fundingName: 't1.VRSCTEST@', rootSystemName: 'VRSCTEST'}),
   }, expect.any(Object));
