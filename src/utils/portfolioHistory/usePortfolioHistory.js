@@ -100,7 +100,8 @@ const usePortfolioHistory = ({
     const time = Date.now();
     const prices = coins.map((coin) => [coin.id, getSavedUsdHistory(coin, start, time)]);
     const fx = getSavedFiatHistory(currency);
-    return fx && prices.every(([, samples]) => samples) ? { prices: Object.fromEntries(prices), fx } : null;
+    return fx && prices.every(([, samples]) => samples)
+      ? { loading: false, prices: Object.fromEntries(prices), fx } : null;
   // eslint-disable-next-line react-hooks/exhaustive-deps -- marketKey stands for coins, currency and start.
   }, [state, cacheLoaded, marketKey]);
 
