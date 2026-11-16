@@ -274,8 +274,8 @@ const Home = () => {
     setTotalCryptoBalances(totalBalances.crypto);
     setBalanceAccountHash(accountHash);
   }, [
-    balances, ledgerBalances, assetManagement.snapshots, displayCurrency,
-    activeCoinsForUser, allSubWallets, rates, accountHash,
+    balances, ledgerBalances, assetManagement.snapshots, assetManagement.preferences,
+    assetManagement.ready, displayCurrency, activeCoinsForUser, allSubWallets, rates, accountHash,
   ]);
 
   useEffect(() => {
@@ -364,6 +364,10 @@ const Home = () => {
       const balance = getManagedAssetBalance(coinObj, allSubWallets[key], ledgerBalances, assetManagement.snapshots);
       coinBalances[key] = balance.total;
 
+      // The value record keeps the amount of a hidden asset. The total counts
+      // only the assets on Home.
+      if (!isAssetShown(coinObj, assetManagement.preferences)) return;
+
       const rate = getRate(key, displayCurrency);
 
       if (rate != null) {
@@ -374,7 +378,8 @@ const Home = () => {
     });
 
     return {
-      fiat: fiatComplete ? _totalFiatBalance.toNumber() : null,
+      // The Show on Home choices are not known before the assets are ready.
+      fiat: fiatComplete && assetManagement.ready ? _totalFiatBalance.toNumber() : null,
       crypto: coinBalances,
     };
   };
@@ -636,9 +641,14 @@ const Home = () => {
     }
   }, [isConnected]);
 
+  // The chart draws the Home total, so it uses the same assets.
+  const shownCoins = useMemo(
+    () => activeCoinsForUser.filter(coin => isAssetShown(coin, assetManagement.preferences)),
+    [activeCoinsForUser, assetManagement.preferences],
+  );
   const portfolioHistory = usePortfolioHistory({
     account: activeAccount,
-    activeCoins: activeCoinsForUser,
+    activeCoins: shownCoins,
     balances: totalCryptoBalances,
     total: balanceAccountHash === accountHash ? totalFiatBalance : null,
     rates,
