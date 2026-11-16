@@ -6,7 +6,7 @@ const mockDecodeBackup = jest.fn();
 const mockActivateKeepAwake = jest.fn();
 const mockDeactivateKeepAwake = jest.fn();
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Keyboard: {dismiss: jest.fn()},
   SafeAreaView: 'SafeAreaView',
   TouchableWithoutFeedback: 'TouchableWithoutFeedback',

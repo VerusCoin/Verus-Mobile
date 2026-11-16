@@ -3,7 +3,7 @@ const mockDeliverResponse = jest.fn();
 const mockHandleEncryption = jest.fn();
 let mockState;
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   StyleSheet: {create: styles => styles},
   View: 'View',
   TouchableOpacity: 'TouchableOpacity',

@@ -1,6 +1,6 @@
 let mockState;
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Keyboard: {dismiss: jest.fn()},
   Dimensions: {get: () => ({width: 400, height: 800})},
   View: 'View',
@@ -9,7 +9,7 @@ jest.mock('react-native-paper', () => ({
   TextInput: 'TextInput',
   Checkbox: {Item: 'Checkbox'},
 }));
-jest.mock('react-redux', () => ({
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({
   useDispatch: () => jest.fn(),
   useSelector: selector => selector(mockState),
   connect: () => Component => Component,

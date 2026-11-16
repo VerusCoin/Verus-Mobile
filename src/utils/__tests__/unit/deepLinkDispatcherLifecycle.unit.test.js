@@ -5,9 +5,9 @@ const mockOpenAuth = jest.fn();
 const mockDispatch = jest.fn();
 const mockRenderGeneric = jest.fn();
 
-jest.mock('react-native', () => ({View: 'View'}));
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({View: 'View'}));
 jest.mock('@react-navigation/native', () => ({CommonActions: {reset: value => ({type: 'RESET', ...value})}}));
-jest.mock('react-redux', () => ({useSelector: selector => selector(mockState), useDispatch: () => mockDispatch}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState), useDispatch: () => mockDispatch}));
 jest.mock('../../../hooks/useObjectSelector', () => ({useObjectSelector: selector => selector(mockState)}));
 jest.mock('../../../selectors/authentication', () => ({selectHasAuthenticatedSession: state => state.authentication.signedIn}));
 jest.mock('../../../store', () => ({getState: () => mockState}));

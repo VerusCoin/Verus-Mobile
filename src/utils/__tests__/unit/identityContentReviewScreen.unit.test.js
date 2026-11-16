@@ -1,4 +1,4 @@
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Pressable: 'Pressable', View: 'View', ScrollView: 'ScrollView',
   StyleSheet: {create: value => value},
 }));

@@ -8,7 +8,7 @@ const mockState = {
   coins: {activeCoinList: []},
 };
 
-jest.mock('react-redux', () => ({useDispatch: () => mockDispatch}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useDispatch: () => mockDispatch}));
 jest.mock('../../../hooks/useObjectSelector', () => ({
   useObjectSelector: selector => selector(mockState),
 }));

@@ -4,7 +4,7 @@ const mockSubmitReviewedIdentityUpdate = jest.fn();
 const mockValidateIdentityUpdateContext = jest.fn(async () => 100);
 let mockState;
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   ActivityIndicator: 'ActivityIndicator',
   Alert: {alert: jest.fn()},
   ScrollView: 'ScrollView',
@@ -13,7 +13,7 @@ jest.mock('react-native', () => ({
 }));
 jest.mock('react-native-paper', () => ({Button: 'Button', Portal: 'Portal', Text: 'Text'}));
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
-jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 jest.mock('react-native-format-currency', () => ({formatCurrency: jest.fn()}));
 jest.mock('../../../styles', () => ({highRiskStepStyles: {}, confirmPayStepStyles: {}}));
 jest.mock('../../../components/AnimatedActivityIndicatorBox', () => 'ActivityIndicator');

@@ -14,7 +14,7 @@ jest.mock('../../../store', () => ({
   __esModule: true,
   default: {getState: () => mockState},
 }));
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Keyboard: {dismiss: jest.fn()},
   Platform: {OS: 'android'},
   SafeAreaView: 'SafeAreaView',
@@ -35,7 +35,7 @@ jest.mock('react-native-paper', () => ({
   ),
 }));
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
-jest.mock('react-redux', () => ({
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({
   useDispatch: () => jest.fn(),
   useSelector: selector => selector(mockState),
 }));

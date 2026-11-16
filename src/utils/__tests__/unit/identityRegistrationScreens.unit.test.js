@@ -21,10 +21,10 @@ jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', 
   publishRegistrationJobs: (...args) => mockPublishRegistrationJobs(...args),
   clearRegistrationJobs: (...args) => mockClearRegistrationJobs(...args),
 }));
-jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 jest.mock('@react-navigation/native', () => ({useFocusEffect: callback => require('react').useEffect(callback, [callback])}));
 jest.mock('@react-navigation/elements', () => ({useHeaderHeight: () => 96}));
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   AppState: {currentState: 'active', addEventListener: () => ({remove: jest.fn()})},
   View: 'View', Pressable: 'Pressable', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView',
   RefreshControl: 'RefreshControl', Alert: {alert: mockAlert}, Keyboard: {dismiss: jest.fn()},

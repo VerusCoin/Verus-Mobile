@@ -5,14 +5,14 @@ const mockAlert = jest.fn();
 const mockGetIdentity = jest.fn();
 let mockCoins;
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   SafeAreaView: 'SafeAreaView', ScrollView: 'ScrollView',
   TouchableOpacity: 'TouchableOpacity', View: 'View',
 }));
 jest.mock('react-native-paper', () => ({Portal: 'Portal', Text: 'Text'}));
 jest.mock('react-native-safe-area-context', () => ({useSafeAreaInsets: () => ({bottom: 0})}));
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
-jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 jest.mock('../../../hooks/useObjectSelector', () => ({useObjectSelector: selector => selector(mockState)}));
 jest.mock('../../../store', () => ({getState: () => mockState}));
 jest.mock('../../../components/Button', () => 'Button');

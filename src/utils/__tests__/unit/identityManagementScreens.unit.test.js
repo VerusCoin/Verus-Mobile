@@ -12,9 +12,9 @@ jest.mock('../../../containers/Services/ServiceComponents/VerusIdService/Identit
   useIdentityManagement: () => mockManagement,
 }));
 jest.mock('../../../store', () => ({__esModule: true, default: {getState: () => mockState}}));
-jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 jest.mock('@react-navigation/elements', () => ({useHeaderHeight: () => 96}));
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   View: 'View', Pressable: 'Pressable', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView',
   RefreshControl: 'RefreshControl', Keyboard: {dismiss: jest.fn()},
   Platform: {OS: 'ios'}, StyleSheet: {create: value => value, hairlineWidth: 1},

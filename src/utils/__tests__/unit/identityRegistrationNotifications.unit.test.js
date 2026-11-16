@@ -3,8 +3,8 @@ const mockAlert = jest.fn();
 const mockClear = jest.fn();
 const mockRemove = jest.fn();
 const mockLinkIdentity = jest.fn();
-jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
-jest.mock('react-native', () => ({
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   View: 'View', Text: 'Text', TouchableOpacity: 'TouchableOpacity',
   Alert: {alert: mockAlert}, StyleSheet: {create: value => value, hairlineWidth: 1},
 }));

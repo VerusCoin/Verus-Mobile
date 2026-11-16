@@ -6,8 +6,8 @@ const mockRefreshRegistrations = jest.fn(() => Promise.resolve());
 const mockUpdateWallets = jest.fn();
 const mockUpdateService = jest.fn();
 
-jest.mock('react-native', () => ({AppState: {addEventListener: () => ({remove: jest.fn()})}}));
-jest.mock('react-redux', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({AppState: {addEventListener: () => ({remove: jest.fn()})}}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({
   useSelector: (selector, equals = Object.is) => {
     const value = selector(mockState);
     const previous = require('react').useRef(value);

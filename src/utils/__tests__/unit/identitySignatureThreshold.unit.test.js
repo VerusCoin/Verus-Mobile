@@ -1,6 +1,6 @@
 let mockState;
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Platform: {OS: 'ios'},
   Dimensions: {get: () => ({width: 390, height: 844})},
   SafeAreaView: 'SafeAreaView',
@@ -13,7 +13,7 @@ jest.mock('react-native-paper', () => ({
   Button: 'Button', Portal: 'Portal', Text: 'Text', Checkbox: {Android: 'Checkbox'},
 }));
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
-jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 jest.mock('react-native-safe-area-context', () => ({useSafeAreaInsets: () => ({bottom: 0})}));
 jest.mock('../../../hooks/useObjectSelector', () => ({useObjectSelector: selector => selector(mockState)}));
 jest.mock('../../../styles', () => ({identityUpdateRequestInfoStyles: {}, highRiskStepStyles: {}}));

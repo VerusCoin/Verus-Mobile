@@ -14,7 +14,7 @@ jest.mock('../../../store', () => ({
   },
 }));
 
-jest.mock('react-redux', () => ({
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({
   connect: () => Component => Component,
 }));
 
@@ -79,7 +79,7 @@ jest.mock(
   () => ({ProvisionIdentityConfirmRender: jest.fn()}),
 );
 
-jest.mock('react-native', () => ({Alert: {alert: jest.fn()}}));
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({Alert: {alert: jest.fn()}}));
 
 const {
   SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,

@@ -1,4 +1,4 @@
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Alert: {alert: jest.fn()},
   Clipboard: {setString: jest.fn()},
   Image: 'Image',
