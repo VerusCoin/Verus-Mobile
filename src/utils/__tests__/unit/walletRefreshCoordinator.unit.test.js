@@ -81,7 +81,9 @@ describe('shared wallet refresh coordinator', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetEndpoint.mockReturnValue({requestMany: mockRequestMany});
+    // The balance update reads balance and mempool again, uncached, while
+    // the mempool lists anything. Those single reads use request().
+    mockGetEndpoint.mockReturnValue({requestMany: mockRequestMany, request: async request => responseFor(request)});
     mockRequestMany.mockImplementation(async requests => requests.map(responseFor));
     jest.spyOn(console, 'error').mockImplementation(() => {});
     jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -142,20 +144,21 @@ describe('shared wallet refresh coordinator', () => {
     const results = await conditionallyUpdateWallets(state, dispatch, requestedUpdates());
 
     expect(results).toEqual([API_SUCCESS, API_SUCCESS]);
-    expect(mockGetEndpoint).toHaveBeenCalledTimes(1);
+    // One batch, then an uncached balance and mempool read per address with a listed mempool.
+    expect(mockGetEndpoint).toHaveBeenCalledTimes(21);
     expect(mockGetEndpoint).toHaveBeenCalledWith('system');
     expect(mockRequestMany).toHaveBeenCalledTimes(1);
     const requests = mockRequestMany.mock.calls[0][0];
     expect(requests.filter(request => request.cmd === 'getaddressbalance')).toHaveLength(10);
     expect(requests.filter(request => request.cmd === 'getaddressdeltas')).toHaveLength(10);
-    expect(requests.filter(request => request.cmd === 'getaddressmempool')).toHaveLength(10);
+    expect(requests.filter(request => request.cmd === 'getaddressmempool')).toHaveLength(20);
     expect(requests.filter(request => request.cmd === 'getinfo')).toHaveLength(1);
     expect(dispatched.filter(action => action.type === SET_BALANCES)).toHaveLength(10);
     expect(dispatched.filter(action => action.type === SET_TRANSACTIONS)).toHaveLength(10);
 
     for (const channel of channels) {
       const address = channel.split('.')[1];
-      expect(state.ledger.balances[channel].NATIVE.total).toBe('2');
+      expect(state.ledger.balances[channel].NATIVE.total).toBe('3');
       expect(state.ledger.transactions[channel].NATIVE).toMatchObject([
         {txid: `pending-${address}`, amount: '1', confirmed: false},
         {txid: `confirmed-${address}`, amount: '2', confirmed: true},
@@ -176,11 +179,11 @@ describe('shared wallet refresh coordinator', () => {
 
     expect(results).toEqual(Array(5).fill(API_SUCCESS));
     expect(mockRequestMany).toHaveBeenCalledTimes(1);
-    expect(mockRequestMany.mock.calls[0][0]).toHaveLength(31);
+    expect(mockRequestMany.mock.calls[0][0]).toHaveLength(41);
     expect(dispatched.filter(action => action.type === SET_BALANCES)).toHaveLength(20);
     expect(dispatched.filter(action => action.type === SET_TRANSACTIONS)).toHaveLength(20);
     for (const channel of channels) {
-      expect(state.ledger.balances[channel].TOKEN.total).toBe('12.5');
+      expect(state.ledger.balances[channel].TOKEN.total).toBe('15.5');
       expect(state.ledger.transactions[channel].TOKEN.map(transaction => transaction.amount))
         .toEqual(['3', '7']);
       expect(state.ledger.transactions[channel].NATIVE.map(transaction => transaction.amount))
@@ -195,8 +198,8 @@ describe('shared wallet refresh coordinator', () => {
     const results = await conditionallyUpdateWallets(state, dispatch, requestedUpdates());
 
     expect(results).toEqual([API_SUCCESS, API_ABORTED]);
-    expect(mockRequestMany.mock.calls[0][0]).toHaveLength(9);
-    expect(mockRequestMany.mock.calls[0][0].every(request => request.cmd === 'getaddressbalance')).toBe(true);
+    expect(mockRequestMany.mock.calls[0][0].map(request => request.cmd))
+      .toEqual(Array(9).fill(['getaddressbalance', 'getaddressmempool']).flat());
     expect(state.ledger.balances[channels[0]]).toBeUndefined();
     expect(tracker('NATIVE', API_GET_BALANCES).busy[channels[0]]).toBe(true);
   });
@@ -271,8 +274,9 @@ describe('shared wallet refresh coordinator', () => {
         ? {error: {message: 'Mempool unavailable'}}
         : responseFor(request)));
 
+    // A balance without its mempool deltas is unavailable, not confirmed-only.
     expect(await conditionallyUpdateWallets(state, dispatch, requestedUpdates()))
-      .toEqual([API_SUCCESS, API_SUCCESS]);
+      .toEqual([API_ERROR, API_SUCCESS]);
     for (const channel of channels) {
       expect(state.ledger.transactions[channel].NATIVE).toMatchObject([
         {amount: '2', confirmed: true},
