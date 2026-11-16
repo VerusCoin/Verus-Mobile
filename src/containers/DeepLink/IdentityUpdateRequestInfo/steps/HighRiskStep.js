@@ -197,9 +197,27 @@ const primaryActionValue = (addedCount, removedCount) => {
   return 'Changed';
 };
 
+// The card title names the change itself, so the user does not need the
+// details sheet to see that an address is added or removed.
+const primaryKicker = (addedCount, removedCount) => {
+  if (addedCount > 0 && removedCount > 0) {
+    return addedCount === 1 && removedCount === 1
+      ? 'Primary address replaced'
+      : 'Primary addresses replaced';
+  }
+  if (addedCount > 0) {
+    return addedCount === 1 ? 'Primary address added' : 'Primary addresses added';
+  }
+  if (removedCount > 0) {
+    return removedCount === 1 ? 'Primary address removed' : 'Primary addresses removed';
+  }
+  return 'Primary control';
+};
+
 // Shown on the step itself, so the user sees who controls the VerusID after
 // the update without opening the details: every primary address after the
-// update, marked by whether this wallet holds it, then the removed ones.
+// update, marked by whether this wallet holds it and whether this update adds
+// it, then the removed ones.
 const primaryChangeLines = (added, removed, primaryInfo) => {
   const removedLines = removed.map(change => ({
     label: 'Removed',
@@ -223,11 +241,13 @@ const primaryChangeLines = (added, removed, primaryInfo) => {
   return [
     ...primaryInfo.addresses.map(item => {
       const address = item.address || item.displayAddress;
+      const isAdded = addedAddresses.has(address);
+      const holder = item.inWallet ? 'This wallet' : 'Not in this wallet';
       return {
-        label: item.inWallet ? 'This wallet' : 'Not in this wallet',
+        label: isAdded ? `Added · ${holder}` : holder,
         value: address,
         mono: true,
-        emphasis: addedAddresses.has(address),
+        emphasis: isAdded,
       };
     }),
     ...removedLines,
@@ -317,7 +337,7 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
     return {
       key: PRIMARY_REVIEW_KEY,
       kind: 'primary',
-      kicker: 'Primary control',
+      kicker: primaryKicker(added.length, removed.length),
       value: actionValue,
       lines: linesWithRule,
       caption: 'Wallet loses control',
@@ -344,7 +364,7 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
   return {
     key: PRIMARY_REVIEW_KEY,
     kind: 'primary',
-    kicker: 'Primary control',
+    kicker: primaryKicker(added.length, removed.length),
     value: actionValue,
     lines: needsAdditionalSignatures ? linesWithRule : lines,
     caption: needsAdditionalSignatures
@@ -835,7 +855,12 @@ const HighRiskStep = ({
               return (
                 <TouchableOpacity
                   key={item.key}
-                  accessibilityLabel={`View ${item.kicker}: ${item.value} details`}
+                  accessibilityLabel={
+                    // The primary card title already names the action.
+                    item.kind === 'primary'
+                      ? `View ${item.kicker} details`
+                      : `View ${item.kicker}: ${item.value} details`
+                  }
                   accessibilityRole="button"
                   activeOpacity={0.74}
                   onPress={() => setActiveDetailKey(item.key)}

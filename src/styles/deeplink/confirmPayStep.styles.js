@@ -186,18 +186,9 @@ const createConfirmPayStepStyles = theme => StyleSheet.create({
     color: theme.colors.textSecondary,
     marginTop: 1,
   },
-  encryptedKeyRecapRow: {
-    backgroundColor: theme.isDark
-      ? 'rgba(49, 101, 212, 0.18)'
-      : '#EBF6FF',
-    borderRadius: 16,
-    padding: 12,
+  // Look comes from EncryptedCredentialNote; this is only its place in the recap.
+  encryptedKeyRecapNote: {
     marginTop: 8,
-  },
-  encryptedKeyRecapText: {
-    fontSize: 12,
-    lineHeight: 17,
-    color: theme.colors.primary,
   },
   broadcastSheet: {
     height: IDENTITY_UPDATE_COMPLETION_SHEET_HEIGHT,
