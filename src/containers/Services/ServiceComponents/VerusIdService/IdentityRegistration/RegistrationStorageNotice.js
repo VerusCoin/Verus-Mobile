@@ -14,6 +14,10 @@ import {verusIdErrorMessage} from '../verusIdErrors';
 import {useRegistrationStyles} from './RegistrationDesign';
 import useRegistrationAction from './useRegistrationAction';
 
+// Same 32-point action as the Home notices: no vertical label margin, or the label clips.
+const noticeAction = {borderRadius: 10};
+const noticeActionLabel = {marginVertical: 0, marginHorizontal: 12};
+
 const LOAD_ERROR = 'Saved registrations could not be loaded. Your registration data has not been changed.';
 
 // Wallet start-up skips an unreadable registration store so the wallet still
@@ -85,8 +89,9 @@ export default function RegistrationStorageNotice({storage, children = null}) {
       </Text>
     </View>
     <View style={[styles.row, {gap: 16, flexWrap: 'wrap', marginTop: 2}]}>
-      <AppButton compact height={32} preserveHeightOnSmallWindow variant="secondary" buttonColor={theme.colors.surface}
-        labelStyle={theme.typography.labelSm} disabled={storage.busy} onPress={storage.retry}>Try again</AppButton>
+      <AppButton compact height={32} preserveHeightOnSmallWindow variant="secondary" themeMode={theme.mode}
+        buttonColor={theme.colors.surface} labelStyle={[theme.typography.labelSm, noticeActionLabel]} style={noticeAction}
+        disabled={storage.busy} onPress={storage.retry}>Try again</AppButton>
       <TextAction size="small" destructive disabled={storage.busy} onPress={storage.clear}>Clear all registration data</TextAction>
     </View>
   </View>;
