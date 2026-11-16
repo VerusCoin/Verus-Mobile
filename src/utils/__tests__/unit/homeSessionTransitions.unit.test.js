@@ -1,6 +1,6 @@
 let mockState;
 const mockDispatch = jest.fn();
-const mockNavigation = {navigate: jest.fn(), closeDrawer: jest.fn(), dispatch: jest.fn()};
+const mockNavigation = {navigate: jest.fn(), closeDrawer: jest.fn(), dispatch: jest.fn(), getParent: () => undefined};
 const mockAddWidget = jest.fn();
 const mockRefreshRegistrations = jest.fn(() => Promise.resolve());
 const mockUpdateWallets = jest.fn();
@@ -16,10 +16,12 @@ jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')(
   },
   useDispatch: () => mockDispatch,
 }));
+jest.mock('@react-native-community/netinfo', () => ({useNetInfo: () => ({isConnected: true})}));
 jest.mock('../../../store', () => ({__esModule: true, default: {getState: () => mockState}}));
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => mockNavigation,
   useFocusEffect: () => {},
+  useIsFocused: () => true,
   CommonActions: {reset: value => ({type: 'RESET', ...value})},
 }));
 jest.mock('../../../actions/actionCreators', () => ({
@@ -39,18 +41,14 @@ jest.mock('../../../actions/actions/sendModal/dispatchers/sendModal', () => ({op
 jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', () => ({refreshRegistrationJobs: (...args) => mockRefreshRegistrations(...args)}));
 jest.mock('../../dragDetection', () => ({dragDetectionEnabled: () => false}));
 jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {findCoinObj: jest.fn()}}));
-jest.mock('../../../containers/Home/Home.render', () => ({
-  HomeRender: props => {
-    const React = require('react');
-    return React.createElement('Home', props, props.HomeRenderCoinsList());
-  },
-  HomeRenderCoinsList: props => require('react').createElement('Cards', props),
-  HomeRenderWidget: () => null,
-}));
+jest.mock('../../../containers/Home/SignedInWalletHome', () => props => require('react').createElement('Home', props));
 
 const React = require('react');
 const {act, create} = require('react-test-renderer');
-const Home = require('../../../containers/Home/Home').default;
+const {Provider: PaperProvider} = require('react-native-paper');
+const HomeScreen = require('../../../containers/Home/Home').default;
+// The app root supplies the Paper provider that Home's overlays need.
+const Home = () => <PaperProvider><HomeScreen /></PaperProvider>;
 const {CURRENCY_WIDGET_TYPE, TOTAL_UNI_BALANCE_WIDGET_TYPE, VERUSID_WIDGET_TYPE} = require('../../constants/widgets');
 const {
   API_GET_BALANCES, API_GET_FIATPRICE, API_GET_INFO,
@@ -58,8 +56,8 @@ const {
   API_GET_SERVICE_RATES, API_GET_SERVICE_NOTIFICATIONS,
 } = require('../../constants/intervalConstants');
 const coin = {id: 'VRSCTEST', default_app: 'overview', apps: {overview: {data: [{key: 'overview'}]}}};
-const wallet = {id: 'main', name: 'Main wallet', api_channels: {[API_GET_BALANCES]: 'vrpc'}};
-const identityWallet = {id: 'identity', name: 'Alice@', api_channels: {[API_GET_BALANCES]: 'vrpc.id'}};
+const wallet = {id: 'main', name: 'Main wallet', api_channels: {[API_GET_BALANCES]: 'vrpc'}, compatible_apps: ['wallet-overview', 'wallet-send', 'wallet-receive']};
+const identityWallet = {id: 'identity', name: 'Alice@', api_channels: {[API_GET_BALANCES]: 'vrpc.id'}, compatible_apps: ['wallet-overview', 'wallet-send', 'wallet-receive']};
 const cardId = `${CURRENCY_WIDGET_TYPE}:${coin.id}`;
 const stateFor = () => ({
   authentication: {activeAccount: {accountHash: 'alice', testnetOverrides: {}}, sessionEpoch: 1, signedIn: true},
@@ -68,7 +66,10 @@ const stateFor = () => ({
   settings: {generalWalletSettings: {homeCardDragDetection: false, displayCurrency: 'USD'}},
   widgets: {order: {[TOTAL_UNI_BALANCE_WIDGET_TYPE]: 0, [cardId]: 1, [VERUSID_WIDGET_TYPE]: 2}},
   ledger: {balances: {vrpc: {[coin.id]: {total: '3'}}, 'vrpc.id': {[coin.id]: {total: '5'}}}, rates: {}},
-  errors: {},
+  modal: {stack: []},
+  channelStore_verusid: {pendingIds: {}, registrationJobs: {}},
+  assetManagement: {ready: true, loadError: false, networkKey: null, preferences: {}, removed: {}, reviewed: {}, snapshots: {}, resolved: {}, revision: 0, persistedRevision: 0},
+  errors: {[API_GET_BALANCES]: {vrpc: {}, 'vrpc.id': {}}},
 });
 let views;
 const mount = async () => {
@@ -92,29 +93,32 @@ test('Home remains renderable while a profile logout clears the active account',
   mockState = {...mockState, authentication: {...mockState.authentication, activeAccount: null, signedIn: false},
     coinMenus: {allSubWallets: {}, activeSubWallets: {}}};
   await update(view);
-  expect(view.root.findByType('Cards')).toBeDefined();
+  expect(view.root.findByType('Home')).toBeDefined();
   expect(mockAddWidget).not.toHaveBeenCalled();
 });
 
 test('Home tolerates coin wallets rebuilding and becomes actionable when they arrive', async () => {
   mockState.coinMenus = {allSubWallets: {}, activeSubWallets: {}};
   const view = await mount();
-  const cards = () => view.root.findByType('Cards').props;
-  expect(cards().totalCryptoBalances[coin.id].toString()).toBe('0');
-  await act(async () => cards().handleWidgetPress(cardId));
-  expect(mockNavigation.dispatch).not.toHaveBeenCalled();
+  const home = () => view.root.findByType('Home').props;
+  const openAsset = () => act(async () => home().onOpenAsset(home().assets[0].coin, home().assets[0].preferredCard));
+  expect(home().assets[0].balance).toBeNull();
+  expect(home().assets[0].balanceComplete).toBe(false);
+  await openAsset();
+  expect(mockNavigation.navigate).not.toHaveBeenCalled();
   mockState = {...mockState, coinMenus: {allSubWallets: {[coin.id]: [wallet]}, activeSubWallets: {}}};
   await update(view);
-  await act(async () => cards().handleWidgetPress(cardId));
+  await openAsset();
   expect(mockDispatch).toHaveBeenCalledWith({type: 'active-subwallet', coin: coin.id, wallet});
-  expect(mockNavigation.dispatch).toHaveBeenCalledTimes(1);
+  expect(mockNavigation.navigate).toHaveBeenCalledTimes(1);
 });
 
 test('a card opens an available wallet after its previously selected identity was unlinked', async () => {
   const view = await mount();
   mockState = {...mockState, coinMenus: {...mockState.coinMenus, allSubWallets: {[coin.id]: [wallet]}}};
   await update(view);
-  await act(async () => view.root.findByType('Cards').props.handleWidgetPress(cardId));
+  const home = view.root.findByType('Home').props;
+  await act(async () => home.onOpenAsset(home.assets[0].coin, home.assets[0].preferredCard));
   expect(mockDispatch).toHaveBeenCalledWith({type: 'active-subwallet', coin: coin.id, wallet});
   expect(mockDispatch).not.toHaveBeenCalledWith({type: 'active-subwallet', coin: coin.id, wallet: identityWallet});
 });
@@ -128,7 +132,7 @@ test('Home submits all coins in one refresh while service work is pending', asyn
   const view = await mount();
   const home = () => view.root.findByType('Home').props;
 
-  await act(async () => home().forceUpdate());
+  await act(async () => home().onRefresh());
 
   expect(mockUpdateWallets).toHaveBeenCalledTimes(1);
   expect(mockUpdateWallets).toHaveBeenCalledWith(mockState, mockDispatch, [
@@ -162,7 +166,7 @@ test('Home finishes refresh and continues service updates after failures', async
 
   try {
     const view = await mount();
-    await act(async () => view.root.findByType('Home').props.forceUpdate());
+    await act(async () => view.root.findByType('Home').props.onRefresh());
 
     expect(mockUpdateService).toHaveBeenCalledTimes(4);
     expect(warning).toHaveBeenCalledWith(walletError);
