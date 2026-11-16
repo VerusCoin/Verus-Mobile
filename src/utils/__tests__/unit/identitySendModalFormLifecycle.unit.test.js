@@ -37,7 +37,7 @@ const constants = require('../../constants/sendModal');
 const cases = [[Revoke, mockRenderRevoke, 'active'], [Recover, mockRenderRecover, 'revoked']];
 const subject = status => ({result: {status, identity: {identityaddress: 'target-id', recoveryauthority: 'authority-id', revocationauthority: 'authority-id'}}});
 const authority = {result: {status: 'active', identity: {identityaddress: 'authority-id', primaryaddresses: ['controlled-address'], minimumsignatures: 1}}};
-const props = () => ({setLoading: jest.fn(), setModalHeight: jest.fn(), navigation: {navigate: jest.fn()}, updateSendFormData: jest.fn()});
+const props = () => ({setLoading: jest.fn(), setModalHeight: jest.fn(), setIdentitySafetyRequestCloseHandler: jest.fn(), navigation: {navigate: jest.fn()}, updateSendFormData: jest.fn()});
 beforeEach(() => {
   jest.clearAllMocks();
   mockState = {authentication: {instanceKey: 'instance-before', signedIn: false, activeAccount: null}, sendModal: {requestId: 'modal-original', data: {
