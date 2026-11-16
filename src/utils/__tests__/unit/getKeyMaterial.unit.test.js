@@ -68,13 +68,13 @@ describe('Sapling key normalization', () => {
   it('reports a missing key with setup guidance', async () => {
     requestPrivKey.mockResolvedValueOnce(null);
 
-    await expect(getKeyMaterial('VRSC')).rejects.toThrow('set up a Z Seed');
+    await expect(getKeyMaterial('VRSC')).rejects.toThrow('Set up a Z recovery secret');
   });
 
   it('reports a missing shielded-key record with setup guidance', async () => {
     mockAuthentication.activeAccount.keys = {};
 
-    await expect(getKeyMaterial('VRSC')).rejects.toThrow('set up a Z Seed');
+    await expect(getKeyMaterial('VRSC')).rejects.toThrow('Set up a Z recovery secret');
     expect(requestPrivKey).not.toHaveBeenCalled();
   });
 });

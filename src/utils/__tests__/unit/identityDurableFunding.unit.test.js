@@ -391,9 +391,9 @@ describe('historical verification retained for gift and claim transactions', () 
       1,
       'selected-chain',
       blockhash,
-      1,
+      true,
     );
-    expect(mockGetBlock).toHaveBeenNthCalledWith(2, 'selected-chain', '101', 1);
+    expect(mockGetBlock).toHaveBeenNthCalledWith(2, 'selected-chain', '101', true);
   });
 
   it('uses the active height for an unexpired prepared transaction', async () => {

@@ -420,7 +420,7 @@ test.each(['satoshi', 'not-an-address'])('explains missing @ in recipient %s', a
 });
 
 test('prevents a no-op transaction and payment', async () => {
-  await expect(prepare({mode: 'transfer', recipient: address})).rejects.toThrow('Make a change');
+  await expect(prepare({mode: 'transfer', recipient: address})).rejects.toThrow('This address is in this wallet');
   expect(mockBuild).not.toHaveBeenCalled();
 });
 

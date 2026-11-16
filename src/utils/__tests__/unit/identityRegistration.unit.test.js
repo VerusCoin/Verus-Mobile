@@ -271,7 +271,10 @@ test('a first payment writes its refreshed plan and signed receipt once before i
   const review = await build();
   mockEvents = [];
   await approveCommitment(review.jobId, review.approvalToken, createRegistrationContext());
-  expect(mockEvents).toEqual(['saved:commitment_signed', 'broadcast:commitment', 'saved:commitment_broadcast']);
+  // The second save keeps the durable first broadcast time before the network call.
+  expect(mockEvents).toEqual([
+    'saved:commitment_signed', 'saved:commitment_signed', 'broadcast:commitment', 'saved:commitment_broadcast',
+  ]);
   expect(mockValidate).toHaveBeenCalledTimes(1);
   expect(mockValidate).toHaveBeenCalledWith(mockJobs[review.jobId].commitment.prepared, 'commit-signed', mockAddress);
   expect(mockRaw).not.toHaveBeenCalled();
@@ -582,7 +585,7 @@ test.each(['first submission', 'retry'])('registration %s batches the tip block 
   expect(mockRequestMany).toHaveBeenCalledTimes(1);
   const requests = mockRequestMany.mock.calls[0][0];
   expect(requests.map(request => request.cmd)).toEqual(['getblock', ...inputs.map(() => 'gettxout')]);
-  expect(requests[0].getParams()).toEqual(['100', 1]);
+  expect(requests[0].getParams()).toEqual(['100', true]);
   expect(requests.slice(1).map(request => request.getParams()))
     .toEqual(inputs.map(input => [input.txid, input.vout, true]));
   expect(mockGetTxOut).toHaveBeenCalledTimes(expectedChecks);
