@@ -3874,7 +3874,7 @@ automatic postinstall failed on the existing navigation patch.
 
 ### GR-4.REQUEST-BOX — 13 request and VerusID fixes from the phone run (2026-11-16)
 
-Status: **Built, iOS verified, Android pictures pending**. Branch
+Status: **Built and verified, awaiting Max's review**. Branch
 `claude/request-box-1116`, base `e4a0fe64`. Not merged: Max reviews the
 before/after report first.
 
@@ -3901,7 +3901,8 @@ with a detail sheet (Max's pick; upstream parity item M8 shows five rows).
   entries. Cleared keys show with their full key ID.
 - [x] 8 Credential note drops the z-address sentence. No private address:
   refusal when the request opens (no key read). Mismatch: clear text at fee time.
-- [x] 9 Failed provisioning shows "Failed" under "Needs attention", with Remove.
+- [x] 9 Failed provisioning shows "Failed" under "Needs attention" with the
+  group's red alert line, and Remove.
 - [x] 10 Link sheet: one height for busy, done and failed; Home card removed
   after the sheet closes.
 - [x] 11 Provider FAILED in the first answer: "VerusID not created" text.
@@ -3917,5 +3918,9 @@ tests fail on `e4a0fe64` and on the branch (no new failure). Astra review
 (gpt-6-astra, high) found 3 P2 issues, fixed in `7ed7b58c`, re-check clean.
 iOS 26 simulator (Verus Steps QA, light and dark) with deeplink-sim and the
 disposable devphone wallet: items 1-9 and 11-13 pass; SE: items 2, 4, 5, 7,
-8c and 13 pass. Notes: `docs/qa/request-box-1116/ios/result.local.md`.
-Open: item 10 on a device, Android before/after pictures.
+8c and 13 pass; item 10 passes on iOS and SE (real sub-IDs under
+AUD.VRSCTEST@). Notes: `docs/qa/request-box-1116/ios/result.local.md`.
+Android normal (Pixel 9, Game PC, light): before (`e4a0fe64`) and after
+pictures for all 13 items; item 10 sheet height 912 px in busy and done (before:
+325 px then 710 px). Report: https://claude.ai/artifact/S3bJ9znNEprpuuWyGQHDyC.
+Open: Android dark; failed Link state on a device; follow-ups in the report.
