@@ -414,6 +414,22 @@ describe('identity signature-threshold review', () => {
     renderer.unmount();
   });
 
+  it('shows how long an expiring request stays valid in the requester sheet', () => {
+    // The request card passes these sections to its requester sheet.
+    const sheetRows = renderer => renderer.root.findByType('ReviewStep').props.requestCard
+      .props.sections.flatMap(section => section.rows);
+    // The identity update handler passes the request details as a buffer.
+    // Height 130 at chain height 100 is 30 blocks of 60 seconds.
+    const expiring = IdentityUpdateRequestDetails.fromCLIJson({name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV'}, {expiryheight: 130});
+    const renderer = renderRequest({}, currentIdentity, {detailsBufferString: expiring.toBuffer().toString('hex')});
+    expect(sheetRows(renderer)).toContainEqual({label: 'Expires', value: '30 minutes'});
+    renderer.unmount();
+
+    const lasting = renderRequest({});
+    expect(sheetRows(lasting).map(row => row.label)).not.toContain('Expires');
+    lasting.unmount();
+  });
+
   it('preserves the generic request network through final confirmation', () => {
     mockState.authentication.activeAccount.testnetOverrides = {VRSC: 'VRSCTEST'};
     const request = requestEnvelope();
