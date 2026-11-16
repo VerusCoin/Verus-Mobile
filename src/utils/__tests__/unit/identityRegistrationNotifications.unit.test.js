@@ -1,21 +1,27 @@
 let mockState;
+let mockNavigation;
 const mockAlert = jest.fn();
 const mockClear = jest.fn();
 const mockRemove = jest.fn();
-const mockLinkIdentity = jest.fn();
 jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   View: 'View', Text: 'Text', TouchableOpacity: 'TouchableOpacity',
   Alert: {alert: mockAlert}, StyleSheet: {create: value => value, hairlineWidth: 1},
 }));
-jest.mock('react-native-paper', () => ({Card: 'Card', IconButton: 'IconButton'}));
+jest.mock('react-native-paper', () => ({...jest.requireActual('react-native-paper'), Card: 'Card', IconButton: 'IconButton'}));
+jest.mock('../../../containers/Home/HomeWidgets/VerusIdReadyCard', () => 'VerusIdReadyCard');
+jest.mock('@react-navigation/native', () => ({useNavigation: () => mockNavigation, useIsFocused: () => true}));
+jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
+jest.mock('../../../containers/Services/ServiceComponents/VerusIdService/LinkVerusIdSheet', () => 'LinkVerusIdSheet');
+jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', () => ({
+  updateRegistrationUiState: jest.fn(() => Promise.resolve()),
+}));
 jest.mock('../../../images/customIcons', () => ({
   VerusIdAtIcon: 'VerusIdAtIcon', ReceivedIcon: 'ReceivedIcon', VerusIdErrorIcon: 'VerusIdErrorIcon',
 }));
-jest.mock('../../../actions/actions/sendModal/dispatchers/sendModal', () => ({openLinkIdentityModal: mockLinkIdentity}));
 jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {getBasicCoinObj: chain => ({id: chain})}}));
 jest.mock('../../../actions/actions/notifications/dispatchers/notifications', () => ({
-  dispatchClearAccountNotifications: mockClear, dispatchRemoveNotification: mockRemove,
+  dispatchClearAccountNotifications: mockClear, dispatchRemoveNotification: mockRemove, dispatchAddNotification: jest.fn(),
 }));
 
 const React = require('react');
@@ -23,12 +29,18 @@ const {act, create} = require('react-test-renderer');
 const NotificationWidget = require('../../../containers/Home/HomeWidgets/NotificationWidget').default;
 const {registrationNotifications} = require('../../identityRegistration/notifications');
 const {NOTIFICATION_TYPE_BASIC, NOTIFICATION_ICON_TX, NOTIFICATION_TYPE_VERUS_ID_PROVISIONING} = require('../../constants/notifications');
-const {SEND_MODAL_IDENTITY_TO_LINK_FIELD} = require('../../constants/sendModal');
 const longName = 'a-long-identity-name.in-a-long-namespace.VRSCTEST@';
 const textContent = node => typeof node === 'string' ? node :
   (node.children || []).map(textContent).join('');
-const notice = view => view.root.findByProps({testID: 'registration-notice-job'});
-const render = navigation => create(<NotificationWidget navigation={navigation} />);
+const AppButton = require('../../../components/AppButton').default;
+const actionButton = view => view.root.findAllByType(AppButton)[0];
+// The notice is the card that holds the registration's name.
+const notice = view => view.root.findAll(node => node.type === 'View' && node.findAllByType('Text')
+  .some(label => textContent(label) === longName) && node.findAllByType(AppButton).length > 0).pop();
+const render = navigation => {
+  mockNavigation = navigation;
+  return create(<NotificationWidget />);
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -40,6 +52,7 @@ beforeEach(() => {
       status: 'commitment_broadcast', createdAt: 1,
     }}},
     notifications: {directory: {}},
+    settings: {generalWalletSettings: {}},
   };
 });
 
@@ -50,26 +63,21 @@ it('keeps status and action separate, announces the full name, and opens progres
   const row = notice(view);
   const labels = row.findAllByType('Text');
   expect(labels.map(textContent)).toEqual([
-    longName, 'Name commitment awaiting confirmation', 'View progress ›',
+    longName, 'Confirming commitment', 'View progress',
   ]);
   labels.forEach(label => {
-    // Compact previews may shorten the name; status and CTA must stay visible.
-    expect(label.props.numberOfLines).toBe(textContent(label) === longName ? 2 : undefined);
+    // The name and status show in full (the button label is one line) and scale with the text size.
+    if (textContent(label) !== 'View progress') expect(label.props.numberOfLines).toBeUndefined();
     expect(label.props.allowFontScaling).not.toBe(false);
   });
-  // Status and action share the vertical content column, instead of competing
-  // for horizontal space with the identity name as in the overflowing tray.
-  expect(labels[0].parent).toBe(labels[1].parent);
-  expect(labels[1].parent).toBe(labels[2].parent);
+  // The name sits above the status in a column, instead of competing for
+  // horizontal space with it.
   expect(labels[0].parent.props.style.flexDirection).not.toBe('row');
-  expect(row.props.accessibilityRole).toBe('button');
-  expect(row.props.accessibilityLabel).toContain(longName);
-  expect(row.props.style.minHeight).toBeGreaterThanOrEqual(44);
   expect(JSON.stringify(view.toJSON())).not.toContain('iTechnicalAddress');
-  act(() => row.props.onPress());
-  expect(navigation.navigate).toHaveBeenCalledWith('ServicesHome', {
+  act(() => actionButton(view).props.onPress());
+  expect(navigation.navigate).toHaveBeenCalledWith('IdentityTab', {
     screen: 'IdentityRegistration',
-    params: {screen: 'IdentityRegistrationProgress', params: {jobId: 'job'}},
+    params: {originTab: 'WalletHome', screen: 'IdentityRegistrationProgress', params: {jobId: 'job'}},
   });
 });
 
@@ -78,8 +86,8 @@ it('changes the same persistent notice into a registration action when the commi
   act(() => {view = render({navigate: jest.fn()});});
   mockState.channelStore_verusid.registrationJobs.job.status = 'commitment_confirmed';
   act(() => view.update(<NotificationWidget navigation={{navigate: jest.fn()}} />));
-  expect(textContent(notice(view))).toContain('Name committed. Ready to register.');
-  expect(textContent(notice(view))).toContain('Continue registration');
+  expect(textContent(notice(view))).toContain('Ready for the second payment');
+  expect(textContent(notice(view))).toContain('Continue');
   expect(notice(view).findAllByProps({accessibilityLabel: 'Dismiss notification'})).toHaveLength(0);
   expect(registrationNotifications(mockState.channelStore_verusid.registrationJobs, 'account')[0].persistent).toBe(true);
 });
@@ -89,42 +97,17 @@ it('keeps registration notices after clearing ordinary notifications and support
     uid: 'message', acchash: 'account', type: NOTIFICATION_TYPE_BASIC,
     icon: NOTIFICATION_ICON_TX, title: ['Payment ', 'received'], body: 'A wallet payment',
   };
-  mockClear.mockImplementation(() => {mockState.notifications.directory = {};});
+  mockRemove.mockImplementation(() => {mockState.notifications = {directory: {}};});
   let view;
   act(() => {view = render({navigate: jest.fn()});});
-  const clear = view.root.findAllByType('TouchableOpacity').find(item => textContent(item) === 'Clear all');
-  act(() => clear.props.onPress());
-  act(() => mockAlert.mock.calls[0][2].find(action => action.text === 'Clear').onPress());
-  act(() => view.update(<NotificationWidget navigation={{navigate: jest.fn()}} />));
+  const dismiss = view.root.findAllByType('TouchableOpacity').find(item => item.props.accessibilityLabel === 'Dismiss notification');
+  act(() => dismiss.props.onPress());
+  act(() => view.update(<NotificationWidget />));
   expect(notice(view)).toBeDefined();
-  expect(mockClear).toHaveBeenCalledTimes(1);
-  expect(mockClear).toHaveBeenCalledWith('account');
-  expect(mockRemove).not.toHaveBeenCalled();
-  const toggle = view.root.findAllByType('TouchableOpacity').find(item => item.props.accessibilityState);
-  act(() => toggle.props.onPress());
-  expect(view.root.findAllByProps({testID: 'registration-notice-job'})).toHaveLength(0);
-  act(() => view.root.findAllByType('TouchableOpacity').find(item => item.props.accessibilityState).props.onPress());
-  expect(notice(view)).toBeDefined();
-});
-
-it('clears the profile that opened the confirmation even if the active profile changes', () => {
-  mockState.notifications.directory.message = {
-    uid: 'message', acchash: 'account', type: NOTIFICATION_TYPE_BASIC,
-    icon: NOTIFICATION_ICON_TX, title: 'Payment received', body: 'A wallet payment',
-  };
-  let view;
-  act(() => {view = render({navigate: jest.fn()});});
-  const clear = view.root.findAllByType('TouchableOpacity').find(item => textContent(item) === 'Clear all');
-  act(() => clear.props.onPress());
-  const confirm = mockAlert.mock.calls[0][2].find(action => action.text === 'Clear');
+  expect(mockRemove).toHaveBeenCalledTimes(1);
+  expect(mockRemove).toHaveBeenCalledWith('message');
   expect(mockClear).not.toHaveBeenCalled();
-
-  mockState.authentication.activeAccount = {accountHash: 'another-account'};
-  act(() => view.update(<NotificationWidget navigation={{navigate: jest.fn()}} />));
-  act(() => confirm.onPress());
-
-  expect(mockClear).toHaveBeenCalledTimes(1);
-  expect(mockClear).toHaveBeenCalledWith('account');
+  expect(view.root.findAllByType('TouchableOpacity').filter(item => item.props.accessibilityLabel === 'Dismiss notification')).toHaveLength(0);
 });
 
 it('keeps a registered identity visible until the user explicitly links it', () => {
@@ -132,23 +115,21 @@ it('keeps a registered identity visible until the user explicitly links it', () 
   jobs.job.status = 'registered';
   jobs.job.linked = false;
   const notification = registrationNotifications(jobs, 'account')[0];
-  expect(notification).toMatchObject({
-    persistent: true, statusText: 'Identity registered. Ready to link.', body: 'Link to wallet',
-  });
+  expect(notification).toMatchObject({persistent: true, ready: true, body: 'Link VerusID'});
   const navigation = {navigate: jest.fn()};
   let view;
   act(() => {view = render(navigation);});
-  expect(textContent(notice(view))).toContain('Link to wallet');
-  act(() => notice(view).props.onPress());
-  expect(navigation.navigate).toHaveBeenCalledWith('ServicesHome', {
-    screen: 'IdentityRegistration',
-    params: {screen: 'IdentityRegistrationProgress', params: {jobId: 'job'}},
-  });
+  const card = view.root.findByType('VerusIdReadyCard');
+  expect(card.props).toMatchObject({highlight: longName, remainder: 'is ready', label: 'Link VerusID'});
+  expect(view.root.findByType('LinkVerusIdSheet').props.target).toBeNull();
+  act(() => card.props.onAction());
+  expect(view.root.findByType('LinkVerusIdSheet').props.target).toEqual({jobId: 'job', name: longName});
+  expect(navigation.navigate).not.toHaveBeenCalled();
   expect(jobs.job.linked).toBe(false);
   jobs.job.status = 'complete';
   jobs.job.linked = true;
-  act(() => view.update(<NotificationWidget navigation={navigation} />));
-  expect(view.root.findAllByProps({testID: 'registration-notice-job'})).toHaveLength(0);
+  act(() => view.update(<NotificationWidget />));
+  expect(view.root.findAllByType('VerusIdReadyCard')).toHaveLength(0);
 });
 
 it('opens linking for a provisioned identity without replaying its original service request', () => {
@@ -156,11 +137,14 @@ it('opens linking for a provisioned identity without replaying its original serv
     uid: 'provisioned', acchash: 'account', type: NOTIFICATION_TYPE_VERUS_ID_PROVISIONING,
     title: 'Identity ready', body: 'Link VerusID', identityAddress: 'iReadyIdentity', chain: 'VRSC',
   };
+  const navigation = {navigate: jest.fn()};
   let view;
-  act(() => {view = render({navigate: jest.fn()});});
-  const link = view.root.findAllByType('TouchableOpacity').find(item => textContent(item) === 'Link VerusID');
-  act(() => link.props.onPress());
-  expect(mockLinkIdentity).toHaveBeenCalledWith({id: 'VRSC'}, {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: 'iReadyIdentity'});
+  act(() => {view = render(navigation);});
+  act(() => view.root.findByType('VerusIdReadyCard').props.onAction());
+  expect(view.root.findByType('LinkVerusIdSheet').props.target).toEqual({
+    identityAddress: 'iReadyIdentity', chain: 'VRSC', name: 'Identity ready', notificationUid: 'provisioned',
+  });
+  expect(navigation.navigate).not.toHaveBeenCalled();
 });
 
 it('removes completed registrations and never shows another account’s notices', () => {
