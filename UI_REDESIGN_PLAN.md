@@ -3871,3 +3871,19 @@ automatic postinstall failed on the existing navigation patch.
   in this checkout (plugin load error), so it did not run.
 - Open: Android normal and small; iPhone SE high-fee state scrolls 22.5
   points; the receive money value on a real mainnet conversion.
+
+### ID-2.ABOUT — About VerusID text and facts (2026-11-16)
+
+- [x] Replace the About VerusID text with option E: three facts with marks,
+  then four fold-out topics. Remove the subtitle. Name no specific VerusID.
+- [x] Record the sheet in DESIGN.md, with the mark as an exception for this
+  sheet only.
+- [ ] "Connected apps" describes the app authorization request, which is not
+  in the wallet yet. Check the text again when that request lands.
+- [ ] Device QA: Android normal and small, iPhone SE.
+
+Evidence: iOS simulator (iPhone 17 Pro class, iOS 26.5, disposable VRSCTEST
+wallet), light and dark: the sheet as it opens and with one topic open. All
+text matches, nothing clips, Done closes the sheet. Design, changed-file
+safe-area, Babel parsing and whitespace checks pass. Not checked: scrolling
+(the content fits on this screen), iPhone SE, Android.
