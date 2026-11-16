@@ -7,7 +7,9 @@ import { getOnChainPriceRoute } from '../api/channels/general/ratesAPIs/onChainP
 import { getNativeUsdPrice, getRouteUsdPrice } from '../api/channels/general/ratesAPIs/onChainPriceMath';
 import { getCoinPaprikaId } from '../api/channels/general/ratesAPIs/coinPaprika';
 import { getCurrencyState } from '../api/channels/vrpc/requests/getCurrencyState';
-import { cachedHistory, mergeSamples } from './priceCache';
+import {
+  cachedHistory, mergeSamples, savedNote, savedSamples, saveNote,
+} from './priceCache';
 import { DAY, HOUR, interpolate } from './chartMath';
 
 const resultOf = (response) => {
@@ -55,7 +57,13 @@ const tiers = (start, now) => [
   },
 ].filter((tier) => tier.start <= tier.end);
 
-const chainSeries = async (route, start, now, canFetch) => {
+const tierKey = (route, name) => `chain:${route.endpoint.endpoint}:${route.currencyId}:${route.basketId}:${route.kind}:${route.referenceId || ''}:${name}`;
+// The route of an on-chain price needs requests. This note finds its saved samples without them.
+const routeNoteKey = (coin) => `route:${coin.id}:${coin.system_id || ''}:${coin.price_currency_id || ''}`;
+const paprikaDailyKey = (id) => `paprika:${id}:daily`;
+const ecbKey = (currency) => `ecb:${currency}`;
+
+const chainSeries = async (route, start, now, canFetch, hourly) => {
   if (route.kind === 'fixed') return [[start, 1], [now, 1]];
   if (!route.basketId || !positive(route.price)) throw new Error('No usable on-chain price route.');
   const samples = [];
@@ -69,12 +77,12 @@ const chainSeries = async (route, start, now, canFetch) => {
       basketId: route.config.basket,
       endpoint: route.nativeEndpoint,
       systemId: route.config.native,
-    }, start, now, canFetch);
-  const historyTiers = tiers(start, now);
+    }, start, now, canFetch, hourly);
+  const historyTiers = tiers(start, now).filter((tier) => hourly || tier.name !== 'hourly');
   for (let i = 0; i < historyTiers.length; i++) {
     const tier = historyTiers[i];
     const period = { hourly: HOUR, daily: DAY, weekly: 7 * DAY }[tier.name];
-    const key = `chain:${route.endpoint.endpoint}:${route.currencyId}:${route.basketId}:${route.kind}:${route.referenceId || ''}:${tier.name}`;
+    const key = tierKey(route, tier.name);
     // eslint-disable-next-line no-await-in-loop -- Share each completed tier before fetching the next.
     const data = await cachedHistory({
       key,
@@ -101,7 +109,7 @@ const chainSeries = async (route, start, now, canFetch) => {
   return mergeSamples(...samples);
 };
 
-const paprikaSeries = async (coin, start, now, canFetch) => {
+const paprikaSeries = async (coin, start, now, canFetch, hourly) => {
   const id = getCoinPaprikaId(coin);
   if (!id) throw new Error('No CoinPaprika history ID.');
   const fetchSamples = (interval) => async (from) => {
@@ -127,7 +135,7 @@ const paprikaSeries = async (coin, start, now, canFetch) => {
     });
   };
   const daily = await cachedHistory({
-    key: `paprika:${id}:daily`,
+    key: paprikaDailyKey(id),
     start: Math.max(start, now - (365 * DAY)),
     end: now,
     stamp: date(now),
@@ -135,9 +143,10 @@ const paprikaSeries = async (coin, start, now, canFetch) => {
     canFetch,
     fetchSamples: fetchSamples('1d'),
   });
-  let hourly = [];
+  if (!hourly) return daily;
+  let hourlySamples = [];
   try {
-    hourly = await cachedHistory({
+    hourlySamples = await cachedHistory({
       key: `paprika:${id}:hourly`,
       start: Math.max(start, now - (24 * HOUR)),
       end: now,
@@ -151,19 +160,45 @@ const paprikaSeries = async (coin, start, now, canFetch) => {
     // Daily history can still draw the range when an hourly endpoint is unavailable.
     console.warn('Could not load hourly CoinPaprika history.', error.message);
   }
-  return mergeSamples(daily, hourly);
+  return mergeSamples(daily, hourlySamples);
 };
 
-export const getUsdHistory = async (coin, start, now, canFetch = () => true) => {
+// Without `hourly`, only the daily and weekly prices load. They are enough for 1M and longer.
+export const getUsdHistory = async (coin, start, now, canFetch = () => true, hourly = true) => {
   // Also protect against a stale development price still present in a release ledger.
   if (coin.testnet && !__DEV__) return [];
   ensureFocused(canFetch);
   if (coin.proto === 'vrsc' || coin.price_currency_id) {
     const route = await getOnChainPriceRoute(coin);
     if (!route) throw new Error('On-chain price route is unavailable.');
-    return chainSeries(route, start, now, canFetch);
+    const samples = await chainSeries(route, start, now, canFetch, hourly);
+    saveNote(routeNoteKey(coin), route.kind === 'fixed' ? { fixed: true }
+      : { keys: ['weekly', 'daily'].map((name) => tierKey(route, name)) }).catch(() => {});
+    return samples;
   }
-  return paprikaSeries(coin, start, now, canFetch);
+  return paprikaSeries(coin, start, now, canFetch, hourly);
+};
+
+// The saved daily and weekly prices of a coin, without a request. Null when the phone has none.
+export const getSavedUsdHistory = (coin, start, now) => {
+  if (coin.testnet && !__DEV__) return [];
+  let keys;
+  if (coin.proto === 'vrsc' || coin.price_currency_id) {
+    const note = savedNote(routeNoteKey(coin));
+    if (note?.fixed) return [[start, 1], [now, 1]];
+    keys = note?.keys;
+  } else {
+    const id = getCoinPaprikaId(coin);
+    keys = id && [paprikaDailyKey(id)];
+  }
+  const samples = keys && savedSamples(keys);
+  return samples?.length ? samples : null;
+};
+
+export const getSavedFiatHistory = (currency) => {
+  if (currency === 'USD') return [];
+  const samples = savedSamples([ecbKey(currency)]);
+  return samples?.length ? samples : null;
 };
 
 // SDMX-JSON uses dimension indexes in both the series key and observation key.
@@ -192,7 +227,7 @@ export const parseEcbHistory = (data, currency) => {
 export const getFiatHistory = async (currency, start, now, canFetch = () => true) => {
   if (currency === 'USD') return [];
   return cachedHistory({
-    key: `ecb:${currency}`,
+    key: ecbKey(currency),
     start,
     end: now,
     stamp: date(now),
