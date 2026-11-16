@@ -1,11 +1,9 @@
 import React, { Component } from "react"
 import { connect } from 'react-redux'
 import { setServiceLoading } from "../../../../actions/actionCreators";
-import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { requestServiceStoredData } from "../../../../utils/auth/authBox";
 import { VERUSID_SERVICE_ID } from "../../../../utils/constants/services";
 import { VerusIdServiceRender } from "./VerusIdService.render";
-import {ENABLE_SIGNED_IN_REDESIGN} from '../../../../../env/index';
 
 class VerusIdService extends Component {
   constructor(props) {
@@ -37,11 +35,7 @@ class VerusIdService extends Component {
         });
       }
     } catch (e) {
-      if (ENABLE_SIGNED_IN_REDESIGN) {
-        this.setState({linkedIds: {}, loadError: e.message || 'Failed to load VerusIDs'});
-      } else {
-        createAlert('Error Loading Linked VerusIDs', e.message);
-      }
+      this.setState({linkedIds: {}, loadError: e.message || 'Failed to load VerusIDs'});
     }
 
     this.props.dispatch(setServiceLoading(false, VERUSID_SERVICE_ID));

@@ -32,7 +32,6 @@ import { createAlert, resolveAlert } from "../../../actions/actions/alert/dispat
 import { checkPinForUser } from "../../../utils/asyncStore/asyncStore";
 import {
   ENABLE_DLIGHT,
-  ENABLE_SIGNED_IN_REDESIGN,
 } from '../../../../env/index';
 import { dlightEnabled } from "../../../utils/enabledChannels";
 import SetupSeedModal from "../../../components/SetupSeedModal/SetupSeedModal";
@@ -530,7 +529,6 @@ class ProfileSettings extends Component {
     const showSeedWarning =
       this.props.activeAccount.hideSeedWarnings ||
       this.props.showHideSeedCorruptionSetting;
-    const showKeychainEncryption = ENABLE_SIGNED_IN_REDESIGN;
 
     return (
       <SettingsScreen testID="settings.profile">
@@ -577,7 +575,6 @@ class ProfileSettings extends Component {
           />
           <SettingsRow
             icon="lock-reset"
-            last={!showBiometry && !showKeychainEncryption && !showSeedWarning}
             onPress={() => this._openSettings(RESET_PWD)}
             testID="settings.profile.changePassword"
             title="Change password"
@@ -586,7 +583,6 @@ class ProfileSettings extends Component {
             <SettingsRow
               accessibilityLabel={`${biometryTitle}, ${biometryValue}`}
               description={biometryDescription}
-              last={!showKeychainEncryption && !showSeedWarning}
               leading={
                 <BiometricAffordanceIcon
                   showFallback={biometryEnabled}
@@ -611,12 +607,10 @@ class ProfileSettings extends Component {
               value={biometryValue}
             />
           ) : null}
-          {showKeychainEncryption ? (
-            <KeychainEncryptionSettingRow
-              last={!showSeedWarning}
-              navigation={this.props.navigation}
-            />
-          ) : null}
+          <KeychainEncryptionSettingRow
+            last={!showSeedWarning}
+            navigation={this.props.navigation}
+          />
           {showSeedWarning ? (
             <SettingsSwitchRow
               description="Alert on sign-in when non-standard characters may indicate damaged recovery data"

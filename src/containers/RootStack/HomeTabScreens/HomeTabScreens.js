@@ -18,8 +18,6 @@ import {
 } from '../../../utils/constants/services';
 import {useOnboardingTheme} from '../../../theme/onboarding';
 import signedInCopy from '../../../copy/signedIn';
-import {ENABLE_SIGNED_IN_REDESIGN} from '../../../../env/index';
-import LegacyHomeTabScreens from './LegacyHomeTabScreens';
 
 const HomeTabs = createBottomTabNavigator();
 
@@ -65,8 +63,6 @@ const HomeTabScreens = () => {
     actionable.sort();
     return {count: actionable.length, key: actionable.join('|')};
   }, [pendingIds]);
-
-  if (!ENABLE_SIGNED_IN_REDESIGN) return <LegacyHomeTabScreens />;
 
   const hasUnseenIdentityPending =
     pendingIdentityMeta.count > 0 &&

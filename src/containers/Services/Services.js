@@ -5,9 +5,7 @@
 
 import { Component } from "react"
 import { connect } from 'react-redux'
-import { ServicesRender } from "./Services.render"
 import SignedInServicesHome from './SignedInServicesHome';
-import {ENABLE_SIGNED_IN_REDESIGN} from '../../../env/index';
 
 class Services extends Component {
   constructor(props) {
@@ -16,11 +14,7 @@ class Services extends Component {
   }
 
   render() {
-    if (ENABLE_SIGNED_IN_REDESIGN) {
-      return <SignedInServicesHome navigation={this.props.navigation} />;
-    }
-
-    return ServicesRender.call(this);
+    return <SignedInServicesHome navigation={this.props.navigation} />;
   }
 }
 
