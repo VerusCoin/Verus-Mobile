@@ -124,7 +124,7 @@ describe('Default VRPC endpoints', () => {
         const {coinsList: configuredCoins} = require('../../CoinData/CoinsList');
 
         expect(configuredCoins.VRSCTEST.vrpc_endpoints).toEqual([endpoint]);
-        expect(configuredCoins.VRSC.vrpc_endpoints).toEqual(['https://api.verus.services']);
+        expect(configuredCoins.VRSC.vrpc_endpoints).toEqual(['https://v2api.verus.services']);
         expect(
           configuredCoins.i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X.vrpc_endpoints,
         ).toEqual(['https://api.verus.services']);

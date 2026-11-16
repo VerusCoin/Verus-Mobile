@@ -85,8 +85,7 @@ export const coinsList = {
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: 'vrsc',
     dlight_endpoints: dlightServers.vrsc,
-    // Mainnet stays on V1: builds have no mainnet V2 signing key.
-    vrpc_endpoints: ['https://api.verus.services'],
+    vrpc_endpoints: ['https://v2api.verus.services'],
     decimals: DEFAULT_DECIMALS,
     seconds_per_block: 60,
     default_app: 'wallet',
@@ -302,7 +301,6 @@ export const coinsList = {
     compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: "vrsc",
-    // Mainnet stays on V1: see the note on VRSC.
     vrpc_endpoints: ["https://api.verus.services"],
     decimals: 8,
     seconds_per_block: 60,
