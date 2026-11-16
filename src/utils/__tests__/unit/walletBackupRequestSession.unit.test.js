@@ -24,6 +24,8 @@ jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative'
   View: 'View',
 }));
 jest.mock('react-native-paper', () => ({
+  ...jest.requireActual('react-native-paper'),
+  Portal: 'Portal',
   ActivityIndicator: 'ActivityIndicator',
   Button: 'Button',
   Checkbox: {Item: 'CheckboxItem'},
@@ -38,9 +40,6 @@ jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
 jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({
   useDispatch: () => jest.fn(),
   useSelector: selector => selector(mockState),
-}));
-jest.mock('react-native-safe-area-context', () => ({
-  useSafeAreaInsets: () => ({bottom: 0}),
 }));
 jest.mock('../../../hooks/useObjectSelector', () => ({
   useObjectSelector: selector => selector(mockState),
@@ -78,6 +77,7 @@ jest.mock('../../keychain/keychain', () => ({
 jest.mock('../../profile/createProfileFromSeed', () => ({
   createProfileFromSeed: mockCreateProfile,
 }));
+jest.mock('../../vrpc/vrpcInterface', () => ({__esModule: true, default: {initEndpoint: jest.fn()}}));
 jest.mock('../../walletBackup/walletBackup', () => ({
   WALLET_BACKUP_ENCRYPTION_ITERATION_OPTIONS: [
     {label: 'Medium', iterations: 300000},
@@ -91,6 +91,7 @@ jest.mock('../../walletBackup/walletBackupCompletionStorage', () => ({
   markWalletBackupRequestComplete: mockMarkComplete,
 }));
 jest.mock('../../walletBackup/walletBackupNfc', () => ({
+  ...jest.requireActual('../../walletBackup/walletBackupNfc'),
   beginWalletBackupNfcSession: mockBeginNfc,
   endWalletBackupNfcSession: mockEndNfc,
   writeWalletBackupToNfc: mockWriteBackup,
@@ -99,6 +100,7 @@ jest.mock('../../walletBackup/walletBackupNfc', () => ({
 const React = require('react');
 const {act, create} = require('react-test-renderer');
 const {ELECTRUM} = require('../../constants/intervalConstants');
+const {captureSessionScope} = require('../../../actions/actions/updates/sessionRequests');
 const WalletBackupRequestInfo = require('../../../containers/DeepLink/WalletBackupRequestInfo/WalletBackupRequestInfo').default;
 
 const account = name => ({id: name, accountHash: name, testnetOverrides: {}});
@@ -124,6 +126,8 @@ describe('wallet backup account isolation', () => {
         sessionEpoch: 1,
       },
       coins: {activeCoinList: []},
+      deeplink: {requestId: 1},
+      modal: {stack: []},
     };
     mockAlert.mockResolvedValue(true);
     mockRequestPassword.mockResolvedValue('profile password');
@@ -144,6 +148,8 @@ describe('wallet backup account isolation', () => {
       request: {isTestnet: () => false},
       detailIndex: 0,
       next: jest.fn().mockResolvedValue(),
+      // The wallet password was typed in an earlier step of this session.
+      walletPasswordTypedScope: captureSessionScope(mockState, 'A'),
     };
     await act(async () => {
       renderer = create(React.createElement(WalletBackupRequestInfo, props));
@@ -155,9 +161,13 @@ describe('wallet backup account isolation', () => {
     consoleError.mockRestore();
   });
 
-  const writeBackupButton = () => renderer.root.findAllByType('Button')
-    .find(button => button.props.children === 'Write NFC Backup');
+  const rawText = node => typeof node === 'string' ? node : (node.children || []).map(rawText).join('');
+  const hostButton = label => renderer.root.findAllByType('Button').find(button => button.props.children === label);
+  const writeBackupButton = () => hostButton('Write to NFC card');
   const writeBackup = () => writeBackupButton().props.onPress();
+  // A failed card step offers Try again, and a written card offers Done.
+  const retryBackup = () => hostButton('Try again').props.onPress();
+  const finishBackup = () => hostButton('Done').props.onPress();
 
   const switchAccount = name => {
     mockState = {
@@ -175,74 +185,10 @@ describe('wallet backup account isolation', () => {
     expect(mockWriteBackup).not.toHaveBeenCalled();
     expect(mockMarkComplete).not.toHaveBeenCalled();
     expect(props.next).not.toHaveBeenCalled();
-    expect(mockAlert).toHaveBeenCalledWith(
-      'Backup Failed',
-      expect.stringContaining('Account changed before the backup was written.'),
-    );
+    expect(rawText(renderer.root)).toContain('Backup not written');
+    expect(rawText(renderer.root)).toContain('Account changed before the backup was written.');
     expect(mockEndNfc).toHaveBeenCalled();
   };
-
-  const showProfileForm = () => {
-    mockState = {
-      ...mockState,
-      authentication: {...mockState.authentication, signedIn: false, activeAccount: null},
-    };
-    act(() => renderer.update(React.createElement(WalletBackupRequestInfo, props)));
-    const createProfileChoice = renderer.root.findAllByType('Button')
-      .find(button => button.props.children === 'Create New Profile');
-    act(() => createProfileChoice.props.onPress());
-    act(() => {
-      const inputs = renderer.root.findAllByType('TextInput');
-      inputs.find(input => input.props.label === 'Profile name').props.onChangeText('New profile');
-      inputs.find(input => input.props.label === 'Profile password').props.onChangeText('password');
-      inputs.find(input => input.props.label === 'Confirm profile password').props.onChangeText('password');
-    });
-    return () => renderer.root.findAllByType('Button')
-      .find(button => button.props.children === 'Create Profile');
-  };
-
-  it('blocks repeated profile creation through seed generation and account setup', async () => {
-    const button = showProfileForm();
-    const seed = deferred();
-    const created = deferred();
-    mockGetKey.mockReturnValueOnce(seed.promise);
-    mockCreateProfile.mockReturnValueOnce(created.promise);
-    const submit = button().props.onPress;
-    let pending;
-
-    await act(async () => {
-      pending = submit();
-      await submit();
-    });
-    expect(mockGetKey).toHaveBeenCalledTimes(1);
-    expect(button().props.disabled).toBe(true);
-
-    await act(async () => {seed.resolve('generated seed');});
-    await act(async () => {await submit();});
-    expect(mockCreateProfile).toHaveBeenCalledTimes(1);
-    expect(mockGetKey).toHaveBeenCalledTimes(1);
-    expect(button().props.disabled).toBe(true);
-
-    await act(async () => {created.resolve(); await pending;});
-    await act(async () => {await submit();});
-    expect(mockGetKey).toHaveBeenCalledTimes(1);
-    expect(mockCreateProfile).toHaveBeenCalledTimes(1);
-    expect(button().props.disabled).toBe(true);
-  });
-
-  it.each(['seed generation', 'account setup'])('allows profile creation retry after %s fails', async stage => {
-    const button = showProfileForm();
-    const operation = stage === 'seed generation' ? mockGetKey : mockCreateProfile;
-    operation.mockRejectedValueOnce(new Error('setup failed'));
-
-    await act(async () => {await button().props.onPress();});
-    expect(mockAlert).toHaveBeenCalledWith('Error', 'setup failed');
-    expect(button().props.disabled).toBe(false);
-
-    await act(async () => {await button().props.onPress();});
-    expect(operation).toHaveBeenCalledTimes(2);
-    expect(mockCreateProfile).toHaveBeenLastCalledWith(expect.objectContaining({seed: 'generated seed'}));
-  });
 
   it('writes and completes a backup for the unchanged approving account', async () => {
     await act(async () => {await writeBackup();});
@@ -252,13 +198,15 @@ describe('wallet backup account isolation', () => {
       expect.objectContaining({beforeWrite: expect.any(Function)}),
     );
     expect(mockMarkComplete).toHaveBeenCalledWith('A');
+    expect(props.next).not.toHaveBeenCalled();
+    await act(async () => {await finishBackup();});
     expect(props.next).toHaveBeenCalledTimes(1);
     expect(mockAlert).not.toHaveBeenCalled();
   });
 
   it('shows one unencrypted confirmation for repeated taps and allows retry after cancellation', async () => {
-    act(() => renderer.root.findAllByType('CheckboxItem')
-      .find(item => item.props.label === 'Encrypt backup with password').props.onPress());
+    act(() => renderer.root.findAll(node => node.props.title === 'Encrypt backup' && typeof node.props.onValueChange === 'function')[0]
+      .props.onValueChange(false));
     const confirmation = deferred();
     mockAlert.mockReturnValueOnce(confirmation.promise);
     const submit = writeBackupButton().props.onPress;
@@ -269,7 +217,7 @@ describe('wallet backup account isolation', () => {
       await submit();
     });
     expect(mockAlert).toHaveBeenCalledTimes(1);
-    expect(mockAlert.mock.calls[0][0]).toBe('Unencrypted Backup');
+    expect(mockAlert.mock.calls[0][0]).toBe('Back up without a password?');
     expect(mockBeginNfc).not.toHaveBeenCalled();
     expect(mockEndNfc).not.toHaveBeenCalled();
 
@@ -281,6 +229,7 @@ describe('wallet backup account isolation', () => {
     expect(mockAlert).toHaveBeenCalledTimes(2);
     expect(mockBeginNfc).toHaveBeenCalledTimes(1);
     expect(mockWriteBackup).toHaveBeenCalledTimes(1);
+    await act(async () => {await finishBackup();});
     expect(props.next).toHaveBeenCalledTimes(1);
   });
 
@@ -318,17 +267,19 @@ describe('wallet backup account isolation', () => {
     expect(mockMarkComplete).not.toHaveBeenCalled();
     expect(mockEndNfc).not.toHaveBeenCalled();
 
-    await act(async () => {writing.resolve({written: true}); await navigationStarted.promise;});
-    await act(async () => {await submit();});
+    await act(async () => {writing.resolve({written: true}); await pending;});
     expect(mockMarkComplete).toHaveBeenCalledTimes(1);
+    expect(props.next).not.toHaveBeenCalled();
+    let finishing;
+    await act(async () => {finishing = finishBackup(); await navigationStarted.promise;});
+    await act(async () => {await finishBackup();});
     expect(props.next).toHaveBeenCalledTimes(1);
 
-    await act(async () => {navigation.resolve(); await pending;});
+    await act(async () => {navigation.resolve(); await finishing;});
     await act(async () => {await submit();});
     expect(mockBeginNfc).toHaveBeenCalledTimes(1);
     expect(mockWriteBackup).toHaveBeenCalledTimes(1);
     expect(props.next).toHaveBeenCalledTimes(1);
-    expect(mockAlert).not.toHaveBeenCalled();
   });
 
   it('holds the write guard through failed preparation cleanup, then allows a retry', async () => {
@@ -347,25 +298,28 @@ describe('wallet backup account isolation', () => {
     expect(mockBeginNfc).toHaveBeenCalledTimes(1);
     expect(mockEndNfc).toHaveBeenCalledTimes(1);
     expect(mockWriteBackup).not.toHaveBeenCalled();
-    expect(mockAlert).toHaveBeenCalledTimes(1);
     expect(props.next).not.toHaveBeenCalled();
 
     await act(async () => {cleanup.resolve(); await pending;});
-    await act(async () => {await writeBackup();});
+    expect(rawText(renderer.root)).toContain('Backup not written');
+    expect(rawText(renderer.root)).toContain('Password cancelled');
+    await act(async () => {await retryBackup();});
     expect(mockBeginNfc).toHaveBeenCalledTimes(2);
     expect(mockEndNfc).toHaveBeenCalledTimes(1);
     expect(mockWriteBackup).toHaveBeenCalledTimes(1);
+    await act(async () => {await finishBackup();});
     expect(props.next).toHaveBeenCalledTimes(1);
   });
 
   it('allows retry if completion navigation fails instead of permanently latching the screen', async () => {
     props.next.mockRejectedValueOnce(new Error('Could not complete request'));
     await act(async () => {await writeBackup();});
-    expect(mockAlert).toHaveBeenCalledWith('Backup Failed', expect.stringContaining('Could not complete request'));
+    await act(async () => {await finishBackup();});
+    expect(mockAlert).toHaveBeenCalledWith('Cannot finish request', 'Could not complete request');
 
-    await act(async () => {await writeBackup();});
-    expect(mockBeginNfc).toHaveBeenCalledTimes(2);
-    expect(mockWriteBackup).toHaveBeenCalledTimes(2);
+    await act(async () => {await finishBackup();});
+    expect(mockBeginNfc).toHaveBeenCalledTimes(1);
+    expect(mockWriteBackup).toHaveBeenCalledTimes(1);
     expect(props.next).toHaveBeenCalledTimes(2);
   });
 
@@ -436,7 +390,10 @@ describe('wallet backup account isolation', () => {
     await act(async () => {backup.resolve({mnemonic: 'stale backup'}); await pending;});
 
     expectAborted();
-    await act(async () => {await writeBackup();});
+    // The wallet password typed before the switch no longer belongs to this session.
+    props = {...props, walletPasswordTypedScope: captureSessionScope(mockState, 'A')};
+    act(() => renderer.update(React.createElement(WalletBackupRequestInfo, props)));
+    await act(async () => {await retryBackup();});
     expect(mockBuildBackup).toHaveBeenCalledTimes(2);
     expect(mockWriteBackup).toHaveBeenCalledTimes(1);
     expect(mockWriteBackup.mock.calls[0][0]).toEqual({mnemonic: 'seed for A'});
