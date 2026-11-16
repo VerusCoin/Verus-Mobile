@@ -109,6 +109,8 @@ jest.mock('../../api/channels/vrpc/callCreators', () => ({
   getAddressDeltas: mockGetAddressDeltas,
   getAddressUtxos: mockGetAddressUtxos,
   getInfo: mockGetInfo,
+  // The mempool recheck at funding time finds no pending spends.
+  getMempoolUnspentUtxos: jest.fn((systemId, addresses, utxos) => Promise.resolve(utxos)),
   getSpendableUtxos: mockGetSpendableUtxos,
   getTransaction: mockGetTransaction,
   sendRawTransaction: mockSendRawTransaction,
@@ -336,6 +338,7 @@ describe('gift card helpers', () => {
     expect(removedClaimed.cards[newCard.id]).toEqual({
       ...newCard,
       sharedAt: null,
+      shareAttempt: null,
     });
     expect(Object.values(upserted.cards)).toHaveLength(1);
     expect(upserted.cards[newCard.id].label).toBe('Same Label');
@@ -464,6 +467,7 @@ describe('gift card helpers', () => {
       id: 'card-id',
       label: 'Gift',
       sharedAt: null,
+      shareAttempt: null,
       updatedAt: 1,
       status: {state: 'new'},
       fundingHistory: [],
@@ -498,6 +502,7 @@ describe('gift card helpers', () => {
       id: 'card-id',
       label: 'Gift',
       sharedAt: null,
+      shareAttempt: null,
       updatedAt: 1,
       status: {state: 'new', hasClaims: false, systems: []},
       fundingHistory: [],
@@ -533,6 +538,7 @@ describe('gift card helpers', () => {
     const card = {
       id: 'card-id',
       sharedAt: null,
+      shareAttempt: null,
       status: {state: 'funded', hasClaims: true, systems: []},
       fundingHistory: [],
     };
