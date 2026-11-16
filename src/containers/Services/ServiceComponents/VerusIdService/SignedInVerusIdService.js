@@ -82,6 +82,7 @@ import LinkExistingVerusIdSheet, {
 import {VERUSID_NETWORK_DEFAULT} from '../../../../../env/index';
 import VerusIdOptionsSheet from './VerusIdOptionsSheet';
 import RegistrationTabRows, {RegistrationGroupTitle} from './IdentityRegistration/RegistrationTabRows';
+import RegistrationStorageNotice, {useRegistrationStorage} from './IdentityRegistration/RegistrationStorageNotice';
 import {registrationNoticeState} from '../../../../utils/identityRegistration/noticeState';
 import LinkVerusIdSheet from './LinkVerusIdSheet';
 
@@ -366,6 +367,7 @@ const SignedInVerusIdService = ({controller}) => {
   );
   const pendingIds = useObjectSelector(state => state.channelStore_verusid?.pendingIds || {});
   const registrationJobs = useObjectSelector(state => state.channelStore_verusid?.registrationJobs || {});
+  const registrationStorage = useRegistrationStorage();
   const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser);
   const cardsByCoin = useObjectSelector(state => extractDisplaySubWallets(state));
   const balances = useObjectSelector(state =>
@@ -982,6 +984,7 @@ const SignedInVerusIdService = ({controller}) => {
           stickySectionHeadersEnabled={false}
           ListHeaderComponent={
             <View style={styles.listHeader}>
+              <RegistrationStorageNotice storage={registrationStorage} />
               {['Needs attention', 'In progress', 'Ready to link'].map((title, index) => {
                 const pending = [groups.attention, groups.progress, groups.ready][index];
                 const count = pending.length + Object.values(registrationJobs).filter(job => job.status !== 'complete' && registrationNoticeState(job).group === title).length;
@@ -1008,13 +1011,19 @@ const SignedInVerusIdService = ({controller}) => {
           )}
         />
       ) : (
-        <EmptyState
-          actionLabel="Add VerusID"
-          icon={AtSign}
-          message="Create or link a VerusID to manage funds, authenticate across apps, and keep your data in your hands."
-          onAction={() => setAddVisible(true)}
-          title="No VerusID yet"
-        />
+        // An unreadable registration store replaces the empty state: the
+        // wallet may hold a saved, paid registration that it cannot show.
+        <View style={registrationStorage.error ? styles.listContent : styles.screen}>
+          <RegistrationStorageNotice storage={registrationStorage}>
+            <EmptyState
+              actionLabel="Add VerusID"
+              icon={AtSign}
+              message="Create or link a VerusID to manage funds, authenticate across apps, and keep your data in your hands."
+              onAction={() => setAddVisible(true)}
+              title="No VerusID yet"
+            />
+          </RegistrationStorageNotice>
+        </View>
       )}
 
       <VerusIdOptionsSheet

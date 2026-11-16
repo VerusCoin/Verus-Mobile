@@ -19,7 +19,7 @@ import {getControlFacts} from '../../../../../utils/verusid/verusIdControlFacts'
 import {useOnboardingTheme} from '../../../../../theme/onboarding';
 import {identityManagementStyles as styles} from '../../../../../styles';
 import {useIdentityManagement} from './IdentityManagementContext';
-import {ManagementPage as Page, ManagementError, ActionButton, Body, CheckOption, DetailRow, Disclosure, LoadingIdentity, SectionTitle, SelectionField, Warning, verusIdText} from './ManagementComponents';
+import {ManagementPage as Page, ActionButton, Body, CheckOption, DetailRow, Disclosure, LoadingIdentity, SectionTitle, SelectionField, Warning, verusIdText} from './ManagementComponents';
 import {currencyLabel} from '../IdentityRegistration/RegistrationComponents';
 import {identityLabel} from '../IdentityRegistration/presentation';
 import {preferredRegistrationFundingSource, registrationFundingBalance} from '../IdentityRegistration/fundingSources';
@@ -385,7 +385,13 @@ function IdentityTransferForm({navigation, route}) {
     ['Funds held by this VerusID', `Funds held at this VerusID address on ${model?.networkName || model?.chainTicker || 'this network'} return to your main wallet in the same transaction as the transfer. We’ll show the exact amounts before you approve. Private funds and funds on other networks are not moved.`],
     ['Revoke and recover', 'The new owner also gets revoke and recover. Any outside VerusID that had these rights loses them. A transfer cannot be undone.'],
   ];
-  return <Page title="Transfer VerusID" onBack={back} busy={busy} error={model ? null : error} info={info} infoTitle="About this transfer" infoHeight="86%"
+  // The error shows above the fixed footer action, as on Send Confirm, so it
+  // stays in view on small phones while Review transfer is off.
+  return <Page title="Transfer VerusID" onBack={back} busy={busy} error={error} info={info} infoTitle="About this transfer" infoHeight="86%"
+    onRetry={model ? () => {
+      setError(null);
+      setCheckAttempt(value => value + 1);
+    } : undefined}
     footer={<ActionButton busy={busy} disabled={!!model && !needsReload && (!ownerValid || !!error)}
       onPress={model && !needsReload ? () => {
         Keyboard.dismiss();
@@ -414,10 +420,6 @@ function IdentityTransferForm({navigation, route}) {
         form.setFundingAddress(value);
       }}} /></View>
       <Warning><Strong>A transfer cannot be undone.</Strong> The new owner also gets revoke and recover.</Warning>
-      <View style={styles.transferError}><ManagementError error={error} busy={busy} onRetry={() => {
-        setError(null);
-        setCheckAttempt(value => value + 1);
-      }} /></View>
     </>}
   </Page>;
 }

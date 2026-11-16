@@ -19,7 +19,6 @@ export const identityManagementStyles = StyleSheet.create({
   returnAddress: {paddingLeft: 34, gap: 4},
   feeSource: {borderTopWidth: StyleSheet.hairlineWidth},
   warning: {marginTop: 16, borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 8},
-  transferError: {marginTop: 12},
   changePanel: {borderRadius: 18, padding: 16, gap: 8, marginTop: 8},
   changeLabel: {marginTop: 4},
   skeleton: {gap: 12},

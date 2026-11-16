@@ -404,6 +404,9 @@ const Home = () => {
       userSelectedSubWallet: userSelectedSubWallets[coinObj.id],
       savedSelectedId: cardStackPreferences[coinObj.id]?.selectedId,
     });
+    // While cards rebuild, an ordinary asset would open on an empty card
+    // chooser. A pre-launch currency opens on its own screen without cards.
+    if (openingCard == null && !prelaunchAssets.has(coinObj.id)) return;
     if (openingCard != null) {
       dispatch(setCoinSubWallet(coinObj.id, openingCard));
     }

@@ -109,6 +109,15 @@ const footerAction = (view, label) => {
 const footerBusy = view => view.root.findByType(SafeBottomActionStack)
   .findAll(node => isHost(node) && node.props.accessibilityState?.busy === true).length > 0;
 const alertText = view => textContent(view.root.findAll(node => isHost(node) && node.props.accessibilityRole === 'alert', {deep: false})[0]);
+// An error the user must see sits above the fixed footer action, outside the
+// scroll view, so it stays visible while the footer action is off.
+const footerAlertText = view => {
+  const isAlert = node => isHost(node) && node.props.accessibilityRole === 'alert';
+  view.root.findAllByType('ScrollView').forEach(scroll => expect(scroll.findAll(isAlert, {deep: false})).toHaveLength(0));
+  const alerts = view.root.findByType(SafeBottomActionStack).findAll(isAlert, {deep: false});
+  expect(alerts).toHaveLength(1);
+  return textContent(alerts[0]);
+};
 // The amount line under the "Total cost" label.
 const totalCost = view => {
   const labels = view.root.findAll(node => node.props.accessibilityLabel === 'Total cost', {deep: false});
@@ -283,8 +292,7 @@ test('invalid QR input keeps the previous recipient and reveals a readable error
   await press(button(view, 'Scan QR code'));
   await act(async () => view.root.findByType('BarcodeReader').props.onScan([{value: 'wrong-network'}]));
   expect(input(view, 'New owner').props.value).toBe('satoshi@');
-  expect(alertText(view)).toContain('different network');
-  expect(mockScrollTo).toHaveBeenLastCalledWith({y: 0, animated: true});
+  expect(footerAlertText(view)).toContain('different network');
   expect(mockApi.prepareIdentityUpdate).not.toHaveBeenCalled();
 });
 
@@ -399,14 +407,13 @@ test('a replacement review clears approval instead of retaining acceptance for t
   expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();
 });
 
-test('preparation errors scroll to the error and retain the entered recipient for correction', async () => {
+test('preparation errors stay visible above the footer and retain the entered recipient for correction', async () => {
   mockApi.prepareIdentityUpdate.mockRejectedValueOnce(new Error('Choose a valid recipient.'));
   const nav = navigation();
   const view = await mount(IdentityTransfer, {navigation: nav});
   await enterOwner(view, 'bad recipient');
   await press(footerAction(view, 'Review transfer'));
-  expect(alertText(view)).toBe('Choose a valid recipient.');
-  expect(mockScrollTo).toHaveBeenLastCalledWith({y: 0, animated: true});
+  expect(footerAlertText(view)).toBe('Choose a valid recipient.');
   expect(input(view, 'New owner').props.value).toBe('bad recipient');
   expect(nav.navigate).not.toHaveBeenCalled();
   expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();

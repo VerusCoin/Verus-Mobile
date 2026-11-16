@@ -540,9 +540,9 @@ const getTonePanelStyle = (item, darkMode = false) => {
   return null;
 };
 
-// The one note for credential data that the wallet encrypts. The Content step
-// card and the Confirm step both show it, so it looks the same on both.
-export const EncryptedCredentialNote = ({darkMode = false, style}) => (
+// The note of the content review. The credential note on the Content card and
+// the Confirm step, and the chain-history note on the Content step, use it.
+export const ContentReviewNote = ({darkMode = false, icon, style, children}) => (
   <View
     style={[
       LocalStyles.encryptedKeyInfo,
@@ -551,7 +551,7 @@ export const EncryptedCredentialNote = ({darkMode = false, style}) => (
     ]}>
     <MaterialCommunityIcons
       color={darkMode ? DARK_INFO_COLOR : Colors.primaryColor}
-      name="shield-lock-outline"
+      name={icon}
       size={14}
       style={{marginRight: 6, marginTop: 1}}
     />
@@ -560,10 +560,18 @@ export const EncryptedCredentialNote = ({darkMode = false, style}) => (
         LocalStyles.encryptedKeyInfoText,
         darkMode && LocalStyles.encryptedKeyInfoTextDark,
       ]}>
-      This credential data will be encrypted before it is stored on-chain.
-      Neither the credential type nor its contents will be publicly visible.
+      {children}
     </Text>
   </View>
+);
+
+// The one note for credential data that the wallet encrypts. The Content step
+// card and the Confirm step both show it, so it looks the same on both.
+export const EncryptedCredentialNote = ({darkMode = false, style}) => (
+  <ContentReviewNote darkMode={darkMode} icon="shield-lock-outline" style={style}>
+    This credential data will be encrypted before it is stored on-chain.
+    Neither the credential type nor its contents will be publicly visible.
+  </ContentReviewNote>
 );
 
 const VerusIdContentChangeCard = ({

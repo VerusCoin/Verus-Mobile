@@ -58,9 +58,17 @@ export function IdentityCommitmentReview({navigation, route}) {
   const funds = useRegistrationBalances(coin, sources, context, review?.approvalToken);
   const prices = useRegistrationPrices(coin, review?.quote);
   const [deleting, setDeleting] = useState(false);
+  // Reading the saved review is not an action. The skeleton and the disabled
+  // slide show it; the slide shows "Preparing…" only for a real action.
+  const [reading, setReading] = useState(false);
+  const readReview = useCallback(() => {
+    if (running.current) return;
+    setReading(true);
+    run(requestContext => getRegistrationReview(jobId, requestContext), setReview).finally(() => setReading(false));
+  }, [jobId, run, running]);
   useFocusEffect(useCallback(() => {
-    run(requestContext => getRegistrationReview(jobId, requestContext), setReview);
-  }, [jobId, run]));
+    readReview();
+  }, [readReview]));
   const fundingState = registrationFundingState(review?.quote, sources[0], coin, coins, balances, funds.reads);
   const ready = review?.status === 'commitment_prepared' && fundingState.status === 'enough';
   const approve = () => {
@@ -71,12 +79,12 @@ export function IdentityCommitmentReview({navigation, route}) {
     });
   };
   useEffect(() => {
-    if (error?.code === 'REVIEW_CHANGED') run(requestContext => getRegistrationReview(jobId, requestContext), setReview);
+    if (error?.code === 'REVIEW_CHANGED') readReview();
   }, [error]);
   return <RegistrationPage navigation={navigation} title="Check details" progress={1} busy={busy} busyRef={running} error={error}
-    onBack={close} onRetry={() => {funds.retry(); run(requestContext => getRegistrationReview(jobId, requestContext), setReview);}}
+    onBack={close} onRetry={() => {funds.retry(); readReview();}}
     info={dismiss => <RegistrationInfo create name={review?.displayName}>{review?.deletionKind && <TextAction destructive onPress={() => dismiss(() => setDeleting(true))}>Delete registration</TextAction>}</RegistrationInfo>}
-    footer={<><ActionButton slide disabled={busy || !ready} busy={busy} onPress={approve}>Slide to start</ActionButton><ActionButton secondary disabled={busy} onPress={close}>Save for later</ActionButton></>}>
+    footer={<><ActionButton slide disabled={busy || !ready} busy={busy && !reading} onPress={approve}>Slide to start</ActionButton><ActionButton secondary disabled={busy} onPress={close}>Save for later</ActionButton></>}>
     {!review ? <RegistrationSkeleton /> : <>
       <RegistrationHero {...review} prices={prices} />
       <RegistrationTimeline review={review} check />
