@@ -1,6 +1,5 @@
 import React from 'react';
 import { createStackNavigator } from "@react-navigation/stack";
-import { defaultHeaderOptions } from '../../../utils/navigation/header';
 import Services from '../../Services/Services'
 import Service from '../../Services/Service/Service'
 import WyreServiceAccountData from '../../Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAccountData/WyreServiceAccountData';
@@ -9,7 +8,6 @@ import WyreServiceEditPaymentMethod from '../../Services/ServiceComponents/WyreS
 import GiftCardCreate from '../../Services/ServiceComponents/GiftCardService/GiftCardCreate/GiftCardCreate';
 import GiftCardFund from '../../Services/ServiceComponents/GiftCardService/GiftCardFund/GiftCardFund';
 import GiftCardQrScreen from '../../Services/ServiceComponents/GiftCardService/GiftCardQrScreen';
-import {ENABLE_SIGNED_IN_REDESIGN} from '../../../../env/index';
 import {createRedesignedHeaderOptions} from '../../../utils/navigation/header';
 import {useAppTheme} from '../../../theme/app';
 import AddressBook from '../../Services/AddressBook/AddressBook';
@@ -26,18 +24,14 @@ const ServicesStackScreens = () => {
 
   return (
     <ServicesStack.Navigator
-      screenOptions={
-        ENABLE_SIGNED_IN_REDESIGN
-          ? createRedesignedHeaderOptions(theme)
-          : defaultHeaderOptions
-      }
+      screenOptions={createRedesignedHeaderOptions(theme)}
     >
       <ServicesStack.Screen
         name="Services"
         component={Services}
         options={{
           title: "Services",
-          headerShown: !ENABLE_SIGNED_IN_REDESIGN,
+          headerShown: false,
         }}
       />
       <ServicesStack.Screen
@@ -55,10 +49,7 @@ const ServicesStackScreens = () => {
           headerShown:
             route.params?.service === GIFT_CARD_SERVICE_ID
               ? false
-              : !(
-                  ENABLE_SIGNED_IN_REDESIGN &&
-                  route.params?.service === VERUSID_SERVICE_ID
-                ),
+              : route.params?.service !== VERUSID_SERVICE_ID,
         })}
       />
       <ServicesStack.Screen

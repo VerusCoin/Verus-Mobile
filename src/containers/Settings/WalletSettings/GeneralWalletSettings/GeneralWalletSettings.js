@@ -19,7 +19,6 @@ import {
   TESTNET_ENVIRONMENT_PRIVATE,
   TESTNET_ENVIRONMENT_PUBLIC,
 } from '../../../../utils/testnetEnvironment';
-import {ENABLE_SIGNED_IN_REDESIGN} from '../../../../../env/index';
 import {DisplayCurrencySheet} from '../../../Home/components/SignedInWalletSheets';
 import {
   SettingsRow,
@@ -238,20 +237,6 @@ const GeneralWalletSettings = () => {
             trailing={savingIndicator('displayCurrency')}
             value={displayedSetting('displayCurrency')}
           />
-          {!ENABLE_SIGNED_IN_REDESIGN && (
-            <SettingsSwitchRow
-              busy={isSaving('homeCardDragDetection')}
-              description="Move home screen cards when dragged"
-              icon="gesture-swipe"
-              onValueChange={value =>
-                persistSetting('homeCardDragDetection', value)
-              }
-              error={rowErrors.homeCardDragDetection}
-              testID="settings.general.homeCardDragDetection"
-              title="Automatic drag detection"
-              value={displayedSetting('homeCardDragDetection')}
-            />
-          )}
           <SettingsSwitchRow
             busy={isSaving('enableExperimentalGenericRequests')}
             description="Allow deeplinks that include experimental features (identity update, app encryption, credentials, data packets, etc.)"
