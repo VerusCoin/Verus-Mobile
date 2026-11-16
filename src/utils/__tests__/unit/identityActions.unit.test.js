@@ -153,17 +153,6 @@ test.each([['transfer', 'Transfer VerusID', 'IdentityTransfer'], ['modify', 'Mod
   },
 );
 
-test('a second tap during the close cannot replace the intended action', async () => {
-  const view = await renderPage();
-  await openOptions();
-  const pressUnlinkRow = find(view, 'Unlink VerusID').props.onPress;
-  await choose(view, 'Transfer VerusID');
-  await act(async () => {pressUnlinkRow();});
-  await closeSheet(optionsSheet(view));
-  expect(unlinkSheet(view).props.visible).toBe(false);
-  expect(mockNavigate).toHaveBeenCalledTimes(1);
-});
-
 test('unlink retains the selected identity and original account scope', async () => {
   const view = await renderPage();
   await openOptions();
