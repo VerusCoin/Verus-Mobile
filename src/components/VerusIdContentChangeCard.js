@@ -540,6 +540,32 @@ const getTonePanelStyle = (item, darkMode = false) => {
   return null;
 };
 
+// The one note for credential data that the wallet encrypts. The Content step
+// card and the Confirm step both show it, so it looks the same on both.
+export const EncryptedCredentialNote = ({darkMode = false, style}) => (
+  <View
+    style={[
+      LocalStyles.encryptedKeyInfo,
+      darkMode && LocalStyles.encryptedKeyInfoDark,
+      style,
+    ]}>
+    <MaterialCommunityIcons
+      color={darkMode ? DARK_INFO_COLOR : Colors.primaryColor}
+      name="shield-lock-outline"
+      size={14}
+      style={{marginRight: 6, marginTop: 1}}
+    />
+    <Text
+      style={[
+        LocalStyles.encryptedKeyInfoText,
+        darkMode && LocalStyles.encryptedKeyInfoTextDark,
+      ]}>
+      This credential data will be encrypted before it is stored on-chain.
+      Neither the credential type nor its contents will be publicly visible.
+    </Text>
+  </View>
+);
+
 const VerusIdContentChangeCard = ({
   children,
   visibilityLabel,
@@ -552,7 +578,6 @@ const VerusIdContentChangeCard = ({
 }) => {
   const theme = useOnboardingTheme();
   const darkMode = darkModeProp ?? theme.isDark;
-  const encryptedInfoColor = darkMode ? DARK_INFO_COLOR : Colors.primaryColor;
   const badges = getContentChangeBadges(item, darkMode);
   const unnamedKey = isUnnamedKeyTitle(item);
   const showKeyId =
@@ -665,29 +690,7 @@ const VerusIdContentChangeCard = ({
       )}
       {children}
 
-      {item.isEncryptedKey && (
-        <View
-          style={[
-            LocalStyles.encryptedKeyInfo,
-            darkMode && LocalStyles.encryptedKeyInfoDark,
-          ]}>
-          <MaterialCommunityIcons
-            color={encryptedInfoColor}
-            name="shield-lock-outline"
-            size={14}
-            style={{marginRight: 6, marginTop: 1}}
-          />
-          <Text
-            style={[
-              LocalStyles.encryptedKeyInfoText,
-              darkMode && LocalStyles.encryptedKeyInfoTextDark,
-            ]}>
-            This credential data will be encrypted before it is stored on-chain.
-            Neither the credential type nor its contents will be publicly
-            visible.
-          </Text>
-        </View>
-      )}
+      {item.isEncryptedKey && <EncryptedCredentialNote darkMode={darkMode} />}
     </TouchableOpacity>
   );
 };

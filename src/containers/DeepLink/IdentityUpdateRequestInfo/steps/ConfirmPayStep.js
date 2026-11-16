@@ -59,6 +59,7 @@ import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTr
 import {isNetworkFailureError} from '../../../../utils/deeplink/genericRequestRejection';
 import {PROFILE_SECURITY_SETTINGS_LABEL} from '../../../../utils/settings/settingsLabels';
 import IdentityStateChangeCard from '../components/IdentityStateChangeCard';
+import {EncryptedCredentialNote} from '../../../../components/VerusIdContentChangeCard';
 import {buildIdentityStateChange} from '../utils/buildIdentityStateChange';
 
 const IDENTITY_UPDATE_COMPLETION_SHEET_HEIGHT = 360;
@@ -896,11 +897,10 @@ const ConfirmPayStep = ({
             </View>
           ))}
           {hasEncryptedKeys && (
-            <View style={localStyles.encryptedKeyRecapRow}>
-              <Text style={localStyles.encryptedKeyRecapText}>
-                    Credential data will be encrypted with a key derived from your identity so that neither the credential type nor its contents are publicly visible on-chain.
-              </Text>
-            </View>
+            <EncryptedCredentialNote
+              darkMode={theme.isDark}
+              style={localStyles.encryptedKeyRecapNote}
+            />
           )}
         </View>
 
