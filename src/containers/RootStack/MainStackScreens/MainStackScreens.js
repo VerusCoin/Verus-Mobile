@@ -4,27 +4,18 @@ import {
   createStackNavigator,
 } from "@react-navigation/stack";
 import {AccessibilityInfo, Easing} from 'react-native';
-import { defaultHeaderOptions } from '../../../utils/navigation/header';
 import AddCoin from '../../AddCoin/AddCoin'
 import CoinDetails from '../../CoinDetails/CoinDetails'
 import DisplaySeed from '../../DisplaySeed/DisplaySeed'
-import SettingsMenus from '../../Settings/SettingsMenus'
 import CoinMenus from '../../Coin/CoinMenus'
 import VerusPay from '../../VerusPay/VerusPay'
 import ProfileInfo from '../../Settings/ProfileSettings/ProfileInfo/ProfileInfo'
 import ResetPwd from '../../Settings/ProfileSettings/ResetPwd/ResetPwd'
 import RecoverSeed from '../../Settings/ProfileSettings/RecoverSeed/RecoverSeed'
-import GeneralWalletSettings from '../../Settings/WalletSettings/GeneralWalletSettings/GeneralWalletSettings'
-import CoinSettings from '../../Settings/WalletSettings/CoinSettings/CoinSettings'
 import DeleteProfile from '../../Settings/ProfileSettings/DeleteProfile/DeleteProfile'
 import SecureLoading from '../../SecureLoading/SecureLoading'
 import HomeTabScreens from '../HomeTabScreens/HomeTabScreens';
-import VrpcOverrides from '../../Settings/WalletSettings/VrpcOverrides/VrpcOverrides';
 import NfcBackup from '../../Settings/WalletSettings/NfcBackup/NfcBackup';
-import ProfileSettings from '../../Settings/ProfileSettings/ProfileSettings';
-import WalletSettings from '../../Settings/WalletSettings/WalletSettings';
-import AppInfo from '../../Settings/AppInfo/AppInfo';
-import Appearance from '../../Settings/Appearance/Appearance';
 import ReceiveAssetsList from '../../Transfer/ReceiveAssetsList';
 import ReceiveAssetDetails from '../../Transfer/ReceiveAssetDetails';
 import SendWizardNavigator from '../../SendWizard/SendWizardNavigator';
@@ -32,7 +23,6 @@ import AddAssetByIdentifier from '../../ManageAssets/AddAssetByIdentifier';
 import ManageAssets, {
   ManageAssetsDirectory,
 } from '../../ManageAssets/ManageAssets';
-import {ENABLE_SIGNED_IN_REDESIGN} from '../../../../env/index';
 import {
   createRedesignedHeaderOptions,
   createSettingsHeaderOptions,
@@ -130,11 +120,7 @@ const MainStackScreens = props => {
 
   return (
     <MainStack.Navigator
-      screenOptions={
-        ENABLE_SIGNED_IN_REDESIGN
-          ? createRedesignedHeaderOptions(theme)
-          : defaultHeaderOptions
-      }
+      screenOptions={createRedesignedHeaderOptions(theme)}
     >
       <MainStack.Screen
         name="Home"
@@ -200,83 +186,23 @@ const MainStackScreens = props => {
 
       <MainStack.Screen name="CoinMenus" component={CoinMenus} />
 
-      {ENABLE_SIGNED_IN_REDESIGN && (
-        <MainStack.Screen
-          name="ReceiveAssetsList"
-          component={ReceiveAssetsList}
-          options={{title: 'Receive assets'}}
-        />
-      )}
+      <MainStack.Screen
+        name="ReceiveAssetsList"
+        component={ReceiveAssetsList}
+        options={{title: 'Receive assets'}}
+      />
 
-      {ENABLE_SIGNED_IN_REDESIGN && (
-        <MainStack.Screen
-          name="ReceiveAssetDetails"
-          component={ReceiveAssetDetails}
-          options={{title: 'Receive'}}
-        />
-      )}
+      <MainStack.Screen
+        name="ReceiveAssetDetails"
+        component={ReceiveAssetDetails}
+        options={{title: 'Receive'}}
+      />
 
-      {ENABLE_SIGNED_IN_REDESIGN && (
-        <MainStack.Screen
-          name="SendWizard"
-          component={SendWizardNavigator}
-          options={{headerShown: false}}
-        />
-      )}
-
-      {!ENABLE_SIGNED_IN_REDESIGN && (
-        <>
-          <MainStack.Screen
-            name="SettingsMenus"
-            component={SettingsMenus}
-            options={settingsHeaderOptions}
-          />
-          <MainStack.Screen
-            name="ProfileSettings"
-            component={ProfileSettings}
-            options={{...settingsHeaderOptions, title: 'Wallet and security'}}
-          />
-          <MainStack.Screen
-            name="WalletSettings"
-            component={WalletSettings}
-            options={{...settingsHeaderOptions, title: 'Wallet settings'}}
-          />
-          <MainStack.Screen
-            name="Appearance"
-            component={Appearance}
-            options={{...settingsHeaderOptions, title: 'Appearance'}}
-          />
-          <MainStack.Screen
-            name="AppInfo"
-            component={AppInfo}
-            options={{...settingsHeaderOptions, title: 'App information'}}
-          />
-          <MainStack.Screen
-            name="GeneralWalletSettings"
-            component={GeneralWalletSettings}
-            options={{
-              ...settingsHeaderOptions,
-              title: "General",
-            }}
-          />
-          <MainStack.Screen
-            name="VrpcOverrides"
-            component={VrpcOverrides}
-            options={{
-              ...settingsHeaderOptions,
-              title: "Custom RPC servers",
-            }}
-          />
-          <MainStack.Screen
-            name="CoinSettings"
-            component={CoinSettings}
-            options={({ route }) => ({
-              ...settingsHeaderOptions,
-              title: route.params != null ? route.params.title : null,
-            })}
-          />
-        </>
-      )}
+      <MainStack.Screen
+        name="SendWizard"
+        component={SendWizardNavigator}
+        options={{headerShown: false}}
+      />
 
       <MainStack.Screen
         name="ProfileInfo"

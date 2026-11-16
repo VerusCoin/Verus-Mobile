@@ -59,7 +59,6 @@ import {
 import {VERUSID_SERVICE_ID} from '../../../utils/constants/services';
 import {DLIGHT_PRIVATE} from '../../../utils/constants/intervalConstants';
 import {
-  ENABLE_SIGNED_IN_REDESIGN,
   VERUSID_NETWORK_DEFAULT,
 } from '../../../../env/index';
 import {PROFILE_SECURITY_SETTINGS_LABEL} from '../../../utils/settings/settingsLabels';
@@ -754,21 +753,13 @@ const AppEncryptionRequestInfoContent = props => {
     dispatch(setConfigSection('settings-profile'));
     dispatch(resetDeeplinkData());
 
-    const settingsRoute = ENABLE_SIGNED_IN_REDESIGN
-      ? {
-          screen: 'Home',
-          params: {
-            screen: 'SettingsHome',
-            params: {screen: 'ProfileSettings'},
-          },
-        }
-      : {
-          screen: 'MainStack',
-          params: {
-            screen: 'SettingsMenus',
-            params: {title: 'Profile'},
-          },
-        };
+    const settingsRoute = {
+      screen: 'Home',
+      params: {
+        screen: 'SettingsHome',
+        params: {screen: 'ProfileSettings'},
+      },
+    };
 
     exitRequestToStack(navigation, 'SignedInStack', settingsRoute);
   }, [dispatch, navigation]);

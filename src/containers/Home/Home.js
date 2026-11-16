@@ -19,7 +19,7 @@ import {
   expireServiceData,
   saveGeneralSettings,
 } from '../../actions/actionCreators';
-import { CommonActions, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
   API_GET_FIATPRICE,
   API_GET_BALANCES,
@@ -57,7 +57,6 @@ import {
   getUnreviewedNewAssetHoldings,
   markFoundAssetsReviewed,
 } from '../../utils/assets/assetManagementService';
-import { HomeRender, HomeRenderCoinsList, HomeRenderWidget } from './Home.render';
 import { extractDisplaySubWallets } from '../../utils/subwallet/extractSubWallets';
 import {getOpeningSubWallet} from '../../utils/subwallet/getOpeningSubWallet';
 import {
@@ -71,8 +70,6 @@ import {
   VERUSID_WIDGET_TYPE,
 } from '../../utils/constants/widgets';
 import { createAlert } from '../../actions/actions/alert/dispatchers/alert';
-import { VERUSID_SERVICE_ID } from '../../utils/constants/services';
-import { dragDetectionEnabled } from '../../utils/dragDetection';
 import { useSelector, useDispatch } from 'react-redux';
 import store from '../../store';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
@@ -90,7 +87,6 @@ import {
 import {getAssetPresentation} from '../../utils/assets/assetPresentation';
 import {
   CONVERSION_DISABLED,
-  ENABLE_SIGNED_IN_REDESIGN,
 } from '../../../env/index';
 import {
   WALLET_APP_RECEIVE,
@@ -159,21 +155,11 @@ const Home = () => {
   }, [foundAssets]);
   const [listItemHeights, setListItemHeights] = useState({});
   const [widgets, setWidgets] = useState([]);
-  const [displayCurrencyModalOpen, setDisplayCurrencyModalOpen] = useState(false);
-  const [editingCards, setEditingCards] = useState(false);
   const [expandedListItems, setExpandedListItems] = useState({});
 
   const LIST_ITEM_INITIAL_HEIGHT = 58;
   const LIST_ITEM_MARGIN = 8;
   const LIST_ITEM_ANIMATION_DURATION = 250;
-
-  const isDragDetectionEnabled = () => {
-    return dragDetectionEnabled(homeCardDragDetection);
-  };
-
-  const handleSetEditingCards = (editing) => {
-    setEditingCards(editing);
-  };
 
   const sortWidgets = useCallback(() => {
     setWidgets((prevWidgets) => {
@@ -241,34 +227,6 @@ const Home = () => {
 
     setWidgets(widgetsList);
   }, [accountHash, activeCoinsForUser, widgetOrder]);
-
-  const handleWidgetPress = (widgetId) => {
-    const widgetSplit = widgetId.split(':');
-    const widgetType = widgetSplit[0];
-
-    const widgetOnPress = {
-      [CURRENCY_WIDGET_TYPE]: () => {
-        const coinId = widgetSplit[1];
-        const coinObj = activeCoinsForUser.find((x) => x.id === coinId);
-
-        if (coinObj) {
-          openCoin(coinObj);
-        }
-      },
-      [TOTAL_UNI_BALANCE_WIDGET_TYPE]: () => {
-        setDisplayCurrencyModalOpen(true);
-      },
-      [VERUSID_WIDGET_TYPE]: () => {
-        navigation.navigate('Service', {
-          service: VERUSID_SERVICE_ID,
-        });
-      },
-    };
-
-    if (widgetOnPress[widgetType]) {
-      widgetOnPress[widgetType]();
-    }
-  };
 
   const setDisplayCurrencyFunc = async (currency) => {
     try {
@@ -371,27 +329,13 @@ const Home = () => {
   );
 
   const resetToScreen = (route, title, data) => {
-    if (ENABLE_SIGNED_IN_REDESIGN) {
-      if (route === 'CoinMenus') {
-        navigation.navigate(route, {title, data});
-        return;
-      }
-
-      const mainNavigation = navigation.getParent()?.getParent();
-      (mainNavigation || navigation).navigate(route, {title, data});
+    if (route === 'CoinMenus') {
+      navigation.navigate(route, {title, data});
       return;
     }
 
-    const resetAction = CommonActions.reset({
-      index: 1,
-      routes: [
-        { name: 'Home' },
-        { name: route, params: { title: title, data: data } },
-      ],
-    });
-
-    if (navigation.closeDrawer) navigation.closeDrawer();
-    navigation.dispatch(resetAction);
+    const mainNavigation = navigation.getParent()?.getParent();
+    (mainNavigation || navigation).navigate(route, {title, data});
   };
 
   const forceUpdate = () => {
@@ -445,10 +389,6 @@ const Home = () => {
         rates[GENERAL][coinId][currency]
       ? rates[GENERAL][coinId][currency]
       : null;
-  };
-
-  const _verusPay = () => {
-    navigation.navigate('VerusPay');
   };
 
   const openCoin = (coinObj, subWallet) => {
@@ -696,15 +636,6 @@ const Home = () => {
     }
   }, [isConnected]);
 
-  const _addCoin = () => {
-    navigation.navigate('AddCoin', { refresh: refresh });
-  };
-
-  const _addAssetByIdentifier = () => {
-    const mainNavigation = navigation.getParent()?.getParent();
-    (mainNavigation || navigation).navigate('AddAssetByIdentifier');
-  };
-
   const portfolioHistory = usePortfolioHistory({
     account: activeAccount,
     activeCoins: activeCoinsForUser,
@@ -717,92 +648,52 @@ const Home = () => {
     testnetPrices,
   });
 
-  if (ENABLE_SIGNED_IN_REDESIGN) {
-    const mainNavigation = navigation.getParent()?.getParent();
-    const receiveAvailable = actionSources('wallet-receive').length > 0;
-    const sendAvailable = actionSources('wallet-send').length > 0;
-    const convertAvailable = actionSources('wallet-convert').length > 0;
-
-    return (
-      <SignedInWalletHome
-        assets={signedInAssets}
-        hiddenAssetCount={uniqueAssets(activeCoinsForUser).filter(coin =>
-          Boolean(coin.testnet) === isTestnetAccount(activeAccount) &&
-          !isAssetShown(coin, assetManagement.preferences)).length}
-        assetsReady={assetManagement.ready}
-        assetsLoadError={assetManagement.loadError}
-        homeNotice={homeNotice}
-        displayCurrency={displayCurrency}
-        loading={loading}
-        showBalance={showBalance}
-        totalFiatBalance={balanceAccountHash === accountHash ? totalFiatBalance : null}
-        history={portfolioHistory}
-        onToggleBalance={() => dispatch({type: 'SET_BALANCE_SHOW'})}
-        onSelectDisplayCurrency={setDisplayCurrencyFunc}
-        onRefresh={forceUpdate}
-        onOpenAsset={openCoin}
-        convertAvailable={convertAvailable}
-        receiveAvailable={receiveAvailable}
-        sendAvailable={sendAvailable}
-        onReceive={() => (mainNavigation || navigation).navigate('ReceiveAssetsList')}
-        onSend={() =>
-          (mainNavigation || navigation).navigate('SendWizard', {
-            mode: SEND_WIZARD_MODE.SEND,
-          })
-        }
-        onConvert={() =>
-          (mainNavigation || navigation).navigate('SendWizard', {
-            mode: SEND_WIZARD_MODE.CONVERT,
-          })
-        }
-        onManageAssets={() =>
-          (mainNavigation || navigation).navigate('ManageAssets')
-        }
-        onReviewFoundAssets={() => {
-          reviewFoundAssets();
-          (mainNavigation || navigation).navigate('ManageAssets');
-        }}
-        onDismissFoundAssets={reviewFoundAssets}
-        onDismissSyncNotice={() => setSyncNoticeDismissed(true)}
-      />
-    );
-  }
+  const mainNavigation = navigation.getParent()?.getParent();
+  const receiveAvailable = actionSources('wallet-receive').length > 0;
+  const sendAvailable = actionSources('wallet-send').length > 0;
+  const convertAvailable = actionSources('wallet-convert').length > 0;
 
   return (
-    <HomeRender
-      dragDetectionEnabled={isDragDetectionEnabled}
-      displayCurrencyModalOpen={displayCurrencyModalOpen}
+    <SignedInWalletHome
+      assets={signedInAssets}
+      hiddenAssetCount={uniqueAssets(activeCoinsForUser).filter(coin =>
+        Boolean(coin.testnet) === isTestnetAccount(activeAccount) &&
+        !isAssetShown(coin, assetManagement.preferences)).length}
+      assetsReady={assetManagement.ready}
+      assetsLoadError={assetManagement.loadError}
+      homeNotice={homeNotice}
       displayCurrency={displayCurrency}
-      setDisplayCurrency={setDisplayCurrencyFunc}
-      setDisplayCurrencyModalOpen={setDisplayCurrencyModalOpen}
-      editingCards={editingCards}
-      setEditingCards={handleSetEditingCards}
-      _addCoin={_addCoin}
-      _verusPay={_verusPay}
-      _addAssetByIdentifier={_addAssetByIdentifier}
-      forceUpdate={forceUpdate}
       loading={loading}
-      HomeRenderCoinsList={() =>
-        HomeRenderCoinsList({
-          widgets,
-          dragDetectionEnabled: isDragDetectionEnabled,
-          editingCards,
-          loading,
-          forceUpdate,
-          handleWidgetPress,
-          dispatch,
-          navigation,
-          activeAccount,
-          totalCryptoBalances,
-          totalFiatBalance,
-          HomeRenderWidget: (widgetId) =>
-            HomeRenderWidget({
-              widgetId,
-              totalCryptoBalances,
-              totalFiatBalance,
-            }),
+      showBalance={showBalance}
+      totalFiatBalance={balanceAccountHash === accountHash ? totalFiatBalance : null}
+      history={portfolioHistory}
+      onToggleBalance={() => dispatch({type: 'SET_BALANCE_SHOW'})}
+      onSelectDisplayCurrency={setDisplayCurrencyFunc}
+      onRefresh={forceUpdate}
+      onOpenAsset={openCoin}
+      convertAvailable={convertAvailable}
+      receiveAvailable={receiveAvailable}
+      sendAvailable={sendAvailable}
+      onReceive={() => (mainNavigation || navigation).navigate('ReceiveAssetsList')}
+      onSend={() =>
+        (mainNavigation || navigation).navigate('SendWizard', {
+          mode: SEND_WIZARD_MODE.SEND,
         })
       }
+      onConvert={() =>
+        (mainNavigation || navigation).navigate('SendWizard', {
+          mode: SEND_WIZARD_MODE.CONVERT,
+        })
+      }
+      onManageAssets={() =>
+        (mainNavigation || navigation).navigate('ManageAssets')
+      }
+      onReviewFoundAssets={() => {
+        reviewFoundAssets();
+        (mainNavigation || navigation).navigate('ManageAssets');
+      }}
+      onDismissFoundAssets={reviewFoundAssets}
+      onDismissSyncNotice={() => setSyncNoticeDismissed(true)}
     />
   );
 };
