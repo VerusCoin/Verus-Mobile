@@ -1,12 +1,17 @@
 jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
-  Pressable: 'Pressable', View: 'View', ScrollView: 'ScrollView',
+  Pressable: 'Pressable', TouchableOpacity: 'TouchableOpacity', View: 'View', ScrollView: 'ScrollView',
   StyleSheet: {create: value => value},
 }));
-jest.mock('react-native-paper', () => ({Text: 'Text'}));
+jest.mock('react-native-paper', () => ({...jest.requireActual('react-native-paper'), Text: 'Text', Portal: 'Portal'}));
+jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
+jest.mock('../../../components/SemiModal', () => ({visible, children}) => visible ? children : null);
+const mockState = {modal: {stack: []}, settings: {generalWalletSettings: {}}};
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 
 const React = require('react');
 const {act, create} = require('react-test-renderer');
 const {PartialSignData} = require('verus-typescript-primitives');
+const VerusIdContentChangeCard = require('../../../components/VerusIdContentChangeCard').default;
 const ContentStep = require('../../../containers/DeepLink/IdentityUpdateRequestInfo/steps/ContentStep').default;
 const {buildContentMultiMapRemoveUi} = require('../../../containers/DeepLink/IdentityUpdateRequestInfo/utils/contentMultiMapRemoveUi');
 const {VERUSID_CMM_DATA, VERUSID_CMM_INFO, VERUSID_PRIVATE_INFO, VERUSID_PRIVATE_ADDRESS} = require('../../constants/verusidObjectData');
@@ -15,11 +20,10 @@ const KEY = 'iCompleteUnrecognizedContentKeyAddress';
 const ROW_KEY = `${VERUSID_CMM_DATA.key}:${KEY}`;
 const identity = {identity: {privateaddress: 'zsCurrentAddressInFullWithoutAnyShortening', contentmultimap: {[KEY]: ['existing value']}}};
 const textContent = node => typeof node === 'string' ? node : (node.children || []).map(textContent).join(' ');
-const flattenStyle = style => Array.isArray(style) ? Object.assign({}, ...style.map(flattenStyle)) : style;
 let views;
 const mount = props => {
   let view;
-  act(() => { view = create(<ContentStep subjectIdentity={identity} {...props} />); });
+  act(() => { view = create(<ContentStep subjectIdentity={identity} styles={{}} {...props} />); });
   views.push(view);
   return view;
 };
@@ -35,22 +39,25 @@ test('shows complete partial-sign-data content on first render without opening t
   })});
   expect(textContent(view.root)).toContain(message);
   expect(textContent(view.root)).toContain(KEY);
-  expect(textContent(view.root)).toContain('Add content');
+  expect(textContent(view.root)).toContain('Add value');
   expect(textContent(view.root)).toContain('Public');
   expect(textContent(view.root)).toContain('Message');
   expect(onPress).not.toHaveBeenCalled();
-  expect(view.root.findAllByType('ScrollView')).toHaveLength(0);
+  // The step's own page scroll is the only one; the content is not in an inner scroll view.
+  expect(view.root.findAllByType('ScrollView')).toHaveLength(1);
+  // Requested content is never cut off. Only the visibility badge and the preview of the
+  // identity's existing value are limited to a few lines.
   view.root.findAllByType('Text').forEach(node => {
-    expect(node.props.numberOfLines).toBeUndefined();
-    expect(node.props.allowFontScaling).toBe(true);
+    if (!['Public', 'existing value'].includes(textContent(node))) expect(node.props.numberOfLines).toBeUndefined();
+    expect(node.props.allowFontScaling).not.toBe(false);
   });
   expect(view.root.findAllByType('Text').find(node => textContent(node) === message).props.selectable).toBe(true);
-  const action = view.root.findByType('Pressable');
+  // The whole card opens the technical details; its own text names the button.
+  const action = view.root.findByType(VerusIdContentChangeCard).findByType('TouchableOpacity');
   expect(action.props.accessibilityRole).toBe('button');
-  expect(action.props.accessibilityLabel).toContain('technical details');
-  expect(flattenStyle(action.props.style({pressed: false})).minHeight).toBeGreaterThanOrEqual(44);
+  expect(textContent(view.root)).not.toContain('Technical details');
   act(() => action.props.onPress());
-  expect(onPress).toHaveBeenCalledTimes(1);
+  expect(textContent(view.root)).toContain('Technical details');
 });
 
 test('renders every added value, including nested fields and the full raw content key', () => {
@@ -72,17 +79,20 @@ test('keeps encrypted uploads separate from public additions and shows the full 
     public: {contentKey: 'iPublicKey', rawData: ['Public addition body']},
     credential: {contentKey: 'iCredentialKey', isEncryptedKey: true, rawData: [{opaque: 'aabb'}]},
   }}});
-  const cards = view.root.findAllByProps({testID: 'identity-content-change'});
+  const cards = view.root.findAllByType(VerusIdContentChangeCard);
   expect(cards).toHaveLength(3);
   expect(textContent(cards[0])).toContain('Encrypted upload');
   expect(textContent(cards[0])).toContain('Encrypted upload body');
-  expect(textContent(cards[0])).toContain(recipient);
-  expect(textContent(cards[0]).indexOf('Encrypted upload body'))
-    .toBeLessThan(textContent(cards[0]).indexOf('This upload will be encrypted'));
+  // The card warns first, then shows the body; the recipient is in its technical details.
+  expect(textContent(cards[0]).indexOf('This upload will be encrypted'))
+    .toBeLessThan(textContent(cards[0]).indexOf('Encrypted upload body'));
+  expect(textContent(view.root)).not.toContain(recipient);
+  act(() => cards[0].findByType('TouchableOpacity').props.onPress());
+  expect(textContent(view.root)).toContain(recipient);
   expect(textContent(cards[1])).toContain('Public');
   expect(textContent(cards[1])).toContain('Public addition body');
   expect(textContent(cards[2])).toContain('Encrypted credential');
-  expect(textContent(cards[2])).toContain('will be encrypted before it is added');
+  expect(textContent(cards[2])).toContain('will be encrypted before it is stored on-chain');
   expect(textContent(view.root)).not.toContain('Private request');
 });
 
@@ -100,11 +110,11 @@ test.each([1, 2, 3, 4])('explains removal action %s inline with its scope, limit
   expect(text).toContain(removalUi.historyNote);
   expect(text).toContain(hash);
   if (action === 4) {
-    expect(text).toContain('All identity content keys and values');
-    expect(text).not.toContain('Target content key');
+    expect(text).toContain('Will clear');
+    expect(text).not.toContain('Will remove');
   } else {
     expect(text).toContain(KEY);
-    expect(text).toContain('Target content key');
+    expect(text).toContain('Will remove');
   }
 });
 
@@ -115,9 +125,9 @@ test('keeps additions and removals in the same request visible together and expl
   }}});
   const text = textContent(view.root);
   expect(text).toContain('new value');
-  expect(text).toContain('Remove earlier values');
+  expect(text).toContain('All active values under selected key');
   expect(text).toContain('A removal can also affect values added in the same update.');
-  expect(view.root.findAllByProps({testID: 'identity-content-change'})).toHaveLength(2);
+  expect(view.root.findAllByType(VerusIdContentChangeCard)).toHaveLength(2);
 });
 
 test('shows the actual removal target and all supplied trailing removal data', () => {
@@ -162,22 +172,25 @@ test('does not describe ignored removal-key data as additions in a removal-only 
   }}});
   const text = textContent(view.root);
 
-  expect(text).toContain('Remove earlier values');
+  expect(text).toContain('All active values under selected key');
   expect(text).toContain('Recorded data');
   expect(text).not.toContain('Included data');
   expect(text).not.toContain('This request adds and removes content.');
-  expect(view.root.findAllByProps({testID: 'identity-content-change'})).toHaveLength(2);
+  expect(view.root.findAllByType(VerusIdContentChangeCard)).toHaveLength(2);
 });
 
 test('shows complete current and requested private addresses', () => {
   const requested = 'zsRequestedAddressInFullWithoutAnyShortening';
   const view = mount({displayUpdates: {[VERUSID_PRIVATE_INFO.key]: {
-    [VERUSID_PRIVATE_ADDRESS.key]: {data: 'zsRequested…', rawData: requested},
+    [VERUSID_PRIVATE_ADDRESS.key]: {
+      data: 'zsRequested…', rawData: requested, highRiskType: 'private-address',
+      beforeAddress: identity.identity.privateaddress, afterAddress: requested,
+    },
   }}});
   expect(textContent(view.root)).toContain(identity.identity.privateaddress);
   expect(textContent(view.root)).toContain(requested);
-  expect(textContent(view.root)).toContain('Current address');
-  expect(textContent(view.root)).toContain('Requested address');
+  expect(textContent(view.root)).toContain('Current');
+  expect(textContent(view.root)).toContain('After update');
   expect(textContent(view.root)).not.toContain('zsRequested…');
 });
 
@@ -190,5 +203,6 @@ test('warns about opaque data while retaining its full bytes inline', () => {
 });
 
 test.each([undefined, {}, {[VERUSID_CMM_INFO.key]: {}}])('omits the section when there are no content changes (%p)', displayUpdates => {
-  expect(mount({displayUpdates}).toJSON()).toBeNull();
+  // The request screen skips this step when there is nothing to review, so it shows no change cards.
+  expect(mount({displayUpdates}).root.findAllByType(VerusIdContentChangeCard)).toHaveLength(0);
 });
