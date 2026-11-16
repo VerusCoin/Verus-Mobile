@@ -182,7 +182,7 @@ const BottomFade = ({backgroundColor, solidHeight}) => (
 // A filled row per VerusID (owner-approved "D revised", 2026-10-22): the name
 // with its parent muted, one line under it, a status badge only when the
 // VerusID is not active, and a chevron. Pending requests keep their action.
-const IdentityRow = ({actionLabel, badge, name, onPress, subtitle, theme}) => (
+const IdentityRow = ({actionLabel, badge, name, onPress, subtitle, subtitleTone, theme}) => (
   <View style={styles.rowWrap}>
     <TouchableOpacity
       accessibilityRole="button"
@@ -201,7 +201,21 @@ const IdentityRow = ({actionLabel, badge, name, onPress, subtitle, theme}) => (
           restColor={theme.colors.textSecondary}
           style={theme.typography.titleRow}
         />
-        {subtitle ? (
+        {subtitle && subtitleTone ? (
+          // Same alert line as the registration rows in "Needs attention".
+          <View style={[styles.identitySubtitle, styles.identitySubtitleTone]}>
+            <CircleAlert color={theme.colors[`${subtitleTone}Text`]} size={14} />
+            <Text
+              numberOfLines={1}
+              style={[
+                theme.typography.caption,
+                styles.identitySubtitleToneText,
+                {color: theme.colors[`${subtitleTone}Text`]},
+              ]}>
+              {subtitle}
+            </Text>
+          </View>
+        ) : subtitle ? (
           <Text
             numberOfLines={1}
             style={[
@@ -859,6 +873,11 @@ const SignedInVerusIdService = ({controller}) => {
                     ? 'Needs attention'
                     : 'In progress'
                 }
+                subtitleTone={
+                  item.status === NOTIFICATION_TYPE_VERUSID_FAILED
+                    ? 'danger'
+                    : undefined
+                }
                 theme={theme}
               />
             );
@@ -1213,6 +1232,8 @@ const styles = StyleSheet.create({
   rowTextWithAction: {paddingRight: 90},
   rowTextWithWideAction: {paddingRight: 140},
   identitySubtitle: {marginTop: 2},
+  identitySubtitleTone: {flexDirection: 'row', alignItems: 'center', gap: 4},
+  identitySubtitleToneText: {flexShrink: 1},
   rowAction: {
     position: 'absolute',
     right: 12,
