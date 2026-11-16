@@ -360,7 +360,8 @@ authorized local implementation, relevant verification, and checklist update.”
 
 ## Preserve these boundaries
 
-- The baseline enables `ENABLE_SIGNED_IN_REDESIGN` on both platforms. Wallet and
+- The redesigned signed-in UI is the only path; the `ENABLE_SIGNED_IN_REDESIGN`
+  flag was removed on 2026-11-16. Wallet and
   coin-detail Send/Convert actions use `SendWizard`; Receive uses the Transfer
   screens. Recheck before editing. Do not blanket-redesign legacy
   `Coin/SendCoin`, `Coin/ConvertCoin`, or `Coin/ReceiveCoin` just because they exist.
@@ -3947,3 +3948,17 @@ and the added address line reads "Added · Not in this wallet"; the Confirm step
 shows the same credential note as the Content step (one `EncryptedCredentialNote`).
 Evidence: Babel compiles the changed files and `check:design` passes. Not run on
 a device (Max chose no test run for these two small changes).
+
+### SHELL.FLAG — `ENABLE_SIGNED_IN_REDESIGN` removed (2026-11-16)
+
+Max decided the flag is not needed. Each check keeps its `true` branch in the
+16 files that held it, and the key is gone from both env files. The legacy
+screen files stay in the repository; nothing mounts them. With `false` the
+VerusID screens had no route (`IdentityTab`), so the flag was not a rollback.
+Evidence (`da562817`): iOS and Android production bundles build; the 14 Jest
+suites that import the edited files show no test that passed before and fails
+now; `check:design` and the other passing check scripts still pass; iOS
+Simulator smoke run on "Verus Asset After QA" (iOS 26.5, profile AfterQA,
+Testnet) passed for unlock, Home, coin detail, Receive, Send and Convert entry,
+all tabs, Settings screens and lock/unlock, with no error in Metro or on
+screen. Not run on Android.
