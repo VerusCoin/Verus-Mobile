@@ -65,6 +65,19 @@ export const cachedHistory = async ({
   return promise;
 };
 
+// Saved data without a request. Both return undefined until the store is loaded.
+export const loadPriceCache = () => read();
+export const savedSamples = (keys) => stored
+  && mergeSamples(...keys.map((key) => stored[key]?.samples || []));
+export const savedNote = (key) => stored?.[key];
+// A note is a small public fact beside the samples, such as where a coin's samples are.
+export const saveNote = async (key, note) => {
+  const entries = await read();
+  if (JSON.stringify(entries[key]) === JSON.stringify(note)) return;
+  entries[key] = note;
+  await persist();
+};
+
 export const clearPortfolioPriceCache = async () => {
   generation += 1;
   hourly.clear();
