@@ -698,24 +698,29 @@ it('explains when a namespace has no referral discount or reward', async () => {
 });
 
 it('ignores referral amounts returned for a previously selected network', async () => {
-  let finishMainnet;
-  mockGetRegistrationReferralInfo
-    .mockReturnValueOnce(new Promise(resolve => {finishMainnet = resolve;}))
-    .mockResolvedValue({
-      discount: '500000000', reward: '250000000', currencyID: 'other-chain', currencyName: 'CHAIN', enabled: true,
-    });
+  jest.useFakeTimers();
   mockState.authentication.activeAccount.keys.CHAIN = {vrpc: {addresses: ['chain-wallet']}};
   mockState.coins.activeCoinsForUser.push({id: 'CHAIN', system_id: 'other-chain', currency_id: 'other-chain', display_ticker: 'CHAIN'});
+  const priced = (systemId, label, atomic) => ({
+    quote: {...quoteFor(systemId), totalRequired: {[systemId]: atomic}, totalOperationRequired: {[systemId]: String(Number(atomic) + 10000)}},
+    currencyNames: {[systemId]: label},
+  });
+  let finishMainnet;
+  mockReadRegistrationName
+    .mockImplementationOnce(request => new Promise(resolve => {
+      finishMainnet = () => resolve(nameReadFor(request, priced('chain', 'VRSC', '2000000000')));
+    }))
+    .mockImplementation(async request => nameReadFor(request, priced('other-chain', 'CHAIN', '500000000')));
   const view = await mount(IdentityRegistrationCreate);
-  await press(button(view, 'Network'));
-  await press(radio(view, 'CHAIN'));
-
-  expect(textContent(view.root)).toContain('makes your ID 5 CHAIN cheaper and gives the referrer 2.5 CHAIN');
-  await act(async () => finishMainnet({
-    discount: '2000000000', reward: '2000000000', currencyID: 'chain', currencyName: 'VRSC', enabled: true,
-  }));
-  expect(textContent(view.root)).toContain('makes your ID 5 CHAIN cheaper and gives the referrer 2.5 CHAIN');
-  expect(textContent(view.root)).not.toContain('20 VRSC');
+  await typeName(view);
+  await press(view.root.findAll(node => node.props.accessibilityLabel === 'Network: VRSC' && node.props.onPress)[0]);
+  await press(view.root.findAll(node => node.props.accessibilityRole === 'radio' && node.props.accessibilityLabel === 'CHAIN' && node.props.onPress)[0]);
+  await advance(500);
+  await advance(700);
+  expect(textContent(view.root)).toContain('5.0001 CHAIN');
+  await act(async () => finishMainnet());
+  expect(textContent(view.root)).toContain('5.0001 CHAIN');
+  expect(textContent(view.root)).not.toContain('20.0001 VRSC');
 });
 
 it('uses the selected network wallet’s private address when creating an identity', async () => {
@@ -836,43 +841,43 @@ it('stops passive polling after registration is ready to link and links once dur
 });
 
 it('keeps the full cost estimate visible when the wallet needs more funding', async () => {
-  mockApi.prepareCommitment.mockRejectedValue(Object.assign(new Error('Insufficient funds for both steps.'), {registrationEstimate: {quote, currencyNames: {chain: 'VRSC'}}}));
+  jest.useFakeTimers();
+  mockReadRegistrationBalances.mockResolvedValue({status: 'ready', amounts: {chain: '0.5'}});
   const view = await mount(IdentityRegistrationCreate);
-  await enterName(view);
-  await press(button(view, 'Review costs'));
-  expect(view.root.findByType(CostReview).props.quote).toEqual(quote);
+  await typeName(view);
+  // The shortfall shows on the Name step, next to the price, before anything is prepared.
   expect(textContent(view.root)).toContain('1.0001 VRSC');
-  expect(view.root.findByProps({accessibilityRole: 'alert'}).findByType('Text').children.join('')).toBe('Insufficient funds for both steps.');
+  expect(textContent(view.root)).toContain('You have 0.5 VRSC');
+  expect(footerAction(view, 'Continue').props.disabled).toBe(true);
+  expect(mockApi.prepareCommitment).not.toHaveBeenCalled();
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
 });
 
 it('scrolls each failed attempt to its error and shows only the button spinner while retrying', async () => {
+  jest.useFakeTimers();
   const message = 'Insufficient funds for both steps.';
   mockApi.prepareCommitment.mockRejectedValueOnce(new Error(message));
   const view = await mount(IdentityRegistrationCreate);
-  await enterName(view);
-  expect(mockScrollTo).not.toHaveBeenCalled();
-  await press(button(view, 'Review costs'));
-  expect(mockScrollTo).toHaveBeenCalledWith({y: 0, animated: true});
-  const firstErrorScrolls = mockScrollTo.mock.calls.length;
-  expect(view.root.findByProps({accessibilityRole: 'alert'}).findByType('Text').children.join('')).toBe(message);
+  await typeName(view);
+  await goToCheck(view);
+  const footer = () => view.root.findByProps({testID: 'registration-footer'});
+  const alerts = () => footer().findAll(node => node.props.accessibilityRole === 'alert' && typeof node.type === 'string');
+  expect(alerts()).toHaveLength(0);
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
+  // The error shows in the fixed footer, next to the action, so it needs no scrolling.
+  expect(alerts()).toHaveLength(1);
+  expect(textContent(alerts()[0])).toBe(message);
 
   let failRetry;
   mockApi.prepareCommitment.mockReturnValueOnce(new Promise((_, reject) => {failRetry = reject;}));
-  const retry = button(view, 'Review costs').props.onPress;
-  await act(async () => {retry();});
-  expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(0);
-  expect(mockScrollTo).toHaveBeenCalledTimes(firstErrorScrolls);
-  const loadingButton = view.root.findAllByType('Pressable').find(node => node.props.accessibilityLabel === 'Review costs');
-  expect(loadingButton.props.disabled).toBe(true);
-  expect(loadingButton.findAllByType('ActivityIndicator')).toHaveLength(1);
-  expect(view.root.findAllByType('ActivityIndicator')).toHaveLength(1);
+  await act(async () => {footerAction(view, 'Slide to start').props.onPress();});
+  expect(alerts()).toHaveLength(0);
+  expect(footerAction(view, 'Slide to start').props).toMatchObject({disabled: true, loading: true});
 
   await act(async () => failRetry(new Error(message)));
-  expect(mockScrollTo.mock.calls.length).toBeGreaterThan(firstErrorScrolls);
-  expect(mockScrollTo).toHaveBeenLastCalledWith({y: 0, animated: true});
-  expect(view.root.findByProps({accessibilityRole: 'alert'}).findByType('Text').children.join('')).toBe(message);
-  expect(view.root.findAllByType('ActivityIndicator')).toHaveLength(0);
+  expect(alerts()).toHaveLength(1);
+  expect(textContent(alerts()[0])).toBe(message);
+  expect(footerAction(view, 'Slide to start').props.loading).toBeFalsy();
 });
 
 it('uses the friendly selected linked VerusID for payment while keeping the wallet key as controller', async () => {
@@ -972,6 +977,8 @@ it('clears the old estimate and funding selection when the network changes', asy
   expect(radio(view, 't1@').props.accessibilityState.selected).toBe(false);
 });
 
+const openDetails = async view => press(view.root.findAllByType(TextAction).find(node => node.props.children === 'Transaction details'));
+
 it('shows friendly identity names and only reveals full addresses when explicitly requested', async () => {
   const ownAddress = `i${'A'.repeat(33)}`;
   const fundingAddress = `i${'B'.repeat(33)}`;
@@ -985,56 +992,61 @@ it('shows friendly identity names and only reveals full addresses when explicitl
     identity: {parent: namespaceAddress, recoveryauthority: authorityAddress, revocationauthority: ownAddress},
   });
   const view = await mount(IdentityCommitmentReview);
-  expect(textContent(view.root)).toContain('Paying from t1@');
-  await press(button(view, 'Identity details'));
-  const details = textContent(view.root);
-  expect(details).toContain('recovery@');
-  expect(details).toContain('friend@');
-  expect(details).toContain('community@');
-  expect(details).toContain('This identity');
+  const summary = textContent(view.root);
+  expect(summary).toContain('t1@');
+  expect(summary).toContain('recovery@');
+  expect(summary).toContain('friend@');
   [ownAddress, fundingAddress, authorityAddress, referralAddress, namespaceAddress].forEach(address => {
-    expect(details).not.toContain(address);
+    expect(summary).not.toContain(address);
   });
-  await press(button(view, 'Addresses & transactions'));
-  expect(textContent(view.root)).toContain(ownAddress);
-  expect(textContent(view.root)).toContain(fundingAddress);
+  await openDetails(view);
+  const details = textContent(view.root);
+  expect(details).toContain('community@');
+  expect(details).toContain('Addresses');
+  expect(details).toContain(ownAddress);
+  expect(details).toContain(fundingAddress);
+  expect(details).not.toContain(authorityAddress);
+  expect(details).not.toContain(referralAddress);
+  expect(details).not.toContain(namespaceAddress);
 });
 
 it('shows a changed registration authority by name before renewed approval even when the price is unchanged', async () => {
   const oldAuthority = `i${'A'.repeat(33)}`;
   const newAuthority = `i${'B'.repeat(33)}`;
   const identityNames = {[oldAuthority]: 'first-issuer@', [newAuthority]: 'new-issuer@'};
-  setSavedReview({...review, registrationAuthority: oldAuthority, identityNames});
-  mockApi.refreshRegistrationReview.mockResolvedValue({
-    ...review, registrationAuthority: newAuthority, identityNames, approvalToken: 'new-authority-token',
-  });
+  mockApi.getRegistrationReview
+    .mockResolvedValueOnce({...review, registrationAuthority: oldAuthority, identityNames})
+    .mockResolvedValue({...review, registrationAuthority: newAuthority, identityNames, approvalToken: 'new-authority-token'});
+  mockApi.approveCommitment.mockRejectedValueOnce(Object.assign(new Error('Registration authority changed.'), {code: 'REVIEW_CHANGED'}));
   const view = await mount(IdentityCommitmentReview);
-  expect(textContent(view.root)).toContain('Registration authorized by first-issuer@');
+  await openDetails(view);
+  expect(textContent(view.root)).toContain('Registration authorized by');
+  expect(textContent(view.root)).toContain('first-issuer@');
   expect(textContent(view.root)).not.toContain(oldAuthority);
-  await press(checkbox(view));
-  await pullRefresh(view);
-  expect(view.root.findByType(CostReview).props.quote).toEqual(quote);
-  expect(textContent(view.root)).toContain('Registration authorized by new-issuer@');
+  await act(async () => { jest.advanceTimersByTime(0); });
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
+  // The changed review is read at once and shown by name; no payment was made with the old token.
+  expect(mockApi.approveCommitment).toHaveBeenCalledTimes(1);
+  expect(mockApi.approveCommitment).toHaveBeenCalledWith('job', 'review-token', expect.any(Object));
+  expect(textContent(view.root)).toContain('new-issuer@');
   expect(textContent(view.root)).not.toContain('first-issuer@');
   expect(textContent(view.root)).not.toContain(newAuthority);
-  expect(checkbox(view).props.accessibilityState.checked).toBe(false);
-  expect(button(view, 'Pay & commit name').props.disabled).toBe(true);
-  expect(mockApi.approveCommitment).not.toHaveBeenCalled();
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
+  expect(mockApi.approveCommitment).toHaveBeenCalledTimes(2);
+  expect(mockApi.approveCommitment).toHaveBeenLastCalledWith('job', 'new-authority-token', expect.any(Object));
 });
 
 it('stacks full cost labels and amounts on a narrow screen with large text', async () => {
   const view = await mount(IdentityCommitmentReview);
-  const rows = view.root.findAllByType(AmountRows);
-  expect(rows).toHaveLength(2);
-  rows.forEach(row => {
-    const labels = row.findAllByType('Text');
-    const label = labels.find(text => textContent(text) === row.props.label);
-    const amount = labels.find(text => textContent(text).endsWith(' VRSC'));
-    expect(label).toBeDefined();
+  const flat = style => Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
+  // Each stage row keeps its full label and amount, lets the pair wrap, and scales with the text size.
+  [['Commitment', '0.0001'], ['Registration', '1']].forEach(([title, value]) => {
+    const row = view.root.findAll(node => node.type === 'View' && flat(node.props.style).flexWrap === 'wrap' &&
+      node.findAllByType('Text').some(text => textContent(text) === title)).pop();
+    expect(row).toBeDefined();
+    const label = row.findAllByType('Text').find(text => textContent(text) === title);
+    const amount = row.findAllByType('Text').find(text => textContent(text) === value);
     expect(amount).toBeDefined();
-    expect(label.parent).toBe(amount.parent);
-    const combinedStyle = Object.assign({}, ...label.parent.props.style.filter(Boolean));
-    expect(combinedStyle.flexDirection).toBe('column');
     [label, amount].forEach(text => {
       expect(text.props.numberOfLines).toBeUndefined();
       expect(text.props.allowFontScaling).not.toBe(false);
