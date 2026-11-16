@@ -3940,3 +3940,10 @@ Android normal (Pixel 9, Game PC, light): before (`e4a0fe64`) and after
 pictures for all 13 items; item 10 sheet height 912 px in busy and done (before:
 325 px then 710 px). Report: https://claude.ai/artifact/S3bJ9znNEprpuuWyGQHDyC.
 Open: Android dark; failed Link state on a device; follow-ups in the report.
+
+Follow-up from Max's phone run on build 23 (2026-11-16, `a12aa108`): the primary
+card title names the change ("Primary address added" / "removed" / "replaced")
+and the added address line reads "Added · Not in this wallet"; the Confirm step
+shows the same credential note as the Content step (one `EncryptedCredentialNote`).
+Evidence: Babel compiles the changed files and `check:design` passes. Not run on
+a device (Max chose no test run for these two small changes).
