@@ -2,7 +2,7 @@
 
 This file lists every place where the pull request deliberately differs from, or replaces, recent upstream work on `ui-redesign`. Nothing here is a merge accident. Each item names the upstream commit, what the PR does instead, the fork commit and the reason.
 
-- Base: `upstream/ui-redesign` at `525aa859`. Head: `89d57d5f`.
+- Base: `upstream/ui-redesign` at `525aa859`. Head: `49fe2b8c`.
 - Logic details: [LOGIC_CHANGES.md](LOGIC_CHANGES.md). Review guide: [README.md](README.md).
 
 ## Decisions by the design owner
@@ -13,7 +13,7 @@ These are decisions, not open questions. The reason is given for each one.
 |---|---|---|---|
 | Button styles | `8872ea1b` "Update button styles to be more consistent" (2026-10-17) changes `StandardButton`, `LargerButton` and about 35 legacy screens. | Merged with the fork side kept (`b923f537` "Merge upstream button styles without changing redesign appearance"). The 35 files show their older code; see [the list](#files-that-show-older-upstream-code). | The redesign has one button system (`AppButton`, `TextAction`). The legacy screens that use the old buttons are not mounted by the redesigned navigation. Exception found in this review, not checked on a device: `LinkIdentityForm.render.js` can still open from the v1 login request screen (`LoginRequestIdentity`), and the `TraditionalCryptoSend` steps can still open from older scan paths in `VerusPay.js` (`preConfirm` -> `openSubwalletSendModal`). Those steps show the older button style. |
 | Link VerusID page | `525aa859` adds a permanent "Link identity manually" button. | Manual entry shows only when the lookup fails and returns no rows: `LinkIdentities.js:323` ("Enter VerusID manually"). Merge `5ab344b2`. | The page leads with the found identities. Consequence: when the lookup succeeds, there is no manual entry. An identity that the wallet only partly controls, and that the lookup does not return, cannot be linked from this page in that case. |
-| Selected card after a card list rebuild | `c9d571d0` falls back to the matching card, else `MAIN_WALLET`, else the first card, and drops coins with no cards. | `coinMenus.js:18-37` keeps the matching card or sets `null`. The card chooser shows. Coins with no cards keep a `null` key. New `userSelectedSubWallets`. | The stale card object is never used, so upstream's safety goal holds. An automatic choice must not look like a user choice (`d30ee935`: "prefer funded cards without replacing explicit choices"). Consequence: after an unlink, the user picks a card. Upstream test `subWalletLifecycle` fails (5 tests). |
+| Selected card after a card list rebuild | `c9d571d0` falls back to the matching card, else `MAIN_WALLET`, else the first card, and drops coins with no cards. | `coinMenus.js:18-37` keeps the matching card or sets `null`. The card chooser shows. Coins with no cards keep a `null` key. New `userSelectedSubWallets`. | The stale card object is never used, so upstream's safety goal holds. An automatic choice must not look like a user choice (`d30ee935`: "prefer funded cards without replacing explicit choices"). Consequence: after an unlink, the user picks a card. As upstream, the chooser opens only on a focused screen with a signed-in account and at least one card (`920fda51`). The three changed `subWalletLifecycle` tests assert the `null` selection (`f02602cf`). |
 | VRPC servers | `6240d074` moves VRSC and VRSCTEST to the V2 servers. | Mainnet VRSC: upstream V2 value, unchanged (`89d57d5f`). VRSCTEST: V2 only when the build has a real key for `v2api.verustest.net`, else `api.verustest.net` (`CoinsList.js:35, 115`). | V2 servers accept only requests signed with a Verus app key. A build with the placeholder key failed every balance, history and send call (`4f8aa68b`). A build with the key behaves like upstream. |
 | Versions and env values | - | Unchanged: app version, build number, `VRPC_API_APP_ID`, `ALLOW_HTTP_GENERIC_RESPONSE_POSTS`, the Android `CI=true` scripts, React Native 0.77.3. | The PR changes none of these values. Release builds now ignore `ALLOW_HTTP_GENERIC_RESPONSE_POSTS` for response POSTs (see [LOGIC_CHANGES.md](LOGIC_CHANGES.md#keys-signing-and-authentication), keys 6); the value itself is unchanged. |
 | `ENABLE_SIGNED_IN_REDESIGN` | Not in upstream. | Removed from code and env files. The redesigned UI is the only path. Legacy screen files stay in the repository; nothing mounts them. | With the flag off, the VerusID registration, link and manage routes had no tab (`IdentityTab`), so the flag was not a working rollback. The legacy files are kept on purpose (reason not recorded beyond the decision); deleting them can be a separate change. |
@@ -104,86 +104,66 @@ The provision-identity steps render through the redesigned `ProvisionIdentityBot
 
 No upstream test file is deleted. Ten test files are new: `genericRequestCompletionFlow`, `genericRequestDelivery`, `giftCardPresentation`, `id1LinkFailureRouting`, `processVerusIdResumeGuard`, `verusIdFlowGuards` (in `src/utils/__tests__/unit`), plus `IdentityUpdateRequestInfo`, `IdentityPickerSheet` and `SignedInVerusIdLifecycle` next to their screens.
 
-Changed upstream test files and why:
+Shared setup (`cb73f287`, `fbb4e15a`):
 
-| Test file | Change | Reason |
-|---|---|---|
-| `CoinData` | New "Default VRPC endpoints" cases (no key, empty key, placeholder, real key). | Testnet endpoint rule. |
-| `contentMultiMapRemoveUi` | Text "current" becomes "active" in three tests; test names changed. | Copy change. Shows as "test missing" in the Jest comparison. |
-| `seedDetails`, `deeplinkNfcSubmission` | Test names and expected text ("recovery data", "step" instead of "prompt"). | Terminology and the NFC tap screen. Shows as "test missing". |
-| `convertOrCrossChainSendConfirm`, `fundRawTransactionError`, `authDataStorage`, `spendableKeyReviewFees` | Mock the app alert instead of `Alert.alert`. | Native alerts moved to the app alert sheet. |
-| `dataRequestResponses` | Mocks `getIdentity`; expects the loaded identity in `signHash`. | Signing order (LOGIC_CHANGES keys 2). |
-| `genericResponseNetwork`, `identityUpdateContentHandler` | Mock the new delivery module; fixtures set `createmmr: true`. | Delivery extraction; early refusal list. |
-| `identityContentReviewScreen`, `identityRegistrationPresentation`, `identityRegistrationScreens`, `identityRegistrationStorage`, `identitySignatureThreshold`, `profileDeletion` | Expected text and labels follow the redesigned copy; `identityRegistrationScreens` uses `AppButton`. | Copy and component change. |
-| `spendableKeyClaimMetadataSession` | New case: refresh affected lifecycles after unlinking gifted identities. | New behavior. |
-| `startupRecovery`, `barcodeReaderCompatibility` | Mock `StartupCover`, `WalletUnlockCoordinator`, safe-area context. | New mounted components. |
-| `walletBackupRequestSession` | Older button labels (`Write NFC Backup`). | Part of the `8872ea1b` decision. |
+- `debug/setupJest.js` mocks the icon, SVG, camera, permission, gesture-handler and safe-area native modules, and gives the Redux mock store `subscribe()` so `createAlert` works in tests.
+- `package.json` adds `@react-navigation` to `transformIgnorePatterns` so its image assets load. This is the only Jest config change.
+- `src/tests/helpers/mockReactNative.js` and `mockReactRedux.js` build a test's `react-native` and `react-redux` mocks from the real modules plus that test's overrides. Hand-written mocks that were too small for the redesigned screens now use them.
+
+How the upstream suites were updated:
+
+- Screen tests drive the redesigned screens. They find controls by role and visible text, and mock navigation, Reanimated, the app state and sheet modals at their boundaries. The behavior checks stay.
+- Where the PR changes logic on purpose, the expectation follows the change and the commit names it. Examples: mempool reads in `vrpcRefresh` and `walletRefreshCoordinator` (`07452edb`, `db7bf214`); boolean `getblock` verbosity and the saved first broadcast time in `identityRegistration`, `identityRegistrationSdk`, `vrpcRegistrationBatching` and `identityDurableFunding` (`34a6f549`, `39268c3b`, `853c51c6`, `c5d17c6e`); `shareAttempt` in `giftCard` (`311d6ad9`); the mempool funding reads in `spendableKey` and `currencyTransferIntent` (`60757c5e`); the own-address refusal in `identityManagementUpdate` (`a56f6ba7`); the "NFC is off" and "Z recovery secret" text in `walletBackupNfc` and `getKeyMaterial` (`4b39d58b`).
+- Where a test found upstream behavior that the redesign had lost, the product was fixed. Eight fixes came from this; see [README.md, section 5](README.md#fixes-found-by-the-upstream-tests).
+- `walletBackupRequestSession` keeps the older button labels (`Write NFC Backup`), as part of the `8872ea1b` decision.
 
 ## Jest status
 
 Full suite, same machine, `--maxWorkers=3`, on 2026-11-16.
 
-| Side | Suites | Failed suites | Tests | Passed | Failed |
-|---|---|---|---|---|---|
-| `upstream/ui-redesign` `525aa859` | 193 | 15 | 2773 | 2630 | 75 |
-| PR branch `89d57d5f` | 202 | 63 | 2436 | 2184 | 184 |
+| Side | Suites | Failed suites | Tests | Passed | Failed | Skipped |
+|---|---|---|---|---|---|---|
+| `upstream/ui-redesign` `525aa859` | 193 | 15 | 2773 | 2630 | 75 | 68 |
+| PR branch `49fe2b8c` | 202 | 19 | 2811 | 2637 | 106 | 68 |
 
-497 tests pass on upstream and do not pass on the PR branch, in 49 suites. The PR branch runs fewer tests in total because suites that do not load report no tests.
+Compared per test name, 25 tests pass on upstream and fail on the PR branch in this run.
 
-**What this means.** Most of the 497 are suites that no longer load. Their hand-written mocks of `react-native`, `react-native-paper` and native modules do not cover what the redesigned screens now import (for example `Platform.OS`, `Animated` mixins, `NativeModules`, the camera, gesture handler). Others assert upstream text or behavior that the PR changed on purpose. A few fail on mocks that lack a new function. These suites need their mocks and expectations updated for the redesigned screens. **This is not done yet.** Until it is, a passing Jest run is not evidence for this PR, and the suites below do not protect the behavior they used to cover.
+**2 tests in `identityRegistrationScreens`.** "waits for saved summaries before showing an empty registration list or enabling creation" and "keeps last known registrations visible but disables actions until their summaries reload". Both mount upstream's registration start screen (`IdentityRegistrationStart`) and test its loading states. The redesign replaced that screen with the VerusID tab, which has no summary wait, so the element is undefined. The other storage cases of that screen now mount the VerusID tab (`c76a2671`).
 
-Kind: **Load** = suite does not load (mock or module gap). **Removed** = imports a file the PR removed. **Expect** = asserts upstream behavior or text that the PR changed on purpose. **Mock** = mock lacks a new function. **Renamed** = test renamed in the PR. **Other** = cause not isolated.
+**23 tests in `api/coinpaprika.int.test.js`.** The file is identical on both sides. Each test calls the live CoinPaprika service with `fetch` and does not run app code; only the coin list comes from `CoinDirectory`. The service rate-limits. On upstream, 61 tests of the same file failed in the same run with the same error; on the PR branch, 87 failed.
 
-| Tests | Suite | Kind | First cause |
-|---|---|---|---|
-| 86 | `identityRegistrationScreens` | Load | `Cannot read properties of undefined (reading 'Mixin')` |
-| 46 | `identityManagementScreens` | Load | same `Mixin` error |
-| 29 | `appEncryptionReviewSession` | Load | `reading 'OS'` (`Platform` mock) |
-| 24 | `identitySignatureThreshold` | Load | `Mixin` |
-| 23 | `api/coinpaprika.int.test.js` | Expect | Live CoinPaprika test. The PR uses CoinPaprika only for `btc`, `eth`, `erc20`; KMD gets no price. |
-| 17 | `spendableKey` | Mock | `getMempoolUnspentUtxos is not a function` |
-| 16 | `identityContentReviewScreen` | Load | `Mixin` |
-| 15 | `identityActions` | Removed | `openIdentityActionsModal is not a function` (legacy overview action removed) |
-| 15 | `deepLinkDispatcherLifecycle` | Load | `OS` |
-| 15 | `currencyTransferIntent` | Other | preflight result lacks `validation`; mempool funding mocks likely (not isolated) |
-| 13 | `identityStateChangeConfirmation` | Load | `Mixin` |
-| 13 | `identityLinkingScreen` | Load | `Mixin` |
-| 13 | `genericRequestCompletionLifecycle` | Removed | `GenericRequestComplete` container removed (delivery moved) |
-| 12 | `walletBackupRequestSession` | Load | `Mixin` |
-| 12 | `genericResponseNetwork` | Load | `OS` |
-| 11 | `vrpcRefresh` | Load | worker crash; `updates.js:29` reads an undefined balance answer |
-| 11 | `identityContentDisplay` | Load | `Mixin` |
-| 10 | `identitySendModalApprovalNavigation` | Load | `OS` |
-| 9 | `coinMenuWalletLifecycle` | Load | `RNGestureHandlerModule` not found |
-| 8 | `loginFailureFeedback` | Load | `OS` |
-| 7 | `setupSeedSubmission` | Load | `reading 'get'` |
-| 7 | `identityRegistrationNotifications` | Load | `Mixin`; also expects old notice text and a `testID` |
-| 6 | `walletRefreshCoordinator` | Expect | mock mempool is not empty, so the uncached re-read runs |
-| 6 | `provisionIdentitySession` | Load | `OS` |
-| 6 | `loginRequestContinuation` | Load | `reading 'create'` |
-| 6 | `identityStateChangeDisplay` | Load | `Mixin` |
-| 6 | `identitySendModalFormLifecycle` | Load | `OS` |
-| 6 | `giftCard` | Mock | result gains a field; mock lacks `getMempoolUnspentUtxos` |
-| 5 | `subWalletLifecycle` | Expect | `null` instead of `MAIN_WALLET` (decision above) |
-| 5 | `profileCreationSubmission` | Load | VisionCamera native module not found |
-| 5 | `homeSessionTransitions` | Load | `reading 'get'` |
-| 4 | `nfcImportSubmission` | Load | `Mixin` |
-| 3 | `identityRegistration` | Expect | extra `saved:` step (`broadcastAt` saved before the send) |
-| 3 | `contentMultiMapRemoveUi` | Renamed | "current" -> "active" |
-| 3 | `barcodeReaderCompatibility` | Other | `barcodeReaderStyles is not a function` |
-| 2 | `walletBackupNfc` | Expect | "NFC is disabled on this device." -> "NFC is off..." |
-| 2 | `vrpcRegistrationBatching` | Expect | `getblock` verbosity `1` -> `true`, height as string |
-| 2 | `seedDetails` | Renamed | terminology |
-| 2 | `overviewRefresh` | Removed | `TxDetailsModal` removed (replaced by `TransactionDetailsSheet`) |
-| 2 | `identityUpdateReviewScreen` | Load | `OS` |
-| 2 | `getKeyMaterial` | Expect | message text "Z recovery secret" |
-| 2 | `deeplinkNfcSubmission` | Renamed | "prompt" -> "step" |
-| 1 | `vrpcEndpointReset` | Other | `getVerusIdInterface` bind on an undefined cached interface |
-| 1 | `subWalletIdentityNames` | Load | test store lacks `subscribe` |
-| 1 | `startupRecovery` | Load | worker crash |
-| 1 | `scopedCredentials` | Expect | fail closed on an unreadable entry |
-| 1 | `identityRegistrationSdk` | Other | not isolated |
-| 1 | `identityManagementUpdate` | Expect | new `RECIPIENT_IN_WALLET` refusal |
-| 1 | `identityDurableFunding` | Expect | `getBlock` verbosity `true` |
+### Upstream test names that the PR changes
+
+63 upstream test names do not exist on the PR branch, in 17 suites. Each one is ported to a redesigned screen under a new name, renamed to the intended behavior, or removed with removed behavior.
+
+| Tests | Suite | What happened |
+|---|---|---|
+| 19 | `identityRegistrationScreens` | Ported to the stepped New VerusID flow (Name, Referral, Check details, progress with slide payments) and the VerusID tab; engine-call checks kept. Cases for removed parts are deleted: dots in names, the Start list, referral memory per network, delete from the list, cost checkboxes, pull to refresh on the review, the Review options flow (`3bccb151`, `c380bd69`, `fe0170ba`, `91c3ed92`, `4e16cf62`, `c76a2671`). |
+| 12 | `appEncryptionReviewSession` | Ported to the review with one approval button; the "ready to send" and Continue step is gone. The two cases that only checked the removed daemon debug panel are removed. The default identity is the first by name (`8da5ed27`, `08bc4614`). |
+| 5 | `identityActions` | Ported from the list chooser in `VerusIdServiceOverview` to the options sheet on the VerusID page. The Android dismissal case is removed with that chooser (`42983e67`, `2f197d5a`, `88da2b89`). |
+| 3 | `walletBackupRequestSession` | The three in-screen profile creation tests are removed: "Create a new wallet" now opens the wallet setup flow (`4f2ab084`). |
+| 3 | `coinMenuWalletLifecycle` | The tab filter and its "No compatible cards found." alert are gone; those cases are removed (`33e10b4d`). |
+| 3 | `subWalletLifecycle` | Renamed: they assert the `null` selection, a safe rate read, and that an explicit card choice stays after a rebuild (`f02602cf`; [decision](#decisions-by-the-design-owner)). |
+| 3 | `contentMultiMapRemoveUi` | Renamed: "current" becomes "active" (copy change). |
+| 2 | `genericRequestCompletionLifecycle` | Ported from the removed `GenericRequestComplete` screen to `createGenericResponseDelivery` and `GenericRequestHome` (`32d295a0`, `e9819fc3`). |
+| 2 | `genericResponseNetwork` | Renamed: a failed detail ends on the request error screen, and the approved response goes to the shared delivery (`adda36f6`). |
+| 2 | `deepLinkDispatcherLifecycle` | Renamed: the wallet unlock sheet replaces the sign-in modal, and a refusal shows on the opening screen, not in an alert (`c9b58c07`). |
+| 2 | `deeplinkNfcSubmission` | Renamed: "prompt" becomes "step" (NFC tap screen). |
+| 2 | `seedDetails` | Renamed: "seed details" becomes "recovery data". |
+| 1 | `identityManagementScreens` | Renamed: a Transfer preparation error shows above the footer, not at the end of the scroll view (`06a4f364`). |
+| 1 | `identityLinkingScreen` | Renamed: the Link page returns by itself once the selected VerusIDs are saved (`a8d35959`). |
+| 1 | `identityContentReviewScreen` | The case for missing content changes (`undefined`) moved to the parent screen test in `identitySignatureThreshold` (`17b11f67`). |
+| 1 | `identityRegistrationNotifications` | The "Clear all" confirmation test is deleted with the removed tray (`db5e7916`). |
+| 1 | `scopedCredentials` | Renamed to "refuses a partial set after an undecryptable stored entry" (`e3f9a85a`; [keys 4](LOGIC_CHANGES.md#keys-signing-and-authentication)). |
+
+### Failing tests that exist only on the PR branch
+
+| Tests | Suite | Cause |
+|---|---|---|
+| 2 | `SignedInVerusIdLifecycle` (VerusID service `__tests__`) | The two READY resume tests. The READY row now opens the Link VerusID list instead of resuming. The suite repair (`c15ee073`) does not cover this behavior change. |
+| 1 | `processVerusIdResumeGuard` | Cause not recorded. |
+| Suite does not load | `genericRequestDelivery` | Cause not recorded. Delivery is also covered by `genericRequestCompletionLifecycle`, which drives `createGenericResponseDelivery`. |
+
+Other failures are the same on both sides: live network tests (`int/composite`, `int/electrum`, `int/dlight`, `api/coinpaprika`) and 1 test in `giftCard`. Five `int/electrum` suites do not load on either side.
 
 All suite names are in `src/utils/__tests__/unit/` unless a path is given.

@@ -12,14 +12,14 @@ This guide is for the review of the UI redesign pull request into `ui-redesign`.
 - A new UI for the whole app: signed out, Home, asset detail, Receive, Send and Convert, requests, VerusID, Services, Scan and Settings.
 - One design system: semantic light and dark theme, Inter typography, shared components, bottom sheets, safe-area footers. The rules are in [`DESIGN.md`](../../DESIGN.md) and [`TYPOGRAPHY.md`](../../TYPOGRAPHY.md); `pnpm check:design` enforces part of them.
 - The logic changes the new screens need, and fixes found while testing them. They are listed one by one in [LOGIC_CHANGES.md](LOGIC_CHANGES.md).
-- Size: 869 files, about +128,000 / -24,000 lines against `upstream/ui-redesign` `525aa859`. About 178 merge commits on the first-parent line; each subject names one change.
+- Size: 916 files, about +131,700 / -25,400 lines against `upstream/ui-redesign` `525aa859`, head `49fe2b8c`. About 179 merge commits on the first-parent line; each subject names one change.
 
 ### What the PR is not
 
 - Not a rewrite of wallet logic. Key derivation, hashing, encryption algorithms, coin channels and the Redux store layout stay. Changes in those files are listed in [LOGIC_CHANGES.md](LOGIC_CHANGES.md).
 - No version change: app version, build number, bundle id, signing, React Native 0.77.3, `VRPC_API_APP_ID` and the env values are the upstream values.
 - No feature flag. The redesigned UI is the only path. Legacy screen files remain in the repository; nothing mounts them (list in [section 4](#4-known-gaps-and-risks)).
-- Not green on Jest. 497 upstream tests that pass on the base do not pass on this branch, mostly because their mocks do not load the new screens. See [Jest status](DIFFERENCES_FROM_UPSTREAM.md#jest-status).
+- Not fully green on Jest. 25 tests that pass on the base fail here: 23 live CoinPaprika tests (identical file; the service rate-limits) and 2 tests for the loading states of an upstream screen that the redesign replaced. See [Jest status](DIFFERENCES_FROM_UPSTREAM.md#jest-status).
 
 ### How to review it, in order
 
@@ -59,15 +59,15 @@ Each area follows the same order: what the user sees now, why it changed, main f
 
 ### 2.2 Home and portfolio
 
-**Now.** The Wallet tab shows the total value, an optional value chart strip (closed by default; the open state is remembered), and one row per asset with balance, fiat value and card count. A header action hides balances; hidden amounts are blurred everywhere, also after a restart. Notices (VerusID registration progress, private wallet sync) are small cards above the list. A "ready" card celebrates a new VerusID once. "Manage assets" adds an asset by identifier, removes an asset at any balance, and offers found currencies without adding them by itself.
+**Now.** The Wallet tab shows the total value, an optional value chart strip (closed by default; the open state is remembered), and one row per asset with balance, fiat value and card count. The total and the chart count only the assets with "Show on Home" on; the total shows "—" until the saved asset choices are loaded. The chart draws at once from prices saved on the phone and updates when new prices arrive. A header action hides balances; hidden amounts are blurred everywhere, also after a restart. Notices (VerusID registration progress, private wallet sync) are small cards above the list. A "ready" card celebrates a new VerusID once. "Manage assets" adds an asset by identifier, removes an asset at any balance, and offers found currencies without adding them by itself.
 
-**Why.** The goal is to make total value, active assets, card counts and status scannable on one screen. The old Home was a widget board. Upstream had two separate modals for "Add PBaaS currency" and "Add ERC-20 token"; one identifier field replaces both.
+**Why.** The goal is to make total value, active assets, card counts and status scannable on one screen. The old Home was a widget board. Upstream had two separate modals for "Add PBaaS currency" and "Add ERC-20 token"; one identifier field replaces both. The total follows the shown rows by design owner decision (`DESIGN.md`, "Home value chart"). The phone still records the amount of a hidden asset, so hiding or showing an asset redraws the whole chart line without a jump.
 
 **Main files.** `src/containers/Home/SignedInWalletHome.js`, `components/HomeValueChart.js`, `components/SignedInWalletSheets.js`, `HomeWidgets/HomeNotice.js`, `HomeWidgets/VerusIdReadyCard.js`, `src/containers/ManageAssets/`, `src/utils/assets/`, `src/utils/portfolioHistory/`, `src/components/PrivacyBlurredText.js`.
 
-**Not changed underneath.** Balance, rate and info refresh still run through `Home.js` and the interval channels. Changed: VRPC pending balance and on-chain prices ([LOGIC_CHANGES.md](LOGIC_CHANGES.md#funds-and-fees), funds 3; network 2). Asset choices move to plain storage (storage 1).
+**Not changed underneath.** Balance, rate and info refresh still run through `Home.js` and the interval channels. Changed: VRPC pending balance and on-chain prices ([LOGIC_CHANGES.md](LOGIC_CHANGES.md#funds-and-fees), funds 3; network 2). Home total rule and chart price requests ([network 12, 13](LOGIC_CHANGES.md#network-and-refresh)). Asset choices move to plain storage (storage 1); the public price cache gains a route note per on-chain coin (storage 4).
 
-**Try it.** Open Home on Testnet. Hide balances, restart, check the blur. Open the chart strip. Add an asset by identifier in Manage assets, then remove it.
+**Try it.** Open Home on Testnet. Hide balances, restart, check the blur. Turn "Show on Home" off for one asset and check that the total equals the shown rows. Open the chart strip. Add an asset by identifier in Manage assets, then remove it.
 
 | Top | Value chart open | Top, dark | End of asset list |
 |---|---|---|---|
@@ -159,13 +159,13 @@ Screenshots: none for this area. These flows need a live request link or an NFC 
 
 ### 2.7 VerusID
 
-**Now.** VerusID is its own tab. The list shows one row per linked VerusID with a two-tone name, asset count and a status badge only when locked or revoked. The VerusID page shows a light card with Receive, Send and Convert, then Control, Content and Details rows, then Funds. "New VerusID" is a stepped flow with name check, payer choice with funds meters, two payment holds, and progress that resumes from Home. "Link VerusID" lists found identities with checkboxes; manual entry shows only when the lookup fails. Modify, Transfer, Revoke and Recover are stepped forms with a summary of every changed key and authority before signing.
+**Now.** VerusID is its own tab. The list shows one row per linked VerusID with a two-tone name, asset count and a status badge only when locked or revoked. The VerusID page shows a light card with Receive, Send and Convert, then Control, Content and Details rows, then Funds. "New VerusID" is a stepped flow with name check, payer choice with funds meters, two payment holds, and progress that resumes from Home. "Link VerusID" lists found identities with checkboxes; manual entry shows only when the lookup fails. Modify, Transfer, Revoke and Recover are stepped forms with a summary of every changed key and authority before signing. When saved registrations cannot be read, the tab shows a notice with "Try again" and "Clear all registration data".
 
 **Why.** The old page used fold-out details. Status badges replace raw state text. Upstream's management and registration features (`c9d571d0`, `9ac1c509`) are kept and wired into these screens; the differences are listed in [DIFFERENCES_FROM_UPSTREAM.md](DIFFERENCES_FROM_UPSTREAM.md#upstream-logic-that-the-pr-changes-on-purpose).
 
 **Main files.** `src/containers/RootStack/IdentityStackScreens/IdentityStackScreens.js`, `src/containers/Services/ServiceComponents/VerusIdService/` (`SignedInVerusIdService.js`, `SignedInVerusIdDetails.js`, `VerusIdCard.js`, `LinkVerusIdSheet.js`, `IdentityRegistration/`, `IdentityManagement/`, `IdentityLinking/LinkIdentities.js`), `src/containers/RevokeRecover/`, `src/utils/verusid/`, `src/utils/identityRegistration/`, `src/utils/identityManagement/`.
 
-**Not changed underneath.** Registration transaction building and signing (upstream SDK), revoke and recover funding from the identity address (`check:identity-authority-funding`). Changed: registration retry and wait rules, transfer refusal of own addresses ([LOGIC_CHANGES.md](LOGIC_CHANGES.md#transaction-building-and-broadcast), broadcast 3; funds 17).
+**Not changed underneath.** Registration transaction building and signing (upstream SDK), revoke and recover funding from the identity address (`check:identity-authority-funding`). Changed: registration retry and wait rules, transfer refusal of own addresses ([LOGIC_CHANGES.md](LOGIC_CHANGES.md#transaction-building-and-broadcast), broadcast 3; funds 17), the registration storage reset (storage 12), the session check on page actions (keys 20).
 
 **Try it.** On Testnet: open the VerusID tab, open a linked identity, Send from it, start "New VerusID" up to the first hold, link an identity, open Modify and go back before signing.
 
@@ -326,7 +326,7 @@ Both Android modules register in the existing `VerusKeepAwakePackage`.
 
 ## 4. Known gaps and risks
 
-1. **Jest is not updated.** 497 upstream tests that pass on the base do not pass here; 40+ suites do not load. See [Jest status](DIFFERENCES_FROM_UPSTREAM.md#jest-status).
+1. **Jest is not fully green.** The suites are updated for the redesigned screens. 25 tests that pass on the base fail here: 23 live CoinPaprika tests (identical file, rate-limited service) and 2 tests for the loading states of the upstream registration start screen, which the redesign does not have. 3 tests that exist only on this branch fail, and the new `genericRequestDelivery` suite does not load. See [Jest status](DIFFERENCES_FROM_UPSTREAM.md#jest-status).
 2. **Legacy files stay unmounted.** For example `LegacyHomeTabScreens.js`, `SideMenu/`, `ProfileStackScreens/`, `Home/Home.render.js`, `Services/Services.render.js`, `Coin/DynamicHeader.js`, `SubWalletSelect/SubWalletSelectorModal.js`, legacy `SendCoin`, `ConvertCoin`, `ReceiveCoin`. They still compile and add review noise. Deleting them is not part of this PR.
 3. **Older button style still reachable in two places.** `LinkIdentityForm` (v1 login requests) and the `TraditionalCryptoSend` steps (older scan paths). See [DIFFERENCES_FROM_UPSTREAM.md](DIFFERENCES_FROM_UPSTREAM.md#decisions-by-the-design-owner).
 4. **Link VerusID.** With a successful lookup there is no manual entry, so an identity the wallet only partly controls cannot be linked from that page if the lookup does not return it.
@@ -347,14 +347,32 @@ Only what a record shows is listed here. Source reading and device runs are kept
 
 ### Static checks
 
-- At `01996b42` (two commits before the head; the later commits only remove files and change one endpoint), these passed: `check:design` (39 canonical sources; card palette contrast minimum 5.014:1), `check:identity-authority-funding`, `check:search-fields`, `check:send-wizard-options`, `check:safe-areas --changed`, `scripts/check-generic-request-completion-flow.js` (11 cases), `scripts/check-stack-freeze.cjs` (iOS and Android modes).
+- At the head `49fe2b8c`, the iOS and Android production JS bundles build and `check:design` passes.
+- At `01996b42` (before the Jest repair and the later fixes), these passed: `check:design` (39 canonical sources; card palette contrast minimum 5.014:1), `check:identity-authority-funding`, `check:search-fields`, `check:send-wizard-options`, `check:safe-areas --changed`, `scripts/check-generic-request-completion-flow.js` (11 cases), `scripts/check-stack-freeze.cjs` (iOS and Android modes).
 - Four other check scripts failed at that point because they compared old text or outputs. They are removed from this PR (`a29c8c91`).
 - A relative-import scan found 0 unresolved imports in `src`, `App.js` and `index.js`.
 - When the flag was removed (`da562817`), iOS and Android production JS bundles built. An Android release bundle also built for the last request fixes.
 
 ### Jest
 
-Run on both sides on 2026-11-16. Upstream: 2630 of 2773 pass. PR branch: 2184 of 2436 pass. Details and per-suite causes: [Jest status](DIFFERENCES_FROM_UPSTREAM.md#jest-status).
+Run on both sides on 2026-11-16. Upstream: 2630 of 2773 pass. PR branch: 2637 of 2811 pass. Compared per test name, 25 tests pass on upstream and fail here: 23 live CoinPaprika tests and 2 tests of the upstream registration start screen. 63 upstream test names are ported to the redesigned screens under new names, renamed to the intended behavior, or removed with removed behavior. Details per suite: [Jest status](DIFFERENCES_FROM_UPSTREAM.md#jest-status).
+
+The suites were updated for the redesigned screens (shared setup in `debug/setupJest.js`, helpers in `src/tests/helpers/`). Where a test found upstream behavior that the redesign had lost, the product was fixed.
+
+### Fixes found by the upstream tests
+
+| Commit | File | Behavior now |
+|---|---|---|
+| `88da2b89` | `SignedInVerusIdDetails.js` | Unlink, Transfer and Modify re-check the session that opened the options sheet; a stale session cancels the action. Upstream's `VerusIdServiceOverview.js` did this. |
+| `5d4f5860` | `VerusIdOptionsSheet.js` | The first chosen action wins when a second tap comes during the sheet close. |
+| `0f3c634b` | `Home.js` | An ordinary asset with no cards does not open while its cards rebuild. A pre-launch currency still opens. |
+| `920fda51` | `SignedInCoinDetail.js`, `CoinMenus.js` | The card chooser opens only on a focused screen with a signed-in account and at least one card. Selecting the only card needs an account. |
+| `06a4f364` | `IdentityManagementScreens.js` | A Transfer error shows above the fixed "Review transfer" button, not at the end of the scroll view. |
+| `c76a2671`, `74a10cc4` | `RegistrationStorageNotice.js`, `SignedInVerusIdService.js` | Unreadable registration storage shows a notice with "Try again" and "Clear all registration data". The confirmation sheet says that fees already paid are not refunded. Signed or broadcast registrations still cannot be deleted one by one. |
+| `cdfa403e` | `RegistrationScreens.js` | No "Preparing…" while a saved commitment review only loads. |
+| `b29f108e` | `ContentStep.js`, `VerusIdContentChangeCard.js` | The identity update Content step shows upstream's warning again: "On-chain history persists, even after content is removed." |
+
+Evidence: unit tests `identityActions`, `homeSessionTransitions`, `coinMenuWalletLifecycle`, `identityManagementScreens`, `identityRegistrationScreens` and `identityContentReviewScreen`; both production JS bundles build; `check:design` passes. Rendered on the iOS Simulator with a forced state, each in light and dark: the registration storage notice, its confirmation sheet and the Transfer footer error. The storage notice was rendered before the label fix `74a10cc4`. The other fixes did not run on a device (see below).
 
 ### Device runs
 
@@ -365,10 +383,13 @@ All device runs used the public VRSCTEST testnet (some also a private test chain
 - **End-to-end runs.** 2026-10-27: batch fixes and small screens on iPhone 17 Pro, iPhone SE and Android 360x640. 2026-11-05: 50 case runs on four phones, 47 pass, 2 fail, 1 skip; the failure (VerusID registration on default servers) was fixed in merge `ff2e63e0`. 2026-11-06 (VerusID focus): 232 case runs, 210 pass, 6 fail, 7 blocked, 9 skip; 0 P1 and 8 P2 findings. The fix batch is merge `0f10dad8`; it was re-checked on both Android phones and not re-run on iOS. Registration with two holds passed on all four phones.
 - **Flag removal.** iOS Simulator smoke run: unlock, Home, asset detail, Receive, Send and Convert entry, all tabs, Settings, lock and unlock, with no error on screen or in Metro. Not run on Android.
 - **Physical iPhone.** Request flows (identity update, provisioning) ran on a physical iPhone; 13 request and VerusID fixes followed and were checked on iOS Simulator (normal and SE) and on Android normal (light).
+- **Home total and value chart.** iOS 26.5 Simulator, testnet wallet: the total equals the shown rows; hide and show across a restart; the chart with delayed price requests; cold start; ranges; light and dark.
 
 ### Not verified on a device
 
 - ERC-20 and BTC sends with the fee choice (no Sepolia token and no BTC test coin at the time).
 - NFC reads and writes on a physical card for every entry (Android emulators have no NFC).
 - Android dark mode for the last request fixes; Android normal size for some request flows.
+- Home total and value chart: not run on Android; chart scrub and pull to refresh not checked.
+- Fixes from the upstream tests: the two VerusID page session guards, the Home and card chooser guards, the registration loading text, the "Try again" label after `74a10cc4`, and the Content step note inside a real request.
 - Any mainnet flow.
