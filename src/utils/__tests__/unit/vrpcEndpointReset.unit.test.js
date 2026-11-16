@@ -19,6 +19,10 @@ jest.mock('verusd-rpc-ts-client', () => ({
       return this.request({cmd: 'getcurrency', currencyname});
     }
 
+    getBlock(hashOrHeight, verbosity) {
+      return this.request({cmd: 'getblock', hashOrHeight, verbosity});
+    }
+
     fundRawTransaction(txhex, utxos, changeaddr, explicitfee) {
       return this.request({
         cmd: 'fundrawtransaction',
