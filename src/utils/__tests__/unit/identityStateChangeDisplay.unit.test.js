@@ -7,13 +7,16 @@ jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative'
 }));
 
 jest.mock('react-native-paper', () => ({
+  ...jest.requireActual('react-native-paper'),
   Checkbox: {Android: 'Checkbox'},
   Portal: 'Portal',
   Text: 'Text',
 }));
 
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
-jest.mock('../../../styles', () => ({highRiskStepStyles: {}}));
+jest.mock('../../../components/SemiModal', () => ({visible, children}) => visible ? children : null);
+const mockState = {modal: {stack: []}, settings: {generalWalletSettings: {}}};
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 jest.mock(
   '../../../containers/DeepLink/IdentityUpdateRequestInfo/components/AuthorityInfoSheet',
   () => () => null,
@@ -21,6 +24,7 @@ jest.mock(
 
 const React = require('react');
 const {act, create} = require('react-test-renderer');
+const AppButton = require('../../../components/AppButton').default;
 const HighRiskStep = require('../../../containers/DeepLink/IdentityUpdateRequestInfo/steps/HighRiskStep').default;
 const IdentityStateChangeCard = require('../../../containers/DeepLink/IdentityUpdateRequestInfo/components/IdentityStateChangeCard').default;
 const {buildIdentityStateChange} = require('../../../containers/DeepLink/IdentityUpdateRequestInfo/utils/buildIdentityStateChange');
@@ -50,16 +54,27 @@ const getText = node => {
 const normalizeText = text => text.replace(/\s+/g, ' ').trim();
 const renderedText = renderer => normalizeText(getText(renderer.toJSON()));
 
-const renderHighRisk = overrides => create(
-  <HighRiskStep
-    highRiskChanges={[change]}
-    identityStateChange={change}
-    acknowledged={false}
-    onToggle={jest.fn()}
-    styles={{}}
-    {...overrides}
-  />,
-);
+const renderCard = props => {
+  let renderer;
+  act(() => { renderer = create(<IdentityStateChangeCard {...props} />); });
+  return renderer;
+};
+
+const press = (renderer, label) => act(() => renderer.root.findAllByType('TouchableOpacity').find(node =>
+  normalizeText(getText(node.children)).includes(label)).props.onPress());
+
+const renderHighRisk = overrides => {
+  let renderer;
+  act(() => { renderer = create(
+    <HighRiskStep
+      highRiskChanges={[change]}
+      identityStateChange={change}
+      styles={{}}
+      {...overrides}
+    />,
+  ); });
+  return renderer;
+};
 
 describe('identity lock change review', () => {
   it.each([false, true])('includes the total wait in the main warning (detailed: %s)', detailed => {
@@ -81,17 +96,25 @@ describe('identity lock change review', () => {
 
   it('shows before/after values, including zero, in the compact review card', () => {
     for (const reviewedChange of [change, clearedTimelockChange]) {
-      const renderer = create(<IdentityStateChangeCard change={reviewedChange} />);
+      const renderer = renderCard({change: reviewedChange});
       const text = renderedText(renderer);
 
       expect(text).toContain('Current');
       expect(text).toContain('After update');
       for (const state of [reviewedChange.before, reviewedChange.after]) {
         expect(text).toContain(state.status);
-        expect(text).toContain(`Flags: ${state.flags}`);
-        expect(text).toContain(`Timelock: ${state.timelock}`);
+        expect(text).not.toContain(`Flags: ${state.flags}`);
+        expect(text).not.toContain(`Timelock: ${state.timelock}`);
       }
       expect(text).not.toContain(normalizeText(reviewedChange.lockExplanation));
+
+      press(renderer, 'View state details');
+      const details = renderedText(renderer);
+      for (const state of [reviewedChange.before, reviewedChange.after]) {
+        expect(details).toContain(`Flags: ${state.flags}`);
+        expect(details).toContain(`Timelock: ${state.timelock}`);
+      }
+      expect(details).toContain(normalizeText(reviewedChange.lockExplanation));
       renderer.unmount();
     }
   });
@@ -102,10 +125,14 @@ describe('identity lock change review', () => {
 
     expect(text).toContain(change.before.status);
     expect(text).toContain(change.after.status);
-    expect(text).toContain(change.warning);
-    expect(text).toContain(normalizeText(change.lockExplanation));
-    expect(text).toContain('Flags: 0');
-    expect(text).toContain('Timelock: 140');
+    expect(text).not.toContain(normalizeText(change.lockExplanation));
+
+    press(renderer, change.title);
+    const details = renderedText(renderer);
+    expect(details).toContain(change.warning);
+    expect(details).toContain(normalizeText(change.lockExplanation));
+    expect(details).toContain('Resulting flags 0');
+    expect(details).toContain('Resulting timelock 140');
     renderer.unmount();
   });
 
@@ -122,34 +149,27 @@ describe('identity lock change review', () => {
     expect(text).toContain('new-authority@');
     expect(text).toContain(change.before.status);
     expect(text).toContain(change.after.status);
-    expect(text).toContain(normalizeText(change.lockExplanation));
+
+    press(renderer, change.title);
+    expect(renderedText(renderer)).toContain(normalizeText(change.lockExplanation));
     renderer.unmount();
   });
 
   it('retains explicit acknowledgement of a lock-only change', () => {
-    const onToggle = jest.fn();
-    const renderer = renderHighRisk({onToggle});
-    const acknowledgement = renderer.root.findByProps({
-      accessibilityLabel: 'Acknowledge high-risk changes',
-    });
+    const onUnderstandAck = jest.fn();
+    const props = {
+      highRiskChanges: [change], identityStateChange: change, styles: {}, onUnderstandAck, onCloseAckSheet: jest.fn(),
+    };
+    const renderer = renderHighRisk(props);
+    const understand = () => renderer.root.findAllByType(AppButton).find(node => node.props.children === 'I understand');
 
-    expect(acknowledgement.props.accessibilityState.checked).toBe(false);
-    act(() => acknowledgement.props.onPress());
-    expect(onToggle).toHaveBeenCalledTimes(1);
-
-    act(() => renderer.update(
-      <HighRiskStep
-        highRiskChanges={[change]}
-        identityStateChange={change}
-        acknowledged={true}
-        onToggle={onToggle}
-        styles={{}}
-      />,
-    ));
-    expect(renderer.root.findByProps({
-      accessibilityLabel: 'Acknowledge high-risk changes',
-    }).props.accessibilityState.checked).toBe(true);
-    expect(renderedText(renderer)).toContain(normalizeText(change.lockExplanation));
+    expect(understand()).toBeUndefined();
+    act(() => renderer.update(<HighRiskStep {...props} ackSheetVisible />));
+    expect(renderedText(renderer)).toContain('Understand high-risk changes');
+    expect(renderedText(renderer)).toContain(change.warning);
+    expect(onUnderstandAck).not.toHaveBeenCalled();
+    act(() => understand().props.onPress());
+    expect(onUnderstandAck).toHaveBeenCalledTimes(1);
     renderer.unmount();
   });
 });
