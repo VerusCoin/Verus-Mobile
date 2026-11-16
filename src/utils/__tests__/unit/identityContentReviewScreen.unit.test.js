@@ -202,7 +202,10 @@ test('warns about opaque data while retaining its full bytes inline', () => {
   expect(text).toContain('On-chain history persists');
 });
 
-test.each([undefined, {}, {[VERUSID_CMM_INFO.key]: {}}])('omits the section when there are no content changes (%p)', displayUpdates => {
+// The only parent (IdentityUpdateRequestInfo) always passes an object and
+// leaves this step out when there are no content changes. The undefined case
+// lives in identitySignatureThreshold.unit.test.js at the parent level.
+test.each([{}, {[VERUSID_CMM_INFO.key]: {}}])('omits the section when there are no content changes (%p)', displayUpdates => {
   // The request screen skips this step when there is nothing to review, so it shows no change cards.
   expect(mount({displayUpdates}).root.findAllByType(VerusIdContentChangeCard)).toHaveLength(0);
 });

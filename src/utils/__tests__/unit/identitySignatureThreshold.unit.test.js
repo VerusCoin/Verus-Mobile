@@ -433,6 +433,18 @@ describe('identity signature-threshold review', () => {
     renderer.unmount();
   });
 
+  // Ported from the ContentStep case "omits the section when there are no
+  // content changes (undefined)": the parent leaves the Content step out.
+  it('omits the content step when the request has no content changes', () => {
+    const renderer = renderRequest({});
+    expect(reviewCounts(renderer).content).toBe(0);
+    expect(renderer.root.findAllByType('ContentStep')).toHaveLength(0);
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findAllByType('ContentStep')).toHaveLength(0);
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(1);
+    renderer.unmount();
+  });
+
   it.each([{}, {minimumsignatures: 1}])('does not invent a threshold change when omitted or unchanged: %p', updates => {
     const renderer = renderRequest(updates);
     expect(reviewCounts(renderer).highRisk).toBe(0);
