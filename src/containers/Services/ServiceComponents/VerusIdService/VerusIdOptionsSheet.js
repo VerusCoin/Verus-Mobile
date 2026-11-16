@@ -43,6 +43,8 @@ const VerusIdOptionsSheet = ({actions = [], onClose, visible}) => {
   const pendingActionRef = useRef(null);
 
   const runAfterClose = action => {
+    // The first choice wins: a tap during the close must not replace it.
+    if (pendingActionRef.current) return;
     pendingActionRef.current = action.onPress;
     onClose();
   };
