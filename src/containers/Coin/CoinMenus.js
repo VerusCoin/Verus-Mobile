@@ -23,7 +23,7 @@ class CoinMenus extends Component {
       filteredTabKey: null,
     };
 
-    if (subWallets.length == 1)
+    if (props.activeAccount != null && subWallets.length == 1)
       props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]));
   }
 
@@ -61,7 +61,11 @@ class CoinMenus extends Component {
   selectOnlySubWallet = () => {
     const subWallets = this.getSubWallets();
 
-    if (this.props.selectedSubWallet == null && subWallets.length == 1) {
+    if (
+      this.props.activeAccount != null &&
+      this.props.selectedSubWallet == null &&
+      subWallets.length == 1
+    ) {
       this.props.dispatch(setCoinSubWallet(this.props.activeCoin.id, subWallets[0]));
     }
   };
@@ -145,6 +149,7 @@ class CoinMenus extends Component {
 
 const mapStateToProps = (state) => {
   return {
+    activeAccount: state.authentication.activeAccount,
     activeCoin: state.coins.activeCoin,
     activeApp: state.coins.activeApp,
     activeSection: state.coins.activeSection,
