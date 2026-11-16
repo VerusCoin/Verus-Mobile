@@ -661,14 +661,26 @@ test.each([
       expect(rebuilt.saltHex).toBe(persisted.saltHex);
       expect(rebuilt.previousCommitments[0].signedHex).toBe(signed.hex);
     } else if (historicalReceipt === 'unsent') {
+      // 5b0d6357 saves the first send time before the SDK is called. An SDK
+      // refusal keeps the signed transaction, its txid and the retry state.
+      const before = Date.now();
       await expect(retryBroadcast(review.jobId, context)).rejects.toMatchObject({code: 'INSUFFICIENT_RELAY_FEE'});
+      const after = Date.now();
       const retained = mockReadJob(review.jobId);
       expect(retained.status).toBe('commitment_signed');
+      expect(retained.commitment.signedHex).toBe(persisted.commitment.signedHex);
+      expect(retained.commitment.txid).toBe(persisted.commitment.txid);
       // The retry keeps the receipt and adds only the durable first broadcast time.
       const {broadcastAt, ...retainedCommitment} = retained.commitment;
-      expect(broadcastAt).toEqual(expect.any(Number));
+      expect(broadcastAt).toBeGreaterThanOrEqual(before);
+      expect(broadcastAt).toBeLessThanOrEqual(after);
       expect(JSON.stringify(retainedCommitment) === JSON.stringify(persisted.commitment)).toBe(true);
       expect(retained.saltHex).toBe(persisted.saltHex);
+      // The same saved transaction can be retried; the first send time stays.
+      await expect(retryBroadcast(review.jobId, context)).rejects.toMatchObject({code: 'INSUFFICIENT_RELAY_FEE'});
+      const retried = mockReadJob(review.jobId);
+      expect(retried.status).toBe('commitment_signed');
+      expect(retried.commitment).toEqual(retained.commitment);
     } else {
       const result = expect(reconcileRegistration(review.jobId, context)).rejects;
       if (historicalReceipt === 'change-address') await result.toMatchObject({code: 'REGISTRATION_FUNDING_MISMATCH'});
