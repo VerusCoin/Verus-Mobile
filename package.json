@@ -1,6 +1,6 @@
 {
   "name": "verusmobile",
-  "version": "1.0.1-1",
+  "version": "1.0.34",
   "private": true,
   "packageManager": "pnpm@11.5.2",
   "engines": {
@@ -12,12 +12,13 @@
     "clean-android": "cd android && ./gradlew clean && cd ..",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "bundle-android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/",
+    "bundle-android": "CI=true react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/",
     "bundle-ios": "react-native bundle --dev false --entry-file index.js --bundle-output ios/main.jsbundle --platform ios --assets-dest='./ios'",
-    "dist-android": "cd android && ./gradlew assembleRelease && cd ..",
+    "dist-android": "cd android && CI=true ./gradlew assembleRelease && cd ..",
     "check-android-16k": "python3 tools/android/check-16k.py",
     "debug-android": "cd android && ./gradlew assembleDebug --stacktrace && cd ..",
     "test": "jest",
+    "test:identity-upload-daemon": "node debug/runIdentityUploadDaemonTests.cjs",
     "lint": "eslint .",
     "check:design": "node scripts/check-design-contract.js && node scripts/check-card-colors.js",
     "check:card-colors": "node scripts/check-card-colors.js",
@@ -26,8 +27,7 @@
     "check:search-fields": "node scripts/check-search-fields.js src",
     "check:send-wizard-options": "node scripts/check-send-wizard-options.js",
     "check:spendable-key-review": "node scripts/check-spendable-key-review.js",
-    "update-verus-libs": "node tools/update-verus-libs.cjs",
-    "test:identity-upload-daemon": "node debug/runIdentityUploadDaemonTests.cjs"
+    "update-verus-libs": "node tools/update-verus-libs.cjs"
   },
   "dependencies": {
     "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#1603126ee9b19d922b76050ed5965b7bc9bd0fa7",
@@ -99,7 +99,6 @@
     "react-native-modal-datetime-picker": "15.0.0",
     "react-native-nfc-manager": "git+https://github.com/VerusCoin/react-native-nfc-manager.git#63ad94f236a945e382190bf71206675eb6cb455c",
     "react-native-os": "git+https://github.com/VerusCoin/react-native-os.git#1f79a5ae777ff296bd4911e2eb37e1de6f711d12",
-    "react-native-pager-view": "6.7.1",
     "react-native-paper": "5.12.5",
     "react-native-permissions": "4.1.5",
     "react-native-qrcode-svg": "6.1.1",
@@ -140,7 +139,8 @@
     "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#f3dcd552d6940422e875f8f657ee3d8e2097b37b",
     "verusid-ts-client": "github:VerusCoin/verusid-ts-client#e18701f69153c9eb81927a5c9dfff794bc974a26",
     "vm-browserify": "0.0.4",
-    "wif": "2.0.6"
+    "wif": "2.0.6",
+    "react-native-pager-view": "6.7.1"
   },
   "devDependencies": {
     "@babel/core": "7.29.7",
@@ -264,12 +264,12 @@
     "sjcl": "1.0.9",
     "ws@6": "6.2.4",
     "ws@7": "7.5.11",
-    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#1603126ee9b19d922b76050ed5965b7bc9bd0fa7",
     "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives#d5e3068021cfa83e3aae489403f4d63aad0c1a6c",
     "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client#f3dcd552d6940422e875f8f657ee3d8e2097b37b",
     "verusid-ts-client": "github:VerusCoin/verusid-ts-client#e18701f69153c9eb81927a5c9dfff794bc974a26",
     "verus-typescript-primitives/bn.js": "5.2.3",
-    "verusid-ts-client/bn.js": "5.2.3"
+    "verusid-ts-client/bn.js": "5.2.3",
+    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#1603126ee9b19d922b76050ed5965b7bc9bd0fa7"
   },
   "jest": {
     "preset": "react-native",

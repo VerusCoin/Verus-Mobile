@@ -1281,8 +1281,7 @@ applies to `SignedInAssetHeader` only.
 
 ## Transaction history row
 
-The owner approved this row on 2026-10-19 (option A of the history mockup, task
-TX-1.HISTORY-NEUTRAL in `UI_REDESIGN_PLAN.md`). It applies to the transaction list
+The owner approved this row on 2026-10-19 (option A of the history mockup). It applies to the transaction list
 on the Coin Overview, drawn by `FocusedTransactionRow` in
 `src/containers/Coin/Overview/Overview.js`.
 
@@ -1363,7 +1362,7 @@ Users: Send, Convert, pre-conversions and invoice payments
 
 ## Services home
 
-The user approved this pattern on 2026-10-15 (SV-1 in `UI_REDESIGN_PLAN.md`).
+The user approved this pattern on 2026-10-15.
 The Services tab root shows each service as a tile in a two-column grid. This is
 an approved exception to "Keep pages flat". It applies to the Services root
 only and does not permit cards on other pages.
@@ -1456,7 +1455,7 @@ setup, with copy about creating and backing up a wallet.
 
 ## Gift card detail
 
-The user approved this pattern on 2026-10-15 (SV-1 in `UI_REDESIGN_PLAN.md`).
+The user approved this pattern on 2026-10-15.
 The detail screen shows one fixed card and says each fact once.
 
 - Header: back on the left, then refresh and the ⋯ options button on the right.
@@ -1849,7 +1848,7 @@ the coins that fly onto Home.
 ## Receive and payment request
 
 The owner approved variation A ("Calm address") for Receive and variation C's
-paper slip for Request ready on 2026-10-20 (RX-2 in `UI_REDESIGN_PLAN.md`).
+paper slip for Request ready on 2026-10-20.
 
 - The "Receive assets" list shows its title in the header bar, centered in
   `titleSheet` between the arrow back button and an empty right side, as Send's
