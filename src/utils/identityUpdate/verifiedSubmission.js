@@ -358,7 +358,16 @@ export const validateIdentityUpdateContext = async (context, built) => {
   for (const input of built.utxos) {
     const unspent = result(await guarded(context, () => endpoint.getTxOut(input.txid, input.outputIndex, true)));
 
-    if (!unspent) throw fail('REVIEW_CHANGED', 'An approved transaction input is no longer available.');
+    if (!unspent) {
+      // Flag only: the identity output is spent but not confirmed yet, usually
+      // by an earlier update of this VerusID that waits for a block.
+      const identityInputSpent = input.txid === approval.identity.txid &&
+        input.outputIndex === approval.identity.outputIndex;
+      throw Object.assign(
+        fail('REVIEW_CHANGED', 'An approved transaction input is no longer available.'),
+        identityInputSpent ? {identityInputSpent} : {},
+      );
+    }
     assertIdentityUpdateInputMaturity(approval, input, unspent);
   }
 

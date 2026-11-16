@@ -30,6 +30,12 @@ import { getKeyMaterial } from "./getKeyMaterial";
 import { encryptCredentialToDescriptor } from "./encryptDataDescriptor";
 import {cloneIdentityUpdateRequest} from "../identityUpdate/cloneRequest";
 
+// Codes for the screen. The messages stay for logs and existing callers.
+export const CREDENTIAL_ERROR_CODES = {
+  NO_PRIVATE_ADDRESS: 'CREDENTIAL_NO_PRIVATE_ADDRESS',
+  PRIVATE_ADDRESS_MISMATCH: 'CREDENTIAL_PRIVATE_ADDRESS_MISMATCH',
+};
+
 /**
  * Offline replication of C++ CCrossChainRPCData::GetConditionID(uint160, uint256).
  * Produces the same result as: getvdxfid "vrsc::identity.credential" '{"uint256":"<ivkHex>"}'
@@ -91,9 +97,9 @@ export const processEncryptedKeys = async (
   const identity = subjectIdentity.identity || subjectIdentity;
   const privateAddress = identity.privateaddress;
   if (!privateAddress) {
-    throw new Error(
+    throw Object.assign(new Error(
       "Identity must have a z-address (private address) to store encrypted credentials."
-    );
+    ), {code: CREDENTIAL_ERROR_CODES.NO_PRIVATE_ADDRESS});
   }
 
   // Get key material (extended spending key)
@@ -108,10 +114,10 @@ export const processEncryptedKeys = async (
   const derivedAddress = await Tools.deriveShieldedAddress(keyMaterial.extsk, "", coinObj.id);
   assertActive();
   if (!derivedAddress || derivedAddress !== privateAddress) {
-    throw new Error(
+    throw Object.assign(new Error(
       "The z-address on this identity does not match the z-address linked to your account. " +
       "Credential encryption requires the identity's z-address to be derived from the same recovery secret as your account's shielded (Z) address."
-    );
+    ), {code: CREDENTIAL_ERROR_CODES.PRIVATE_ADDRESS_MISMATCH});
   }
 
   // Convert identity address to 20-byte hex for zGetEncryptionAddress

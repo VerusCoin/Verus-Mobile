@@ -308,7 +308,9 @@ const VerusIdContentChanges = ({
               ? () => setUploadReview({title: item.title, upload: updateEntry.signData})
               : undefined}>
             {item.showOperationDetails === false ? null : updateEntry?.signData ? (
-              <UploadContentReview upload={updateEntry.signData} />
+              // The card shows what is uploaded. Its sheet keeps every
+              // technical field under its own heading.
+              <UploadContentReview upload={updateEntry.signData} technical="hide" />
             ) : item.removeMeta && updateEntry?.rawData != null ? (
               <UploadContentReview
                 upload={updateEntry.rawData}
@@ -329,7 +331,7 @@ const VerusIdContentChanges = ({
         title={uploadReview?.title || 'Upload content'}
         onClose={closeUploadReview}
         onClosed={() => setUploadReview(null)}>
-        {uploadReview && <UploadContentReview upload={uploadReview.upload} copy />}
+        {uploadReview && <UploadContentReview upload={uploadReview.upload} copy technical="group" />}
       </InfoSheet>
 
       <PrivateInfoFallback
@@ -376,13 +378,36 @@ const ContentValuesReview = ({value}) => {
 
 // Read the original content. Keep every field and warning visible, including
 // exact encoded bytes. The sheet adds shared copy actions without changing data.
-const UploadContentReview = ({upload, copy = false, isUpload = true, label = 'Upload content', showTitle = false, shownRemovalHash, shownRemovalKey}) => {
+// `technical`: "show" keeps metadata fields in place, "hide" leaves them out
+// (only where a sheet shows them), "group" lists them last under a heading.
+const UploadContentReview = ({upload, copy = false, isUpload = true, label = 'Upload content', showTitle = false, shownRemovalHash, shownRemovalKey, technical = 'show'}) => {
   const theme = useOnboardingTheme();
   // The heading owns the value number. Rows keep only their nested field path.
   const reviewLabel = showTitle ? 'Content' : label;
   const review = useMemo(() => buildContentReview(upload, {
     isUpload, label: reviewLabel, omitRootLabel: true,
   }), [upload, isUpload, reviewLabel]);
+  const fields = review.fields.filter(field => {
+    // Match the removal object's own fields, never unrelated nested data.
+    if (shownRemovalHash && field.id.endsWith(`${ContentMultiMapRemoveKey.vdxfid}:valuehash`) &&
+        field.copyValue === shownRemovalHash) return false;
+    if (shownRemovalKey && field.id.endsWith(`${ContentMultiMapRemoveKey.vdxfid}:entrykey`) &&
+        field.copyValue === shownRemovalKey) return false;
+    return true;
+  });
+  const contentFields = technical === 'show' ? fields : fields.filter(field => field.kind !== 'metadata');
+  const technicalFields = fields.filter(field => field.kind === 'metadata');
+  const renderField = field => (
+    <InfoSheetRow
+      key={field.id}
+      label={field.path ? `${field.path} › ${field.label}` : field.label}
+      value={field.value}
+      copy={copy}
+      copyValue={field.copyValue}
+      selectable={!field.escaped}
+      valueStyle={field.kind === 'encoded' ? [contentStyles.cmmCardKeyId, theme.isDark && contentStyles.cmmCardKeyIdDark] : undefined}
+    />
+  );
   return (
     <View style={{gap: theme.spacing.sm}}>
       {showTitle && (
@@ -395,24 +420,13 @@ const UploadContentReview = ({upload, copy = false, isUpload = true, label = 'Up
           {warning}
         </Text>
       ))}
-      {review.fields.filter(field => {
-        // Match the removal object's own fields, never unrelated nested data.
-        if (shownRemovalHash && field.id.endsWith(`${ContentMultiMapRemoveKey.vdxfid}:valuehash`) &&
-            field.copyValue === shownRemovalHash) return false;
-        if (shownRemovalKey && field.id.endsWith(`${ContentMultiMapRemoveKey.vdxfid}:entrykey`) &&
-            field.copyValue === shownRemovalKey) return false;
-        return true;
-      }).map(field => (
-        <InfoSheetRow
-          key={field.id}
-          label={field.path ? `${field.path} › ${field.label}` : field.label}
-          value={field.value}
-          copy={copy}
-          copyValue={field.copyValue}
-          selectable={!field.escaped}
-          valueStyle={field.kind === 'encoded' ? [contentStyles.cmmCardKeyId, theme.isDark && contentStyles.cmmCardKeyIdDark] : undefined}
-        />
-      ))}
+      {contentFields.map(renderField)}
+      {technical === 'group' && technicalFields.length > 0 && (
+        <Text accessibilityRole="header" style={[theme.typography.titleRow, {color: theme.colors.textPrimary, marginTop: theme.spacing.sm}]}>
+          Technical details
+        </Text>
+      )}
+      {technical === 'group' && technicalFields.map(renderField)}
     </View>
   );
 };

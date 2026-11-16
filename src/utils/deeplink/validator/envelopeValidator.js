@@ -81,6 +81,17 @@ export const validateGenericRequest = async (request) => {
     await validator(request, i);
   }
 
+  // The library's structure rule runs again inside signature verification and
+  // returns false there too. Check it first, so a request with a valid
+  // signature but a forbidden detail order or combination is refused as not
+  // valid, not as a signature that cannot be verified.
+  if (request.isSigned() && !VerusIdInterface.validateUnsignedGenericRequest(request)) {
+    throw createGenericRequestRejectionError(
+      GENERIC_REQUEST_REJECTION_CODES.INVALID,
+      'Invalid request structure',
+    )
+  }
+
   if (request.isSigned()) {
     try {
       await assertSignedRequestAuthorization(request);

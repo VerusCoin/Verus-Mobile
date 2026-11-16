@@ -49,6 +49,7 @@ import {
 import {VerusIdName} from './VerusIdCard';
 import {
   NOTIFICATION_TYPE_VERUSID_ERROR,
+  NOTIFICATION_TYPE_VERUSID_FAILED,
   NOTIFICATION_TYPE_VERUSID_READY,
 } from '../../../../utils/constants/services';
 import {
@@ -150,7 +151,10 @@ const normalizeIdentityItems = (linkedIds, pendingIds, identityNetwork) => {
         readyAction: getReadyActionConfig(details),
       };
       if (details.status === NOTIFICATION_TYPE_VERUSID_READY) groups.ready.push(item);
-      else if (details.status === NOTIFICATION_TYPE_VERUSID_ERROR) groups.attention.push(item);
+      else if (
+        details.status === NOTIFICATION_TYPE_VERUSID_ERROR ||
+        details.status === NOTIFICATION_TYPE_VERUSID_FAILED
+      ) groups.attention.push(item);
       else groups.progress.push(item);
     });
   });
@@ -480,6 +484,9 @@ const SignedInVerusIdService = ({controller}) => {
     pendingSheetItem?.status === NOTIFICATION_TYPE_VERUSID_ERROR;
   const pendingIsReady =
     pendingSheetItem?.status === NOTIFICATION_TYPE_VERUSID_READY;
+  // The provider answered that it could not create this VerusID.
+  const pendingIsFailed =
+    pendingSheetItem?.status === NOTIFICATION_TYPE_VERUSID_FAILED;
   const pendingCanRetry = false;
   // Writes the ref before the state update so same-frame taps and the close
   // guard see the in-flight link synchronously.
@@ -846,6 +853,8 @@ const SignedInVerusIdService = ({controller}) => {
                 subtitle={
                   isReady
                     ? null
+                    : item.status === NOTIFICATION_TYPE_VERUSID_FAILED
+                    ? 'Failed'
                     : item.status === NOTIFICATION_TYPE_VERUSID_ERROR
                     ? 'Needs attention'
                     : 'In progress'
@@ -1055,7 +1064,9 @@ const SignedInVerusIdService = ({controller}) => {
             {pendingSheetItem?.name || 'VerusID'}
           </Text>
           <Text style={[styles.pendingStatus, {color: theme.colors.textSecondary}]}>
-            {pendingIsError
+            {pendingIsFailed
+              ? 'Failed'
+              : pendingIsError
               ? 'Needs attention'
               : pendingIsReady
               ? 'Ready to link'
@@ -1067,7 +1078,9 @@ const SignedInVerusIdService = ({controller}) => {
               styles.pendingDescription,
               {color: theme.colors.textSecondary},
             ]}>
-            {pendingIsError
+            {pendingIsFailed
+              ? 'The provider could not create this VerusID. Remove the request from this list.'
+              : pendingIsError
               ? pendingCanRetry
                 ? 'The request did not finish. Retry it, or check for updates first.'
                 : 'The request did not finish and its original payload is no longer available. Remove it from this list.'

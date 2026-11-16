@@ -29,7 +29,7 @@ import {useObjectSelector} from '../../../hooks/useObjectSelector';
 import {requestServiceStoredData} from '../../../utils/auth/authBox';
 import {getIdentity} from '../../../utils/api/channels/verusid/callCreators';
 import {getVdxfId} from '../../../utils/api/channels/vrpc/requests/getVdxfid';
-import {handleProvisioningResponse} from '../../../utils/api/channels/vrpc/requests/handleProvisioningResponse';
+import {handleProvisioningResponse, PROVISIONING_FAILED} from '../../../utils/api/channels/vrpc/requests/handleProvisioningResponse';
 import {signIdProvisioningRequest} from '../../../utils/api/channels/vrpc/requests/signIdProvisioningRequest';
 import {NOTIFICATION_ICON_VERUSID} from '../../../utils/constants/notifications';
 import {VERUSID_SERVICE_ID} from '../../../utils/constants/services';
@@ -801,6 +801,13 @@ const ProvisionIdentityBottomSheet = ({
           isProvisioningResponseMismatchError(e))
       ) {
         setRequestBlocked(true);
+      } else if (e?.code === PROVISIONING_FAILED) {
+        // The provider answered. Its own text is not shown as app copy.
+        console.warn('VerusID provider refused the request', e);
+        createAlert(
+          'VerusID not created',
+          'The provider could not create this VerusID. Ask the provider for help, or try again later.',
+        );
       } else {
         console.warn('VerusID request failed', e);
         createAlert(

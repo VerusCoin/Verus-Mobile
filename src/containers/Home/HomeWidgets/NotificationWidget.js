@@ -62,6 +62,13 @@ const NotificationWidget = ({followsHomeNotice = false}) => {
   const jobs = useObjectSelector(state => state.channelStore_verusid.registrationJobs || {});
   const registrationNotices = registrationNotifications(jobs, accountHash);
   const [linkTarget, setLinkTarget] = useState(null);
+  // The link sheet stays mounted until its close animation ends, also when its
+  // card was the last one.
+  const [linkSheetOpen, setLinkSheetOpen] = useState(false);
+  const openLinkSheet = target => {
+    setLinkSheetOpen(true);
+    setLinkTarget(target);
+  };
 
   const actionableNotifications = useMemo(() => {
     if (!notifications?.directory || !accountHash) return [];
@@ -78,7 +85,7 @@ const NotificationWidget = ({followsHomeNotice = false}) => {
           ? LoadingNotification.fromJson(value)
           : VerusIdProvisioningNotification.fromJson(
               value,
-              (_props, identityAddress, chain) => setLinkTarget({identityAddress, chain,
+              (_props, identityAddress, chain) => openLinkSheet({identityAddress, chain,
                 name: getNotificationCopy(value).highlight, notificationUid: uid}),
             );
         notification.uid = uid;
@@ -100,14 +107,14 @@ const NotificationWidget = ({followsHomeNotice = false}) => {
   const updateReady = (jobId, patch) => updateRegistrationUiState(jobId, patch, createRegistrationContext()).catch(() => {
     // Keep the card recoverable when this optional presentation write fails.
   });
-  if (actionableNotifications.length === 0 && registrationNotices.length === 0 && !linkTarget) return null;
+  if (actionableNotifications.length === 0 && registrationNotices.length === 0 && !linkTarget && !linkSheetOpen) return null;
 
   return (
     <View style={[styles.container, followsHomeNotice && styles.followingContainer]}>
-      <LinkVerusIdSheet target={linkTarget} onClose={() => setLinkTarget(null)} />
+      <LinkVerusIdSheet target={linkTarget} onClose={() => setLinkTarget(null)} onClosed={() => setLinkSheetOpen(false)} />
       {registrationNotices.map((notice, index) => notice.ready ? <View key={notice.uid} style={styles.cardSpacing}>
         <VerusIdReadyCard active={isFocused} celebrate={!notice.celebrated} highlight={notice.identityName} remainder="is ready"
-          label="Link VerusID" theme={theme} onAction={() => setLinkTarget({jobId: notice.jobId, name: notice.identityName})}
+          label="Link VerusID" theme={theme} onAction={() => openLinkSheet({jobId: notice.jobId, name: notice.identityName})}
           onCelebrated={() => updateReady(notice.jobId, {readyCelebrated: true})}
           onDismiss={() => updateReady(notice.jobId, {readyDismissed: true})} />
       </View> : (
