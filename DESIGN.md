@@ -1668,6 +1668,13 @@ scaling it; Reduce Motion is instant. During a closed-strip scrub, the date
 replaces the hero pill and the eye and plus fade out. Keep the existing chart
 tokens, loading skeletons, hidden balances, and day-one behavior.
 
+The Home total and the chart count only the assets with "Show on Home" on
+(owner, 2026-11-16). The phone still records the amount of a hidden asset, so
+a hide or a show changes the whole line and makes no jump. The chart draws at
+once from the prices saved on the phone and replaces them when new prices
+arrive. Show the loading skeletons only when the phone has no saved prices for
+an asset on Home, or while the total is not known.
+
 ## Home notification card
 
 The owner chose card A on 2026-10-22 (gap 5 mockups). On 2026-11-04, the owner

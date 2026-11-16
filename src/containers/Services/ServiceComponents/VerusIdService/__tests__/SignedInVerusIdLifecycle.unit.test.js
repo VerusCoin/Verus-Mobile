@@ -33,6 +33,7 @@ const mockGoBack = jest.fn();
 let mockHeaderRight = null;
 
 const buildNavigation = () => ({
+  addListener: () => () => {},
   goBack: mockGoBack,
   setOptions: options => {
     if (options && typeof options.headerRight === 'function') {
@@ -57,7 +58,7 @@ let sheetOnClosed = null;
 
 jest.mock('../../../../../store', () => ({
   __esModule: true,
-  default: {getState: () => mockState},
+  default: {getState: () => mockState, subscribe: () => () => {}, dispatch: jest.fn()},
 }));
 
 jest.mock('react-redux', () => ({
@@ -66,6 +67,7 @@ jest.mock('react-redux', () => ({
 }));
 
 jest.mock('@react-navigation/native', () => ({
+  useFocusEffect: () => {},
   useNavigation: () => buildNavigation(),
   useRoute: () => buildRoute(),
 }));

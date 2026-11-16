@@ -4,24 +4,35 @@ const mockSubmitReviewedIdentityUpdate = jest.fn();
 const mockValidateIdentityUpdateContext = jest.fn(async () => 100);
 let mockState;
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   ActivityIndicator: 'ActivityIndicator',
   Alert: {alert: jest.fn()},
+  // The app is in the foreground, so the slide can commit.
+  AppState: {currentState: 'active', addEventListener: () => ({remove: () => {}})},
   ScrollView: 'ScrollView',
   TouchableOpacity: 'TouchableOpacity',
   View: 'View',
 }));
 jest.mock('react-native-paper', () => ({Button: 'Button', Portal: 'Portal', Text: 'Text'}));
+// A shared value keeps its identity across renders, as on device. The stock
+// mock makes a new one per render, which resets the slide's gesture epoch.
+jest.mock('react-native-reanimated', () => ({
+  ...require('react-native-reanimated/mock'),
+  useSharedValue: init => require('react').useRef({value: init}).current,
+}));
+jest.mock('@react-navigation/native', () => {
+  const navigation = {isFocused: () => true, addListener: () => jest.fn(), getParent: () => undefined};
+  return {useNavigation: () => navigation};
+});
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
-jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 jest.mock('react-native-format-currency', () => ({formatCurrency: jest.fn()}));
-jest.mock('../../../styles', () => ({highRiskStepStyles: {}, confirmPayStepStyles: {}}));
 jest.mock('../../../components/AnimatedActivityIndicatorBox', () => 'ActivityIndicator');
-jest.mock('../../../components/GradientButton', () => 'GradientButton');
 jest.mock('../../../components/SemiModal', () => ({visible, children}) => visible ? children : null);
 jest.mock('../../CoinData/CoinsList', () => ({coinsList: {}}));
 jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {findCoinObj: () => null}}));
 jest.mock('../../api/channels/verusid/requests/updateIdentity', () => ({
+  getUpdateIdentityFeeSats: jest.requireActual('../../api/channels/verusid/requests/updateIdentity').getUpdateIdentityFeeSats,
   createUpdateIdentityTx: mockCreateUpdateIdentityTx,
   pushUpdateIdentityTx: mockPushUpdateIdentityTx,
 }));
@@ -39,7 +50,10 @@ jest.mock('../../identityUpdate/verifiedSubmission', () => ({
   validateIdentityUpdateContext: mockValidateIdentityUpdateContext,
   submitReviewedIdentityUpdate: mockSubmitReviewedIdentityUpdate,
 }));
-jest.mock('../../crypto/encryptCredentials', () => ({processEncryptedKeys: jest.fn()}));
+jest.mock('../../crypto/encryptCredentials', () => ({
+  ...jest.requireActual('../../crypto/encryptCredentials'),
+  processEncryptedKeys: jest.fn(),
+}));
 jest.mock('../../deeplink/genericResponse/ensureGenericResponseSigner', () => ({
   ensureGenericResponseSigner: jest.fn(),
 }));
@@ -60,6 +74,9 @@ const {buildIdentityStateChange} = require('../../../containers/DeepLink/Identit
 const {processEncryptedKeys} = require('../../crypto/encryptCredentials');
 const {createLocalIdentityUploadCrypto} = require('../../identityUpdate/localUploadCrypto');
 const {requestPrivKey} = require('../../auth/authBox');
+const AppButton = require('../../../components/AppButton').default;
+const CopyAction = require('../../../components/CopyAction').default;
+const SlideToConfirm = require('../../../components/SlideToConfirm').default;
 
 const renderedText = renderer => renderer.root.findAllByType('Text')
   .map(node => node.children.join('')).join(' ');
@@ -120,12 +137,15 @@ const setup = (builtOverrides = {}, props = {}) => {
   ); });
   return {renderer, details, built};
 };
+const appButton = (renderer, label) => renderer.root.findAllByType(AppButton).find(node => node.props.children === label);
+const slide = renderer => renderer.root.findByType(SlideToConfirm);
+const openSources = renderer => act(() => appButton(renderer, 'Select payment source').props.onPress());
+const walletRow = renderer => renderer.root.findAllByType('TouchableOpacity').find(node =>
+  node.findAllByType('Text').some(text => text.children.includes('Test payment wallet')),
+);
 const selectSource = async renderer => {
-  act(() => renderer.root.findByType('TouchableOpacity').props.onPress());
-  const source = renderer.root.findAllByType('TouchableOpacity').find(node =>
-    node.findAllByType('Text').some(text => text.children.includes('Test payment wallet')),
-  );
-  await act(async () => source.props.onPress());
+  openSources(renderer);
+  await act(async () => walletRow(renderer).props.onPress());
 };
 beforeEach(() => {
   jest.clearAllMocks();
@@ -136,7 +156,7 @@ beforeEach(() => {
 it('reviews the funded transaction unlock height before enabling the update', async () => {
   const {renderer, details} = setup();
   expect(renderedText(renderer)).toContain('Timelock: 140');
-  expect(renderer.root.findByType('GradientButton').props.disabled).toBe(true);
+  expect(renderer.root.findAllByType(SlideToConfirm)).toHaveLength(0);
 
   await selectSource(renderer);
 
@@ -146,7 +166,7 @@ it('reviews the funded transaction unlock height before enabling the update', as
   expect(renderedText(renderer)).toContain('Timelock: 160');
   expect(renderedText(renderer)).toContain('spending from block 161');
   expect(renderedText(renderer)).not.toContain('Timelock: 140');
-  expect(renderer.root.findByType('GradientButton').props.disabled).toBe(false);
+  expect(slide(renderer).props.disabled).toBe(false);
   expect(Alert.alert).not.toHaveBeenCalled();
   expect(mockPushUpdateIdentityTx).not.toHaveBeenCalled();
   renderer.unmount();
@@ -155,18 +175,22 @@ it('reviews the funded transaction unlock height before enabling the update', as
 it('rejects a funded response without its original approval before enabling signing', async () => {
   const {renderer} = setup({fundingApproval: undefined});
   await selectSource(renderer);
-  expect(renderer.root.findByType('GradientButton').props.disabled).toBe(true);
-  expect(Alert.alert).toHaveBeenCalledWith('Error', expect.stringContaining('Missing verified'));
+  expect(renderer.root.findAllByType(SlideToConfirm)).toHaveLength(0);
+  expect(renderedText(renderer)).toContain('The fee could not be calculated. Select a payment source again.');
+  expect(Alert.alert).not.toHaveBeenCalled();
   expect(mockSubmitReviewedIdentityUpdate).not.toHaveBeenCalled();
   renderer.unmount();
 });
 
 it('does not display a usable review when the chain or expiry changes during preparation', async () => {
   const {renderer} = setup();
-  mockValidateIdentityUpdateContext.mockResolvedValueOnce(100).mockRejectedValueOnce(new Error('Request expired'));
+  mockValidateIdentityUpdateContext.mockResolvedValueOnce(100).mockRejectedValueOnce(
+    Object.assign(new Error('This identity update request has expired.'), {code: 'REVIEW_CHANGED'}),
+  );
   await selectSource(renderer);
-  expect(renderer.root.findByType('GradientButton').props.disabled).toBe(true);
-  expect(Alert.alert).toHaveBeenCalledWith('Error', 'Request expired');
+  expect(renderer.root.findAllByType(SlideToConfirm)).toHaveLength(0);
+  expect(renderedText(renderer)).toContain('This review is out of date. Close the request and open it again.');
+  expect(Alert.alert).not.toHaveBeenCalled();
   renderer.unmount();
 });
 
@@ -196,7 +220,7 @@ it('keeps the approved inputs and session-bound keys but cannot resend after unc
   mockSubmitReviewedIdentityUpdate.mockRejectedValueOnce(Object.assign(new Error('Delivery unconfirmed'), {
     code: 'BROADCAST_UNKNOWN', txid: 'ab'.repeat(32),
   }));
-  const send = renderer.root.findByType('GradientButton').props.onPress;
+  const send = slide(renderer).props.onPress;
   await act(async () => send());
   await act(async () => send());
   expect(mockSubmitReviewedIdentityUpdate).toHaveBeenCalledTimes(1);
@@ -210,10 +234,11 @@ it('keeps the approved inputs and session-bound keys but cannot resend after unc
   expect(await attempt.getKeys()).toEqual([['private-key'], ['private-key']]);
   expect(requestPrivKey).toHaveBeenCalledWith('VRSC', 'vrpc', attempt.context);
   expect(renderedText(renderer)).toContain('Delivery not confirmed');
-  expect(renderedText(renderer)).toContain('ab'.repeat(32));
-  expect(renderedText(renderer)).toContain('Check the transaction’s status before starting a new review');
-  expect(renderer.root.findAllByType('GradientButton')).toHaveLength(0);
-  await act(async () => renderer.root.findByType('Button').props.onPress());
+  expect(renderedText(renderer)).toContain(`${'ab'.repeat(5)}...${'ab'.repeat(5)}`);
+  expect(renderer.root.findByType(CopyAction).props.value).toBe('ab'.repeat(32));
+  expect(renderedText(renderer)).toContain('Check the transaction status before you start a new review.');
+  expect(appButton(renderer, 'Try again')).toBeUndefined();
+  await act(async () => appButton(renderer, 'Close').props.onPress());
   expect(cancel).toHaveBeenCalledTimes(1);
   expect(mockCreateUpdateIdentityTx).toHaveBeenCalledTimes(1);
   expect(mockPushUpdateIdentityTx).not.toHaveBeenCalled();
@@ -225,14 +250,19 @@ it('does not expose another payment after a response callback fails following su
   const {renderer} = setup({}, {next});
   await selectSource(renderer);
   mockSubmitReviewedIdentityUpdate.mockResolvedValueOnce({txid: 'ab'.repeat(32)});
-  const send = renderer.root.findByType('GradientButton').props.onPress;
+  const send = slide(renderer).props.onPress;
   await act(async () => send());
+  await act(async () => send());
+  expect(mockSubmitReviewedIdentityUpdate).toHaveBeenCalledTimes(1);
+  expect(renderedText(renderer)).toContain('Identity update broadcast');
+  expect(next).not.toHaveBeenCalled();
+  await act(async () => appButton(renderer, 'Complete').props.onPress());
   await act(async () => send());
   expect(next).toHaveBeenCalledTimes(1);
   expect(mockSubmitReviewedIdentityUpdate).toHaveBeenCalledTimes(1);
-  expect(renderedText(renderer)).toContain('Update sent');
-  expect(renderedText(renderer)).toContain('request response could not be completed');
-  expect(renderer.root.findAllByType('GradientButton')).toHaveLength(0);
+  expect(renderedText(renderer)).toContain('Response not sent');
+  expect(renderedText(renderer)).toContain('Response failed');
+  expect(appButton(renderer, 'Complete')).toBeUndefined();
   renderer.unmount();
 });
 
@@ -244,18 +274,15 @@ it('disposes local upload keys on funding errors and cancellation while an uploa
   mockCreateUpdateIdentityTx.mockRejectedValueOnce(new Error('Funding rejected'));
   await selectSource(first.renderer);
   expect(crypto.dispose).toHaveBeenCalledTimes(1);
-  expect(first.renderer.root.findByType('GradientButton').props.disabled).toBe(true);
+  expect(first.renderer.root.findAllByType(SlideToConfirm)).toHaveLength(0);
   first.renderer.unmount();
 
   let finish;
   const second = setup({}, {details});
   mockCreateUpdateIdentityTx.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
   let pending;
-  act(() => second.renderer.root.findByType('TouchableOpacity').props.onPress());
-  const source = second.renderer.root.findAllByType('TouchableOpacity').find(node =>
-    node.findAllByType('Text').some(text => text.children.includes('Test payment wallet')),
-  );
-  act(() => { pending = source.props.onPress(); });
+  openSources(second.renderer);
+  act(() => { pending = walletRow(second.renderer).props.onPress(); });
   await act(async () => { await Promise.resolve(); await Promise.resolve(); });
   act(() => second.renderer.unmount());
   expect(crypto.dispose).toHaveBeenCalledTimes(2);
@@ -271,21 +298,27 @@ it('shows the exact funded ownership policy together with its actual fee', async
     fundingApproval: {nativeFee: '12345678'},
   });
   await selectSource(renderer);
-  expect(renderedText(renderer)).toContain('Primary addresses: final-first-owner, final-second-owner');
-  expect(renderedText(renderer)).toContain('Required signatures: 2');
-  expect(renderedText(renderer)).toContain('0.12345678');
+  expect(renderedText(renderer)).toContain('0.12345678 VRSC');
+  act(() => renderer.root.findAllByType('TouchableOpacity').find(node =>
+    node.props.accessibilityLabel === 'Keys and authorities, Changed').props.onPress());
+  expect(renderedText(renderer)).toContain('Primary addresses Current None After update final-first-owner\nfinal-second-owner');
+  expect(renderedText(renderer)).toContain('Required signatures Current None After update 2');
   renderer.unmount();
 });
 
 it('invalidates a funded review when the mounted screen receives a different request', async () => {
   const {renderer, details} = setup();
   await selectSource(renderer);
-  expect(renderer.root.findByType('GradientButton').props.disabled).toBe(false);
+  expect(slide(renderer).props.disabled).toBe(false);
+  // The user completes the slide on the old review. The slide commits on a
+  // later frame, and the different request arrives before that frame.
+  const track = slide(renderer).findAll(node => typeof node.props.onAccessibilityAction === 'function')[0];
+  act(() => track.props.onAccessibilityAction({nativeEvent: {actionName: 'activate'}}));
   const previousProps = renderer.root.findByType(ConfirmPayStep).props;
   const replacement = {...details, containsRequestID: () => true, requestID: {toAddress: () => 'different-request'}};
   act(() => renderer.update(<ConfirmPayStep {...previousProps} details={replacement} />));
-  expect(renderer.root.findByType('GradientButton').props.disabled).toBe(true);
-  await act(async () => renderer.root.findByType('GradientButton').props.onPress());
+  expect(renderer.root.findAllByType(SlideToConfirm)).toHaveLength(0);
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 100)); });
   expect(mockSubmitReviewedIdentityUpdate).not.toHaveBeenCalled();
   renderer.unmount();
 });
@@ -297,18 +330,15 @@ it('discards an upload build that completes after the source identity changes', 
   const {renderer, built} = setup({}, {details});
   let finish;
   mockCreateUpdateIdentityTx.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
-  act(() => renderer.root.findByType('TouchableOpacity').props.onPress());
-  const source = renderer.root.findAllByType('TouchableOpacity').find(node =>
-    node.findAllByType('Text').some(text => text.children.includes('Test payment wallet')),
-  );
+  openSources(renderer);
   let pending;
-  act(() => { pending = source.props.onPress(); });
+  act(() => { pending = walletRow(renderer).props.onPress(); });
   await act(async () => { await Promise.resolve(); await Promise.resolve(); });
   const previousProps = renderer.root.findByType(ConfirmPayStep).props;
   act(() => renderer.update(<ConfirmPayStep {...previousProps} subjectIdTxHex="new-source-identity-transaction" />));
   expect(crypto.dispose).toHaveBeenCalled();
   await act(async () => { finish(built); await pending; });
-  expect(renderer.root.findByType('GradientButton').props.disabled).toBe(true);
+  expect(renderer.root.findAllByType(SlideToConfirm)).toHaveLength(0);
   expect(mockSubmitReviewedIdentityUpdate).not.toHaveBeenCalled();
   expect(Alert.alert).not.toHaveBeenCalled();
   renderer.unmount();
@@ -327,7 +357,7 @@ it('revokes the signing context when the confirmation is left during a key promp
     return {txid: 'ab'.repeat(32)};
   });
   let pending;
-  act(() => { pending = renderer.root.findByType('GradientButton').props.onPress(); });
+  act(() => { pending = slide(renderer).props.onPress(); });
   const attempt = mockSubmitReviewedIdentityUpdate.mock.calls[0][0];
   expect(attempt.context.signal.aborted).toBe(false);
   act(() => renderer.unmount());
@@ -345,12 +375,13 @@ it('releases the busy screen and ignores completion of a replaced signing reques
   let release;
   mockSubmitReviewedIdentityUpdate.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
   let pending;
-  act(() => { pending = renderer.root.findByType('GradientButton').props.onPress(); });
-  expect(renderedText(renderer)).toContain('Broadcasting transaction');
+  act(() => { pending = slide(renderer).props.onPress(); });
+  expect(renderedText(renderer)).toContain('Broadcasting update');
+  expect(slide(renderer).props.loading).toBe(true);
   const previousProps = renderer.root.findByType(ConfirmPayStep).props;
   act(() => renderer.update(<ConfirmPayStep {...previousProps} details={{...details}} next={newNext} />));
-  expect(renderedText(renderer)).not.toContain('Broadcasting transaction');
-  expect(renderer.root.findByType('GradientButton').props.disabled).toBe(true);
+  expect(renderedText(renderer)).not.toContain('Broadcasting update');
+  expect(renderer.root.findAllByType(SlideToConfirm)).toHaveLength(0);
   await act(async () => { release({txid: 'ab'.repeat(32)}); await pending; });
   expect(oldNext).not.toHaveBeenCalled();
   expect(newNext).not.toHaveBeenCalled();
@@ -369,13 +400,13 @@ it('allows the replacement request to prepare while an old key prompt is still p
     throw new Error('Old request must not sign');
   });
   let pending;
-  act(() => { pending = renderer.root.findByType('GradientButton').props.onPress(); });
+  act(() => { pending = slide(renderer).props.onPress(); });
   const previousProps = renderer.root.findByType(ConfirmPayStep).props;
   act(() => renderer.update(<ConfirmPayStep {...previousProps} details={{...details}} />));
   await selectSource(renderer);
-  expect(renderer.root.findByType('GradientButton').props.disabled).toBe(false);
+  expect(slide(renderer).props.disabled).toBe(false);
   await act(async () => { release('old-wallet-key'); await pending; });
-  expect(renderer.root.findByType('GradientButton').props.disabled).toBe(false);
+  expect(slide(renderer).props.disabled).toBe(false);
   expect(mockCreateUpdateIdentityTx).toHaveBeenCalledTimes(2);
   expect(Alert.alert).not.toHaveBeenCalled();
   renderer.unmount();

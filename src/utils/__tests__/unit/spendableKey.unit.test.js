@@ -235,6 +235,8 @@ jest.mock('../../keys', () => ({
 jest.mock('../../api/channels/vrpc/callCreators', () => ({
   getAddressUtxos: mockGetAddressUtxos,
   getInfo: mockGetInfo,
+  // The mempool recheck at funding time finds no pending spends.
+  getMempoolUnspentUtxos: jest.fn((systemId, addresses, utxos) => Promise.resolve(utxos)),
   getTransaction: mockGetTransaction,
   sendRawTransaction: mockSendRawTransaction,
 }));

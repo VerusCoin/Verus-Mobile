@@ -7,7 +7,10 @@ import { AppState } from 'react-native';
 import { GENERAL } from '../constants/intervalConstants';
 import { isTestnetAccount, uniqueAssets } from '../assets/assetIdentity';
 import { appendBalanceRecord, readBalanceRecord, subscribeBalanceRecord } from './balanceRecord';
-import { getFiatHistory, getUsdHistory } from './priceHistory';
+import {
+  getFiatHistory, getSavedFiatHistory, getSavedUsdHistory, getUsdHistory,
+} from './priceHistory';
+import { loadPriceCache } from './priceCache';
 import {
   availableRanges, buildSeries, HOUR, visibility,
 } from './chartMath';
@@ -26,6 +29,7 @@ const usePortfolioHistory = ({
   const [range, setRange] = useState('1M');
   const [now, setNow] = useState(Date.now());
   const [market, setMarket] = useState(null);
+  const [cacheLoaded, setCacheLoaded] = useState(false);
   const coins = useMemo(() => uniqueAssets(activeCoins)
     .filter((coin) => Boolean(coin.testnet) === isTestnetAccount(account))
     .filter((coin) => !coin.testnet || (__DEV__ && testnetPrices))
@@ -40,6 +44,12 @@ const usePortfolioHistory = ({
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => setAppActive(state === 'active'));
     return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    loadPriceCache().then(() => { if (active) setCacheLoaded(true); }).catch(() => {});
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -84,42 +94,58 @@ const usePortfolioHistory = ({
   const coinsRef = useRef(coins);
   coinsRef.current = coins;
   const hourBucket = Math.floor(now / HOUR);
+  // The saved prices draw the chart at once. The requests below replace them when they return.
+  const savedMarket = useMemo(() => {
+    if (state !== 'chart' || !cacheLoaded) return null;
+    const time = Date.now();
+    const prices = coins.map((coin) => [coin.id, getSavedUsdHistory(coin, start, time)]);
+    const fx = getSavedFiatHistory(currency);
+    return fx && prices.every(([, samples]) => samples)
+      ? { loading: false, prices: Object.fromEntries(prices), fx } : null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- marketKey stands for coins, currency and start.
+  }, [state, cacheLoaded, marketKey]);
+
+  // The requests start with the Home refresh, not after it. `refreshing` stays a dependency so a
+  // refresh tries failed requests again.
   useEffect(() => {
-    if (!focused || state !== 'chart' || refreshing) return undefined;
+    if (!focused || state !== 'chart') return undefined;
     let active = true;
-    const canFetch = () => active && focusedRef.current;
+    // A started request may finish for the cache after this effect ends. Only an unfocused Home stops it.
+    const canFetch = () => focusedRef.current;
     const time = Date.now();
     // Keep the drawn history while it refreshes; show skeletons only for a new key.
     setMarket((previous) => (previous?.key === marketKey ? previous : {
       key: marketKey, loading: true, prices: {}, fx: [],
     }));
-    const priceRequests = coinsRef.current.map(async (coin) => {
-      try {
-        const samples = await getUsdHistory(coin, start, time, canFetch);
-        return [coin.id, samples];
-      } catch (error) {
-        console.warn('Could not load portfolio price history; using the current price.', coin.id, error.message);
-        return [coin.id, []];
-      }
+    const load = (hourly, drawn) => Promise.all([
+      Promise.all(coinsRef.current.map(async (coin) => {
+        try {
+          return [coin.id, await getUsdHistory(coin, start, time, canFetch, hourly)];
+        } catch (error) {
+          console.warn('Could not load portfolio price history; using the last known prices.', coin.id, error.message);
+          return [coin.id, drawn?.prices[coin.id] || getSavedUsdHistory(coin, start, time) || []];
+        }
+      })),
+      getFiatHistory(currency, start, time, canFetch).catch((error) => {
+        console.warn('Could not load portfolio exchange history; using the last known rates.', error.message);
+        return drawn?.fx || getSavedFiatHistory(currency) || [];
+      }),
+    ]).then(([prices, fx]) => {
+      const loaded = {
+        key: marketKey, loading: false, prices: Object.fromEntries(prices), fx,
+      };
+      if (active) setMarket(loaded);
+      return loaded;
     });
-    const fiatRequest = getFiatHistory(currency, start, time, canFetch)
-      .catch((error) => {
-        console.warn('Could not load portfolio exchange history; using the current ratio.', error.message);
-        return [];
-      });
-    Promise.all([Promise.all(priceRequests), fiatRequest]).then(([prices, fx]) => {
-      if (active) {
-        setMarket({
-          key: marketKey, loading: false, prices: Object.fromEntries(prices), fx,
-        });
-      }
-    });
+    // Daily prices draw 1M and longer, the range Home opens with. Hourly prices follow for 1D and 1W.
+    load(false).then((drawn) => { if (active) load(true, drawn); });
     return () => { active = false; };
   }, [focused, state, refreshing, marketKey, start, currency, hourBucket]);
 
   const ranges = record ? availableRanges(record.start, now) : ['1D', '1W', '1M', '1Y'];
   const selectedRange = ranges.includes(range) ? range : '1M';
-  const data = market?.key === marketKey ? market : null;
+  const requested = market?.key === marketKey ? market : null;
+  const data = requested && !requested.loading ? requested : savedMarket || requested;
   const ratioCoin = coins.find((coin) => Number(rates[GENERAL]?.[coin.id]?.[currency]) > 0);
   const currentRatio = ratioCoin ? Number(rates[GENERAL][ratioCoin.id][currency]) / Number(ratioCoin.usd) : 0;
   const fxFallback = currency === 'USD' ? 1 : currentRatio;

@@ -3,7 +3,7 @@ const mockDeliverResponse = jest.fn();
 const mockHandleEncryption = jest.fn();
 let mockState;
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   StyleSheet: {create: styles => styles},
   View: 'View',
   TouchableOpacity: 'TouchableOpacity',
@@ -94,7 +94,7 @@ describe('generic response network context during request handling', () => {
     jest.clearAllMocks();
     mockState = {
       deeplink: {passthrough: {}, requestId: 1},
-      authentication: {signedIn: true, activeAccount: {accountHash: 'profile'}, sessionEpoch: 1},
+      authentication: {signedIn: true, activeAccount: {accountHash: 'profile'}, accounts: [{accountHash: 'profile'}], sessionEpoch: 1},
       settings: {generalWalletSettings: {enableExperimentalGenericRequests: true}},
     };
 
@@ -111,7 +111,7 @@ describe('generic response network context during request handling', () => {
     if (renderer) act(() => renderer.unmount());
   });
 
-  it('stops processing later request details after a failed handler cancels the flow', async () => {
+  it('stops processing later request details after a failed handler ends the flow on the error screen', async () => {
     mockHandleAuthentication.mockRejectedValueOnce(new Error('Invalid first detail'));
     const cancel = jest.fn();
     const warning = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -119,8 +119,12 @@ describe('generic response network context during request handling', () => {
       renderer = create(<GenericRequestHome deeplinkData={requestHex('original', 2)} navigation={{navigate: jest.fn()}} cancel={cancel} />);
     });
     expect(mockHandleAuthentication).toHaveBeenCalledTimes(1);
+    expect(createAlert).not.toHaveBeenCalled();
+    const loading = renderer.root.findByType('GenericRequestLoading');
+    expect(loading.props.error).toMatchObject({title: 'Cannot open request', canRetry: true});
+    expect(cancel).not.toHaveBeenCalled();
+    act(() => loading.props.onCancel());
     expect(cancel).toHaveBeenCalledTimes(1);
-    expect(createAlert).toHaveBeenCalledWith('Error', 'Invalid first detail');
     warning.mockRestore();
   });
 
@@ -185,7 +189,7 @@ describe('generic response network context during request handling', () => {
     expect(mockHandleEncryption).toHaveBeenCalledTimes(2);
   });
 
-  it('carries the originating encryption approval session into the completion route', async () => {
+  it('delivers the approved encryption response once its request is complete', async () => {
     const request = new GenericRequest({details: [
       new AppEncryptionRequestOrdinalVDXFObject({data: new AppEncryptionRequestDetails()}),
     ]});
@@ -196,9 +200,13 @@ describe('generic response network context during request handling', () => {
       data: new AuthenticationResponseDetails(),
     })]});
     await act(async () => screen.props.next(response, [0]));
-    expect(props.navigation.navigate).toHaveBeenCalledWith('GenericRequestComplete', expect.objectContaining({
-      appEncryptionSessionKey: getAppEncryptionSessionKey(mockState),
-    }));
+    expect(mockDeliverResponse).toHaveBeenCalledTimes(1);
+    const [{requestBufferString, responseBufferString}] = mockDeliverResponse.mock.calls[0];
+    expect(requestBufferString).toBe(props.deeplinkData);
+    const received = new GenericResponse();
+    received.fromBuffer(Buffer.from(responseBufferString, 'hex'));
+    expect(received.details).toHaveLength(1);
+    expect(props.navigation.navigate).not.toHaveBeenCalled();
   });
 
   it.each([

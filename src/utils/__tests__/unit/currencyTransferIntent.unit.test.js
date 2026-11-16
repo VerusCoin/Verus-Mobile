@@ -23,7 +23,18 @@ import {estimateConversion} from '../../api/channels/vrpc/requests/estimateConve
 import {getCurrency} from '../../api/channels/verusid/callCreators';
 
 jest.mock('../../api/channels/vrpc/requests/getAddressBalances', () => ({getAddressBalances: jest.fn()}));
-jest.mock('../../api/channels/vrpc/requests/getAddressUtxos', () => ({getSpendableUtxos: jest.fn()}));
+jest.mock('../../api/channels/vrpc/requests/getAddressUtxos', () => {
+  const getSpendableUtxos = jest.fn();
+  return {
+    getSpendableUtxos,
+    // Preflight reads the same spendable inputs with an empty mempool summary.
+    getSpendableUtxosWithMempoolInfo: jest.fn(async (...args) => ({
+      utxos: await getSpendableUtxos(...args),
+      mempoolSpentUtxoCount: 0,
+      hasUnconfirmedIncoming: false,
+    })),
+  };
+});
 jest.mock('../../api/channels/vrpc/requests/getInfo', () => ({getInfo: jest.fn()}));
 jest.mock('../../api/channels/vrpc/requests/fundRawTransaction', () => ({fundRawTransaction: jest.fn()}));
 jest.mock('../../api/channels/vrpc/requests/getSendCurrencyTransaction', () => ({getSendCurrencyTransaction: jest.fn()}));

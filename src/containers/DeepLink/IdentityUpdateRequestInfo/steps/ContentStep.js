@@ -19,6 +19,7 @@ import {buildContentReview} from '../../../../utils/identityUpdate/contentReview
 import {useRequestBackHandler} from '../../useRequestNavigation';
 import PrivateAddressChangeValues from '../components/PrivateAddressChangeValues';
 import VerusIdContentChangeCard, {
+  ContentReviewNote,
   buildVerusIdContentChangeItems,
   contentChangeMatchesFilter,
   getCmmDataKeyLabel,
@@ -434,7 +435,7 @@ const UploadContentReview = ({upload, copy = false, isUpload = true, label = 'Up
 const ContentStep = ({
   requestCard,
   subjectIdentity,
-  displayUpdates,
+  displayUpdates = {},
   cmmDataKeys,
   styles,
   // A content clear is reviewed on the High-risk step. Keep it in the data,
@@ -490,6 +491,9 @@ const ContentStep = ({
   const removeCount = cmmItems.filter(
     item => item.changeType === 'removed',
   ).length;
+  const addsContent = cmmItems.some(
+    item => item.changeType === 'added' || item.changeType === 'appended',
+  );
   // Private address changes are not content values a removal can affect.
   const hasMixedCmmChanges =
     removeCount > 0 && cmmItems.some(item => item.changeType === 'added' || item.changeType === 'appended');
@@ -537,6 +541,15 @@ const ContentStep = ({
       <ScrollView
         style={contentStyles.contentReviewScroll}
         contentContainerStyle={contentStyles.contentReviewScrollContent}>
+        {/* Said once, before approval. A removal card has its own history line. */}
+        {addsContent && (
+          <ContentReviewNote
+            darkMode={darkMode}
+            icon="history"
+            style={contentStyles.contentReviewNote}>
+            On-chain history persists, even after content is removed.
+          </ContentReviewNote>
+        )}
         {hasMixedCmmChanges && (
           <Text style={[styles.subtitle, contentStyles.contentReviewNote]}>
             A removal can also affect values added in the same update.

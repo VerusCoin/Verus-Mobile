@@ -278,7 +278,7 @@
       "./debug/setupJest.js"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!((jest-)?react-native(?:-[^/]+)?|@react-native(?:-community)?)/)"
+      "node_modules/(?!((jest-)?react-native(?:-[^/]+)?|@react-native(?:-community)?|@react-navigation)/)"
     ]
   },
   "react-native": {

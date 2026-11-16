@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import {useFocusEffect} from '@react-navigation/native';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import {useSharedValue} from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
@@ -100,6 +100,13 @@ const SignedInCoinDetail = ({navigation, route}) => {
   const cardPickerTriggerRef = useRef(null);
   const restorePickerFocusRef = useRef(false);
   const [cardPickerVisible, setCardPickerVisible] = useState(false);
+  const isFocused = useIsFocused();
+  const signedIn = useSelector(
+    state => state.authentication.activeAccount != null,
+  );
+  // The chooser opens only on the visible screen of a signed-in account with
+  // cards. Otherwise a teardown or rebuild would show an empty native sheet.
+  const cardPickerAllowed = isFocused && signedIn && allSubWallets.length > 0;
   const compatibleApps = selectedSubWallet?.compatible_apps || [];
   const hasOverview = compatibleApps.includes(WALLET_APP_OVERVIEW);
   const canReceive = compatibleApps.includes(WALLET_APP_RECEIVE);
@@ -360,7 +367,9 @@ const SignedInCoinDetail = ({navigation, route}) => {
         onSelect={selectCard}
         selectedSubWalletId={selectedSubWallet?.id || null}
         subWallets={allSubWallets}
-        visible={selectedSubWallet == null || cardPickerVisible}
+        visible={
+          cardPickerAllowed && (selectedSubWallet == null || cardPickerVisible)
+        }
       />
     </View>
   );

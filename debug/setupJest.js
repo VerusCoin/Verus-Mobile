@@ -205,3 +205,35 @@ global.fetch = require('../__mocks__/react-native-fetch/fetch');
 global.ENABLE_VERUS_IDENTITIES = true;
 global.DISABLED_CHANNELS = ['dlight'];
 global.ENABLE_DLIGHT = !global.DISABLED_CHANNELS.includes('dlight');
+
+// Icons and SVG drawings render native views. Tests render them as host
+// elements named after the export (for example 'AtSign' or 'Path'), so a test
+// that mocks 'react-native' by hand still loads screens that draw icons.
+const mockSvgModule = defaultName =>
+  new Proxy(
+    {},
+    {
+      get: (target, name) => {
+        if (name === '__esModule') {
+          return true;
+        }
+        if (name === 'default') {
+          return defaultName;
+        }
+        return typeof name === 'string' && name !== 'then' ? name : undefined;
+      },
+    },
+  );
+jest.mock('lucide-react-native', () => mockSvgModule('Icon'));
+jest.mock('react-native-svg', () => mockSvgModule('Svg'));
+require('react-native-gesture-handler/jestSetup');
+jest.mock('react-native-safe-area-context', () =>
+  require('react-native-safe-area-context/jest/mock').default,
+);
+jest.mock('react-native-vision-camera', () => ({
+  Camera: 'Camera',
+  useCameraDevice: jest.fn(() => undefined),
+  useCameraPermission: jest.fn(() => ({hasPermission: false, requestPermission: jest.fn()})),
+  useCodeScanner: jest.fn(config => config),
+}));
+jest.mock('react-native-permissions', () => require('react-native-permissions/mock'));
