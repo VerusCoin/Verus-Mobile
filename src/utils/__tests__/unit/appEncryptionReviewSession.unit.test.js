@@ -160,28 +160,14 @@ it('shows an unregistered nested identity and its independent index', async () =
   }
 });
 
-it('uses the canonical PBaaS signer system for identity lookup and the decrypt command', async () => {
+// The redesign (93636634) removed the debug panel with its decryptdata
+// command on purpose, so no daemon command is left to check.
+it('uses the canonical PBaaS signer system for identity lookup', async () => {
   props = {...props, signerSystemID: otherSystemID, signerSystemName: 'Other Chain'};
   const view = await mount();
   expect(text(view)).toContain('Other Chain');
   await act(async () => onPressOf(button(view, 'Request from requester@, verified'))());
   expect(mockGetIdentity).toHaveBeenCalledWith(otherSystemID, 'iSigner');
-  await act(async () => onPressOf(button(view, APPROVE))());
-  act(() => onPressOf(button(view, 'View debug information'))());
-  expect(text(view)).toContain(`./verus -chain=${otherSystemID} decryptdata`);
-});
-
-it.each(['VRSC', 'VRSCTEST'])('preserves the %s daemon command', async chain => {
-  const testSystem = toIAddress('VRSCTEST', 'VRSCTEST');
-  const signerSystemID = chain === 'VRSC' ? systemID : testSystem;
-  mockCoins[signerSystemID] = {id: chain, system_id: signerSystemID};
-  props = {...props, signerSystemID, signerSystemName: chain};
-  const view = await mount();
-  await act(async () => onPressOf(button(view, APPROVE))());
-  act(() => onPressOf(button(view, 'View debug information'))());
-  expect(text(view)).toContain(chain === 'VRSC'
-    ? './verus decryptdata'
-    : './verus -chain=vrsctest decryptdata');
 });
 
 it.each([false, true])('describes the spending key actually shared (nested=%s)', async nested => {
@@ -279,12 +265,16 @@ it('keeps the response private until the approval completes and prevents duplica
   const wait = deferred();
   mockProcess.mockReturnValueOnce(wait.promise);
   const view = await mount();
+  // The picker sorts linked identities by name (93636634), so other@ comes
+  // before user@ and is the default.
+  expect(button(view, 'Respond as other@')).toBeDefined();
+  expect(button(view, 'Respond as user@')).toBeUndefined();
   const approve = onPressOf(button(view, APPROVE));
   let pending;
   await act(async () => { pending = approve(); await approve(); });
   expect(mockProcess).toHaveBeenCalledTimes(1);
   expect(mockProcess.mock.calls[0][0]).toMatchObject({
-    responseSignerID: userID, responseSignerSystemID: systemID, assertActive: expect.any(Function),
+    responseSignerID: otherID, responseSignerSystemID: systemID, assertActive: expect.any(Function),
   });
   expect(props.next).not.toHaveBeenCalled();
   await act(async () => {
@@ -297,7 +287,7 @@ it('keeps the response private until the approval completes and prevents duplica
   expect(props.response.details).toEqual([]);
   expect(props.next).toHaveBeenCalledTimes(1);
   expect(props.next).toHaveBeenCalledWith(expect.objectContaining({details: [{encryptedData: 'ciphertext'}]}), [0],
-    {autoDeliverOnComplete: true, responseIdentityName: 'user@'});
+    {autoDeliverOnComplete: true, responseIdentityName: 'other@'});
 });
 
 it.each(['profile', 'epoch', 'sign-out', 'network', 'deeplink', 'request'])('discards derivation and approval after a %s change', async change => {
