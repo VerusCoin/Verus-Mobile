@@ -15,6 +15,7 @@ const mockClearRegistrationJobs = jest.fn();
 const mockUpdateRegistrationUiState = jest.fn();
 const mockReadRegistrationBalances = jest.fn();
 const mockCheckRegistrationFunds = jest.fn();
+const mockReadRegistrationName = jest.fn();
 const mockGetRegistrationReferralInfo = jest.fn();
 const mockRegistrationReferralNamespace = jest.fn();
 jest.mock('../../identityRegistration', () => mockApi);
@@ -26,6 +27,10 @@ jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', 
   publishRegistrationJobs: (...args) => mockPublishRegistrationJobs(...args),
   clearRegistrationJobs: (...args) => mockClearRegistrationJobs(...args),
   updateRegistrationUiState: (...args) => mockUpdateRegistrationUiState(...args),
+}));
+jest.mock('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/registrationReads', () => ({
+  ...jest.requireActual('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/registrationReads'),
+  readRegistrationName: (...args) => mockReadRegistrationName(...args),
 }));
 jest.mock('../../identityRegistration/funding', () => ({
   ...jest.requireActual('../../identityRegistration/funding'),
@@ -66,6 +71,8 @@ const {
 const {CostReview, AmountRows} = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/RegistrationComponents');
 const AppButton = require('../../../components/AppButton').default;
 const SlideToConfirm = require('../../../components/SlideToConfirm').default;
+const ProgressHeader = require('../../../components/ProgressHeader').default;
+const RegistrationTabRows = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/RegistrationTabRows').default;
 const TextAction = require('../../../components/TextAction').default;
 const AcknowledgeSheet = require('../../../components/AcknowledgeSheet').default;
 const {preferredRegistrationFundingSource, registrationFundingSources} = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/fundingSources');
@@ -77,7 +84,7 @@ const quote = {
 const review = {
   jobId: 'job', revision: 4, approvalToken: 'review-token', status: 'commitment_prepared', displayName: 'alice@', chainTicker: 'VRSC',
   quote, systemId: 'chain', currencyNames: {chain: 'VRSC'}, identityAddress: 'identity',
-  identity: {primaryaddresses: ['wallet']}, fundingName: 'Wallet address',
+  identity: {primaryaddresses: ['wallet'], recoveryauthority: 'identity', revocationauthority: 'identity'}, fundingName: 'Wallet address',
   fundingAddress: 'wallet', signingAddress: 'wallet', linked: false,
 };
 const PRIVATE_ADDRESS = 'zs1wczplx4kegw32h8g0f7xwl57p5tvnprwdmnzmdnsw50chcl26f7tws92wk2ap03ykaq6jyyztfa';
@@ -110,6 +117,22 @@ const pullRefresh = async view => {
 const enterName = async (view, name = 'alice') => {
   await act(async () => view.root.findAllByType('TextInput').find(node => node.props.label === 'Identity name').props.onChangeText(name));
 };
+const nameInput = view => view.root.findAll(node => node.props.accessibilityLabel === 'VerusID name' && node.props.onChangeText)[0];
+const typeName = async (view, name = 'alice') => {
+  await act(async () => nameInput(view).props.onChangeText(name));
+  // The name check waits for typing to pause, then reads availability and the quote.
+  await act(async () => { jest.advanceTimersByTime(700); });
+};
+const advance = async ms => act(async () => { jest.advanceTimersByTime(ms); });
+const quoteFor = systemId => ({
+  ...quote, systemID: systemId, parentID: systemId, issuerID: systemId,
+  totalOperationRequired: {[systemId]: '100010000'}, totalRequired: {[systemId]: '100000000'},
+});
+const nameReadFor = (request, extra = {}) => ({
+  request: {name: request.name}, policy: {resolvedName: {identityID: 'identity', parent: request.systemId}},
+  quote: quoteFor(request.systemId), referralQuote: null, referralsAllowed: false, referralRequired: false,
+  currencyNames: {[request.systemId]: 'VRSC'}, ...extra,
+});
 const referralField = view => view.root.findAllByType('TextInput').find(node => node.props.label === 'Referral (optional)');
 const enterReferral = async (view, referral) => {
   await act(async () => referralField(view).props.onChangeText(referral));
@@ -148,7 +171,7 @@ beforeEach(() => {
     settings: {generalWalletSettings: {}}, modal: {stack: []}, ledger: {balances: {}, rates: {}},
   };
   mockUpdateRegistrationUiState.mockReset().mockResolvedValue(undefined);
-  mockReadRegistrationBalances.mockReset().mockResolvedValue({status: 'ready', amounts: {chain: '10'}});
+  mockReadRegistrationBalances.mockReset().mockImplementation(async coin => ({status: 'ready', amounts: {[coin.system_id]: '10'}}));
   mockCheckRegistrationFunds.mockReset().mockResolvedValue({status: 'enough'});
   mockApi.getRegistrationEstimate.mockReset().mockResolvedValue({...review, status: 'commitment_confirmed'});
   setSavedReview({...review});
@@ -157,9 +180,15 @@ beforeEach(() => {
   mockApi.approveRegistration.mockResolvedValue({...review, status: 'registration_broadcast'});
   mockApi.prepareRegistration.mockResolvedValue({...review, status: 'registration_prepared'});
   mockApi.refreshRegistrationReview.mockResolvedValue({...review});
-  mockApi.resolveRegistration.mockResolvedValue({quote, currencyNames: {chain: 'VRSC'}});
   mockApi.prepareCommitment.mockResolvedValue({...review});
   mockApi.findExistingRegistration.mockResolvedValue(null);
+  mockReadRegistrationName.mockReset().mockImplementation(async request => nameReadFor(request));
+  mockApi.resolveRegistration.mockReset().mockImplementation(async request => ({
+    quote: quoteFor(request.systemId), currencyNames: {[request.systemId]: 'VRSC'}, identityNames: {},
+    request: {fundingAddress: request.fundingAddress, signingAddress: request.signingAddress, referralID: request.referralID,
+      privateAddress: request.privateAddress},
+    policy: {resolvedName: {identityID: 'identity'}},
+  }));
   mockApi.deleteRegistration.mockResolvedValue(undefined);
   mockApi.linkRegisteredIdentity.mockResolvedValue({...review, status: 'complete', linked: true});
 });
@@ -169,16 +198,14 @@ afterEach(() => {
 });
 
 it.each([
-  ['overview', IdentityRegistrationStart, 'Create a VerusID'],
-  ['create form', IdentityRegistrationCreate, 'Review costs'],
+  ['create form', IdentityRegistrationCreate, 'Continue'],
 ])('keeps the %s primary action available outside the scrolling content', async (_, Component, label) => {
+  jest.useFakeTimers();
   const view = await mount(Component);
   const action = footerAction(view, label);
-  if (Component === IdentityRegistrationCreate) {
-    expect(action.props.disabled).toBe(true);
-    await enterName(view);
-    expect(footerAction(view, label).props.disabled).toBe(false);
-  }
+  expect(action.props.disabled).toBe(true);
+  await typeName(view);
+  expect(footerAction(view, label).props.disabled).toBe(false);
 });
 
 it('waits for saved summaries before showing an empty registration list or enabling creation', async () => {
@@ -544,93 +571,101 @@ it('saves a payment review for later without approving either payment', async ()
 });
 
 it('the form quotes both stages and navigates using only a saved job ID', async () => {
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
+  jest.useFakeTimers();
+  mockApi.prepareCommitment.mockResolvedValue({...review});
+  mockApi.approveCommitment.mockResolvedValue({...review, status: 'commitment_broadcast'});
+  const navigation = makeNavigation();
   const view = await mount(IdentityRegistrationCreate, {navigation});
-  await enterName(view);
-  await press(button(view, 'Review costs'));
+  await typeName(view);
+  await press(footerAction(view, 'Continue'));
+  await advance(700);
+  // The Check details step shows both stages, then one slide saves and pays the first.
+  expect(textContent(view.root)).toContain('Commitment');
+  expect(textContent(view.root)).toContain('Registration');
+  expect(textContent(view.root)).toContain('1.0001 VRSC');
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
   expect(mockApi.prepareCommitment).toHaveBeenCalledWith({
     request: expect.objectContaining({name: 'alice', systemId: 'chain', fundingAddress: 'wallet', signingAddress: 'wallet', rootSystemName: 'VRSC'}),
   }, expect.any(Object));
-  expect(mockApi.approveCommitment).not.toHaveBeenCalled();
-  expect(navigation.navigate).toHaveBeenCalledWith('IdentityCommitmentReview', {jobId: 'job'});
-  expect(view.root.findAllByType(CostReview)).toHaveLength(0);
+  expect(mockApi.approveCommitment).toHaveBeenCalledTimes(1);
+  expect(mockApi.approveCommitment).toHaveBeenCalledWith('job', 'review-token', expect.any(Object));
+  expect(navigation.replace).toHaveBeenCalledWith('IdentityRegistrationProgress', {jobId: 'job'});
   expect(mockApi.prepareCommitment.mock.calls[0][0].request.privateAddress).toBeUndefined();
 });
+
+const referralName = (request, systemId) => nameReadFor(request, {referralsAllowed: true, referralQuote: {
+  ...quoteFor(systemId), totalRequired: {[systemId]: '80000000'}, totalOperationRequired: {[systemId]: '80010000'},
+}});
+const radioRows = view => view.root.findAll(node => node.props.accessibilityRole === 'radio' && node.props.onPress);
+const goToCheck = async view => {
+  await press(footerAction(view, 'Continue'));
+  await advance(700);
+};
 
 it.each([
   ['VRSC', 'chain', false],
   ['VRSCTEST', 'test-chain', true],
 ])('defaults %s referrals to the foundation and submits the displayed value', async (id, systemId, testnet) => {
+  jest.useFakeTimers();
   mockState.authentication.activeAccount.keys[id] = {vrpc: {addresses: ['wallet']}};
   mockState.coins.activeCoinsForUser = [{id, system_id: systemId, currency_id: systemId, display_ticker: id, testnet}];
-  mockGetRegistrationReferralInfo.mockResolvedValue({
-    discount: '2000000000', reward: '2000000000', currencyID: systemId, currencyName: id, enabled: true,
-  });
+  mockReadRegistrationName.mockImplementation(async request => referralName(request, systemId));
+  mockApi.prepareCommitment.mockResolvedValue({...review});
   const view = await mount(IdentityRegistrationCreate);
-
-  expect(referralField(view).props.value).toBe('Verus Coin Foundation@');
-  expect(button(view, 'set to Verus Coin Foundation@')).toBeDefined();
-  expect(textContent(view.root)).toContain(`Using an eligible referral makes your ID 20 ${id} cheaper and gives the referrer 20 ${id}.`);
-  await enterName(view);
-  await press(button(view, 'Review costs'));
-
+  await typeName(view);
+  await goToCheck(view);
+  // The Referral step selects the foundation; the Check details step then shows it.
+  expect(textContent(view.root)).toContain('Verus Coin Foundation@');
+  await goToCheck(view);
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
   expect(mockApi.prepareCommitment.mock.calls[0][0].request.referralID).toBe('Verus Coin Foundation@');
 });
 
 it('lets a cleared referral stay empty through name edits and submission, and restores it with the foundation button', async () => {
+  jest.useFakeTimers();
+  mockReadRegistrationName.mockImplementation(async request => referralName(request, 'chain'));
+  mockApi.prepareCommitment.mockResolvedValue({...review});
   const view = await mount(IdentityRegistrationCreate);
-  await enterReferral(view, '');
-  await enterName(view);
-  expect(referralField(view).props.value).toBe('');
-  await press(button(view, 'Review costs'));
+  const row = title => radioRows(view).find(node => textContent(node).startsWith(title));
+  await typeName(view);
+  await goToCheck(view);
+  expect(row('Verus Coin Foundation@').props.selected).toBe(true);
+  await press(row('No referral'));
+  // Back to the name step: editing the name keeps the cleared choice.
+  await act(async () => view.root.findByType(ProgressHeader).props.onBack());
+  await typeName(view, 'alice2');
+  await goToCheck(view);
+  expect(row('No referral').props.selected).toBe(true);
+  await goToCheck(view);
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
   expect(mockApi.prepareCommitment.mock.calls[0][0].request).not.toHaveProperty('referralID');
 
-  await press(button(view, 'set to Verus Coin Foundation@'));
-  expect(referralField(view).props.value).toBe('Verus Coin Foundation@');
-});
-
-it('clears the default referral as soon as a dot is entered, including after switching networks', async () => {
-  mockState.authentication.activeAccount.keys.VRSCTEST = {vrpc: {addresses: ['test-wallet']}};
-  mockState.coins.activeCoinsForUser.push({
-    id: 'VRSCTEST', system_id: 'test-chain', currency_id: 'test-chain', display_ticker: 'VRSCTEST', testnet: true,
-  });
-  const view = await mount(IdentityRegistrationCreate);
-  expect(referralField(view).props.value).toBe('Verus Coin Foundation@');
-
-  await enterName(view, 'alice.');
-  expect(referralField(view).props.value).toBe('');
-  await enterName(view, 'alice.community@');
-  await press(button(view, 'Review costs'));
-  expect(mockApi.prepareCommitment.mock.calls[0][0].request).not.toHaveProperty('referralID');
-
-  await press(button(view, 'Network'));
-  await press(radio(view, 'VRSCTEST · Testnet'));
-  expect(referralField(view).props.value).toBe('');
-
-  await enterReferral(view, 'friend.community@');
-  await enterName(view, 'bob.community@');
-  expect(referralField(view).props.value).toBe('friend.community@');
-  await press(button(view, 'Review costs'));
-  expect(mockApi.prepareCommitment.mock.calls[1][0].request.referralID).toBe('friend.community@');
+  await act(async () => view.root.findByType(ProgressHeader).props.onBack());
+  await press(row('Verus Coin Foundation@'));
+  expect(row('Verus Coin Foundation@').props.selected).toBe(true);
+  await goToCheck(view);
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
+  expect(mockApi.prepareCommitment.mock.calls[1][0].request.referralID).toBe('Verus Coin Foundation@');
 });
 
 it.each([false, true])('keeps the referral explanation on another chain without a foundation default or button (testnet=%s)', async testnet => {
+  jest.useFakeTimers();
   mockState.authentication.activeAccount.keys.CHAIN = {vrpc: {addresses: ['chain-wallet']}};
   mockState.coins.activeCoinsForUser = [{
     id: 'CHAIN', system_id: 'other-chain', currency_id: 'other-chain', display_ticker: 'CHAIN', testnet,
   }];
-  mockGetRegistrationReferralInfo.mockResolvedValue({
-    discount: '1250000000', reward: '375000000', currencyID: 'fee-currency', currencyName: 'FEE', enabled: true,
-  });
+  mockReadRegistrationName.mockImplementation(async request => referralName(request, 'other-chain'));
   const view = await mount(IdentityRegistrationCreate);
-
-  expect(referralField(view).props.value).toBe('');
-  expect(button(view, 'set to Verus Coin Foundation@')).toBeUndefined();
-  expect(textContent(view.root)).toContain('Using an eligible referral makes your ID 12.5 FEE cheaper and gives the referrer 3.75 FEE.');
-  expect(textContent(view.root)).toContain('You’ll see the final price before paying.');
-  expect(mockGetRegistrationReferralInfo).toHaveBeenLastCalledWith(expect.objectContaining({
-    systemId: 'other-chain', rootSystemName: testnet ? 'VRSCTEST' : 'VRSC', namespaceId: 'other-chain',
-  }));
+  await typeName(view);
+  await goToCheck(view);
+  const titles = radioRows(view).map(textContent);
+  expect(titles.some(label => label.startsWith('Verus Coin Foundation@'))).toBe(false);
+  expect(titles.some(label => label.startsWith('Someone else'))).toBe(true);
+  expect(titles.some(label => label.startsWith('No referral'))).toBe(true);
+  expect(textContent(view.root)).toContain('A referral lowers the price.');
+  expect(mockReadRegistrationName).toHaveBeenLastCalledWith(expect.objectContaining({
+    systemId: 'other-chain', rootSystemName: testnet ? 'VRSCTEST' : 'VRSC',
+  }), expect.any(Object));
 });
 
 it('refreshes referral savings when the identity namespace changes', async () => {
@@ -651,48 +686,15 @@ it('refreshes referral savings when the identity namespace changes', async () =>
 });
 
 it('explains when a namespace has no referral discount or reward', async () => {
-  mockGetRegistrationReferralInfo.mockResolvedValue({
-    discount: '0', reward: '0', currencyID: 'chain', currencyName: 'VRSC', enabled: false,
-  });
+  jest.useFakeTimers();
+  // The name read says this namespace takes no referrals, so the flow has no Referral step.
+  mockReadRegistrationName.mockImplementation(async request => nameReadFor(request, {referralsAllowed: false}));
   const view = await mount(IdentityRegistrationCreate);
-  expect(textContent(view.root)).toContain('This namespace does not offer referral discounts or referrer rewards.');
-  expect(textContent(view.root)).not.toContain('makes your ID');
-});
-
-it('keeps the referral explanation and form available when referral amounts cannot be loaded', async () => {
-  mockGetRegistrationReferralInfo.mockRejectedValue(new Error('RPC unavailable'));
-  const view = await mount(IdentityRegistrationCreate);
-  expect(textContent(view.root)).toContain('An eligible referral can make your ID cheaper and reward the referrer. You’ll see the amounts before paying.');
-  await enterName(view);
-  expect(button(view, 'Review costs').props.disabled).toBe(false);
-});
-
-it('preserves cleared and custom referrals separately when changing networks', async () => {
-  mockState.authentication.activeAccount.keys.VRSCTEST = {vrpc: {addresses: ['test-wallet']}};
-  mockState.authentication.activeAccount.keys.CHAIN = {vrpc: {addresses: ['chain-wallet']}};
-  mockState.coins.activeCoinsForUser.push(
-    {id: 'VRSCTEST', system_id: 'test-chain', currency_id: 'test-chain', display_ticker: 'VRSCTEST', testnet: true},
-    {id: 'CHAIN', system_id: 'other-chain', currency_id: 'other-chain', display_ticker: 'CHAIN'},
-  );
-  const view = await mount(IdentityRegistrationCreate);
-  await enterReferral(view, '');
-  await press(button(view, 'Network'));
-  await press(radio(view, 'VRSCTEST · Testnet'));
-  expect(referralField(view).props.value).toBe('Verus Coin Foundation@');
-  await enterReferral(view, 'friend@');
-  await press(button(view, 'Network'));
-  await press(radio(view, 'CHAIN'));
-  expect(referralField(view).props.value).toBe('');
-  expect(button(view, 'set to Verus Coin Foundation@')).toBeUndefined();
-  await press(button(view, 'Network'));
-  await press(radio(view, 'VRSC'));
-  expect(referralField(view).props.value).toBe('');
-  await press(button(view, 'Network'));
-  await press(radio(view, 'VRSCTEST · Testnet'));
-  expect(referralField(view).props.value).toBe('friend@');
-  await enterName(view);
-  await press(button(view, 'Review costs'));
-  expect(mockApi.prepareCommitment.mock.calls[0][0].request).toMatchObject({systemId: 'test-chain', referralID: 'friend@'});
+  await typeName(view);
+  await goToCheck(view);
+  expect(radioRows(view)).toHaveLength(0);
+  expect(textContent(view.root)).not.toContain('A referral lowers the price.');
+  expect(footerAction(view, 'Slide to start')).toBeDefined();
 });
 
 it('ignores referral amounts returned for a previously selected network', async () => {
@@ -717,6 +719,7 @@ it('ignores referral amounts returned for a previously selected network', async 
 });
 
 it('uses the selected network wallet’s private address when creating an identity', async () => {
+  jest.useFakeTimers();
   mockState.authentication.activeAccount.keys.VRSC.dlight_private = {addresses: ['zsOtherNetwork']};
   mockState.authentication.activeAccount.keys.VRSCTEST = {
     vrpc: {addresses: ['test-wallet']}, dlight_private: {addresses: [PRIVATE_ADDRESS]},
@@ -724,10 +727,11 @@ it('uses the selected network wallet’s private address when creating an identi
   mockState.coins.activeCoinsForUser.push({
     id: 'VRSCTEST', system_id: 'test-chain', currency_id: 'test-chain', display_ticker: 'VRSCTEST', testnet: true,
   });
+  mockApi.prepareCommitment.mockResolvedValue({...review});
   const view = await mount(IdentityRegistrationCreate, {route: {params: {coinId: 'VRSCTEST'}}});
-  await enterName(view);
-  expect(textContent(view.root)).toContain('Your identity will use this wallet’s private address');
-  await press(button(view, 'Review costs'));
+  await typeName(view);
+  await goToCheck(view);
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
   expect(mockApi.prepareCommitment.mock.calls[0][0].request).toMatchObject({
     systemId: 'test-chain', rootSystemName: 'VRSCTEST', signingAddress: 'test-wallet', privateAddress: PRIVATE_ADDRESS,
   });
@@ -742,52 +746,47 @@ it('includes the private receiving address in the identity review', async () => 
 });
 
 it('does not flash costs while preparation is pending and ignores a second review tap', async () => {
+  jest.useFakeTimers();
   let finishPreparation;
   mockApi.prepareCommitment.mockReturnValue(new Promise(resolve => {finishPreparation = resolve;}));
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
+  const navigation = makeNavigation();
   const view = await mount(IdentityRegistrationCreate, {navigation});
-  await enterName(view);
-  const reviewPress = button(view, 'Review costs').props.onPress;
-  // Let name resolution finish while holding the transaction preparation open.
-  // The old flow inserted the quote into this form at exactly this point.
-  await act(async () => {reviewPress();});
-  expect(mockApi.resolveRegistration).not.toHaveBeenCalled();
+  await typeName(view);
+  await goToCheck(view);
+  const slidePress = footerAction(view, 'Slide to start').props.onPress;
+  await act(async () => {slidePress();});
   expect(mockApi.prepareCommitment).toHaveBeenCalledTimes(1);
-  expect(view.root.findAllByType(CostReview)).toHaveLength(0);
-  expect(textContent(view.root)).not.toContain('PAY NOW');
-  expect(navigation.navigate).not.toHaveBeenCalled();
-  const busyButton = view.root.findAllByType('Pressable').find(node => node.props.accessibilityLabel === 'Review costs');
-  expect(busyButton.props.disabled).toBe(true);
-  expect(busyButton.props.accessibilityState.busy).toBe(true);
-  await act(async () => {reviewPress();});
+  expect(navigation.replace).not.toHaveBeenCalled();
+  expect(footerAction(view, 'Slide to start').props).toMatchObject({disabled: true, loading: true});
+  await act(async () => {slidePress();});
   expect(mockApi.prepareCommitment).toHaveBeenCalledTimes(1);
   await act(async () => finishPreparation({...review}));
-  expect(view.root.findAllByType(CostReview)).toHaveLength(0);
-  expect(navigation.navigate).toHaveBeenCalledTimes(1);
-  expect(navigation.navigate).toHaveBeenCalledWith('IdentityCommitmentReview', {jobId: 'job'});
-  expect(mockApi.approveCommitment).not.toHaveBeenCalled();
+  expect(navigation.replace).toHaveBeenCalledTimes(1);
+  expect(navigation.replace).toHaveBeenCalledWith('IdentityRegistrationProgress', {jobId: 'job'});
+  expect(mockApi.approveCommitment).toHaveBeenCalledTimes(1);
 });
 
 it.each([
   ['commitment_prepared', 'IdentityCommitmentReview'],
-  ['registration_prepared', 'IdentityRegistrationReview'],
+  ['registration_prepared', 'IdentityRegistrationProgress'],
   ['commitment_broadcast', 'IdentityRegistrationProgress'],
   ['registered', 'IdentityRegistrationProgress'],
 ])('resumes an existing %s registration before quoting or preparing another payment', async (status, screen) => {
-  mockApi.prepareCommitment.mockResolvedValue({...review, jobId: 'existing', status});
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
+  jest.useFakeTimers();
+  mockApi.findExistingRegistration.mockResolvedValue({...review, jobId: 'existing', status});
+  const navigation = makeNavigation();
   const view = await mount(IdentityRegistrationCreate, {navigation});
-  await enterName(view);
-  await press(button(view, 'Review costs'));
-  expect(mockApi.prepareCommitment).toHaveBeenCalledWith({request: expect.objectContaining({
+  await typeName(view);
+  expect(textContent(view.root)).toContain('Saved registration');
+  await press(footerAction(view, 'Continue'));
+  expect(mockApi.findExistingRegistration).toHaveBeenCalledWith(expect.objectContaining({
     name: 'alice', systemId: 'chain', rootSystemName: 'VRSC',
-  })}, expect.any(Object));
-  expect(navigation.navigate).toHaveBeenCalledWith(screen, {jobId: 'existing'});
+  }), expect.any(Object));
+  expect(navigation.replace).toHaveBeenCalledWith(screen, {jobId: 'existing'});
   expect(mockApi.resolveRegistration).not.toHaveBeenCalled();
-  expect(mockApi.prepareCommitment).toHaveBeenCalledTimes(1);
-  expect(mockApi.findExistingRegistration).not.toHaveBeenCalled();
+  expect(mockReadRegistrationName).not.toHaveBeenCalled();
+  expect(mockApi.prepareCommitment).not.toHaveBeenCalled();
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
-  expect(view.root.findAllByType(CostReview)).toHaveLength(0);
 });
 
 it('links a confirmed identity in one tap and returns after linking', async () => {
@@ -1043,73 +1042,80 @@ it('stacks full cost labels and amounts on a narrow screen with large text', asy
   });
 });
 
+const renderRows = async (jobs, navigation, group) => {
+  let view;
+  await act(async () => {
+    view = create(<RegistrationTabRows jobs={jobs} navigation={navigation} group={group} onLink={jest.fn()} />);
+  });
+  views.push(view);
+  return view;
+};
+const rowButton = (view, label) => view.root.findAll(node => node.props.accessibilityRole === 'button' && node.props.onPress &&
+  String(node.props.accessibilityLabel).startsWith(label))[0];
+
 it('groups saved registrations by next action, hides completed details, and resumes the chosen job', async () => {
-  mockState.channelStore_verusid.registrationJobs = {
+  const jobs = {
     waiting: {id: 'waiting', displayName: 'pending@', status: 'commitment_broadcast', createdAt: 1},
     ready: {id: 'ready', displayName: 'ready@', status: 'commitment_confirmed', createdAt: 2},
     completed: {id: 'completed', displayName: 'finished@', status: 'complete', createdAt: 3},
   };
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
-  const view = await mount(IdentityRegistrationStart, {navigation, route: {params: {coinId: 'VRSCTEST'}}});
+  const navigation = makeNavigation();
+  const view = await renderRows(jobs, navigation, 'In progress');
   const text = textContent(view.root);
-  expect(text).toContain('NEEDS YOU');
-  expect(text).toContain('IN PROGRESS');
+  expect(text).toContain('In progress');
   expect(text.indexOf('ready@')).toBeLessThan(text.indexOf('pending@'));
   expect(text).not.toContain('finished@');
-  await press(button(view, 'ready@'));
-  expect(mockApi.prepareRegistration).toHaveBeenCalledWith({jobId: 'ready'}, expect.any(Object));
-  expect(navigation.navigate).toHaveBeenLastCalledWith('IdentityRegistrationReview', {jobId: 'ready'});
-  await press(button(view, 'Completed (1)'));
-  await press(button(view, 'finished@'));
-  expect(navigation.navigate).toHaveBeenLastCalledWith('IdentityRegistrationProgress', {jobId: 'completed'});
-  await press(button(view, 'Create a VerusID'));
-  expect(navigation.navigate).toHaveBeenLastCalledWith('IdentityRegistrationCreate', {coinId: 'VRSCTEST'});
+  await press(rowButton(view, 'ready@'));
+  expect(navigation.navigate).toHaveBeenLastCalledWith('IdentityRegistration', {
+    screen: 'IdentityRegistrationProgress', params: {jobId: 'ready'},
+  });
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
   expect(mockApi.approveRegistration).not.toHaveBeenCalled();
 });
 
 it.each([
   ['commitment_prepared', 'IdentityCommitmentReview'],
-  ['registration_prepared', 'IdentityRegistrationReview'],
+  ['registration_prepared', 'IdentityRegistrationProgress'],
   ['commitment_broadcast', 'IdentityRegistrationProgress'],
 ])('opens the next saved screen directly for %s without making a payment', async (status, screen) => {
-  mockState.channelStore_verusid.registrationJobs.saved = {id: 'saved', displayName: 'saved@', status, createdAt: 1};
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
-  const view = await mount(IdentityRegistrationStart, {navigation});
-  await press(button(view, 'saved@'));
-  expect(navigation.navigate).toHaveBeenCalledWith(screen, {jobId: 'saved'});
+  const navigation = makeNavigation();
+  const view = await renderRows({saved: {id: 'saved', displayName: 'saved@', status, createdAt: 1}}, navigation);
+  await press(rowButton(view, 'saved@'));
+  expect(navigation.navigate).toHaveBeenCalledWith('IdentityRegistration', {screen, params: {jobId: 'saved'}});
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
   expect(mockApi.approveRegistration).not.toHaveBeenCalled();
 });
 
 it('returns from progress to saved registrations without creating or resubmitting a transaction', async () => {
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
+  const goBack = jest.fn();
+  const navigation = makeNavigation({getParent: () => ({goBack, reset: jest.fn()})});
   setSavedReview({...review, status: 'commitment_broadcast', commitmentTxid: 'sent'});
   const view = await mount(IdentityRegistrationProgress, {navigation});
-  await press(button(view, 'Done for now'));
-  expect(navigation.navigate).toHaveBeenCalledWith('IdentityRegistrationStart');
+  await press(footerAction(view, 'Done for now'));
+  expect(goBack).toHaveBeenCalledTimes(1);
   expect(mockApi.retryBroadcast).not.toHaveBeenCalled();
   expect(mockApi.prepareCommitment).not.toHaveBeenCalled();
 });
 
 it.each([
   ['draft', 'commitment_prepared', 'No payment has been sent.'],
-  ['completed', 'complete', 'Your identity stays registered'],
 ])('deletes a %s from the home list only after confirmation', async (deletionKind, status, warning) => {
-  mockState.channelStore_verusid.registrationJobs.saved = {id: 'saved', displayName: 'saved@', status, deletionKind, createdAt: 1};
-  mockApi.deleteRegistration.mockImplementation(async () => { delete mockState.channelStore_verusid.registrationJobs.saved; });
-  const view = await mount(IdentityRegistrationStart);
-  if (deletionKind === 'completed') await press(button(view, 'Completed (1)'));
-  await press(view.root.findByProps({accessibilityLabel: 'Delete saved registration for saved@'}));
+  jest.useFakeTimers();
+  const goBack = jest.fn();
+  const navigation = makeNavigation({getParent: () => ({goBack, reset: jest.fn()})});
+  setSavedReview({...review, status, deletionKind});
+  const view = await mount(IdentityRegistrationProgress, {navigation});
+  await openDelete(view);
   expect(mockApi.deleteRegistration).not.toHaveBeenCalled();
-  expect(mockAlert.mock.calls[0][1]).toContain(warning);
-  expect(mockAlert.mock.calls[0][2].find(action => action.text === 'Delete').style).toBe('destructive');
-  await act(async () => mockAlert.mock.calls[0][2].find(action => action.text === 'Keep registration').onPress());
+  expect(view.root.findByType(AcknowledgeSheet).props.message).toContain(warning);
+  expect(view.root.findByType(AcknowledgeSheet).props.destructive).toBe(true);
+  await press(view.root.findAllByType(AppButton).find(node => node.props.children === 'Keep registration'));
+  await act(async () => { jest.advanceTimersByTime(1000); });
   expect(mockApi.deleteRegistration).not.toHaveBeenCalled();
-  await press(view.root.findByProps({accessibilityLabel: 'Delete saved registration for saved@'}));
-  await act(async () => mockAlert.mock.calls[1][2].find(action => action.text === 'Delete').onPress());
-  expect(mockApi.deleteRegistration).toHaveBeenCalledWith('saved', deletionKind, expect.any(Object));
-  expect(textContent(view.root)).not.toContain('saved@');
+  await openDelete(view);
+  await confirmDelete(view);
+  expect(mockApi.deleteRegistration).toHaveBeenCalledWith('job', deletionKind, expect.any(Object));
+  expect(goBack).toHaveBeenCalledTimes(1);
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
   expect(mockApi.approveRegistration).not.toHaveBeenCalled();
 });
@@ -1143,17 +1149,6 @@ it('warns that the original paid commitment fee is lost forever before deleting 
   expect(mockApi.deleteRegistration).toHaveBeenCalledWith('job', 'commitment', expect.any(Object));
   expect(goBack).toHaveBeenCalledTimes(1);
   expect(mockApi.retryBroadcast).not.toHaveBeenCalled();
-});
-
-it('shows the exact paid-commitment loss warning from a home summary', async () => {
-  mockState.channelStore_verusid.registrationJobs.saved = {
-    id: 'saved', displayName: 'saved@', status: 'commitment_confirmed', deletionKind: 'commitment',
-    commitmentFee: '10000', systemId: 'test-chain', chainTicker: 'VRSCTEST', createdAt: 1,
-  };
-  const view = await mount(IdentityRegistrationStart);
-  await press(view.root.findByProps({accessibilityLabel: 'Delete saved registration for saved@'}));
-  expect(mockAlert.mock.calls[0][1]).toContain('0.0001 VRSCTEST commitment fee will be lost forever');
-  expect(mockApi.deleteRegistration).not.toHaveBeenCalled();
 });
 
 it('never offers deletion for an unsettled signed registration', async () => {
