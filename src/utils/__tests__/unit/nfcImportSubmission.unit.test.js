@@ -5,8 +5,14 @@ const mockReadBackup = jest.fn();
 const mockDecodeBackup = jest.fn();
 const mockActivateKeepAwake = jest.fn();
 const mockDeactivateKeepAwake = jest.fn();
+const mockBackListeners = new Set();
 
 jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
+  // The Android Back button. A listener that returns true consumes the press.
+  BackHandler: {addEventListener: (_event, listener) => {
+    mockBackListeners.add(listener);
+    return {remove: () => mockBackListeners.delete(listener)};
+  }},
   Keyboard: {dismiss: jest.fn()},
   SafeAreaView: 'SafeAreaView',
   TouchableWithoutFeedback: 'TouchableWithoutFeedback',
@@ -22,6 +28,11 @@ jest.mock('react-native-paper', () => ({
   ),
 }));
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
+jest.mock('react-native-reanimated', () => ({...require('react-native-reanimated/mock'), useReducedMotion: () => true}));
+jest.mock('react-native-svg', () => ({__esModule: true, default: 'Svg', Circle: 'Circle', G: 'G', Path: 'Path'}));
+jest.mock('../../../components/SafeBottomActionStack', () => 'SafeBottomActionStack');
+jest.mock('../../../components/WalletAvatar', () => 'WalletAvatar');
+jest.mock('../../CoinData/Graphics', () => ({AssetCoinLogo: 'AssetCoinLogo'}));
 jest.mock('../../../actions/actions/alert/dispatchers/alert', () => ({
   createAlert: mockAlert,
 }));
@@ -46,6 +57,8 @@ const React = require('react');
 const {act, create} = require('react-test-renderer');
 const ImportNfc = require('../../../containers/CreateWallet/Forms/ImportWallet/Forms/ImportNfc').default;
 const NfcTapView = require('../../../components/NfcTap/NfcTapView').default;
+const WalletSetupOverlay = require('../../../components/WalletSetup/WalletSetupOverlay').default;
+const {closeWalletSetup, markWalletSetupShown, showWalletSetup} = require('../../../components/WalletSetup/walletSetupStore');
 
 const deferred = () => {
   let resolve;
@@ -145,6 +158,39 @@ describe('NFC import submission', () => {
 
     await act(async () => {created.resolve(); await pending;});
     expect(button('Decrypt and import').props.disabled).toBe(false);
+  });
+
+  it('covers the setup screen and consumes Back while the imported profile is created', async () => {
+    // CreateProfile creates the profile from the NFC seed behind the root
+    // wallet setup screen, which replaces the import screen's Back control.
+    const created = deferred();
+    const started = deferred();
+    props.onComplete.mockImplementationOnce(async () => {
+      const shown = showWalletSetup({walletName: 'Card wallet', walletAvatar: null, restoring: true, biometryName: null, coins: []});
+      markWalletSetupShown();
+      await shown;
+      started.resolve();
+      await created.promise;
+    });
+    let overlay;
+    act(() => {overlay = create(React.createElement(WalletSetupOverlay));});
+    expect(overlay.toJSON()).toBeNull();
+    await prepareEncryptedImport();
+    let pending;
+    await act(async () => {
+      pending = button('Decrypt and import').props.onPress();
+      await started.promise;
+    });
+    expect(props.onComplete).toHaveBeenCalledTimes(1);
+    expect(overlay.root.findAll(node => node.props.accessibilityViewIsModal === true).length).toBeGreaterThan(0);
+    expect(mockBackListeners.size).toBe(1);
+    expect([...mockBackListeners].map(listener => listener())).toEqual([true]);
+    expect(props.navigation.goBack).not.toHaveBeenCalled();
+
+    await act(async () => {created.resolve(); await pending; closeWalletSetup();});
+    expect(overlay.toJSON()).toBeNull();
+    expect(mockBackListeners.size).toBe(0);
+    act(() => overlay.unmount());
   });
 
   it('allows a corrected password retry after decryption fails', async () => {
