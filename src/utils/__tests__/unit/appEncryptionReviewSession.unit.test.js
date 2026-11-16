@@ -5,14 +5,17 @@ const mockAlert = jest.fn();
 const mockGetIdentity = jest.fn();
 let mockCoins;
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   SafeAreaView: 'SafeAreaView', ScrollView: 'ScrollView',
-  TouchableOpacity: 'TouchableOpacity', View: 'View',
+  TouchableOpacity: 'TouchableOpacity', View: 'View', AppState: {currentState: 'active'},
 }));
-jest.mock('react-native-paper', () => ({Portal: 'Portal', Text: 'Text'}));
-jest.mock('react-native-safe-area-context', () => ({useSafeAreaInsets: () => ({bottom: 0})}));
+jest.mock('react-native-paper', () => ({...jest.requireActual('react-native-paper'), Portal: 'Portal', Text: 'Text'}));
+jest.mock('@react-navigation/native', () => ({useNavigation: () => ({
+  isFocused: () => true, addListener: () => jest.fn(), getParent: () => undefined,
+})}));
+jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
-jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 jest.mock('../../../hooks/useObjectSelector', () => ({useObjectSelector: selector => selector(mockState)}));
 jest.mock('../../../store', () => ({getState: () => mockState}));
 jest.mock('../../../components/Button', () => 'Button');
@@ -50,6 +53,7 @@ const {
   CompactAddressObject, GenericResponse, RecipientConstraint, toIAddress,
 } = require('verus-typescript-primitives');
 const {VERUSID_SERVICE_ID} = require('../../constants/services');
+const {DLIGHT_PRIVATE} = require('../../constants/intervalConstants');
 const VrpcProvider = require('../../vrpc/vrpcInterface').default;
 const userID = toIAddress('user', 'VRSC');
 const otherID = toIAddress('other', 'VRSC');
@@ -74,8 +78,18 @@ const deferred = () => {
 };
 const textOf = node => node.children.filter(child => typeof child === 'string' || typeof child === 'number').join('');
 const text = view => view.root.findAllByType('Text').map(textOf).join('\n');
-const button = (view, label) => view.root.findAllByType('TouchableOpacity')
-  .find(node => node.findAllByType('Text').some(child => textOf(child) === label));
+const APPROVE = 'Share encryption address';
+const rawText = node => typeof node === 'string' ? node : (node.children || []).map(rawText).join('');
+const button = (view, label) => view.root.findAll(node => typeof node.type === 'string' && node.props.accessibilityRole === 'button' &&
+  (node.props.accessibilityLabel === label || rawText(node) === label), {deep: false})[0];
+// A button handles the press on itself or on the component that wraps it.
+const pressable = node => {
+  let current = node;
+  while (current && !current.props.onPress) current = current.parent;
+  return current;
+};
+const onPressOf = node => pressable(node).props.onPress;
+const isDisabled = node => node.props.accessibilityState.disabled;
 let props, views;
 const mount = async () => {
   let view;
@@ -103,9 +117,13 @@ beforeEach(() => {
   mockCoins[systemID] = mockCoins.VRSC;
   mockCoins[otherSystemID] = mockCoins.OTHER;
   mockState = {
-    authentication: {signedIn: true, activeAccount: {accountHash: 'profile'}, sessionEpoch: 1, accounts: []},
+    authentication: {
+      signedIn: true, sessionEpoch: 1, accounts: [],
+      activeAccount: {accountHash: 'profile', keys: Object.fromEntries(
+        ['VRSC', 'VRSCTEST', otherSystemID].map(chain => [chain, {[DLIGHT_PRIVATE]: {}}]))},
+    },
     deeplink: {id: 'generic', data: 'original', requestId: 1},
-    sendModal: {type: null}, services: {stored: {[VERUSID_SERVICE_ID]: {}}},
+    coins: {activeCoinList: []}, sendModal: {type: null}, services: {stored: {[VERUSID_SERVICE_ID]: {}}},
   };
   mockLoadIds.mockReset().mockResolvedValue({linked_ids: {VRSC: {[userID]: 'user@', [otherID]: 'other@'}}});
   mockGetIdentity.mockReset().mockResolvedValue({result: {identity: {parent: parentID}}});
@@ -114,7 +132,7 @@ beforeEach(() => {
     encryptedDescriptorJson: {objectdata: 'ciphertext'},
   });
   props = {
-    request: {details: [], isTestnet: () => false, toBuffer: () => Buffer.from('approved-request')},
+    request: {details: [], isSigned: () => true, isTestnet: () => false, toBuffer: () => Buffer.from('approved-request')},
     response: new GenericResponse(), detailIndex: 0, next: jest.fn(), cancel: jest.fn(),
     signerFqn: 'requester@', signerIdentityID: 'iSigner', signerSystemID: systemID, signerSystemName: 'VRSC',
     appScopeID: 'iScope', appScopeFqn: 'scope@', derivationNumber: 7,
@@ -127,52 +145,36 @@ afterEach(() => act(() => views.forEach(view => view.unmount())));
 it('shows the app scope, primary index, selected user and response recipient', async () => {
   const view = await mount();
   const content = text(view);
-  for (const expected of ['scope@', 'iScope', '#7', 'user@', userID, 'zs-recipient', 'Response Encryption Recipient']) {
+  for (const expected of ['scope@', 'iScope', '#7', 'user@', 'zs-recipient', 'Response encryption recipient']) {
     expect(content).toContain(expected);
   }
-  expect(content).not.toContain('Secondary Key Number');
+  expect(content).not.toContain('Secondary key number');
   expect(content).not.toContain('Your signing identity');
 });
 
 it('shows an unregistered nested identity and its independent index', async () => {
   props = {...props, hasDerivationID: true, derivationIdentityID: 'iUnregistered', secondaryDerivationNumber: 0};
   const view = await mount();
-  for (const expected of ['iScope', 'iUnregistered', '#7', '#0', 'Secondary Key Number']) {
+  for (const expected of ['iScope', 'iUnregistered', '#7', '#0', 'Secondary key number']) {
     expect(text(view)).toContain(expected);
   }
 });
 
-it('uses the canonical PBaaS signer system for identity lookup and the decrypt command', async () => {
+// The redesign (93636634) removed the debug panel with its decryptdata
+// command on purpose, so no daemon command is left to check.
+it('uses the canonical PBaaS signer system for identity lookup', async () => {
   props = {...props, signerSystemID: otherSystemID, signerSystemName: 'Other Chain'};
   const view = await mount();
   expect(text(view)).toContain('Other Chain');
-  act(() => button(view, 'requester@').props.onPress());
-  const modal = view.root.findByType('IdentityModal');
-  await modal.props.loadVerusId();
+  await act(async () => onPressOf(button(view, 'Request from requester@, verified'))());
   expect(mockGetIdentity).toHaveBeenCalledWith(otherSystemID, 'iSigner');
-  await act(async () => button(view, 'Approve').props.onPress());
-  act(() => button(view, 'View debug information').props.onPress());
-  expect(text(view)).toContain(`./verus -chain=${otherSystemID} decryptdata`);
-});
-
-it.each(['VRSC', 'VRSCTEST'])('preserves the %s daemon command', async chain => {
-  const testSystem = toIAddress('VRSCTEST', 'VRSCTEST');
-  const signerSystemID = chain === 'VRSC' ? systemID : testSystem;
-  mockCoins[signerSystemID] = {id: chain, system_id: signerSystemID};
-  props = {...props, signerSystemID, signerSystemName: chain};
-  const view = await mount();
-  await act(async () => button(view, 'Approve').props.onPress());
-  act(() => button(view, 'View debug information').props.onPress());
-  expect(text(view)).toContain(chain === 'VRSC'
-    ? './verus decryptdata'
-    : './verus -chain=vrsctest decryptdata');
 });
 
 it.each([false, true])('describes the spending key actually shared (nested=%s)', async nested => {
   props = {...props, returnESK: true, hasDerivationID: nested};
   const view = await mount();
   expect(text(view)).toContain(nested
-    ? 'final nested channel. It can decrypt data, spend funds, and derive further keys from this channel. The app-scope key stays private.'
+    ? 'The app can decrypt data, spend funds, and derive more keys. The app-scope key stays private.'
     : 'derive every nested channel for your selected identity, app scope, and primary key number.');
 });
 
@@ -181,9 +183,9 @@ it('filters the picker and auto-selects only the required identity', async () =>
   const view = await mount();
   expect(text(view)).toContain('other@');
   expect(text(view)).not.toContain('user@');
-  act(() => button(view, 'Your selected identity').props.onPress());
+  act(() => onPressOf(button(view, 'Respond as other@'))());
   expect(button(view, 'user@')).toBeUndefined();
-  await act(async () => button(view, 'Approve').props.onPress());
+  await act(async () => onPressOf(button(view, APPROVE))());
   expect(mockProcess.mock.calls[0][0].responseSignerID).toBe(otherID);
 });
 
@@ -195,7 +197,7 @@ it('auto-selects a required system outside the default chain and passes it throu
   const view = await mount();
   expect(text(view)).toContain('other-chain-user@');
   expect(text(view)).not.toContain('default-user@');
-  await act(async () => button(view, 'Approve').props.onPress());
+  await act(async () => onPressOf(button(view, APPROVE))());
   expect(mockProcess.mock.calls[0][0]).toMatchObject({
     responseSignerID: userID, responseSignerSystemID: otherSystemID,
   });
@@ -223,9 +225,10 @@ it('keeps unverified parent records ineligible, even when a linked name suggests
   mockLoadIds.mockResolvedValue({linked_ids: {VRSC: {[userID]: 'user.parent@'}}});
   mockGetIdentity.mockReturnValue(wait.promise);
   const view = await mount();
-  expect(button(view, 'Approve').props.disabled).toBe(true);
+  expect(button(view, APPROVE)).toBeUndefined();
+  expect(button(view, 'Choose VerusID')).toBeDefined();
   await act(async () => { wait.resolve({error: {message: 'Lookup failed'}}); });
-  expect(button(view, 'Approve').props.disabled).toBe(true);
+  expect(button(view, APPROVE)).toBeUndefined();
   expect(text(view)).not.toContain('user.parent@');
 });
 
@@ -238,37 +241,42 @@ it('discards stale parent lookups after the signed constraints change', async ()
   props.request = constrainedRequest([[RecipientConstraint.REQUIRED_PARENT, otherID]]);
   await update(view);
   await act(async () => { wait.resolve({result: {identity: {parent: otherID}}}); });
-  expect(button(view, 'Approve').props.disabled).toBe(true);
+  expect(button(view, APPROVE)).toBeUndefined();
   expect(text(view)).not.toContain('user@');
 });
 
-it('invalidates a prepared response when the selected identity is no longer eligible', async () => {
+it('invalidates a retained approval when the selected identity is no longer eligible', async () => {
   const view = await mount();
-  await act(async () => button(view, 'Approve').props.onPress());
-  const send = button(view, 'Continue').props.onPress;
+  const approve = onPressOf(button(view, APPROVE));
   mockLoadIds.mockResolvedValue({linked_ids: {}});
   mockState.services.stored[VERUSID_SERVICE_ID] = {updated: true};
-  // A retained Continue callback cannot bypass eligibility refresh before render.
-  await act(async () => send());
+  // A retained approval callback cannot bypass eligibility refresh before render.
+  await act(async () => approve());
+  expect(mockProcess).not.toHaveBeenCalled();
   expect(props.next).not.toHaveBeenCalled();
   await update(view);
-  await act(async () => send());
+  await act(async () => approve());
+  expect(mockProcess).not.toHaveBeenCalled();
   expect(props.next).not.toHaveBeenCalled();
-  expect(text(view)).not.toContain('ready to send');
-  expect(button(view, 'Approve').props.disabled).toBe(true);
+  expect(button(view, APPROVE)).toBeUndefined();
 });
 
-it('keeps the response private until Continue and prevents duplicate approval', async () => {
+it('keeps the response private until the approval completes and prevents duplicate approval', async () => {
   const wait = deferred();
   mockProcess.mockReturnValueOnce(wait.promise);
   const view = await mount();
-  const approve = button(view, 'Approve').props.onPress;
+  // The picker sorts linked identities by name (93636634), so other@ comes
+  // before user@ and is the default.
+  expect(button(view, 'Respond as other@')).toBeDefined();
+  expect(button(view, 'Respond as user@')).toBeUndefined();
+  const approve = onPressOf(button(view, APPROVE));
   let pending;
   await act(async () => { pending = approve(); await approve(); });
   expect(mockProcess).toHaveBeenCalledTimes(1);
   expect(mockProcess.mock.calls[0][0]).toMatchObject({
-    responseSignerID: userID, responseSignerSystemID: systemID, assertActive: expect.any(Function),
+    responseSignerID: otherID, responseSignerSystemID: systemID, assertActive: expect.any(Function),
   });
+  expect(props.next).not.toHaveBeenCalled();
   await act(async () => {
     wait.resolve({
       responseDetail: {encryptedData: 'ciphertext'},
@@ -277,17 +285,16 @@ it('keeps the response private until Continue and prevents duplicate approval', 
     await pending;
   });
   expect(props.response.details).toEqual([]);
-  expect(props.next).not.toHaveBeenCalled();
-  expect(text(view)).toContain('Your encrypted response is ready to send');
-  await act(async () => button(view, 'Continue').props.onPress());
-  expect(props.next).toHaveBeenCalledWith(expect.objectContaining({details: [{encryptedData: 'ciphertext'}]}), [0]);
+  expect(props.next).toHaveBeenCalledTimes(1);
+  expect(props.next).toHaveBeenCalledWith(expect.objectContaining({details: [{encryptedData: 'ciphertext'}]}), [0],
+    {autoDeliverOnComplete: true, responseIdentityName: 'other@'});
 });
 
 it.each(['profile', 'epoch', 'sign-out', 'network', 'deeplink', 'request'])('discards derivation and approval after a %s change', async change => {
   const wait = deferred();
   mockProcess.mockReturnValueOnce(wait.promise);
   const view = await mount();
-  const approve = button(view, 'Approve').props.onPress;
+  const approve = onPressOf(button(view, APPROVE));
   let pending;
   await act(async () => { pending = approve(); });
   const assertActive = mockProcess.mock.calls[0][0].assertActive;
@@ -301,48 +308,46 @@ it.each(['profile', 'epoch', 'sign-out', 'network', 'deeplink', 'request'])('dis
   });
   expect(props.next).not.toHaveBeenCalled();
   expect(props.response.details).toEqual([]);
-  expect(text(view)).not.toContain('ready to send');
   expect(mockAlert).not.toHaveBeenCalled();
   expect(mockProcess).toHaveBeenCalledTimes(1);
 });
 
-it.each(['profile', 'epoch', 'sign-out', 'network', 'deeplink', 'request'])('discards a pending response and its old Continue callback after a %s change', async change => {
+it.each(['profile', 'epoch', 'sign-out', 'network', 'deeplink', 'request'])('discards a retained approval callback after a %s change', async change => {
   const view = await mount();
-  await act(async () => button(view, 'Approve').props.onPress());
-  const send = button(view, 'Continue').props.onPress;
+  const approve = onPressOf(button(view, APPROVE));
   changeSession(change);
   await update(view);
-  await act(async () => send());
+  await act(async () => approve());
+  expect(mockProcess).not.toHaveBeenCalled();
   expect(props.next).not.toHaveBeenCalled();
   expect(props.response.details).toEqual([]);
-  expect(text(view)).not.toContain('ready to send');
 });
 
 it('invalidates approval when a retained identity-picker callback changes the selected identity', async () => {
   const wait = deferred();
   mockProcess.mockReturnValueOnce(wait.promise);
   const view = await mount();
-  act(() => button(view, 'Your selected identity').props.onPress());
-  const selectOther = button(view, 'other@').props.onPress;
+  const selected = ['user@', 'other@'].find(name => button(view, `Respond as ${name}`));
+  act(() => onPressOf(button(view, `Respond as ${selected}`))());
+  const selectOther = onPressOf(button(view, selected === 'user@' ? 'other@' : 'user@'));
   let pending;
-  await act(async () => { pending = button(view, 'Approve').props.onPress(); });
+  await act(async () => { pending = onPressOf(button(view, APPROVE))(); });
   act(() => {
     selectOther();
     // Selection invalidates approval immediately, before React renders the update.
     expect(mockProcess.mock.calls[0][0].assertActive).toThrow('no longer current');
   });
   await act(async () => { wait.resolve({responseDetail: {address: 'stale-channel'}}); await pending; });
-  expect(text(view)).not.toContain('ready to send');
   expect(props.next).not.toHaveBeenCalled();
   expect(props.response.details).toEqual([]);
 });
 
-it('blocks a stale Continue callback immediately when the store changes before a render', async () => {
+it('blocks a stale approval callback immediately when the store changes before a render', async () => {
   const view = await mount();
-  await act(async () => button(view, 'Approve').props.onPress());
-  const send = button(view, 'Continue').props.onPress;
+  const approve = onPressOf(button(view, APPROVE));
   changeSession('profile');
-  await act(async () => send());
+  await act(async () => approve());
+  expect(mockProcess).not.toHaveBeenCalled();
   expect(props.next).not.toHaveBeenCalled();
 });
 
@@ -354,5 +359,5 @@ it('ignores linked-identity decryption from the previous profile', async () => {
   await update(view);
   await act(async () => { wait.resolve({linked_ids: {VRSC: {iOldUser: 'old-user@'}}}); });
   expect(text(view)).not.toContain('old-user@');
-  expect(button(view, 'Approve').props.disabled).toBe(true);
+  expect(button(view, APPROVE)).toBeUndefined();
 });

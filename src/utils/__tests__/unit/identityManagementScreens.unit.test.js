@@ -1,9 +1,10 @@
-const mockApi = {loadIdentityForUpdate: jest.fn(), prepareIdentityUpdate: jest.fn(), sendIdentityUpdate: jest.fn()};
+const mockApi = {loadIdentityForUpdate: jest.fn(), prepareIdentityUpdate: jest.fn(), sendIdentityUpdate: jest.fn(), validateIdentityTransfer: jest.fn()};
 const mockParseRecipient = jest.fn();
 const mockScrollTo = jest.fn();
 const mockUnlink = jest.fn();
 let mockState;
 let mockManagement;
+let mockNavigation;
 jest.mock('../../identityManagement/updateIdentity', () => mockApi);
 jest.mock('../../identityManagement/unlinkAfterUpdate', () => ({unlinkUpdatedIdentity: (...args) => mockUnlink(...args)}));
 jest.mock('../../identityManagement/identityDefinition', () => ({MAX_IDENTITY_PRIMARY_ADDRESSES: 25}));
@@ -11,16 +12,20 @@ jest.mock('../../identityManagement/recipient', () => ({recipientFromQr: (...arg
 jest.mock('../../../containers/Services/ServiceComponents/VerusIdService/IdentityManagement/IdentityManagementContext', () => ({
   useIdentityManagement: () => mockManagement,
 }));
-jest.mock('../../../store', () => ({__esModule: true, default: {getState: () => mockState}}));
-jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
+jest.mock('../../../store', () => ({__esModule: true, default: {getState: () => mockState, subscribe: () => () => {}, dispatch: jest.fn()}}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
 jest.mock('@react-navigation/elements', () => ({useHeaderHeight: () => 96}));
-jest.mock('react-native', () => ({
-  View: 'View', Pressable: 'Pressable', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView',
+jest.mock('@react-navigation/native', () => ({useNavigation: () => mockNavigation}));
+jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
+  View: 'View', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView',
   RefreshControl: 'RefreshControl', Keyboard: {dismiss: jest.fn()},
-  Platform: {OS: 'ios'}, StyleSheet: {create: value => value, hairlineWidth: 1},
+  Platform: {OS: 'ios'}, AppState: {currentState: 'active'}, StyleSheet: {create: value => value, hairlineWidth: 1},
   useWindowDimensions: () => ({width: 320, height: 640, fontScale: 2}),
 }));
-jest.mock('react-native-paper', () => ({Text: 'Text', TextInput: 'TextInput', ActivityIndicator: 'ActivityIndicator'}));
+jest.mock('react-native-paper', () => ({
+  ...jest.requireActual('react-native-paper'), Portal: 'Portal', Text: 'Text', TextInput: 'TextInput', ActivityIndicator: 'ActivityIndicator',
+}));
 jest.mock('react-native-safe-area-context', () => ({useSafeAreaInsets: () => ({bottom: 20})}));
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
 jest.mock('../../../components/SemiModal', () => 'SemiModal');
@@ -30,6 +35,9 @@ jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {findCoinObj: (
 const React = require('react');
 const {act, create} = require('react-test-renderer');
 const {Keyboard} = require('react-native');
+const SafeBottomActionStack = require('../../../components/SafeBottomActionStack').default;
+const SlideToConfirm = require('../../../components/SlideToConfirm').default;
+const {InfoSheetTopic} = require('../../../components/InfoSheetSection');
 const {IdentityModify, IdentityTransfer, IdentityUpdateReview, IdentityUpdateResult} =
   require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityManagement/IdentityManagementScreens');
 
@@ -57,23 +65,64 @@ const makePlan = (changes = {}) => ({review: {
   warnings: [], ...changes,
 }});
 const navigation = () => ({navigate: jest.fn(), reset: jest.fn(), goBack: jest.fn(), addListener: jest.fn(() => jest.fn()),
-  getParent: jest.fn(() => ({goBack: jest.fn()}))});
-const textContent = node => typeof node === 'string' ? node : (node.children || []).map(textContent).join('');
-const button = (view, label) => view.root.findAllByType('Pressable').find(node =>
-  node.props.accessibilityRole === 'button' && node.props.accessibilityLabel === label);
-const input = (view, label) => view.root.findAllByType('TextInput').find(node => node.props.label === label);
-const checkbox = (view, label = 'I understand who will control this identity') => view.root.findAllByType('Pressable').find(node =>
-  node.props.accessibilityRole === 'checkbox' && node.props.accessibilityLabel === label);
-const press = async node => {expect(node).toBeDefined(); await act(async () => node.props.onPress());};
+  isFocused: jest.fn(() => true),
+  getParent: jest.fn(() => ({goBack: jest.fn(), addListener: jest.fn(() => jest.fn())}))});
+const rawText = node => typeof node === 'string' ? node : (node.children || []).map(rawText).join('');
+// VerusID names carry zero-width spaces for line breaking; tests compare the visible text.
+const textContent = node => rawText(node).replace(/\u200B/g, '');
+const isHost = node => typeof node.type === 'string';
+// Host elements with a role and either an accessibility label or the visible text as their label.
+const nodes = (root, role, label) => root.findAll(node => isHost(node) && node.props.accessibilityRole === role &&
+  (node.props.accessibilityLabel === label || textContent(node) === label), {deep: false});
+const button = (view, label) => nodes(view.root, 'button', label)[0];
+const input = (view, label) => view.root.findAllByType('TextInput').find(node => node.props.accessibilityLabel === label);
+const checkbox = (view, label = 'I understand who will control this VerusID') => nodes(view.root, 'checkbox', label)[0];
+const section = (view, title) => view.root.findAll(node => isHost(node) && node.props.accessibilityRole === 'checkbox' &&
+  node.props.accessibilityLabel?.startsWith(`${title}, `), {deep: false})[0];
+// A row or button handles the press on itself or on the component that wraps it.
+const pressable = node => {
+  let current = node;
+  while (current && !current.props.onPress) current = current.parent;
+  return current;
+};
+const press = async node => {expect(node).toBeDefined(); await act(async () => pressable(node).props.onPress());};
+const flush = async () => {for (let turn = 0; turn < 5; turn += 1) await act(async () => {await Promise.resolve();});};
+// A slide to confirm completes through its accessibility activation, then two animation frames.
+const slide = async node => {
+  expect(node).toBeDefined();
+  await act(async () => {node.props.onAccessibilityTap(); jest.advanceTimersByTime(100);});
+  await flush();
+};
 const enter = async (view, label, value) => {await act(async () => input(view, label).props.onChangeText(value));};
+// The new owner is checked after a 650 ms pause, and review stays off until the check passes.
+const validateOwner = () => act(async () => {jest.advanceTimersByTime(700);});
+const enterOwner = async (view, value) => {await enter(view, 'New owner', value); await validateOwner();};
+const beforeRemove = (nav, event) => nav.addListener.mock.calls.filter(([name]) => name === 'beforeRemove')
+  .forEach(([, listener]) => listener(event));
 const footerAction = (view, label) => {
-  const matches = node => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel === label;
-  const actions = view.root.findAllByType('Pressable').filter(matches);
+  const actions = nodes(view.root.findByType(SafeBottomActionStack), 'button', label);
   expect(actions).toHaveLength(1);
-  expect(view.root.findByType('ScrollView').findAllByType('Pressable').filter(matches)).toHaveLength(0);
-  expect(view.root.findByProps({testID: 'registration-footer'}).findAllByType('Pressable').filter(matches)).toEqual(actions);
+  view.root.findAllByType('ScrollView').forEach(scroll => expect(nodes(scroll, 'button', label)).toHaveLength(0));
   return actions[0];
 };
+// A loading AppButton marks its spinner busy; the button itself only reports disabled.
+const footerBusy = view => view.root.findByType(SafeBottomActionStack)
+  .findAll(node => isHost(node) && node.props.accessibilityState?.busy === true).length > 0;
+const alertText = view => textContent(view.root.findAll(node => isHost(node) && node.props.accessibilityRole === 'alert', {deep: false})[0]);
+// The amount line under the "Total cost" label.
+const totalCost = view => {
+  const labels = view.root.findAll(node => node.props.accessibilityLabel === 'Total cost', {deep: false});
+  const siblings = labels[0].parent.parent.children;
+  return textContent(siblings[siblings.findIndex(node => textContent(node) === 'Total cost') + 1]);
+};
+// The Disclosure that holds a toggle button and, once open, its content.
+const disclosure = (view, title) => {
+  const toggle = button(view, title);
+  let container = toggle.parent;
+  while (container.parent && textContent(container) === textContent(toggle)) container = container.parent;
+  return textContent(container);
+};
+const infoTopic = (view, title) => textContent(view.root.findAllByType(InfoSheetTopic).find(topic => topic.props.title === title));
 const deferred = () => {
   let resolve, reject;
   const promise = new Promise((yes, no) => {resolve = yes; reject = no;});
@@ -83,7 +132,8 @@ let views;
 const mount = async (Component, props = {}) => {
   let view;
   await act(async () => {
-    view = create(<Component navigation={props.navigation || navigation()}
+    mockNavigation = props.navigation || navigation();
+    view = create(<Component navigation={mockNavigation}
       route={{params: {chain: 'VRSCTEST', identityAddress: 'iAlice', displayName: 'alice.VRSCTEST@'}}} {...props} />, {
       createNodeMock: node => node.type === 'ScrollView' ? {scrollTo: mockScrollTo} : null,
     });
@@ -93,29 +143,38 @@ const mount = async (Component, props = {}) => {
 };
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.useFakeTimers();
   views = [];
   mockState = {authentication: {activeAccount: {accountHash: 'alice'}, sessionEpoch: 1}, coins: {showBalance: true}, ledger: {balances: {
     'vrpc.Rwallet.test-system': {VRSCTEST: {confirmed: '2'}},
     'vrpc.iTreasury.test-system': {VRSCTEST: {confirmed: '1000'}},
   }}};
   mockManagement = {context: {sessionScope: {sessionScoped: true, accountHash: 'alice', sessionEpoch: 1}},
-    plan: makePlan(), setPlan: jest.fn(), result: null, setResult: jest.fn(), reloadVersion: 0, setReloadVersion: jest.fn()};
+    sourceModel: model, setSourceModel: jest.fn(), plan: makePlan(), setPlan: jest.fn(), result: null, setResult: jest.fn(), reloadVersion: 0, setReloadVersion: jest.fn()};
   mockApi.loadIdentityForUpdate.mockReset().mockResolvedValue(model);
   mockApi.prepareIdentityUpdate.mockReset().mockResolvedValue(makePlan());
   mockApi.sendIdentityUpdate.mockReset().mockResolvedValue({txid: 'reviewed-transaction'});
+  mockApi.validateIdentityTransfer.mockReset().mockResolvedValue(undefined);
   mockUnlink.mockReset().mockResolvedValue({unlinked: true});
   mockParseRecipient.mockReset().mockReturnValue('Rrecipient');
 });
-afterEach(() => act(() => views.forEach(view => view.unmount())));
+afterEach(async () => {
+  await act(async () => views.forEach(view => view.unmount()));
+  jest.useRealTimers();
+});
 
-test.each([[IdentityModify, 'Review changes'], [IdentityTransfer, 'Review transfer']])(
+test.each([[IdentityModify, 'Continue'], [IdentityTransfer, 'Review transfer']])(
   'keeps the form primary action in the fixed footer', async (Component, label) => {
     const view = await mount(Component);
     const action = footerAction(view, label);
     if (Component === IdentityTransfer) {
-      expect(action.props.disabled).toBe(true);
-      await enter(view, 'New owner', 'satoshi@');
-      expect(footerAction(view, label).props.disabled).toBe(false);
+      expect(action.props.accessibilityState.disabled).toBe(true);
+      await enterOwner(view, 'satoshi@');
+      expect(footerAction(view, label).props.accessibilityState.disabled).toBe(false);
+    } else {
+      expect(action.props.accessibilityState.disabled).toBe(true);
+      await press(section(view, 'Spend and sign'));
+      expect(footerAction(view, label).props.accessibilityState.disabled).toBe(false);
     }
     expect(mockApi.loadIdentityForUpdate).toHaveBeenCalledWith({chain: 'VRSCTEST', identityAddress: 'iAlice'}, mockManagement.context);
     expect(mockApi.prepareIdentityUpdate).not.toHaveBeenCalled();
@@ -126,11 +185,17 @@ test.each([[IdentityModify, 'Review changes'], [IdentityTransfer, 'Review transf
 test('the modify form submits only changed fields and selects the highest funded payment source', async () => {
   const nav = navigation();
   const view = await mount(IdentityModify, {navigation: nav});
-  expect(input(view, 'Recovery identity').props.value).toBe('guardian@');
-  expect(input(view, 'Revocation identity').props.value).toBe('revoker@');
+  await press(section(view, 'Spend and sign'));
+  await press(section(view, 'Revoke and recover'));
+  await press(section(view, 'Private address'));
+  await press(footerAction(view, 'Continue'));
   await press(button(view, 'Add primary address'));
   await enter(view, 'Primary address 2', 'Rsecond');
   await enter(view, 'Required signatures', '2');
+  await press(footerAction(view, 'Continue'));
+  expect(input(view, 'Recovery VerusID').props.value).toBe('guardian@');
+  expect(input(view, 'Revocation VerusID').props.value).toBe('revoker@');
+  await press(footerAction(view, 'Continue'));
   await enter(view, 'Private address (optional)', '');
   await press(footerAction(view, 'Review changes'));
   expect(mockApi.prepareIdentityUpdate).toHaveBeenCalledWith(model, {
@@ -147,6 +212,8 @@ test('the private-address shortcut fills the form and requires a separate review
   const loaded = {...model, walletPrivateAddress: 'zsWallet'};
   mockApi.loadIdentityForUpdate.mockResolvedValueOnce(loaded);
   const view = await mount(IdentityModify);
+  await press(section(view, 'Private address'));
+  await press(footerAction(view, 'Continue'));
   await press(button(view, 'Use this wallet’s private address'));
   expect(input(view, 'Private address (optional)').props.value).toBe('zsWallet');
   expect(mockApi.prepareIdentityUpdate).not.toHaveBeenCalled();
@@ -159,9 +226,13 @@ test('the private-address shortcut fills the form and requires a separate review
 
 test('wallets without a private address omit the shortcut and explain recovery authority', async () => {
   const view = await mount(IdentityModify);
+  await press(section(view, 'Revoke and recover'));
+  await press(section(view, 'Private address'));
+  await press(footerAction(view, 'Continue'));
+  expect(textContent(view.root)).toContain('guardian@ can take control of this VerusID.');
+  expect(textContent(view.root)).toContain('only the new recovery VerusID can authorize another change to recovery');
+  await press(footerAction(view, 'Continue'));
   expect(button(view, 'Use this wallet’s private address')).toBeUndefined();
-  expect(textContent(view.root)).toContain('The recovery identity can take control of this identity.');
-  expect(textContent(view.root)).toContain('only the new recovery identity can authorize another change to recovery');
 });
 
 test('preparing a review locks editable controls and ignores rapid double taps', async () => {
@@ -169,12 +240,15 @@ test('preparing a review locks editable controls and ignores rapid double taps',
   mockApi.prepareIdentityUpdate.mockReturnValueOnce(prepared.promise);
   const nav = navigation();
   const view = await mount(IdentityModify, {navigation: nav});
+  await press(section(view, 'Private address'));
+  await press(footerAction(view, 'Continue'));
   await enter(view, 'Private address (optional)', 'zsNew');
-  const onPress = footerAction(view, 'Review changes').props.onPress;
+  const onPress = pressable(footerAction(view, 'Review changes')).props.onPress;
   await act(async () => {onPress(); onPress();});
   expect(mockApi.prepareIdentityUpdate).toHaveBeenCalledTimes(1);
-  expect(footerAction(view, 'Review changes').props.accessibilityState).toMatchObject({disabled: true, busy: true});
-  view.root.findAllByType('TextInput').forEach(field => expect(field.props.disabled).toBe(true));
+  expect(footerAction(view, 'Review changes').props.accessibilityState).toMatchObject({disabled: true});
+  expect(footerBusy(view)).toBe(true);
+  view.root.findAllByType('TextInput').forEach(field => expect(field.props.editable).toBe(false));
   expect(nav.navigate).not.toHaveBeenCalled();
   await act(async () => prepared.resolve(makePlan({mode: 'modify'})));
   expect(nav.navigate).toHaveBeenCalledTimes(1);
@@ -192,9 +266,10 @@ test('a QR scan fills the recipient once without preparing or sending a transact
   expect(mockParseRecipient).toHaveBeenCalledTimes(1);
   expect(mockParseRecipient).toHaveBeenCalledWith('qr-payload', 'test-system');
   expect(input(view, 'New owner').props.value).toBe('Rrecipient');
-  expect(view.root.findByType('SemiModal').props.visible).toBe(false);
+  expect(view.root.findAllByType('BarcodeReader')).toHaveLength(0);
   expect(mockApi.prepareIdentityUpdate).not.toHaveBeenCalled();
   expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();
+  await validateOwner();
   await press(footerAction(view, 'Review transfer'));
   expect(mockApi.prepareIdentityUpdate).toHaveBeenCalledWith(model, {
     mode: 'transfer', recipient: 'Rrecipient', fundingAddress: 'iTreasury', returnFunds: true, returnAddress: 'Rwallet',
@@ -208,7 +283,7 @@ test('invalid QR input keeps the previous recipient and reveals a readable error
   await press(button(view, 'Scan QR code'));
   await act(async () => view.root.findByType('BarcodeReader').props.onScan([{value: 'wrong-network'}]));
   expect(input(view, 'New owner').props.value).toBe('satoshi@');
-  expect(textContent(view.root.findByProps({accessibilityRole: 'alert'}))).toContain('different network');
+  expect(alertText(view)).toContain('different network');
   expect(mockScrollTo).toHaveBeenLastCalledWith({y: 0, animated: true});
   expect(mockApi.prepareIdentityUpdate).not.toHaveBeenCalled();
 });
@@ -218,7 +293,8 @@ test('closing the scanner ignores a queued camera frame instead of replacing the
   await enter(view, 'New owner', 'satoshi@');
   await press(button(view, 'Scan QR code'));
   const onScan = view.root.findByType('BarcodeReader').props.onScan;
-  await act(async () => view.root.findByType('SemiModal').props.onRequestClose());
+  await press(button(view, 'Go back'));
+  expect(view.root.findAllByType('BarcodeReader')).toHaveLength(0);
   await act(async () => onScan([{value: 'late-camera-frame'}]));
   expect(input(view, 'New owner').props.value).toBe('satoshi@');
   expect(mockParseRecipient).not.toHaveBeenCalled();
@@ -233,14 +309,15 @@ test.each([
 ])('%s requires acknowledgement beside the fixed payment button', async (_, change) => {
   mockManagement.plan = makePlan(change);
   const view = await mount(IdentityUpdateReview);
-  const label = change.mode === 'transfer' ? 'Pay & transfer identity' : 'Pay & save changes';
-  expect(footerAction(view, label).props.disabled).toBe(true);
-  await press(footerAction(view, label));
+  const label = change.mode === 'transfer' ? 'Slide to pay & transfer' : 'Slide to pay & save';
+  expect(footerAction(view, label).props.accessibilityState.disabled).toBe(true);
+  await slide(footerAction(view, label));
+  await act(async () => view.root.findByType(SlideToConfirm).props.onPress());
   expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();
-  const footer = view.root.findByProps({testID: 'registration-footer'});
-  expect(footer.findAllByType('Pressable').find(node => node.props.accessibilityRole === 'checkbox')).toBe(checkbox(view));
+  const footer = view.root.findByType(SafeBottomActionStack);
+  expect(nodes(footer, 'checkbox', 'I understand who will control this VerusID')[0]).toBe(checkbox(view));
   await press(checkbox(view));
-  expect(footerAction(view, label).props.disabled).toBe(false);
+  expect(footerAction(view, label).props.accessibilityState.disabled).toBe(false);
   expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();
 });
 
@@ -248,9 +325,9 @@ test('review displays the exact fee, self authorities and cleared private receiv
   const view = await mount(IdentityUpdateReview);
   const text = textContent(view.root);
   expect(text).toContain('0.0001 VRSCTEST');
-  expect(text).toContain('No identity registration charge');
+  expect(text).toContain('No VerusID registration charge');
   expect(text).toContain('satoshi@');
-  expect(text).toContain('This identity (alice.VRSCTEST@)');
+  expect(text).toContain('This VerusID (alice.VRSCTEST@)');
   expect(text).toContain('Previous external authorities will no longer be able to revoke or recover it');
   expect(text).not.toContain('An external authority can still revoke or recover');
   expect(text).toContain('The private receiving address will be cleared. Existing private funds are not moved.');
@@ -267,9 +344,9 @@ test('review explains who can take control when changing to an external recovery
   mockManagement.plan = makePlan({mode: 'modify', losesControl: false, after: {...fields, recoveryauthority: 'iTreasury'}});
   const view = await mount(IdentityUpdateReview);
   const text = textContent(view.root);
-  expect(text).toContain('treasury@ will be able to take control of this identity.');
-  expect(text).toContain('Only that identity will be able to authorize future changes to the recovery identity.');
-  expect(footerAction(view, 'Pay & save changes').props.disabled).toBe(true);
+  expect(text).toContain('treasury@ will be able to take control of this VerusID.');
+  expect(text).toContain('Only that VerusID will be able to authorize future changes to the recovery VerusID.');
+  expect(footerAction(view, 'Slide to pay & save').props.accessibilityState.disabled).toBe(true);
 });
 
 test('transfer review shows the recipient private address and the replaced address', async () => {
@@ -277,7 +354,7 @@ test('transfer review shows the recipient private address and the replaced addre
     after: {...makePlan().review.after, privateaddress: 'zsRecipient'}});
   const view = await mount(IdentityUpdateReview);
   const text = textContent(view.root);
-  expect(text).toContain('Recipient’s private receiving addresszsRecipient');
+  expect(text).toContain('Private receiving addresszsRecipient');
   expect(text).toContain('Previous private receiving addresszsOriginal');
   expect(text).toContain('Private payments will use the address published by satoshi@.');
   expect(text).toContain('Existing private funds are not moved.');
@@ -291,19 +368,20 @@ test('approval sends the exact displayed plan once and prevents leaving or chang
   const plan = mockManagement.plan;
   const view = await mount(IdentityUpdateReview, {navigation: nav});
   await press(checkbox(view));
-  const send = footerAction(view, 'Pay & transfer identity').props.onPress;
-  await act(async () => {send(); send();});
+  const send = footerAction(view, 'Slide to pay & transfer').props.onAccessibilityTap;
+  await act(async () => {send(); send(); jest.advanceTimersByTime(100);});
   expect(mockApi.sendIdentityUpdate).toHaveBeenCalledTimes(1);
   expect(mockApi.sendIdentityUpdate.mock.calls[0][0]).toBe(plan);
   expect(mockApi.sendIdentityUpdate.mock.calls[0][1]).toBe(mockManagement.context);
-  expect(footerAction(view, 'Pay & transfer identity').props.accessibilityState).toMatchObject({busy: true, disabled: true});
-  expect(checkbox(view).props.disabled).toBe(true);
+  expect(footerAction(view, 'Slide to pay & transfer').props.accessibilityState).toMatchObject({busy: true, disabled: true});
+  expect(checkbox(view).props.accessibilityState.disabled).toBe(true);
   const event = {preventDefault: jest.fn()};
-  nav.addListener.mock.calls.find(([name]) => name === 'beforeRemove')[1](event);
+  beforeRemove(nav, event);
   expect(event.preventDefault).toHaveBeenCalled();
   expect(nav.reset).not.toHaveBeenCalled();
   expect(mockUnlink).not.toHaveBeenCalled();
   await act(async () => sent.resolve({txid: 'approved-tx'}));
+  await flush();
   expect(mockUnlink).toHaveBeenCalledWith(plan.review, mockManagement.context);
   expect(mockManagement.setResult).toHaveBeenCalledWith({txid: 'approved-tx', review: plan.review, unlinkRequested: true, unlinked: true});
   expect(nav.reset).toHaveBeenCalledWith({index: 0, routes: [{name: 'IdentityUpdateResult'}]});
@@ -316,7 +394,7 @@ test('a replacement review clears approval instead of retaining acceptance for t
   mockManagement.plan = makePlan({fee: '0.0002', nativeTotalCost: '0.0002'});
   await act(async () => view.update(<IdentityUpdateReview navigation={nav} />));
   expect(checkbox(view).props.accessibilityState.checked).toBe(false);
-  expect(footerAction(view, 'Pay & transfer identity').props.disabled).toBe(true);
+  expect(footerAction(view, 'Slide to pay & transfer').props.accessibilityState.disabled).toBe(true);
   expect(textContent(view.root)).toContain('0.0002 VRSCTEST');
   expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();
 });
@@ -325,9 +403,9 @@ test('preparation errors scroll to the error and retain the entered recipient fo
   mockApi.prepareIdentityUpdate.mockRejectedValueOnce(new Error('Choose a valid recipient.'));
   const nav = navigation();
   const view = await mount(IdentityTransfer, {navigation: nav});
-  await enter(view, 'New owner', 'bad recipient');
+  await enterOwner(view, 'bad recipient');
   await press(footerAction(view, 'Review transfer'));
-  expect(textContent(view.root.findByProps({accessibilityRole: 'alert'}))).toBe('Choose a valid recipient.');
+  expect(alertText(view)).toBe('Choose a valid recipient.');
   expect(mockScrollTo).toHaveBeenLastCalledWith({y: 0, animated: true});
   expect(input(view, 'New owner').props.value).toBe('bad recipient');
   expect(nav.navigate).not.toHaveBeenCalled();
@@ -337,12 +415,13 @@ test('preparation errors scroll to the error and retain the entered recipient fo
 test('a changed identity offers a reload instead of retrying preparation against stale data', async () => {
   mockApi.prepareIdentityUpdate.mockRejectedValueOnce(Object.assign(new Error('Identity changed.'), {code: 'REVIEW_CHANGED'}));
   const view = await mount(IdentityTransfer);
-  await enter(view, 'New owner', 'satoshi@');
+  await enterOwner(view, 'satoshi@');
   await press(footerAction(view, 'Review transfer'));
-  await press(footerAction(view, 'Reload identity'));
+  await press(footerAction(view, 'Reload VerusID'));
+  await validateOwner();
   expect(mockApi.loadIdentityForUpdate).toHaveBeenCalledTimes(2);
   expect(mockApi.prepareIdentityUpdate).toHaveBeenCalledTimes(1);
-  expect(footerAction(view, 'Review transfer').props.disabled).toBe(false);
+  expect(footerAction(view, 'Review transfer').props.accessibilityState.disabled).toBe(false);
   expect(input(view, 'New owner').props.value).toBe('satoshi@');
   expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();
 });
@@ -352,8 +431,8 @@ test('an expired approval clears the old plan and returns to reload the identity
   const nav = navigation();
   const view = await mount(IdentityUpdateReview, {navigation: nav});
   await press(checkbox(view));
-  await press(footerAction(view, 'Pay & transfer identity'));
-  await press(footerAction(view, 'Reload identity'));
+  await slide(footerAction(view, 'Slide to pay & transfer'));
+  await press(footerAction(view, 'Reload VerusID'));
   expect(mockManagement.setPlan).toHaveBeenCalledWith(null);
   expect(mockManagement.setReloadVersion.mock.calls[0][0](3)).toBe(4);
   expect(nav.goBack).toHaveBeenCalledTimes(1);
@@ -369,9 +448,9 @@ test('an uncertain broadcast consumes the review and opens transaction status wi
   const nav = navigation();
   const view = await mount(IdentityUpdateReview, {navigation: nav});
   await press(checkbox(view));
-  const send = footerAction(view, 'Pay & transfer identity').props.onPress;
-  await act(async () => send());
-  await act(async () => send());
+  const send = footerAction(view, 'Slide to pay & transfer');
+  await slide(send);
+  await slide(send);
   expect(mockApi.sendIdentityUpdate).toHaveBeenCalledTimes(1);
   expect(mockManagement.setPlan).toHaveBeenCalledWith(null);
   expect(mockManagement.setResult).toHaveBeenCalledWith({txid: 'uncertain-tx', review: plan.review, deliveryUnknown: true});
@@ -398,7 +477,7 @@ test('session rejection cannot populate a review or navigate', async () => {
   mockApi.prepareIdentityUpdate.mockRejectedValueOnce(Object.assign(new Error('Account changed'), {code: 'SESSION_CHANGED'}));
   const nav = navigation();
   const view = await mount(IdentityTransfer, {navigation: nav});
-  await enter(view, 'New owner', 'satoshi@');
+  await enterOwner(view, 'satoshi@');
   mockManagement.setPlan.mockClear();
   await press(footerAction(view, 'Review transfer'));
   expect(nav.navigate).not.toHaveBeenCalled();
@@ -411,9 +490,9 @@ test('late preparation completion after unmount cannot update the flow or naviga
   mockApi.prepareIdentityUpdate.mockReturnValueOnce(prepared.promise);
   const nav = navigation();
   const view = await mount(IdentityTransfer, {navigation: nav});
-  await enter(view, 'New owner', 'satoshi@');
+  await enterOwner(view, 'satoshi@');
   mockManagement.setPlan.mockClear();
-  await act(async () => {footerAction(view, 'Review transfer').props.onPress();});
+  await act(async () => {pressable(footerAction(view, 'Review transfer')).props.onPress();});
   act(() => view.unmount());
   await act(async () => prepared.resolve(makePlan()));
   expect(mockManagement.setPlan).not.toHaveBeenCalled();
@@ -425,9 +504,9 @@ test('a resolved preparation from a previous session cannot navigate before prov
   mockApi.prepareIdentityUpdate.mockReturnValueOnce(prepared.promise);
   const nav = navigation();
   const view = await mount(IdentityTransfer, {navigation: nav});
-  await enter(view, 'New owner', 'satoshi@');
+  await enterOwner(view, 'satoshi@');
   mockManagement.setPlan.mockClear();
-  await act(async () => {footerAction(view, 'Review transfer').props.onPress();});
+  await act(async () => {pressable(footerAction(view, 'Review transfer')).props.onPress();});
   mockState = {...mockState, authentication: {activeAccount: {accountHash: 'bob'}, sessionEpoch: 2}};
   await act(async () => prepared.resolve(makePlan()));
   expect(mockManagement.setPlan).not.toHaveBeenCalled();
@@ -440,7 +519,7 @@ test('a completed send from a previous session cannot update result state or nav
   const nav = navigation();
   const view = await mount(IdentityUpdateReview, {navigation: nav});
   await press(checkbox(view));
-  await act(async () => {footerAction(view, 'Pay & transfer identity').props.onPress();});
+  await slide(footerAction(view, 'Slide to pay & transfer'));
   mockState = {...mockState, authentication: {activeAccount: {accountHash: 'bob'}, sessionEpoch: 2}};
   await act(async () => sent.resolve({txid: 'old-session-tx'}));
   expect(mockManagement.setResult).not.toHaveBeenCalled();
@@ -453,13 +532,14 @@ test('changing the route while an identity loads cannot apply the old identity t
   mockApi.loadIdentityForUpdate.mockReturnValueOnce(firstLoad.promise).mockResolvedValueOnce(secondModel);
   const nav = navigation();
   const view = await mount(IdentityTransfer, {navigation: nav});
-  expect(footerAction(view, 'Load identity').props.accessibilityState.busy).toBe(true);
+  expect(footerAction(view, 'Load VerusID').props.accessibilityState.disabled).toBe(true);
+  expect(footerBusy(view)).toBe(true);
   await act(async () => view.update(<IdentityTransfer navigation={nav}
     route={{params: {chain: 'VRSCTEST', identityAddress: 'iBob', displayName: 'bob.VRSCTEST@'}}} />));
   expect(textContent(view.root)).toContain('bob.VRSCTEST@');
   await act(async () => firstLoad.resolve(model));
   expect(textContent(view.root)).not.toContain('alice.VRSCTEST@');
-  await enter(view, 'New owner', 'satoshi@');
+  await enterOwner(view, 'satoshi@');
   await press(footerAction(view, 'Review transfer'));
   expect(mockApi.prepareIdentityUpdate.mock.calls[0][0]).toBe(secondModel);
 });
@@ -479,10 +559,10 @@ test('result keeps its Done action fixed and does not initiate more identity ope
 
 test('returning identity funds is selected by default and uses the main wallet address', async () => {
   const view = await mount(IdentityTransfer);
-  expect(checkbox(view, 'Return identity funds to my wallet').props.accessibilityState.checked).toBe(true);
+  expect(checkbox(view, 'Return VerusID funds to my wallet').props.accessibilityState.checked).toBe(true);
   expect(textContent(view.root)).toContain('Main wallet address');
   expect(textContent(view.root)).toContain('Rwallet');
-  await enter(view, 'New owner', 'satoshi@');
+  await enterOwner(view, 'satoshi@');
   await press(footerAction(view, 'Review transfer'));
   expect(mockApi.prepareIdentityUpdate).toHaveBeenCalledWith(model, {
     mode: 'transfer', recipient: 'satoshi@', fundingAddress: 'iTreasury', returnFunds: true, returnAddress: 'Rwallet',
@@ -492,11 +572,11 @@ test('returning identity funds is selected by default and uses the main wallet a
 
 test('opting out of returning funds warns about the gift and includes the explicit choice in preparation', async () => {
   const view = await mount(IdentityTransfer);
-  await press(checkbox(view, 'Return identity funds to my wallet'));
-  expect(checkbox(view, 'Return identity funds to my wallet').props.accessibilityState.checked).toBe(false);
-  expect(textContent(view.root)).toContain('The new owner will receive the identity’s funds on this network');
+  await press(checkbox(view, 'Return VerusID funds to my wallet'));
+  expect(checkbox(view, 'Return VerusID funds to my wallet').props.accessibilityState.checked).toBe(false);
+  expect(textContent(view.root)).toContain('The new owner will receive the VerusID’s funds on this network');
   expect(textContent(view.root)).toContain('included in your total transfer cost');
-  await enter(view, 'New owner', 'Rrecipient');
+  await enterOwner(view, 'Rrecipient');
   await press(footerAction(view, 'Review transfer'));
   expect(mockApi.prepareIdentityUpdate).toHaveBeenCalledWith(model, {
     mode: 'transfer', recipient: 'Rrecipient', fundingAddress: 'iTreasury', returnFunds: false, returnAddress: 'Rwallet',
@@ -509,9 +589,8 @@ test('returned native and token funds are displayed separately from the fee and 
     {currencyId: 'iDollar', label: 'Dollar', amount: '25.5'},
   ]});
   const view = await mount(IdentityUpdateReview);
-  const costCard = view.root.findAllByType('Text').find(node => textContent(node) === 'Total cost').parent;
-  expect(textContent(costCard)).toContain('0.0001 VRSCTEST');
-  expect(textContent(costCard)).not.toContain('25.5');
+  expect(totalCost(view)).toContain('0.0001 VRSCTEST');
+  expect(totalCost(view)).not.toContain('25.5');
   expect(textContent(view.root)).toContain('Funds returned to you');
   expect(textContent(view.root)).toContain('25.5');
   expect(textContent(view.root)).toContain('Dollar');
@@ -529,15 +608,14 @@ test('unrelated fee-source change returns to its original identity and is separa
     returnAddress: 'Rwallet', changeAddress: 'iTreasury', changeName: 'treasury@',
   });
   const view = await mount(IdentityUpdateReview);
-  const costCard = view.root.findAllByType('Text').find(node => textContent(node) === 'Total cost').parent;
-  expect(textContent(costCard)).toContain('Fee paid fromtreasury@');
-  expect(textContent(costCard)).toContain('Unspent change returns to this payment address');
-  expect(textContent(costCard)).not.toContain('main wallet');
+  expect(textContent(view.root)).toContain('Fee paid fromtreasury@');
+  expect(infoTopic(view, 'Payment change')).toContain('Unspent change returns to this payment address');
+  expect(infoTopic(view, 'Payment change')).not.toContain('main wallet');
   expect(textContent(view.root)).toContain('Funds returned to youVRSCTEST10');
   expect(textContent(view.root)).toContain('Return addressRwallet');
   expect(textContent(view.root)).not.toContain('499.9999');
   await press(button(view, 'Additional payment change'));
-  const paymentChange = textContent(button(view, 'Additional payment change').parent);
+  const paymentChange = disclosure(view, 'Additional payment change');
   expect(paymentChange).toContain('VRSCTEST499.9999');
   expect(paymentChange).toContain('Dollar25.5');
   expect(paymentChange).toContain('Change returns totreasury@');
@@ -545,8 +623,8 @@ test('unrelated fee-source change returns to its original identity and is separa
   expect(paymentChange).not.toContain('main wallet');
   expect(paymentChange).not.toContain('iTreasury');
   await press(button(view, 'Transaction details'));
-  expect(textContent(button(view, 'Transaction details').parent)).toContain('Change addressiTreasury');
-  footerAction(view, 'Pay & transfer identity');
+  expect(disclosure(view, 'Transaction details')).toContain('Change addressiTreasury');
+  footerAction(view, 'Slide to pay & transfer');
 });
 
 test('change paid by the main wallet is identified as main-wallet change while identity funds return separately', async () => {
@@ -555,9 +633,9 @@ test('change paid by the main wallet is identified as main-wallet change while i
     fundingChange: [{currencyId: 'test-system', label: 'VRSCTEST', amount: '1.9999'}],
   });
   const view = await mount(IdentityUpdateReview);
-  expect(textContent(view.root)).toContain('Payment change returns to your main wallet address');
+  expect(infoTopic(view, 'Payment change')).toContain('Payment change returns to your main wallet address');
   await press(button(view, 'Additional payment change'));
-  expect(textContent(button(view, 'Additional payment change').parent)).toContain('Change returns toMain wallet address');
+  expect(disclosure(view, 'Additional payment change')).toContain('Change returns toMain wallet address');
 });
 
 test('all gifted currencies appear in total cost without counting an identity-funded fee twice', async () => {
@@ -570,17 +648,19 @@ test('all gifted currencies appear in total cost without counting an identity-fu
     ],
   });
   const view = await mount(IdentityUpdateReview);
-  const costCard = view.root.findAllByType('Text').find(node => textContent(node) === 'Total cost').parent;
-  const cost = textContent(costCard);
-  expect(cost).toContain('10 VRSCTEST');
-  expect(cost).toContain('Network fee0.0001 VRSCTEST');
-  expect(cost).toContain('Dollar25.5');
-  expect(cost).toContain('Gold0.00000001');
-  expect(cost).not.toContain('10.0001');
-  expect(cost).not.toContain('9.9999');
+  const text = textContent(view.root);
+  expect(totalCost(view)).toContain('10 VRSCTEST');
+  await press(button(view, 'Transaction details'));
+  expect(disclosure(view, 'Transaction details')).toContain('Network fee0.0001 VRSCTEST');
+  expect(text).toContain('Dollar25.5');
+  expect(text).toContain('Gold0.00000001');
+  expect(text).not.toContain('10.0001');
+  expect(totalCost(view)).not.toContain('9.9999');
   expect(textContent(view.root)).toContain('Funds given to the new ownerVRSCTEST9.9999');
-  expect(textContent(view.root)).toContain('You give up these funds when you transfer the identity');
+  expect(textContent(view.root)).toContain('You give up these funds when you transfer the VerusID');
 });
+
+const payLabel = mode => mode === 'transfer' ? 'Slide to pay & transfer' : 'Slide to pay & save';
 
 test.each(['modify', 'transfer'])('%s defaults to unlinking only when the update removes signing control', async mode => {
   mockManagement.plan = makePlan({mode, losesControl: true});
@@ -588,7 +668,7 @@ test.each(['modify', 'transfer'])('%s defaults to unlinking only when the update
   expect(checkbox(view, 'Unlink from my wallet after sending').props.accessibilityState.checked).toBe(true);
   expect(textContent(view.root)).toContain('Uncheck to keep viewing it here');
   await press(checkbox(view));
-  await press(footerAction(view, mode === 'transfer' ? 'Pay & transfer identity' : 'Pay & save changes'));
+  await slide(footerAction(view, payLabel(mode)));
   expect(mockUnlink).toHaveBeenCalledWith(mockManagement.plan.review, mockManagement.context);
   expect(mockManagement.setResult).toHaveBeenCalledWith(expect.objectContaining({unlinkRequested: true, unlinked: true}));
 });
@@ -599,7 +679,7 @@ test.each(['modify', 'transfer'])('%s respects the unlink opt-out after losing s
   await press(checkbox(view, 'Unlink from my wallet after sending'));
   expect(checkbox(view, 'Unlink from my wallet after sending').props.accessibilityState.checked).toBe(false);
   await press(checkbox(view));
-  await press(footerAction(view, mode === 'transfer' ? 'Pay & transfer identity' : 'Pay & save changes'));
+  await slide(footerAction(view, payLabel(mode)));
   expect(mockUnlink).not.toHaveBeenCalled();
   expect(mockManagement.setResult).toHaveBeenCalledWith(expect.objectContaining({unlinkRequested: false, unlinked: false}));
 });
@@ -609,7 +689,7 @@ test.each(['modify', 'transfer'])('%s keeps the link when signing control is ret
   const view = await mount(IdentityUpdateReview);
   expect(checkbox(view, 'Unlink from my wallet after sending')).toBeUndefined();
   if (mode === 'transfer') await press(checkbox(view));
-  await press(footerAction(view, mode === 'transfer' ? 'Pay & transfer identity' : 'Pay & save changes'));
+  await slide(footerAction(view, payLabel(mode)));
   expect(mockApi.sendIdentityUpdate).toHaveBeenCalledTimes(1);
   expect(mockUnlink).not.toHaveBeenCalled();
   expect(mockManagement.setResult).toHaveBeenCalledWith(expect.objectContaining({unlinkRequested: false, unlinked: false}));
@@ -632,7 +712,7 @@ test('a validation failure before broadcast never starts local unlinking', async
   const nav = navigation();
   const view = await mount(IdentityUpdateReview, {navigation: nav});
   await press(checkbox(view));
-  await press(footerAction(view, 'Pay & transfer identity'));
+  await slide(footerAction(view, 'Slide to pay & transfer'));
   expect(mockUnlink).not.toHaveBeenCalled();
   expect(mockManagement.setResult).not.toHaveBeenCalled();
   expect(nav.reset).not.toHaveBeenCalled();
@@ -643,7 +723,7 @@ test('an unlink failure after accepted broadcast still opens the successful tran
   const nav = navigation();
   const view = await mount(IdentityUpdateReview, {navigation: nav});
   await press(checkbox(view));
-  await press(footerAction(view, 'Pay & transfer identity'));
+  await slide(footerAction(view, 'Slide to pay & transfer'));
   expect(mockApi.sendIdentityUpdate).toHaveBeenCalledTimes(1);
   expect(mockManagement.setResult).toHaveBeenCalledWith({
     txid: 'reviewed-transaction', review: mockManagement.plan.review,
@@ -660,16 +740,16 @@ test('Retry unlink stays in the fixed footer and retries only local cleanup, wit
     unlinkRequested: true, unlinked: false, unlinkError: 'Wallet refresh failed.'};
   const nav = navigation();
   const view = await mount(IdentityUpdateResult, {navigation: nav});
-  expect(textContent(view.root)).toContain('Your update was sent, but unlinking needs another try');
+  expect(textContent(view.root)).toContain('Unlinking needs another try');
   expect(textContent(view.root)).toContain('it does not send another transaction');
-  const retry = footerAction(view, 'Retry unlink').props.onPress;
+  const retry = pressable(footerAction(view, 'Retry unlink')).props.onPress;
   await act(async () => {retry(); retry();});
   expect(mockUnlink).toHaveBeenCalledTimes(1);
   expect(mockUnlink).toHaveBeenCalledWith(mockManagement.result.review, mockManagement.context);
-  expect(footerAction(view, 'Done').props.disabled).toBe(true);
-  expect(footerAction(view, 'Retry unlink').props.accessibilityState).toMatchObject({disabled: true, busy: true});
+  expect(footerAction(view, 'Done').props.accessibilityState.disabled).toBe(true);
+  expect(footerAction(view, 'Retrying unlink…').props.accessibilityState.disabled).toBe(true);
   const event = {preventDefault: jest.fn()};
-  nav.addListener.mock.calls.find(([name]) => name === 'beforeRemove')[1](event);
+  beforeRemove(nav, event);
   expect(event.preventDefault).toHaveBeenCalled();
   await act(async () => cleanup.resolve({unlinked: true}));
   expect(mockManagement.setResult).toHaveBeenCalledWith({...mockManagement.result, unlinked: true, unlinkError: null});
@@ -686,7 +766,7 @@ test('a failed local retry leaves the accepted transaction available and can nev
   await press(footerAction(view, 'Retry unlink'));
   expect(textContent(view.root)).toContain('accepted-tx');
   expect(textContent(view.root)).toContain('Still unable to refresh');
-  expect(footerAction(view, 'Done').props.disabled).toBeFalsy();
+  expect(footerAction(view, 'Done').props.accessibilityState.disabled).toBeFalsy();
   expect(mockManagement.setResult).not.toHaveBeenCalled();
   expect(mockApi.sendIdentityUpdate).not.toHaveBeenCalled();
   expect(mockApi.prepareIdentityUpdate).not.toHaveBeenCalled();
@@ -696,7 +776,7 @@ test('the successful unlink result confirms wallet cards were refreshed and offe
   mockManagement.result = {txid: 'accepted-tx', review: mockManagement.plan.review,
     unlinkRequested: true, unlinked: true};
   const view = await mount(IdentityUpdateResult);
-  expect(textContent(view.root)).toContain('The identity has been unlinked and your wallet cards refreshed');
+  expect(textContent(view.root)).toContain('The VerusID has been unlinked and your wallet cards refreshed');
   expect(button(view, 'Retry unlink')).toBeUndefined();
   footerAction(view, 'Done');
   expect(mockUnlink).not.toHaveBeenCalled();

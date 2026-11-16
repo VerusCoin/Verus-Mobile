@@ -104,7 +104,7 @@ describe('registration SDK transport integration', () => {
     expect(results[0]).toBe(cachedCurrency);
     expect(bodies()).toHaveLength(1);
     expect(bodies()[0].map(item => [item.method, item.params])).toEqual([
-      ['getinfo', []], ['getblock', [123, 1]],
+      ['getinfo', []], ['getblock', ['123', true]],
     ]);
     expect(results.slice(1).map(result => result.result.method)).toEqual(['getinfo', 'getblock']);
     expect(mockGetCachedResponse.mock.calls.map(call => call[2].cmd)).toEqual(['getcurrency']);
@@ -186,7 +186,7 @@ describe('registration SDK transport integration', () => {
       {result: null, error: missingTransaction},
       {result: null, error: null},
       {result: {method: 'getidentity', params: ['authority@']}, error: null},
-      {result: {method: 'getblock', params: [123, 1]}, error: null},
+      {result: {method: 'getblock', params: ['123', true]}, error: null},
     ]);
     expect(mockSetCachedResponse).not.toHaveBeenCalled();
 
