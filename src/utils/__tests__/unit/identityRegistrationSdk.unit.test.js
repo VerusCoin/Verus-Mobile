@@ -664,7 +664,10 @@ test.each([
       await expect(retryBroadcast(review.jobId, context)).rejects.toMatchObject({code: 'INSUFFICIENT_RELAY_FEE'});
       const retained = mockReadJob(review.jobId);
       expect(retained.status).toBe('commitment_signed');
-      expect(JSON.stringify(retained.commitment) === JSON.stringify(persisted.commitment)).toBe(true);
+      // The retry keeps the receipt and adds only the durable first broadcast time.
+      const {broadcastAt, ...retainedCommitment} = retained.commitment;
+      expect(broadcastAt).toEqual(expect.any(Number));
+      expect(JSON.stringify(retainedCommitment) === JSON.stringify(persisted.commitment)).toBe(true);
       expect(retained.saltHex).toBe(persisted.saltHex);
     } else {
       const result = expect(reconcileRegistration(review.jobId, context)).rejects;
