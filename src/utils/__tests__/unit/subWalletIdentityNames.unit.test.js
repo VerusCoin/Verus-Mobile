@@ -3,7 +3,8 @@ const mockGetIdentity = jest.fn();
 
 jest.mock('../../../store', () => ({
   __esModule: true,
-  default: {getState: () => mockGetState()},
+  // The VRPC module start-up reports its errors through the store-backed alert.
+  default: {getState: () => mockGetState(), subscribe: () => () => {}, dispatch: jest.fn()},
 }));
 jest.mock('../../seedCrypt', () => ({
   decryptkey: (_password, value) => value,
