@@ -58,7 +58,7 @@ describe('subwallet lifecycle after identity changes', () => {
     const identity = wallet('SUBWALLET_vrpc.iPrevious.system');
     const previous = {...select(rebuild(undefined, {VRSC: [identity]}), 'VRSC', identity), claimDisabled: true};
     const signedOut = coinMenus(previous, {type: SIGN_OUT_COMPLETE});
-    expect(signedOut).toEqual({activeSubWallets: {}, allSubWallets: {}, claimDisabled: false});
+    expect(signedOut).toEqual({activeSubWallets: {}, userSelectedSubWallets: {}, allSubWallets: {}, claimDisabled: false});
 
     const currentWallet = wallet('SUBWALLET_vrpc.RCurrent.system');
     const wallets = profile === 'same profile' ? [currentWallet, identity] : [currentWallet];

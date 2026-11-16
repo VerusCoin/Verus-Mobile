@@ -3,6 +3,7 @@ class MockStore  {
     this.state = state
     this.reducers = {}
     this.actionHistory = []
+    this.listeners = []
   }
 
   dispatch(action) {
@@ -11,6 +12,16 @@ class MockStore  {
     Object.keys(this.reducers).map(reducerName => {
       this.state = {...this.state, [reducerName]: this.reducers[reducerName](this.state[reducerName], action)}
     })
+
+    this.listeners.slice().forEach(listener => listener())
+  }
+
+  subscribe(listener) {
+    this.listeners = [...this.listeners, listener]
+
+    return () => {
+      this.listeners = this.listeners.filter(item => item !== listener)
+    }
   }
 
   setStore(store) {

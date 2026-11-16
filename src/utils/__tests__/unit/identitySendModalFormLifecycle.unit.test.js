@@ -5,9 +5,9 @@ const mockGetIdentity = jest.fn();
 const mockDeriveKeyPair = jest.fn();
 const mockDecryptKey = jest.fn();
 const mockBuild = jest.fn();
-jest.mock('react-native', () => ({Alert: {alert: jest.fn()}, Dimensions: {get: () => ({height: 800})}}));
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({Alert: {alert: jest.fn()}, Dimensions: {get: () => ({height: 800})}}));
 jest.mock('../../../store', () => ({getState: () => mockState}));
-jest.mock('react-redux', () => ({useDispatch: () => jest.fn(), useSelector: selector => selector(mockState)}));
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useDispatch: () => jest.fn(), useSelector: selector => selector(mockState)}));
 jest.mock('../../../hooks/useObjectSelector', () => ({useObjectSelector: selector => selector(mockState)}));
 jest.mock('../../../actions/actions/alert/dispatchers/alert', () => ({createAlert: jest.fn()}));
 jest.mock('../../api/channels/verusid/callCreators', () => ({getIdentity: (...args) => mockGetIdentity(...args), getFriendlyNameMap: async () => ({})}));
@@ -37,7 +37,7 @@ const constants = require('../../constants/sendModal');
 const cases = [[Revoke, mockRenderRevoke, 'active'], [Recover, mockRenderRecover, 'revoked']];
 const subject = status => ({result: {status, identity: {identityaddress: 'target-id', recoveryauthority: 'authority-id', revocationauthority: 'authority-id'}}});
 const authority = {result: {status: 'active', identity: {identityaddress: 'authority-id', primaryaddresses: ['controlled-address'], minimumsignatures: 1}}};
-const props = () => ({setLoading: jest.fn(), setModalHeight: jest.fn(), navigation: {navigate: jest.fn()}, updateSendFormData: jest.fn()});
+const props = () => ({setLoading: jest.fn(), setModalHeight: jest.fn(), setIdentitySafetyRequestCloseHandler: jest.fn(), navigation: {navigate: jest.fn()}, updateSendFormData: jest.fn()});
 beforeEach(() => {
   jest.clearAllMocks();
   mockState = {authentication: {instanceKey: 'instance-before', signedIn: false, activeAccount: null}, sendModal: {requestId: 'modal-original', data: {

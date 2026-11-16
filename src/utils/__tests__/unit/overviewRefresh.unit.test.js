@@ -1,19 +1,26 @@
 const mockUpdateWallets = jest.fn();
 const mockUpdateService = jest.fn();
-const mockState = {authentication: {activeAccount: {accountHash: 'alice'}, sessionEpoch: 1}};
+const mockRefreshCard = jest.fn();
+const mockState = {
+  authentication: {activeAccount: {accountHash: 'alice'}, sessionEpoch: 1},
+  coins: {coinMenuFocused: true, activeCoin: {id: 'VRSCTEST'}, activeSection: {key: 'wallet-overview'}},
+};
 
 jest.mock('react-redux', () => ({connect: () => component => component}));
-jest.mock('react-native', () => ({View: 'View', FlatList: 'FlatList', TouchableOpacity: 'TouchableOpacity'}));
 jest.mock('react-native-paper', () => ({Portal: 'Portal', List: {}, Text: 'Text', Badge: 'Badge'}));
 jest.mock('../../../store', () => ({__esModule: true, default: {getState: () => mockState}}));
 jest.mock('../../../styles', () => ({}));
 jest.mock('../../../images/customIcons', () => ({TransactionLogos: {}}));
-jest.mock('../../../components/TxDetailsModal/TxDetailsModal', () => () => null);
+jest.mock('../../../containers/Coin/Overview/TransactionDetailsSheet', () => ({__esModule: true, default: () => null, decodeTxid: jest.fn()}));
 jest.mock('../../../selectors/transactions', () => ({selectTransactions: jest.fn()}));
 jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {}}));
 jest.mock('../../math', () => ({scientificToDecimal: jest.fn()}));
 jest.mock('../../../actions/actionCreators', () => ({
   expireCoinData: jest.fn(), expireServiceData: jest.fn(), setActiveOverviewFilter: jest.fn(),
+}));
+jest.mock('../../ledger/refreshWalletChannels', () => ({
+  refreshWalletChannels: (...args) => mockRefreshCard(...args),
+  VISIBLE_WALLET_REFRESH_INTERVAL: 15000,
 }));
 jest.mock('../../../actions/actionDispatchers', () => ({
   conditionallyUpdateWallets: (...args) => mockUpdateWallets(...args),
@@ -28,7 +35,11 @@ const {
 } = require('../../constants/intervalConstants');
 
 const createOverview = () => {
-  const overview = new Overview({dispatch: jest.fn(), activeCoin: {id: 'VRSCTEST'}});
+  const overview = new Overview({
+    dispatch: jest.fn(), activeCoin: {id: 'VRSCTEST'}, activeSubWallet: {id: 'main'},
+    navigation: {isFocused: () => true},
+  });
+  overview._isMounted = true;
   overview.setState = (state, callback) => {
     overview.state = {...overview.state, ...state};
     if (callback) overview.refreshFinished = callback();
@@ -39,6 +50,7 @@ const createOverview = () => {
 beforeEach(() => {
   mockUpdateWallets.mockReset().mockResolvedValue([]);
   mockUpdateService.mockReset().mockResolvedValue(undefined);
+  mockRefreshCard.mockReset().mockResolvedValue(['success']);
 });
 
 test('Overview groups balance and history work without waiting for services', async () => {
@@ -53,16 +65,20 @@ test('Overview groups balance and history work without waiting for services', as
   expect(mockUpdateWallets).toHaveBeenCalledTimes(1);
   expect(mockUpdateWallets).toHaveBeenCalledWith(mockState, overview.props.dispatch, [
     {chainTicker: 'VRSCTEST', updateId: API_GET_FIATPRICE},
-    {chainTicker: 'VRSCTEST', updateId: API_GET_BALANCES},
     {chainTicker: 'VRSCTEST', updateId: API_GET_INFO},
-    {chainTicker: 'VRSCTEST', updateId: API_GET_TRANSACTIONS},
   ]);
+  // Balance and history come from the active card's own refresh, started first.
+  expect(mockRefreshCard).toHaveBeenCalledTimes(1);
+  expect(mockRefreshCard).toHaveBeenCalledWith(
+    'VRSCTEST', [{id: 'main'}], [API_GET_BALANCES, API_GET_TRANSACTIONS], {force: false},
+  );
   expect(mockUpdateService).toHaveBeenCalledTimes(1);
   expect(overview.state.loading).toBe(true);
 
   // A second pull while the first is pending must not start another cycle.
   overview.refresh();
   expect(mockUpdateWallets).toHaveBeenCalledTimes(1);
+  expect(mockUpdateService).toHaveBeenCalledTimes(1);
 
   finishWallets([]);
   await Promise.resolve();

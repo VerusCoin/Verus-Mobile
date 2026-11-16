@@ -232,7 +232,7 @@ describe('scoped credential retrieval', () => {
     expect(credentials).toHaveLength(1);
   });
 
-  it('continues after an undecryptable stored entry', async () => {
+  it('refuses a partial set after an undecryptable stored entry', async () => {
     const credential = new Credential({
       version: Credential.VERSION_CURRENT,
       credentialKey: CREDENTIAL_KEY,
@@ -255,14 +255,13 @@ describe('scoped credential retrieval', () => {
       },
     }));
 
-    const credentials = await getScopedCredentials({
+    // A decryption error is retryable, never a silently truncated set.
+    await expect(getScopedCredentials({
       systemID: SYSTEM_ID,
       identityAddress: IDENTITY_ID,
       scope: IDENTITY_ID,
       credentialKeys: [CREDENTIAL_KEY],
-    });
-
-    expect(credentials).toHaveLength(1);
+    })).rejects.toThrow('Unable to read encrypted credentials.');
     console.warn.mockRestore();
   });
 });

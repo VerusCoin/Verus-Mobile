@@ -1,4 +1,4 @@
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Alert: {alert: jest.fn()},
   Clipboard: {setString: jest.fn()},
   Image: 'Image',
@@ -27,7 +27,7 @@ const {VERUSID_CMM_INFO, VERUSID_CMM_DATA} = require('../../constants/verusidObj
 
 const KEY = 'iExistingContentKey';
 const ROW_KEY = `${VERUSID_CMM_DATA.key}:${KEY}`;
-const OLD_VALUES = '2 items (old-one, old-two)';
+const OLD_VALUES = 'old-one | old-two';
 const identity = {
   name: 'Example',
   identityaddress: 'iExample',
@@ -104,15 +104,15 @@ describe('identity content update review', () => {
     renderer.unmount();
   });
 
-  it.each([1, 2])('keeps all current values neutral for selective removal action %i', action => {
+  it.each([[1, 'One active value under Existing key'], [2, 'All active matching values under Existing key']])('keeps all current values neutral for selective removal action %i', (action, scope) => {
     const renderer = renderUpdates({
       [VERUSID_CMM_INFO.key]: {[`${ROW_KEY}:remove:0`]: removalEntry(action)},
     });
     const [card] = cards(renderer);
     const oldValues = card.findAllByType('Text').find(item => item.children.join('') === OLD_VALUES);
 
-    expect(text(card)).toContain(`Current ${OLD_VALUES}`);
-    expect(text(card)).toContain('matching value');
+    expect(text(card)).toContain(`Active ${OLD_VALUES}`);
+    expect(text(card)).toContain(scope);
     expect(styleOf(oldValues).textDecorationLine).toBeUndefined();
     renderer.unmount();
   });
@@ -124,7 +124,7 @@ describe('identity content update review', () => {
     const [card] = cards(renderer);
     const oldValues = card.findAllByType('Text').find(item => item.children.join('') === OLD_VALUES);
 
-    expect(text(card)).toContain('All current values under Existing key');
+    expect(text(card)).toContain('All active values under Existing key');
     expect(styleOf(oldValues).textDecorationLine).toBe('line-through');
     renderer.unmount();
   });
@@ -158,7 +158,7 @@ describe('identity content update review', () => {
     const [card] = cards(renderer);
 
     expect(text(card)).toContain('Will clear');
-    expect(text(card)).toContain('All current content keys and values');
+    expect(text(card)).toContain('All active content keys and values');
     expect(text(card)).not.toContain(OLD_VALUES);
     renderer.unmount();
   });

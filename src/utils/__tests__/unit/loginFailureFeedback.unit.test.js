@@ -1,15 +1,16 @@
 let mockState;
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Keyboard: {dismiss: jest.fn()},
   Dimensions: {get: () => ({width: 400, height: 800})},
   View: 'View',
 }));
 jest.mock('react-native-paper', () => ({
+  Button: 'Button',
   TextInput: 'TextInput',
   Checkbox: {Item: 'Checkbox'},
 }));
-jest.mock('react-redux', () => ({
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({
   useDispatch: () => jest.fn(),
   useSelector: selector => selector(mockState),
   connect: () => Component => Component,
@@ -34,7 +35,6 @@ jest.mock('../../../components/SendModal/SendModal.render', () => ({
 }));
 jest.mock('../../../components/Button', () => 'Button');
 jest.mock('../../../components/AnimatedActivityIndicatorBox', () => 'Spinner');
-jest.mock('../../../styles', () => ({}));
 jest.mock('../../keychain/keychain', () => ({getSupportedBiometryType: jest.fn()}));
 jest.mock('../../keychain/biometrics', () => ({
   getBiometricPassword: jest.fn(),
@@ -148,7 +148,7 @@ it('preserves successful login without showing an error', async () => {
 
   await act(async () => unlock());
 
-  expect(initializeAccountData).toHaveBeenCalledWith(account, password, false);
+  expect(initializeAccountData).toHaveBeenCalledWith(account, password);
   expect(props.navigation.navigate).toHaveBeenCalledWith(SEND_MODAL_FORM_STEP_RESULT);
   expect(createAlert).not.toHaveBeenCalled();
   expect(props.setPreventExit.mock.calls).toEqual([[true], [false]]);
