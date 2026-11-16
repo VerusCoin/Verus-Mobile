@@ -427,7 +427,9 @@ it.each([
   mockApi.prepareRegistration.mockResolvedValue({...review, status: 'registration_prepared'});
   mockApi.refreshRegistrationReview.mockResolvedValue({...review, status: 'registration_prepared'});
   const view = await mount(IdentityRegistrationProgress);
-  footerAction(view, label);
+  // Each action is enabled: ActionButton passes `disabled || busy`, so an
+  // enabled button can carry false or undefined.
+  expect(footerAction(view, label).props.disabled).toBeFalsy();
 });
 
 it.each([['registered', 'VerusID created'], ['complete', 'VerusID created']])('shows the %s result with its Link VerusID action instead of the progress footer', async (status, title) => {
@@ -1232,9 +1234,11 @@ it('warns that the original paid commitment fee is lost forever before deleting 
   expect(mockApi.retryBroadcast).not.toHaveBeenCalled();
 });
 
-it('never offers deletion for an unsettled signed registration', async () => {
+// Delete now lives only in the About sheet of the progress screen; saved
+// rows in the VerusID tab have no delete action.
+it.each(['registration_broadcast', 'registration_signed'])('never offers deletion for an unsettled signed registration (%s)', async status => {
   jest.useFakeTimers();
-  setSavedReview({...review, status: 'registration_broadcast', deletionKind: null});
+  setSavedReview({...review, status, deletionKind: null});
   const progress = await mount(IdentityRegistrationProgress);
   await press(progress.root.findAll(node => node.props.accessibilityLabel === 'About this registration' && node.props.onPress)[0]);
   expect(progress.root.findAllByType(TextAction).filter(node => node.props.children === 'Delete registration')).toHaveLength(0);
