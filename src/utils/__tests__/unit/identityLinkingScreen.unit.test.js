@@ -1,6 +1,7 @@
 const mockApi = {captureIdentityLinkContext: jest.fn(), discoverLinkableIdentities: jest.fn(), linkSelectedIdentities: jest.fn(), retryIdentityLinkRefresh: jest.fn()};
 let mockState;
 jest.mock('../../identityLinking/identityLinking', () => mockApi);
+jest.mock('../../../actions/actions/sendModal/dispatchers/sendModal', () => ({openLinkIdentityModal: jest.fn()}));
 jest.mock('react-redux', () => ({useSelector: selector => selector(mockState)}));
 jest.mock('../../../store', () => ({__esModule: true, default: {getState: () => mockState}}));
 jest.mock('@react-navigation/elements', () => ({useHeaderHeight: () => 96}));
