@@ -237,14 +237,18 @@ const SignedInVerusIdDetails = () => {
     Store.getState(),
     activeAccount?.accountHash || null,
   );
-  const isRenderedSessionCurrent = useCallback(
+  // The session the options sheet was opened in. A chosen action runs after
+  // the sheet closes, and Unlink after its own sheet, so each one re-checks
+  // this scope, not the latest render's, and is dropped when it is stale.
+  const actionScopeRef = useRef(null);
+  const isActionSessionCurrent = useCallback(
     () =>
-      sessionScopeIsCurrent(
-        Store.getState(),
-        renderedSessionScopeRef.current,
-      ),
+      screenMountedRef.current &&
+      sessionScopeIsCurrent(Store.getState(), actionScopeRef.current),
     [],
   );
+  const renderedAccountHash = renderedSessionScopeRef.current.accountHash;
+  const renderedSessionEpoch = renderedSessionScopeRef.current.sessionEpoch;
   const bottomPadding = Math.max(insets.bottom, 20);
   const coinObj = useMemo(() => {
     try {
@@ -335,6 +339,21 @@ const SignedInVerusIdDetails = () => {
       screenMountedRef.current = false;
     };
   }, []);
+
+  // A wallet switch with this page still open ends the previous session's
+  // actions: close their sheets and drop the captured scope.
+  useEffect(() => {
+    if (
+      actionScopeRef.current == null ||
+      sessionScopeIsCurrent(Store.getState(), actionScopeRef.current)
+    ) {
+      return;
+    }
+
+    actionScopeRef.current = null;
+    setOptionsVisible(false);
+    setUnlinkVisible(false);
+  }, [renderedAccountHash, renderedSessionEpoch]);
 
   const title = useMemo(
     () =>
@@ -486,12 +505,12 @@ const SignedInVerusIdDetails = () => {
   const unlinkIdentity = useCallback(async () => {
     // Same-frame double taps must only start one unlink.
     if (unlinkingRef.current) return;
-    // The details belong to the account this screen rendered. If the store
-    // account already moved on, the unlink must not run against the new one.
-    if (!isRenderedSessionCurrent()) return;
+    // The unlink belongs to the session the options sheet was opened in. If
+    // the store account moved on, it must not run against the new one.
+    if (!isActionSessionCurrent()) return;
 
     const requestContext = {
-      sessionScope: renderedSessionScopeRef.current,
+      sessionScope: actionScopeRef.current,
     };
     const token = unlinkTokenRef.current + 1;
     unlinkTokenRef.current = token;
@@ -578,32 +597,46 @@ const SignedInVerusIdDetails = () => {
     chain,
     dispatch,
     iAddress,
-    isRenderedSessionCurrent,
+    isActionSessionCurrent,
     navigation,
     unlinkDismissal,
   ]);
 
+  const openOptions = useCallback(() => {
+    actionScopeRef.current = renderedSessionScopeRef.current;
+    setOptionsVisible(true);
+  }, []);
+
+  // The options sheet runs a chosen action after it has closed. An action of
+  // a session that is no longer current is cancelled silently.
   const optionActions = useMemo(
     () => [
       {key: 'transfer', label: 'Transfer VerusID', icon: 'account-arrow-right-outline',
-        onPress: () => navigation.navigate('IdentityManagement', {
-          screen: 'IdentityTransfer', params: {chain, identityAddress: iAddress, displayName: title},
-        })},
+        onPress: () => {
+          if (!isActionSessionCurrent()) return;
+          navigation.navigate('IdentityManagement', {
+            screen: 'IdentityTransfer', params: {chain, identityAddress: iAddress, displayName: title},
+          });
+        }},
       {key: 'modify', label: 'Modify VerusID', icon: 'account-edit-outline',
-        onPress: () => navigation.navigate('IdentityManagement', {
-          screen: 'IdentityModify', params: {chain, identityAddress: iAddress, displayName: title},
-        })},
+        onPress: () => {
+          if (!isActionSessionCurrent()) return;
+          navigation.navigate('IdentityManagement', {
+            screen: 'IdentityModify', params: {chain, identityAddress: iAddress, displayName: title},
+          });
+        }},
       {
         key: 'unlink',
         label: 'Unlink VerusID',
         icon: 'link-variant-off',
         onPress: () => {
+          if (!isActionSessionCurrent()) return;
           setUnlinkError(null);
           setUnlinkVisible(true);
         },
       },
     ],
-    [chain, iAddress, navigation, title],
+    [chain, iAddress, isActionSessionCurrent, navigation, title],
   );
 
   useLayoutEffect(() => {
@@ -614,7 +647,7 @@ const SignedInVerusIdDetails = () => {
           accessibilityLabel="VerusID options"
           accessibilityRole="button"
           hitSlop={8}
-          onPress={() => setOptionsVisible(true)}
+          onPress={openOptions}
           style={styles.headerAction}>
           <MaterialCommunityIcons
             color={theme.colors.textPrimary}
@@ -631,7 +664,7 @@ const SignedInVerusIdDetails = () => {
       },
       headerTintColor: theme.colors.textPrimary,
     });
-  }, [navigation, shortName, theme, titleShown]);
+  }, [navigation, openOptions, shortName, theme, titleShown]);
 
   const hasIdentity = Boolean(identity && friendlyNames);
 
