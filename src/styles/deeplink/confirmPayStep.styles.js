@@ -35,24 +35,18 @@ const createConfirmPayStepStyles = theme => StyleSheet.create({
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
   },
-  feeCalculatingRow: {
-    height: 38,
-    flexDirection: 'row',
-    alignItems: 'center',
+  // One line of labelMd, then the caption-sized money line when a rate exists.
+  feeSkeleton: {alignSelf: 'auto', alignItems: 'flex-end'},
+  feeSkeletonLine: {height: theme.typography.labelMd.lineHeight, justifyContent: 'center'},
+  feeSkeletonFiatLine: {height: 17, marginTop: 2, justifyContent: 'center'},
+  // The fee row's measures, without a second hairline where the rows meet.
+  keysRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+    minHeight: 56, paddingVertical: 16, borderTopWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.colors.border,
   },
-  feeLoadingAnimation: {
-    width: 36,
-    height: 36,
-    marginLeft: -4,
-    marginRight: 8,
-  },
-  feeCalculating: {
-    color: theme.colors.textPrimary,
-    fontSize: 16,
-    lineHeight: 22,
-    fontWeight: '600',
-    letterSpacing: 0,
-  },
+  keysValueGroup: {flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 2},
+  keysValue: {...theme.typography.labelMd, color: theme.colors.textPrimary, flexShrink: 1},
   recapCard: {
     marginBottom: 12,
   },

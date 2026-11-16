@@ -258,9 +258,10 @@ export const checkVerusIdNotificationsForUpdates = async requestContext => {
         continue;
       } 
         
-        if ((pendingIds[ticker][iaddress].createdAt + 600) < Math.floor(Date.now() / 1000) &&
-              pendingIds[ticker][iaddress].status !== NOTIFICATION_TYPE_VERUSID_READY) {
-          // If the request is older than 10 minutes, check info endpoint to see if it was accepted or rejected
+        if (pendingIds[ticker][iaddress].status !== NOTIFICATION_TYPE_VERUSID_READY) {
+          // Check the provider's status address on every check, so a failure
+          // shows within about a minute. The signature and signer checks below
+          // stay, and an unreachable status address still waits 20 minutes.
         let errorFound = false;
         try {
           if (pendingIds[ticker][iaddress].infoUri) {

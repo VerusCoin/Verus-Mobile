@@ -254,6 +254,15 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
     partialIdentity.contentMultiMap.kvContent.hasAddress(IDENTITY_CREDENTIAL.vdxfid)
   );
 
+  // Credentials are encrypted to the VerusID's own private address. Without one,
+  // fee preparation would fail later with the same cause, so refuse now. The
+  // match with the wallet's Z recovery secret needs the key and stays at fee time.
+  if (hasEncryptedKeys && !subjectIdentity.identity?.privateaddress) {
+    throw identityUpdateRefusal(
+      'This VerusID has no private address, which credentials need for encryption. Add one, then open the request again.',
+    );
+  }
+
   // Credential encryption via signDataMap is not supported on mobile
   if (requestDetails.containsSignData()) {
     if (requestDetails.signDataMap.hasAddress(IDENTITY_CREDENTIAL.vdxfid)) {

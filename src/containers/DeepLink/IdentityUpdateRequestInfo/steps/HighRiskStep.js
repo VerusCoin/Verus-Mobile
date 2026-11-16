@@ -97,10 +97,19 @@ const contentClearCaption = ackRows => {
   return 'Active content will be cleared';
 };
 
-const contentClearRows = (ackRows, rawValue) => [
+const contentClearRows = (ackRows, rawValue, clearedKeys) => [
   ...(ackRows.length > 0
     ? ackRows
     : [['Action', 'Clear active VerusID content']]),
+  ...(Array.isArray(clearedKeys) && clearedKeys.length > 0
+    ? [[
+        clearedKeys.length === 1 ? 'Key that clears' : 'Keys that clear',
+        // A known key shows its name, with the full key ID on the next line.
+        clearedKeys
+          .map(key => (key?.label ? `${key.label}\n${key.id}` : key?.id || key))
+          .join('\n\n'),
+      ]]
+    : []),
   ['Raw request value', rawValue],
 ];
 
@@ -188,21 +197,53 @@ const primaryActionValue = (addedCount, removedCount) => {
   return 'Changed';
 };
 
-// Shown on the step itself, so the user sees each address without opening
-// the details.
-const primaryChangeLines = (added, removed) => [
-  ...removed.map(change => ({
+// Shown on the step itself, so the user sees who controls the VerusID after
+// the update without opening the details: every primary address after the
+// update, marked by whether this wallet holds it, then the removed ones.
+const primaryChangeLines = (added, removed, primaryInfo) => {
+  const removedLines = removed.map(change => ({
     label: 'Removed',
     value: change.rawData || change.data,
     mono: true,
-  })),
-  ...added.map(change => ({
-    label: 'Added',
-    value: change.rawData || change.data,
-    mono: true,
-    emphasis: true,
-  })),
-];
+  }));
+
+  if (!Array.isArray(primaryInfo?.addresses) || primaryInfo.addresses.length === 0) {
+    return [
+      ...removedLines,
+      ...added.map(change => ({
+        label: 'Added',
+        value: change.rawData || change.data,
+        mono: true,
+        emphasis: true,
+      })),
+    ];
+  }
+
+  const addedAddresses = new Set(added.map(change => change.rawData || change.data));
+  return [
+    ...primaryInfo.addresses.map(item => {
+      const address = item.address || item.displayAddress;
+      return {
+        label: item.inWallet ? 'This wallet' : 'Not in this wallet',
+        value: address,
+        mono: true,
+        emphasis: addedAddresses.has(address),
+      };
+    }),
+    ...removedLines,
+  ];
+};
+
+// The signature rule in plain words, for the addresses after the update.
+const signatureRuleLine = primaryInfo => {
+  if (!Array.isArray(primaryInfo?.addresses) || primaryInfo.addresses.length === 0) return null;
+  const count = primaryInfo.addresses.length;
+  const required = primaryInfo.minimumSignatures ?? 1;
+
+  if (count === 1) return 'This address alone controls this VerusID.';
+  if (required <= 1) return `1 of ${count}: each address can control this VerusID alone.`;
+  return `${required} of ${count}: ${required} addresses must sign together to control this VerusID.`;
+};
 
 // A name, with its i-address on the next line when both are known.
 const nameWithAddress = (name, address) =>
@@ -245,6 +286,9 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
   const walletLosesControl = hasPrimaryInfo && primaryInfo.walletCount === 0;
   const needsAdditionalSignatures = hasPrimaryInfo &&
     primaryInfo.walletCount < (primaryInfo.minimumSignatures ?? 1);
+  // With one required signature, an added address does not share control: it
+  // can act alone.
+  const oneSignatureEnough = hasPrimaryInfo && (primaryInfo.minimumSignatures ?? 1) <= 1;
   const addsExternalPrimary = added.some(change => change.walletMatch === false);
   const hasExternalPrimaryAfterUpdate = externalAfterUpdate.length > 0;
   const result = walletLosesControl
@@ -252,15 +296,22 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
     : needsAdditionalSignatures
     ? 'Additional signatures required'
     : addsExternalPrimary
-    ? 'External address can share control'
+    ? oneSignatureEnough
+      ? 'External address can control alone'
+      : 'External address can share control'
     : hasExternalPrimaryAfterUpdate
     ? 'External address remains a controller'
     : 'Wallet remains a primary controller';
   const rows = primaryAddressRows(added, removed, primaryInfo, result);
-  const lines = primaryChangeLines(added, removed);
+  const lines = primaryChangeLines(added, removed, hasPrimaryInfo ? primaryInfo : null);
+  const ruleLine = signatureRuleLine(hasPrimaryInfo ? primaryInfo : null);
   if (hasPrimaryInfo) rows.push(['Required signatures', primaryInfo.minimumSignatures ?? 1]);
   const ackRows = primaryAckRows(added, removed);
   const actionValue = primaryActionValue(added.length, removed.length);
+  // When the caption is a warning, the signature rule goes on the card as a line.
+  const linesWithRule = ruleLine
+    ? [...lines, {label: 'Signatures', value: ruleLine}]
+    : lines;
 
   if (walletLosesControl) {
     return {
@@ -268,7 +319,7 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
       kind: 'primary',
       kicker: 'Primary control',
       value: actionValue,
-      lines,
+      lines: linesWithRule,
       caption: 'Wallet loses control',
       tone: 'danger',
       losesWalletControl: true,
@@ -295,9 +346,11 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
     kind: 'primary',
     kicker: 'Primary control',
     value: actionValue,
-    lines,
+    lines: needsAdditionalSignatures ? linesWithRule : lines,
     caption: needsAdditionalSignatures
       ? 'Your wallet will need additional signatures after this update'
+      : ruleLine
+      ? ruleLine
       : addsExternalPrimary
       ? 'Gives an external address control'
       : hasExternalPrimaryAfterUpdate
@@ -309,7 +362,9 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
     detailCopy: 'Review the exact primary address change before you continue.',
     ackTitle: 'Primary address',
     ackCopy: addsExternalPrimary
-      ? 'An external primary address can share control of this VerusID.'
+      ? oneSignatureEnough
+        ? 'An external primary address can control this VerusID alone.'
+        : 'An external primary address can share control of this VerusID.'
       : removed.length > 0 && added.length === 0
       ? 'A primary address is being removed from this VerusID.'
       : 'The primary addresses that control this VerusID are changing.',
@@ -318,7 +373,9 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
     risk: needsAdditionalSignatures
       ? `After this update, your wallet will have ${primaryInfo.walletCount} primary addresses, but ${primaryInfo.minimumSignatures} signatures will be required to authorize this VerusID.`
       : addsExternalPrimary
-      ? 'This address can participate in future control decisions for this VerusID.'
+      ? oneSignatureEnough
+        ? 'This address can spend, sign and update for this VerusID without this wallet.'
+        : 'This address can participate in future control decisions for this VerusID.'
       : 'Primary addresses control who can spend and sign for this VerusID.',
   };
 };
@@ -349,7 +406,9 @@ const buildAuthorityReviewItem = (change, type, currentAuthorities) => {
       },
     ].filter(Boolean),
     caption: copy.caption,
-    tone: type === 'revocation' ? 'danger' : undefined,
+    // Both authorities can take control in their own way; red stays for a
+    // change that removes this wallet's control.
+    tone: 'warning',
     detailTitle: copy.detailTitle,
     detailCopy: copy.detailCopy,
     ackTitle: copy.ackTitle,
@@ -380,6 +439,21 @@ const buildFallbackReviewItem = (change, primaryInfo) => {
       value: !change.afterAddress
         ? 'Removed'
         : change.beforeAddress ? 'Replaced' : 'Added',
+      // The only place this change shows before the acknowledgement, so the
+      // card states both values, as the authority cards do.
+      lines: [
+        {
+          label: 'Current',
+          value: change.beforeAddress || 'No private address',
+          mono: !!change.beforeAddress,
+        },
+        {
+          label: 'After update',
+          value: change.afterAddress || 'No private address',
+          mono: !!change.afterAddress,
+          emphasis: true,
+        },
+      ],
       caption: change.warning,
       detailTitle: change.title,
       detailCopy: change.warning,
@@ -469,7 +543,7 @@ const buildFallbackReviewItem = (change, primaryInfo) => {
       ackTitle: 'Clear active content',
       ackCopy:
         "Confirm that this VerusID's active content should be cleared.",
-      rows: contentClearRows(ackRows, value),
+      rows: contentClearRows(ackRows, value, change.clearedKeys),
       ackRows,
       risk: null,
     };

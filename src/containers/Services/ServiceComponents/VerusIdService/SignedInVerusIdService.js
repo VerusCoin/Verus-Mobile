@@ -49,6 +49,7 @@ import {
 import {VerusIdName} from './VerusIdCard';
 import {
   NOTIFICATION_TYPE_VERUSID_ERROR,
+  NOTIFICATION_TYPE_VERUSID_FAILED,
   NOTIFICATION_TYPE_VERUSID_READY,
 } from '../../../../utils/constants/services';
 import {
@@ -173,7 +174,10 @@ const normalizeIdentityItems = (linkedIds, pendingIds, identityNetwork) => {
         readyAction: getReadyActionConfig(details),
       };
       if (details.status === NOTIFICATION_TYPE_VERUSID_READY) groups.ready.push(item);
-      else if (details.status === NOTIFICATION_TYPE_VERUSID_ERROR) groups.attention.push(item);
+      else if (
+        details.status === NOTIFICATION_TYPE_VERUSID_ERROR ||
+        details.status === NOTIFICATION_TYPE_VERUSID_FAILED
+      ) groups.attention.push(item);
       else groups.progress.push(item);
     });
   });
@@ -201,7 +205,7 @@ const BottomFade = ({backgroundColor, solidHeight}) => (
 // A filled row per VerusID (owner-approved "D revised", 2026-10-22): the name
 // with its parent muted, one line under it, a status badge only when the
 // VerusID is not active, and a chevron. Pending requests keep their action.
-const IdentityRow = ({actionLabel, badge, name, onPress, subtitle, theme}) => (
+const IdentityRow = ({actionLabel, badge, name, onPress, subtitle, subtitleTone, theme}) => (
   <View style={styles.rowWrap}>
     <TouchableOpacity
       accessibilityRole="button"
@@ -220,7 +224,21 @@ const IdentityRow = ({actionLabel, badge, name, onPress, subtitle, theme}) => (
           restColor={theme.colors.textSecondary}
           style={theme.typography.titleRow}
         />
-        {subtitle ? (
+        {subtitle && subtitleTone ? (
+          // Same alert line as the registration rows in "Needs attention".
+          <View style={[styles.identitySubtitle, styles.identitySubtitleTone]}>
+            <CircleAlert color={theme.colors[`${subtitleTone}Text`]} size={14} />
+            <Text
+              numberOfLines={1}
+              style={[
+                theme.typography.caption,
+                styles.identitySubtitleToneText,
+                {color: theme.colors[`${subtitleTone}Text`]},
+              ]}>
+              {subtitle}
+            </Text>
+          </View>
+        ) : subtitle ? (
           <Text
             numberOfLines={1}
             style={[
@@ -503,6 +521,9 @@ const SignedInVerusIdService = ({controller}) => {
     pendingSheetItem?.status === NOTIFICATION_TYPE_VERUSID_ERROR;
   const pendingIsReady =
     pendingSheetItem?.status === NOTIFICATION_TYPE_VERUSID_READY;
+  // The provider answered that it could not create this VerusID.
+  const pendingIsFailed =
+    pendingSheetItem?.status === NOTIFICATION_TYPE_VERUSID_FAILED;
   const pendingCanRetry = false;
   // Writes the ref before the state update so same-frame taps and the close
   // guard see the in-flight link synchronously.
@@ -869,9 +890,16 @@ const SignedInVerusIdService = ({controller}) => {
                 subtitle={
                   isReady
                     ? null
+                    : item.status === NOTIFICATION_TYPE_VERUSID_FAILED
+                    ? 'Failed'
                     : item.status === NOTIFICATION_TYPE_VERUSID_ERROR
                     ? 'Needs attention'
                     : 'In progress'
+                }
+                subtitleTone={
+                  item.status === NOTIFICATION_TYPE_VERUSID_FAILED
+                    ? 'danger'
+                    : undefined
                 }
                 theme={theme}
               />
@@ -1107,7 +1135,9 @@ const SignedInVerusIdService = ({controller}) => {
             {pendingSheetItem?.name || 'VerusID'}
           </Text>
           <Text style={[styles.pendingStatus, {color: theme.colors.textSecondary}]}>
-            {pendingIsError
+            {pendingIsFailed
+              ? 'Failed'
+              : pendingIsError
               ? 'Needs attention'
               : pendingIsReady
               ? 'Ready to link'
@@ -1119,7 +1149,9 @@ const SignedInVerusIdService = ({controller}) => {
               styles.pendingDescription,
               {color: theme.colors.textSecondary},
             ]}>
-            {pendingIsError
+            {pendingIsFailed
+              ? 'The provider could not create this VerusID. Remove the request from this list.'
+              : pendingIsError
               ? pendingCanRetry
                 ? 'The request did not finish. Retry it, or check for updates first.'
                 : 'The request did not finish and its original payload is no longer available. Remove it from this list.'
@@ -1252,6 +1284,8 @@ const styles = StyleSheet.create({
   rowTextWithAction: {paddingRight: 90},
   rowTextWithWideAction: {paddingRight: 140},
   identitySubtitle: {marginTop: 2},
+  identitySubtitleTone: {flexDirection: 'row', alignItems: 'center', gap: 4},
+  identitySubtitleToneText: {flexShrink: 1},
   rowAction: {
     position: 'absolute',
     right: 12,

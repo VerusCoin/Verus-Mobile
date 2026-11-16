@@ -13,6 +13,7 @@ export const GENERIC_REQUEST_REJECTION_CODES = {
   NETWORK_HEIGHT_UNAVAILABLE: 'NETWORK_HEIGHT_UNAVAILABLE',
   LINK_TOO_LONG: 'REQUEST_LINK_TOO_LONG',
   NETWORK_MISMATCH: 'REQUEST_NETWORK_MISMATCH',
+  PLAINTEXT_RESPONSE_UNSUPPORTED: 'PLAINTEXT_RESPONSE_UNSUPPORTED',
   SIGNATURE_INVALID: 'REQUEST_SIGNATURE_INVALID',
 };
 
@@ -135,6 +136,12 @@ export const getGenericRequestRejection = (error, context = {}) => {
         canRetry: false,
         message: `Verus Mobile could not confirm who signed this request. ${NEW_REQUEST}`,
         title: 'Cannot verify signer',
+      };
+    case GENERIC_REQUEST_REJECTION_CODES.PLAINTEXT_RESPONSE_UNSUPPORTED:
+      return {
+        canRetry: false,
+        message: `This request asks for a response that is not encrypted. Verus Mobile does not send one. ${NEW_REQUEST}`,
+        title: 'Unencrypted response',
       };
     case GENERIC_REQUEST_REJECTION_CODES.INVALID:
       return {canRetry: false, message: NEW_REQUEST, title: 'Request not valid'};

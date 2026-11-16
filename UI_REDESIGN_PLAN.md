@@ -3887,3 +3887,56 @@ wallet), light and dark: the sheet as it opens and with one topic open. All
 text matches, nothing clips, Done closes the sheet. Design, changed-file
 safe-area, Babel parsing and whitespace checks pass. Not checked: scrolling
 (the content fits on this screen), iPhone SE, Android.
+
+### GR-4.REQUEST-BOX — 13 request and VerusID fixes from the phone run (2026-11-16)
+
+Status: **Built, verified and merged into `redesign`**. Branch
+`claude/request-box-1116`, base `e4a0fe64`. Max reviewed the before/after
+report and asked for the merge on 2026-11-16.
+
+Design contract: operate mode. Scope is GenericRequest refusals, the identity
+update steps (Content, High-risk, Confirm), the VerusID tab provisioning states,
+the provisioning failure alert and the Link VerusID sheet. Exemplars are the
+existing Confirm step, High-risk cards, `InfoSheet` rows, the request result
+sheets (animation and checkmark) and `SkeletonLoader`. Deliberate deviation:
+the Confirm "Resulting identity" block becomes one "Keys and authorities" row
+with a detail sheet (Max's pick; upstream parity item M8 shows five rows).
+
+- [x] 1a Signed request that fails the unsigned structure rule: "Request not
+  valid", not "Cannot verify signer". A bad signature keeps its text.
+- [x] 1b Plain-text app encryption response: "Unencrypted response", no retry.
+- [x] 1c Second update while the first is unconfirmed: names the unconfirmed
+  update. Other REVIEW_CHANGED causes keep their text.
+- [x] 2 Confirm: "Keys and authorities" row (Not changed / Changed) + sheet.
+- [x] 3 Recovery and revocation cards use the warning tone.
+- [x] 4 Fee loads as a skeleton at the value's place; row height stays.
+- [x] 5 Primary card lists every address after the update with its owner and
+  one signature-rule line, also next to a warning caption.
+- [x] 6 + 7 Private address change and content clear show on the High-risk step
+  only. The Content step keeps the clear in its data for the effects of other
+  entries. Cleared keys show with their full key ID.
+- [x] 8 Credential note drops the z-address sentence. No private address:
+  refusal when the request opens (no key read). Mismatch: clear text at fee time.
+- [x] 9 Failed provisioning shows "Failed" under "Needs attention" with the
+  group's red alert line, and Remove.
+- [x] 10 Link sheet: one height for busy, done and failed; Home card removed
+  after the sheet closes.
+- [x] 11 Provider FAILED in the first answer: "VerusID not created" text.
+- [x] 12 Provider status read from the first check (no 10-minute wait). The
+  signature, signer and 20-minute rules stay. No reason for the 10 minutes was
+  found upstream (`267ffe97f`, 2023-12-04).
+- [x] 13 Upload card hides technical rows; the sheet groups them under
+  "Technical details".
+
+Evidence: `check:design` and `check:safe-areas --changed` pass; Babel compiles
+all changed files; an Android release bundle builds. Unit tests: the same 87
+tests fail on `e4a0fe64` and on the branch (no new failure). Astra review
+(gpt-6-astra, high) found 3 P2 issues, fixed in `7ed7b58c`, re-check clean.
+iOS 26 simulator (Verus Steps QA, light and dark) with deeplink-sim and the
+disposable devphone wallet: items 1-9 and 11-13 pass; SE: items 2, 4, 5, 7,
+8c and 13 pass; item 10 passes on iOS and SE (real sub-IDs under
+AUD.VRSCTEST@). Notes: `docs/qa/request-box-1116/ios/result.local.md`.
+Android normal (Pixel 9, Game PC, light): before (`e4a0fe64`) and after
+pictures for all 13 items; item 10 sheet height 912 px in busy and done (before:
+325 px then 710 px). Report: https://claude.ai/artifact/S3bJ9znNEprpuuWyGQHDyC.
+Open: Android dark; failed Link state on a device; follow-ups in the report.

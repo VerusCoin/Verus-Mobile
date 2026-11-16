@@ -13,14 +13,15 @@ import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 import { formatCurrency } from 'react-native-format-currency';
-import { Check } from 'lucide-react-native';
+import { Check, ChevronRight } from 'lucide-react-native';
 import LottieView from 'lottie-react-native';
 import AnimatedSuccessCheckmark from '../../../../components/AnimatedSuccessCheckmark';
 import AppButton from '../../../../components/AppButton';
 import SlideToConfirm from '../../../../components/SlideToConfirm';
 import BottomSheetModal from '../../../../components/BottomSheetModal';
 import CopyAction from '../../../../components/CopyAction';
-import InfoSheetSection from '../../../../components/InfoSheetSection';
+import InfoSheet from '../../../../components/InfoSheet';
+import InfoSheetSection, {InfoSheetRow} from '../../../../components/InfoSheetSection';
 import SkeletonLoader, {SkeletonBlock} from '../../../../components/SkeletonLoader';
 import SafeBottomActionStack from '../../../../components/SafeBottomActionStack';
 import { useOnboardingTheme } from '../../../../theme/onboarding';
@@ -51,7 +52,7 @@ import {
   IdentityUpdateResponseDetails,
   IdentityUpdateResponseOrdinalVDXFObject,
 } from 'verus-typescript-primitives';
-import { processEncryptedKeys } from '../../../../utils/crypto/encryptCredentials';
+import { CREDENTIAL_ERROR_CODES, processEncryptedKeys } from '../../../../utils/crypto/encryptCredentials';
 import { confirmPayStepStyles as createConfirmPayStepStyles } from '../../../../styles';
 import {ensureGenericResponseSigner} from '../../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
@@ -133,6 +134,17 @@ const getFeeErrorMessage = error => {
 
   if (message.includes('No Z recovery secret')) {
     return `Set up the Z recovery secret in Settings > ${PROFILE_SECURITY_SETTINGS_LABEL}, then select a payment source again.`;
+  }
+  if (error?.code === CREDENTIAL_ERROR_CODES.NO_PRIVATE_ADDRESS) {
+    return 'This VerusID has no private address, which credentials need for encryption. Add one, then open the request again.';
+  }
+  if (error?.code === CREDENTIAL_ERROR_CODES.PRIVATE_ADDRESS_MISMATCH) {
+    return "This VerusID's private address does not come from this wallet's Z recovery secret, so the credentials cannot be encrypted for it.";
+  }
+  // An earlier update of this VerusID waits for a block, so its identity output
+  // is spent in the mempool. A new block lets the fee be calculated again.
+  if (error?.code === 'REVIEW_CHANGED' && error.identityInputSpent) {
+    return 'This VerusID has an update that is not confirmed yet. Wait about a minute, then select a payment source again.';
   }
   if (isNetworkFailureError(error)) {
     return `${NETWORK_UNAVAILABLE_MESSAGE}, then select a payment source again.`;
@@ -236,6 +248,7 @@ const ConfirmPayStep = ({
   const [feeError, setFeeError] = useState(null);
   const [completionDeliveryInfo, setCompletionDeliveryInfo] = useState(null);
   const [sourceSheetVisible, setSourceSheetVisible] = useState(false);
+  const [keysSheetVisible, setKeysSheetVisible] = useState(false);
   const mountedRef = useRef(true);
   const [preparedStateChange, setPreparedStateChange] = useState(null);
 
@@ -283,6 +296,7 @@ const ConfirmPayStep = ({
     setPendingResponse(null);
     setFeeError(null);
     setSourceSheetVisible(false);
+    setKeysSheetVisible(false);
     return () => {
       preparationSequence.current += 1;
       preparationController.current?.abort();
@@ -292,29 +306,80 @@ const ConfirmPayStep = ({
   }, [reviewInputs]);
 
 
+  // The prepared identity, said once: "Not changed", or only the fields that
+  // differ from the current identity, each with its current value.
+  const keysAndAuthorities = useMemo(() => {
+    if (!preparedIdentity?.primaryaddresses) return null;
+    const current = subjectIdentity.identity || {};
+    const authorityName = address => friendlyNames[address] || address;
+    const fields = [
+      {
+        label: 'Identity address',
+        current: current.identityaddress,
+        after: preparedIdentity.identityaddress || preparedIdentity.name,
+        copy: true,
+      },
+      {
+        label: 'Required signatures',
+        current: current.minimumsignatures == null ? null : String(current.minimumsignatures),
+        after: String(preparedIdentity.minimumsignatures),
+      },
+      {
+        label: 'Primary addresses',
+        current: Array.isArray(current.primaryaddresses) ? current.primaryaddresses.join('\n') : null,
+        after: preparedIdentity.primaryaddresses.join('\n'),
+      },
+      {
+        label: 'Revocation authority',
+        current: current.revocationauthority ? authorityName(current.revocationauthority) : null,
+        after: authorityName(preparedIdentity.revocationauthority),
+      },
+      {
+        label: 'Recovery authority',
+        current: current.recoveryauthority ? authorityName(current.recoveryauthority) : null,
+        after: authorityName(preparedIdentity.recoveryauthority),
+      },
+    ];
+    const changed = fields.filter(field => field.current !== field.after);
+    return {
+      changed,
+      fields,
+      summary: changed.length === 0 ? 'Not changed' : 'Changed',
+    };
+  }, [friendlyNames, preparedIdentity, subjectIdentity]);
+
   // --- Fiat fee display ---
   const rates = useObjectSelector(state => state.ledger.rates);
   const displayCurrency = useSelector(
     state => state.settings.generalWalletSettings.displayCurrency || USD,
   );
 
-  const feeFiatDisplay = useMemo(() => {
-    if (!fee || !feeCurrency) return null;
+  // The fee is paid in the requested currency. Its rate is known before the
+  // fee, so the loading skeleton can reserve the money line too.
+  const getFeeRate = useCallback(currencyId => {
+    if (!currencyId) return null;
 
     // Find the coin ID for the fee currency to look up rate
     let feeCoinId = null;
     try {
-      const coin = CoinDirectory.findCoinObj(feeCurrency);
+      const coin = CoinDirectory.findCoinObj(currencyId);
       if (coin) feeCoinId = coin.id;
     } catch (e) {}
 
     if (!feeCoinId) return null;
 
-    const rate = rates?.[WYRE_SERVICE]?.[feeCoinId]?.[displayCurrency] != null
+    return rates?.[WYRE_SERVICE]?.[feeCoinId]?.[displayCurrency] != null
       ? rates[WYRE_SERVICE][feeCoinId][displayCurrency]
       : rates?.[GENERAL]?.[feeCoinId]?.[displayCurrency] != null
         ? rates[GENERAL][feeCoinId][displayCurrency]
         : null;
+  }, [rates, displayCurrency]);
+  const feeRateKnown = !!getFeeRate(requestedCurrency);
+
+  const feeFiatDisplay = useMemo(() => {
+    if (!fee || !feeCurrency) return null;
+
+    const rate = getFeeRate(feeCurrency);
 
     if (!rate) return null;
 
@@ -329,7 +394,7 @@ const ConfirmPayStep = ({
     } catch (e) {
       return null;
     }
-  }, [fee, feeCurrency, rates, displayCurrency]);
+  }, [fee, feeCurrency, getFeeRate, displayCurrency]);
 
   useEffect(() => {
     if (typeof onBroadcastingChange === 'function') {
@@ -744,17 +809,22 @@ const ConfirmPayStep = ({
 
         <IdentityStateChangeCard change={preparedStateChange || identityStateChange} detailed />
 
-        {preparedIdentity?.primaryaddresses && (
-          <InfoSheetSection
-            title="Resulting identity"
-            rows={[
-              {label: 'Identity address', value: preparedIdentity.identityaddress || preparedIdentity.name},
-              {label: 'Required signatures', value: String(preparedIdentity.minimumsignatures)},
-              {label: 'Primary addresses', value: preparedIdentity.primaryaddresses.join('\n')},
-              {label: 'Revocation authority', value: friendlyNames[preparedIdentity.revocationauthority] || preparedIdentity.revocationauthority},
-              {label: 'Recovery authority', value: friendlyNames[preparedIdentity.recoveryauthority] || preparedIdentity.recoveryauthority},
-            ]}
-          />
+        {keysAndAuthorities && (
+          <TouchableOpacity
+            accessibilityHint="Opens the keys and authorities after this update"
+            accessibilityLabel={`Keys and authorities, ${keysAndAuthorities.summary}`}
+            accessibilityRole="button"
+            activeOpacity={0.74}
+            onPress={() => setKeysSheetVisible(true)}
+            style={localStyles.keysRow}>
+            <Text style={localStyles.feeLabel}>Keys and authorities</Text>
+            <View style={localStyles.keysValueGroup}>
+              <Text numberOfLines={1} style={localStyles.keysValue}>
+                {keysAndAuthorities.summary}
+              </Text>
+              <ChevronRight color={theme.colors.textSubtle} size={20} />
+            </View>
+          </TouchableOpacity>
         )}
 
         {/* Fee */}
@@ -770,17 +840,21 @@ const ConfirmPayStep = ({
               },
             ]}>
             {calculating ? (
-              <View
+              // Shaped like the fee value it replaces, so the row keeps its
+              // height and the value appears in the same place.
+              <SkeletonLoader
                 key="fee-loading"
-                collapsable={false}
                 accessibilityLabel="Calculating transaction fee"
-                accessibilityRole="progressbar"
-                style={localStyles.feeCalculatingRow}>
-                <SkeletonLoader accessibilityLabel="Calculating transaction fee">
-                  <SkeletonBlock width={80} height={24} />
-                </SkeletonLoader>
-                <Text style={localStyles.feeCalculating}>Calculating fee</Text>
-              </View>
+                style={localStyles.feeSkeleton}>
+                <View style={localStyles.feeSkeletonLine}>
+                  <SkeletonBlock width={96} height={14} radius={4} />
+                </View>
+                {feeRateKnown && (
+                  <View style={localStyles.feeSkeletonFiatLine}>
+                    <SkeletonBlock width={56} height={12} radius={4} />
+                  </View>
+                )}
+              </SkeletonLoader>
             ) : hasFee ? (
               <View key="fee-value">
                 <Text style={localStyles.feeValue}>{fee} {feeCurrencyDisplay}</Text>
@@ -824,7 +898,7 @@ const ConfirmPayStep = ({
           {hasEncryptedKeys && (
             <View style={localStyles.encryptedKeyRecapRow}>
               <Text style={localStyles.encryptedKeyRecapText}>
-                    Credential data will be encrypted with a key derived from your identity so that neither the credential type nor its contents are publicly visible on-chain. Your account's Z recovery secret must match the identity's z-address.
+                    Credential data will be encrypted with a key derived from your identity so that neither the credential type nor its contents are publicly visible on-chain.
               </Text>
             </View>
           )}
@@ -880,6 +954,31 @@ const ConfirmPayStep = ({
           </AppButton>
         )}
       </SafeBottomActionStack>
+
+      <InfoSheet
+        visible={keysSheetVisible && keysAndAuthorities != null}
+        title="Keys and authorities"
+        onClose={() => setKeysSheetVisible(false)}>
+        {keysAndAuthorities?.changed.length > 0
+          ? keysAndAuthorities.changed.map(field => (
+            <InfoSheetSection
+              key={field.label}
+              title={field.label}
+              rows={[
+                {label: 'Current', value: field.current || 'None'},
+                {label: 'After update', value: field.after || 'None'},
+              ]}
+            />
+          ))
+          : keysAndAuthorities?.fields.map(field => (
+            <InfoSheetRow
+              key={field.label}
+              label={field.label}
+              value={field.after}
+              copy={field.copy}
+            />
+          ))}
+      </InfoSheet>
 
       <BottomSheetModal
         visible={sourceSheetVisible}

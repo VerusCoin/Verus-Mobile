@@ -684,8 +684,7 @@ const VerusIdContentChangeCard = ({
             ]}>
             This credential data will be encrypted before it is stored on-chain.
             Neither the credential type nor its contents will be publicly
-            visible. The identity's z-address must match the z-address linked to
-            your account's Z recovery secret.
+            visible.
           </Text>
         </View>
       )}
