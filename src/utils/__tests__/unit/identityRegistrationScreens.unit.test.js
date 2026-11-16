@@ -18,6 +18,7 @@ const mockCheckRegistrationFunds = jest.fn();
 const mockReadRegistrationName = jest.fn();
 const mockGetRegistrationReferralInfo = jest.fn();
 const mockRegistrationReferralNamespace = jest.fn();
+const mockLoadRegistrationNamespaces = jest.fn();
 jest.mock('../../identityRegistration', () => mockApi);
 jest.mock('../../identityRegistration/referrals', () => ({
   getRegistrationReferralInfo: (...args) => mockGetRegistrationReferralInfo(...args),
@@ -31,6 +32,11 @@ jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', 
 jest.mock('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/registrationReads', () => ({
   ...jest.requireActual('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/registrationReads'),
   readRegistrationName: (...args) => mockReadRegistrationName(...args),
+}));
+// The namespace list reads currency definitions from the chain.
+jest.mock('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/namespaceData', () => ({
+  ...jest.requireActual('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/namespaceData'),
+  loadRegistrationNamespaces: (...args) => mockLoadRegistrationNamespaces(...args),
 }));
 jest.mock('../../identityRegistration/funding', () => ({
   ...jest.requireActual('../../identityRegistration/funding'),
@@ -669,21 +675,45 @@ it.each([false, true])('keeps the referral explanation on another chain without 
   }), expect.any(Object));
 });
 
+// The referral savings now show as the price on each referral row. A new
+// namespace is chosen in the namespace sheet; it reads the name again with
+// that namespace, and the rows show the new namespace's referral price.
 it('refreshes referral savings when the identity namespace changes', async () => {
-  mockRegistrationReferralNamespace.mockImplementation(({systemId, name}) =>
-    name.endsWith('.community@') ? 'community-id' : systemId);
-  mockGetRegistrationReferralInfo.mockImplementation(async ({namespaceId}) => ({
-    discount: namespaceId === 'community-id' ? '250000000' : '2000000000',
-    reward: namespaceId === 'community-id' ? '125000000' : '2000000000',
-    currencyID: 'chain', currencyName: 'VRSC', enabled: true,
-  }));
+  jest.useFakeTimers();
+  const community = {
+    id: 'community-id', name: 'community', parentName: 'community@', suffix: '.community@',
+    amount: '100000000', currency: 'community', referralsAllowed: true, referralRequired: false,
+  };
+  mockLoadRegistrationNamespaces.mockResolvedValue([community]);
+  mockReadRegistrationName.mockImplementation(async request => request.parent === 'community-id'
+    ? nameReadFor(request, {referralsAllowed: true, referralQuote: {
+      ...quoteFor('chain'), parentID: 'community-id', issuerID: 'community-id', feePricingCurrencyID: 'chain',
+      totalRequired: {chain: '97500000'}, totalOperationRequired: {chain: '97510000'},
+    }})
+    : referralName(request, 'chain'));
   const view = await mount(IdentityRegistrationCreate);
-  expect(textContent(view.root)).toContain('makes your ID 20 VRSC cheaper');
-  await enterName(view, 'alice.community@');
-  expect(mockGetRegistrationReferralInfo).toHaveBeenLastCalledWith(expect.objectContaining({
-    systemId: 'chain', rootSystemName: 'VRSC', namespaceId: 'community-id',
-  }));
-  expect(textContent(view.root)).toContain('makes your ID 2.5 VRSC cheaper and gives the referrer 1.25 VRSC');
+  const row = title => radioRows(view).find(node => textContent(node).startsWith(title));
+  await typeName(view);
+  await goToCheck(view);
+  expect(textContent(row('Verus Coin Foundation@'))).toContain('0.8001');
+
+  await act(async () => view.root.findByType(ProgressHeader).props.onBack());
+  await press(view.root.findAll(node => node.props.accessibilityLabel === 'Choose a namespace: Verus' && node.props.onPress)[0]);
+  const namespaceRow = view.root.findAll(node => node.props.title === 'community' && node.props.onPress)[0];
+  await press(namespaceRow);
+  // The choice applies once the sheet has closed.
+  await act(async () => view.root.findAll(node => node.props.title === 'Choose a namespace' && node.props.onClosed)[0].props.onClosed());
+  await advance(700);
+  expect(mockReadRegistrationName).toHaveBeenLastCalledWith(expect.objectContaining({
+    name: 'alice', systemId: 'chain', rootSystemName: 'VRSC', parent: 'community-id', parentName: 'community@',
+  }), expect.any(Object));
+
+  await goToCheck(view);
+  // The explanation names the chosen namespace instead of the root.
+  expect(textContent(view.root)).toMatch(/A community@? referral lowers the price\./);
+  expect(row('Verus Coin Foundation@')).toBeUndefined();
+  expect(textContent(row('Someone else'))).toContain('0.9751');
+  expect(textContent(row('Someone else'))).not.toContain('0.8001');
 });
 
 it('explains when a namespace has no referral discount or reward', async () => {
@@ -909,27 +939,39 @@ it('uses the friendly selected linked VerusID for payment while keeping the wall
   }, expect.any(Object));
 });
 
+// The payer is chosen on Check details. The default is the first source
+// whose confirmed balance pays the quote (d30ee935); unconfirmed funds do not
+// count, and an explicit choice is kept when balances change again.
 it('updates the default when confirmed balances arrive while preserving an explicit payment choice', async () => {
-  mockState.channelStore_verusid.watchedVerusIds = {VRSC: {'funded-id': 'funded@'}};
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
-  const props = {navigation, route: {params: {}}};
-  const view = await mount(IdentityRegistrationCreate, props);
-  await press(button(view, 'Pay from'));
-  expect(radio(view, 'Wallet address').props.accessibilityState.selected).toBe(true);
-  mockState.ledger = {balances: {
-    'vrpc.wallet.chain': {VRSC: {confirmed: '2', unconfirmed: '10000'}},
-    'vrpc.funded-id.chain': {VRSC: {confirmed: '1000'}},
+  jest.useFakeTimers();
+  mockState.channelStore_verusid.watchedVerusIds = {VRSC: {'funded-id': 'funded@', 'other-id': 'other@'}};
+  // Live balance reads stay pending, so the confirmed ledger balances decide.
+  mockReadRegistrationBalances.mockImplementation(() => new Promise(() => {}));
+  mockState.ledger = {rates: {}, balances: {
+    'vrpc.wallet.chain': {VRSC: {confirmed: '0.5', unconfirmed: '10000'}},
+    'vrpc.other-id.chain': {VRSC: {confirmed: '5'}},
   }};
+  mockApi.prepareCommitment.mockResolvedValue({...review});
+  const props = {navigation: makeNavigation(), route: {params: {}}};
+  const view = await mount(IdentityRegistrationCreate, props);
+  await typeName(view);
+  await goToCheck(view);
+  expect(payerText(view)).toContain('Pay fromother@');
+
+  mockState.ledger.balances = {...mockState.ledger.balances, 'vrpc.funded-id.chain': {VRSC: {confirmed: '1000'}}};
   await act(async () => view.update(<IdentityRegistrationCreate {...props} />));
-  expect(radio(view, 'funded@').props.accessibilityState.selected).toBe(true);
-  await press(radio(view, 'Wallet address'));
-  mockState.ledger.balances['vrpc.funded-id.chain'].VRSC.confirmed = '2000';
+  await advance(700);
+  expect(payerText(view)).toContain('Pay fromfunded@');
+
+  await openPayers(view);
+  await press(payerRows(view).find(node => node.props.accessibilityLabel.startsWith('other@')));
+  await advance(700);
+  mockState.ledger.balances = {...mockState.ledger.balances, 'vrpc.funded-id.chain': {VRSC: {confirmed: '2000'}}};
   await act(async () => view.update(<IdentityRegistrationCreate {...props} />));
-  await press(button(view, 'Pay from'));
-  expect(radio(view, 'Wallet address').props.accessibilityState.selected).toBe(true);
-  await enterName(view);
-  await press(button(view, 'Review costs'));
-  expect(mockApi.prepareCommitment.mock.calls[0][0].request.fundingAddress).toBe('wallet');
+  await advance(700);
+  expect(payerText(view)).toContain('Pay fromother@');
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
+  expect(mockApi.prepareCommitment.mock.calls[0][0].request.fundingAddress).toBe('other-id');
 });
 
 const twoNetworks = () => {
