@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {AtSign, CircleAlert, Info} from 'lucide-react-native';
+import {AtSign, CircleAlert, Info, Lock, LogIn, Wallet} from 'lucide-react-native';
 import Svg, {Defs, LinearGradient, Rect, Stop} from 'react-native-svg';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useDispatch} from 'react-redux';
@@ -87,26 +87,49 @@ import LinkVerusIdSheet from './LinkVerusIdSheet';
 const BOTTOM_FADE_HEIGHT = 48;
 const IDENTITY_SKELETON_WIDTHS = ['46%', '64%', '52%', '72%'];
 
-const FAQ_ITEMS = [
+// About VerusID (owner approved option E, 2026-11-16): three uses first,
+// then fold-out topics. The text names no specific VerusID.
+const ABOUT_FACTS = [
+  {
+    key: 'paid',
+    Icon: Wallet,
+    title: 'Get paid by name',
+    body: 'People send to your VerusID. No long address.',
+  },
   {
     key: 'sign-in',
-    title: 'Signing in with VerusID',
-    body: 'Instead of creating usernames and passwords for every app, you authenticate with your VerusID.\n\n• The app presents a QR code or link\n• Your wallet opens\n• You select which VerusID to use\n• You review and approve the request\n\nNo passwords needed.',
+    Icon: LogIn,
+    title: 'Sign in without passwords',
+    body: 'Approve in the wallet. No password.',
   },
   {
-    key: 'personal-db',
-    title: 'Your personal database',
-    body: "Apps can request to store data in your VerusID or read data you've previously saved. Each request appears in your wallet for you to approve or deny.\n\nYour data is encrypted and written directly to your VerusID on the blockchain.",
+    key: 'data',
+    Icon: Lock,
+    title: 'Keep your data yours',
+    body: 'You choose which apps connect. Each app locks your data with its own key.',
+  },
+];
+
+const FAQ_ITEMS = [
+  {
+    key: 'apps',
+    title: 'Connected apps',
+    body: 'Connect an app once and the wallet remembers it. You still approve each request. You can disconnect an app at any time.',
   },
   {
-    key: 'different',
-    title: 'What makes this different?',
-    body: 'Traditional apps store your data in their databases — they can analyze it, sell it, or lose it in a breach. With VerusID, your data lives in your identity.\n\nYou decide exactly what to share with each app, when you share it.',
+    key: 'public',
+    title: 'What others can see',
+    body: 'Your name and addresses are public. Content is public too, unless it is encrypted.',
   },
   {
-    key: 'recovery',
-    title: 'Permanent and recoverable',
-    body: 'Your VerusID never expires and has no renewal fees. No company can suspend or delete it.\n\nYou can designate recovery options to restore access if you ever lose your keys.',
+    key: 'lost-phone',
+    title: 'If you lose your phone',
+    body: 'Your Secret Recovery Phrase restores your wallet. Then you link your VerusID again. For extra safety, a second VerusID can lock this one and give it new keys.',
+  },
+  {
+    key: 'permanent',
+    title: 'Yours for good',
+    body: 'It does not expire. There is no renewal fee. No company can take it away.',
   },
 ];
 
@@ -1003,9 +1026,38 @@ const SignedInVerusIdService = ({controller}) => {
 
       <InfoSheet
         onClose={() => setInfoVisible(false)}
-        subtitle="Acts as a universal login and personal data vault that belongs entirely to you."
         title="VerusID"
         visible={infoVisible}>
+        <View style={styles.aboutFacts}>
+          {ABOUT_FACTS.map(({key, Icon, title, body}) => (
+            <View key={key} style={styles.aboutFact}>
+              <View
+                style={[
+                  styles.aboutFactMark,
+                  {backgroundColor: theme.colors.primaryBackground},
+                ]}>
+                <Icon size={18} strokeWidth={2} color={theme.colors.link} />
+              </View>
+              <View style={styles.aboutFactText}>
+                <Text
+                  style={[
+                    theme.typography.titleRowCompact,
+                    {color: theme.colors.textPrimary},
+                  ]}>
+                  {title}
+                </Text>
+                <Text
+                  style={[
+                    theme.typography.caption,
+                    styles.aboutFactBody,
+                    {color: theme.colors.textSecondary},
+                  ]}>
+                  {body}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
         <View style={styles.faqList}>
           {FAQ_ITEMS.map(item => {
             const expanded = item.key === expandedFaq;
@@ -1223,6 +1275,11 @@ const styles = StyleSheet.create({
   },
   bottomFade: {position: 'absolute', left: 0, right: 0, bottom: 0},
   bottomFadeSvg: {marginBottom: -1},
+  aboutFacts: {width: '100%', gap: 14, marginBottom: 12},
+  aboutFact: {flexDirection: 'row', alignItems: 'flex-start', gap: 12},
+  aboutFactMark: {width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center'},
+  aboutFactText: {flex: 1, minWidth: 0},
+  aboutFactBody: {marginTop: 2},
   faqList: {width: '100%', gap: 4},
   faqItem: {width: '100%'},
   faqHeader: {minHeight: 56, flexDirection: 'row', alignItems: 'center'},

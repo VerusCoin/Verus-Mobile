@@ -1519,6 +1519,15 @@ page itself shows no mark.
   or link explanation, and "Add VerusID". The action opens the same options
   sheet as the header +, with New VerusID and Link VerusID. The list header's ⓘ ("About VerusID") opens the
   explainer; the empty state has no second link to it.
+- About VerusID is an `InfoSheet` titled "VerusID" with no subtitle (owner
+  approved option E, 2026-11-16). First three facts: "Get paid by name",
+  "Sign in without passwords" and "Keep your data yours". Each has a 36-point
+  mark (`primaryBackground`, 11-point radius, 18-point Lucide glyph in `link`),
+  a `titleRowCompact` title and a `caption` body in `textSecondary`. Then the
+  fold-out topics "Connected apps", "What others can see", "If you lose your
+  phone" and "Yours for good". The text speaks to what the user gets and names
+  no specific VerusID. The marks are an approved exception to the
+  information-sheet rule against icons, for this sheet only.
 - Header: the arrow back button, and ⋯ on the right. After the card scrolls
   away, the header shows the first part of the name. ⋯ opens three action rows:
   "Transfer VerusID", "Modify VerusID", and
