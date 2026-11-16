@@ -9,6 +9,7 @@ const mockApi = {
 };
 let mockState;
 const mockAlert = jest.fn();
+const mockCreateAlert = jest.fn();
 const mockScrollTo = jest.fn();
 const mockPublishRegistrationJobs = jest.fn();
 const mockClearRegistrationJobs = jest.fn();
@@ -31,6 +32,11 @@ jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', 
 jest.mock('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/registrationReads', () => ({
   ...jest.requireActual('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/registrationReads'),
   readRegistrationName: (...args) => mockReadRegistrationName(...args),
+}));
+// The redesign confirms through the app alert sheet; createAlert takes the
+// same title, message, buttons and options as the native alert.
+jest.mock('../../../actions/actions/alert/dispatchers/alert', () => ({
+  createAlert: (...args) => mockCreateAlert(...args), resolveAlert: jest.fn(),
 }));
 jest.mock('../../identityRegistration/funding', () => ({
   ...jest.requireActual('../../identityRegistration/funding'),
@@ -76,6 +82,27 @@ const ProgressHeader = require('../../../components/ProgressHeader').default;
 const RegistrationTabRows = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/RegistrationTabRows').default;
 const TextAction = require('../../../components/TextAction').default;
 const AcknowledgeSheet = require('../../../components/AcknowledgeSheet').default;
+const EmptyState = require('../../../components/EmptyState').default;
+const {default: RegistrationStorageNotice, useRegistrationStorage} =
+  require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/RegistrationStorageNotice');
+// The VerusID tab's registration area, as SignedInVerusIdService composes it:
+// the storage notice in place of the empty state, then the saved rows.
+const RegistrationTab = ({navigation}) => {
+  const storage = useRegistrationStorage();
+  return <>
+    <RegistrationStorageNotice storage={storage}>
+      <EmptyState title="No VerusID yet" actionLabel="Add VerusID" onAction={jest.fn()} />
+    </RegistrationStorageNotice>
+    <RegistrationTabRows jobs={mockState.channelStore_verusid.registrationJobs} navigation={navigation} onLink={jest.fn()} />
+  </>;
+};
+// The tab offers a new VerusID from its empty state only when storage is readable.
+const offersNewVerusId = view => textContent(view.root).includes('No VerusID yet');
+// A tab action is an AppButton (Try again) or a TextAction (Clear all registration data).
+// The reset confirmations shown through the app alert sheet.
+const resetAlerts = () => mockCreateAlert.mock.calls.filter(([title]) => title === 'Clear all registration data?');
+const tabAction = (view, label) => view.root.findAll(node =>
+  [AppButton, TextAction].includes(node.type) && node.props.children === label)[0];
 const {preferredRegistrationFundingSource, registrationFundingSources} = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/fundingSources');
 const quote = {
   branch: 'native', systemID: 'chain', parentID: 'chain', issuerID: 'chain', commitmentFee: '10000',
@@ -227,22 +254,20 @@ it('waits for saved summaries before showing an empty registration list or enabl
   expect(mockApi.prepareCommitment).not.toHaveBeenCalled();
 });
 
-it.each([new Error('Unsupported receipt with protected transaction bytes'), null])('shows a retryable load error without exposing receipt details or offering a fresh registration (%p)', async failure => {
+it.each([new Error('Unsupported receipt with protected transaction bytes'), null])('shows a retryable load error on the VerusID tab without exposing receipt details or offering a fresh registration (%p)', async failure => {
   mockPublishRegistrationJobs.mockRejectedValueOnce(failure);
-  const view = await mount(IdentityRegistrationStart);
+  const view = await mount(RegistrationTab);
 
   expect(textContent(view.root)).toContain('Saved registrations could not be loaded. Your registration data has not been changed.');
   expect(textContent(view.root)).not.toContain('protected transaction bytes');
-  expect(textContent(view.root)).not.toContain('A name that’s yours');
-  expect(footerAction(view, 'Create a VerusID').props.disabled).toBe(true);
+  expect(offersNewVerusId(view)).toBe(false);
   expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(1);
 
-  await press(button(view, 'Retry loading registrations'));
+  await press(tabAction(view, 'Try again'));
 
   expect(mockPublishRegistrationJobs).toHaveBeenCalledTimes(2);
   expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(0);
-  expect(footerAction(view, 'Create a VerusID').props.disabled).toBeFalsy();
-  expect(textContent(view.root)).toContain('A name that’s yours');
+  expect(offersNewVerusId(view)).toBe(true);
   expect(mockApi.deleteRegistration).not.toHaveBeenCalled();
   expect(mockApi.prepareCommitment).not.toHaveBeenCalled();
   expect(mockApi.reconcileRegistration).not.toHaveBeenCalled();
@@ -269,45 +294,46 @@ it('keeps last known registrations visible but disables actions until their summ
 
 it('does not show a registration storage error after the originating account changes', async () => {
   mockPublishRegistrationJobs.mockRejectedValueOnce(Object.assign(new Error('Account changed'), {code: 'SESSION_CHANGED'}));
-  const view = await mount(IdentityRegistrationStart);
+  const view = await mount(RegistrationTab);
 
   expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(0);
-  expect(footerAction(view, 'Create a VerusID').props.disabled).toBe(true);
-  expect(textContent(view.root)).not.toContain('A name that’s yours');
+  expect(tabAction(view, 'Clear all registration data')).toBeUndefined();
 });
 
 it('only offers the registration reset after a failed summary load', async () => {
-  const view = await mount(IdentityRegistrationStart);
+  const view = await mount(RegistrationTab);
 
-  expect(button(view, 'Clear all registration data')).toBeUndefined();
+  expect(tabAction(view, 'Clear all registration data')).toBeUndefined();
   expect(mockClearRegistrationJobs).not.toHaveBeenCalled();
 });
 
+// The app alert runs its "Not now" button for Not now, an outside tap and Android Back.
 it.each(['cancel', 'dismiss'])('keeps registration data when the reset confirmation is closed with %s', async choice => {
   mockPublishRegistrationJobs.mockRejectedValueOnce(new Error('Unsupported registration storage'));
-  const view = await mount(IdentityRegistrationStart);
+  const view = await mount(RegistrationTab);
 
-  await press(button(view, 'Clear all registration data'));
-  await press(button(view, 'Clear all registration data'));
+  await press(tabAction(view, 'Clear all registration data'));
+  await press(tabAction(view, 'Clear all registration data'));
 
-  expect(mockAlert).toHaveBeenCalledTimes(1);
-  const [title, message, actions, options] = mockAlert.mock.calls[0];
+  expect(resetAlerts()).toHaveLength(1);
+  const [title, message, actions, options] = resetAlerts()[0];
   expect(title).toBe('Clear all registration data?');
-  expect(message).toContain('Are you sure?');
-  expect(message).toContain('commitment secrets for this profile');
+  expect(message).toContain('Saved registrations in this wallet are deleted');
   expect(message).toContain('fees already paid will not be refunded');
   expect(message).toContain('This cannot be undone');
   expect(actions.find(action => action.text === 'Clear all registration data').style).toBe('destructive');
+  expect(options.cancelable).toBe(true);
   expect(mockClearRegistrationJobs).not.toHaveBeenCalled();
 
-  await act(async () => choice === 'cancel'
-    ? actions.find(action => action.style === 'cancel').onPress()
-    : options.onDismiss());
+  const wayOut = actions.find(action => action.style === 'cancel');
+  expect(wayOut.text).toBe('Not now');
+  // Not now, an outside tap and Android Back all run this way out.
+  await act(async () => wayOut.onPress());
 
   expect(mockClearRegistrationJobs).not.toHaveBeenCalled();
-  expect(button(view, 'Retry loading registrations')).toBeDefined();
-  await press(button(view, 'Clear all registration data'));
-  expect(mockAlert).toHaveBeenCalledTimes(2);
+  expect(tabAction(view, 'Try again')).toBeDefined();
+  await press(tabAction(view, 'Clear all registration data'));
+  expect(resetAlerts()).toHaveLength(2);
 });
 
 it('clears registrations only after confirmation and shows the fresh state only after saving', async () => {
@@ -322,10 +348,10 @@ it('clears registrations only after confirmation and shows the fresh state only 
       resolve();
     };
   }));
-  const view = await mount(IdentityRegistrationStart);
-  await press(button(view, 'Clear all registration data'));
+  const view = await mount(RegistrationTab);
+  await press(tabAction(view, 'Clear all registration data'));
   expect(mockClearRegistrationJobs).not.toHaveBeenCalled();
-  const confirm = mockAlert.mock.calls[0][2].find(action => action.style === 'destructive').onPress;
+  const confirm = resetAlerts()[0][2].find(action => action.style === 'destructive').onPress;
   let saving;
 
   await act(async () => { saving = confirm(); });
@@ -333,16 +359,14 @@ it('clears registrations only after confirmation and shows the fresh state only 
 
   expect(mockClearRegistrationJobs).toHaveBeenCalledTimes(1);
   expect(mockClearRegistrationJobs).toHaveBeenCalledWith({sessionScope: {accountHash: 'account', sessionEpoch: 1}});
-  expect(footerAction(view, 'Create a VerusID').props.disabled).toBe(true);
-  expect(textContent(view.root)).not.toContain('A name that’s yours');
+  expect(offersNewVerusId(view)).toBe(false);
 
   await act(async () => { finishClear(); await saving; });
 
   expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(0);
-  expect(textContent(view.root)).toContain('A name that’s yours');
+  expect(offersNewVerusId(view)).toBe(true);
   expect(textContent(view.root)).not.toContain('saved@');
-  expect(footerAction(view, 'Create a VerusID').props.disabled).toBeFalsy();
-  expect(button(view, 'Clear all registration data')).toBeUndefined();
+  expect(tabAction(view, 'Clear all registration data')).toBeUndefined();
   expect(mockApi.prepareCommitment).not.toHaveBeenCalled();
   expect(mockApi.deleteRegistration).not.toHaveBeenCalled();
 });
@@ -353,16 +377,15 @@ it('keeps the recovery controls and saved rows when clearing registration data f
   };
   mockPublishRegistrationJobs.mockRejectedValueOnce(new Error('Unsupported registration storage'));
   mockClearRegistrationJobs.mockRejectedValueOnce(new Error('Unable to save registration reset.'));
-  const view = await mount(IdentityRegistrationStart);
-  await press(button(view, 'Clear all registration data'));
-  await act(async () => mockAlert.mock.calls[0][2].find(action => action.style === 'destructive').onPress());
+  const view = await mount(RegistrationTab);
+  await press(tabAction(view, 'Clear all registration data'));
+  await act(async () => resetAlerts()[0][2].find(action => action.style === 'destructive').onPress());
 
   expect(textContent(view.root)).toContain('Unable to save registration reset.');
   expect(textContent(view.root)).toContain('saved@');
-  expect(textContent(view.root)).not.toContain('A name that’s yours');
-  expect(footerAction(view, 'Create a VerusID').props.disabled).toBe(true);
-  expect(button(view, 'Retry loading registrations')).toBeDefined();
-  expect(button(view, 'Clear all registration data')).toBeDefined();
+  expect(offersNewVerusId(view)).toBe(false);
+  expect(tabAction(view, 'Try again')).toBeDefined();
+  expect(tabAction(view, 'Clear all registration data')).toBeDefined();
 });
 
 const secondPayment = status => {
