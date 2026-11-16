@@ -24,7 +24,6 @@ jest.mock('verusid-ts-client', () => ({
     constructor(data) { Object.assign(this, data); }
   }},
 }));
-jest.mock('../../../styles', () => ({}));
 jest.mock('../../../images/customIcons', () => ({VerusIdLogo: 'VerusIdLogo'}));
 jest.mock('../../../components/VerusIdDetailsModal/VerusIdDetailsModal', () => 'VerusIdDetailsModal');
 jest.mock('../../../components/AnimatedActivityIndicatorBox', () => 'ActivityIndicator');
