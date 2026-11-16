@@ -932,25 +932,62 @@ it('updates the default when confirmed balances arrive while preserving an expli
   expect(mockApi.prepareCommitment.mock.calls[0][0].request.fundingAddress).toBe('wallet');
 });
 
-it('chooses the funded source on a new network and restores that network’s manual choice', async () => {
+const twoNetworks = () => {
   mockState.authentication.activeAccount.keys.VRSCTEST = {vrpc: {addresses: ['test-wallet']}};
   mockState.coins.activeCoinsForUser.push({id: 'VRSCTEST', system_id: 'test-chain', currency_id: 'test-chain', display_ticker: 'VRSCTEST', testnet: true});
   mockState.channelStore_verusid.watchedVerusIds = {VRSC: {'main-id': 'main@'}, VRSCTEST: {'test-id': 'test@'}};
-  mockState.ledger = {balances: {
-    'vrpc.main-id.chain': {VRSC: {confirmed: '100'}},
-    'vrpc.test-id.test-chain': {VRSCTEST: {confirmed: '1000'}},
-  }};
+  mockReadRegistrationBalances.mockImplementation(async (coin, source) => ({
+    status: 'ready', amounts: {[coin.system_id]: {'main-id': '100', 'test-id': '1000'}[source.address] || '0'},
+  }));
+};
+const switchNetwork = async (view, from, to) => {
+  await press(view.root.findAll(node => node.props.accessibilityLabel === `Network: ${from}` && node.props.onPress)[0]);
+  await press(view.root.findAll(node => node.props.accessibilityRole === 'radio' && node.props.accessibilityLabel === to && node.props.onPress)[0]);
+  await advance(500);
+  await advance(700);
+};
+const payerText = view => textContent(view.root).replace(/\u200B/g, '');
+
+it('chooses the funded source on each network and keeps no payer choice across networks', async () => {
+  jest.useFakeTimers();
+  twoNetworks();
   const view = await mount(IdentityRegistrationCreate);
-  await press(button(view, 'Pay from'));
-  expect(radio(view, 'main@').props.accessibilityState.selected).toBe(true);
-  await press(radio(view, 'Wallet address'));
-  await press(button(view, 'Network'));
-  await press(radio(view, 'VRSCTEST · Testnet'));
-  await press(button(view, 'Pay from'));
-  expect(radio(view, 'test@').props.accessibilityState.selected).toBe(true);
-  await press(button(view, 'Network'));
-  await press(radio(view, 'VRSC'));
-  expect(radio(view, 'Wallet address').props.accessibilityState.selected).toBe(true);
+  await typeName(view);
+  await goToCheck(view);
+  expect(payerText(view)).toContain('Pay frommain@');
+  await act(async () => view.root.findByType(ProgressHeader).props.onBack());
+  await switchNetwork(view, 'VRSC', 'VRSCTEST · Testnet');
+  await goToCheck(view);
+  expect(payerText(view)).toContain('Pay fromtest@');
+  await act(async () => view.root.findByType(ProgressHeader).props.onBack());
+  await switchNetwork(view, 'VRSCTEST · Testnet', 'VRSC');
+  await goToCheck(view);
+  expect(payerText(view)).toContain('Pay frommain@');
+});
+
+it('clears the old estimate and funding selection when the network changes', async () => {
+  jest.useFakeTimers();
+  twoNetworks();
+  const view = await mount(IdentityRegistrationCreate);
+  await typeName(view);
+  await goToCheck(view);
+  // An explicit choice of the wallet address on the first network...
+  await openPayers(view);
+  await press(payerRows(view).find(node => node.props.accessibilityLabel.startsWith('Transparent')) || payerRows(view)[0]);
+  await act(async () => { jest.advanceTimersByTime(500); });
+  await act(async () => view.root.findByType(ProgressHeader).props.onBack());
+  expect(textContent(view.root)).toContain('1.0001 VRSC');
+  // ...does not carry to the next network, and the old price is gone until the new one is read.
+  await act(async () => {
+    view.root.findAll(node => node.props.accessibilityLabel === 'Network: VRSC' && node.props.onPress)[0].props.onPress();
+  });
+  await press(view.root.findAll(node => node.props.accessibilityRole === 'radio' && node.props.accessibilityLabel === 'VRSCTEST · Testnet' && node.props.onPress)[0]);
+  await advance(500);
+  expect(textContent(view.root)).not.toContain('1.0001 VRSC');
+  await advance(700);
+  expect(textContent(view.root)).toContain('1.0001 VRSCTEST');
+  await goToCheck(view);
+  expect(payerText(view)).toContain('Pay fromtest@');
 });
 
 it('compares confirmed native balances exactly and ignores other currencies and unconfirmed funds', () => {
@@ -966,28 +1003,6 @@ it('compares confirmed native balances exactly and ignores other currencies and 
   expect(preferredRegistrationFundingSource(sources, coin, {})).toBe(sources[0]);
   expect(preferredRegistrationFundingSource([], coin, balances)).toBeUndefined();
 });
-
-it('clears the old estimate and funding selection when the network changes', async () => {
-  mockState.authentication.activeAccount.keys.VRSCTEST = {vrpc: {addresses: ['test-wallet']}};
-  mockState.coins.activeCoinsForUser.push({id: 'VRSCTEST', system_id: 'test-chain', currency_id: 'test-chain', display_ticker: 'VRSCTEST', testnet: true});
-  mockState.channelStore_verusid.watchedVerusIds = {VRSC: {'main-id': 'main@'}, VRSCTEST: {'test-id': 't1@'}};
-  mockApi.prepareCommitment.mockRejectedValue(Object.assign(new Error('Insufficient funds.'), {registrationEstimate: {quote, currencyNames: {chain: 'VRSC'}}}));
-  const view = await mount(IdentityRegistrationCreate);
-  await press(button(view, 'Pay from'));
-  await press(radio(view, 'main@'));
-  await enterName(view);
-  await press(button(view, 'Review costs'));
-  expect(view.root.findAllByType(CostReview)).toHaveLength(1);
-  await press(button(view, 'Network'));
-  await press(radio(view, 'VRSCTEST · Testnet'));
-  expect(view.root.findAllByType(CostReview)).toHaveLength(0);
-  await press(button(view, 'Pay from'));
-  expect(radio(view, 'Wallet address').props.accessibilityState.selected).toBe(true);
-  expect(radio(view, 'main@')).toBeUndefined();
-  expect(radio(view, 't1@').props.accessibilityState.selected).toBe(false);
-});
-
-const openDetails = async view => press(view.root.findAllByType(TextAction).find(node => node.props.children === 'Transaction details'));
 
 it('shows friendly identity names and only reveals full addresses when explicitly requested', async () => {
   const ownAddress = `i${'A'.repeat(33)}`;
