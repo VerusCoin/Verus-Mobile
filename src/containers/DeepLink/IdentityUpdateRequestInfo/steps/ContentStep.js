@@ -437,6 +437,9 @@ const ContentStep = ({
   displayUpdates,
   cmmDataKeys,
   styles,
+  // A content clear is reviewed on the High-risk step. Keep it in the data,
+  // because it changes what the other entries do, and hide only its cards.
+  hideContentClear = false,
 }) => {
   const theme = useOnboardingTheme();
   const darkMode = theme.isDark;
@@ -456,8 +459,16 @@ const ContentStep = ({
         cmmUpdates,
         getCmmDataKey,
         changedOnly: true,
-      }).filter(item => item.changeType),
-    [cmmUpdates, getCmmDataKey, subjectIdentity],
+      }).filter(
+        item =>
+          item.changeType &&
+          !(
+            hideContentClear &&
+            cmmUpdates[item.updateKey || item.key]?.highRiskType ===
+              'content-clear'
+          ),
+      ),
+    [cmmUpdates, getCmmDataKey, hideContentClear, subjectIdentity],
   );
   const privateInfoItems = useMemo(() => {
     const privateUpdates = displayUpdates[VERUSID_PRIVATE_INFO.key] || {};

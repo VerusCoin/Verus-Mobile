@@ -599,10 +599,16 @@ const IdentityUpdateRequestInfoContent = props => {
             highRisk: removeMeta.action === 4,
             highRiskType:
               removeMeta.action === 4 ? 'content-clear' : undefined,
-            // The High-risk step lists these keys in its details sheet.
+            // The High-risk step lists these keys in its details sheet. Keep
+            // the full key ID: an unknown key has only a short label.
             clearedKeys:
               removeMeta.action === 4
-                ? Object.keys(activeContentMultiMap).map(getCmmDataKey)
+                ? Object.keys(activeContentMultiMap).map(id => {
+                    const label = getCmmDataKey(id);
+                    const shortId =
+                      id.substring(0, 4) + '...' + id.substring(id.length - 4);
+                    return {id, label: label === shortId ? null : label};
+                  })
                 : undefined,
             highRiskTitle:
               removeMeta.action === 4
@@ -880,19 +886,16 @@ const IdentityUpdateRequestInfoContent = props => {
   // A high-risk change shows on the High-risk step only: a private address
   // change or a content clear does not add a Content step. Ordinary content in
   // the same request keeps its Content step, without the high-risk entries.
+  // The content clear stays in the data (it changes what other entries do);
+  // ContentStep hides only its cards.
   const hasContent = contentChanges.length > 0;
-  const contentStepDisplayUpdates = useMemo(() => {
-    const cmmUpdates = displayUpdates[VERUSID_CMM_INFO.key] || {};
-    return {
+  const contentStepDisplayUpdates = useMemo(
+    () => ({
       ...displayUpdates,
       [VERUSID_PRIVATE_INFO.key]: {},
-      [VERUSID_CMM_INFO.key]: Object.fromEntries(
-        Object.entries(cmmUpdates).filter(
-          ([, entry]) => entry?.highRiskType !== 'content-clear',
-        ),
-      ),
-    };
-  }, [displayUpdates]);
+    }),
+    [displayUpdates],
+  );
   const requesterMetadataRows = [
     chainId ? {label: 'Network', value: chainId} : null,
     sigDateString ? {label: 'Signed', value: sigDateString} : null,
@@ -1136,6 +1139,7 @@ const IdentityUpdateRequestInfoContent = props => {
           subjectIdentity={activeContentSubjectIdentity}
           friendlyNames={friendlyNames}
           displayUpdates={contentStepDisplayUpdates}
+          hideContentClear
           chainInfo={chainInfo}
           coinObj={coinObj}
           cmmDataKeys={cmmDataKeys}

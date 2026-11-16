@@ -102,7 +102,13 @@ const contentClearRows = (ackRows, rawValue, clearedKeys) => [
     ? ackRows
     : [['Action', 'Clear active VerusID content']]),
   ...(Array.isArray(clearedKeys) && clearedKeys.length > 0
-    ? [[clearedKeys.length === 1 ? 'Key that clears' : 'Keys that clear', clearedKeys.join('\n')]]
+    ? [[
+        clearedKeys.length === 1 ? 'Key that clears' : 'Keys that clear',
+        // A known key shows its name, with the full key ID on the next line.
+        clearedKeys
+          .map(key => (key?.label ? `${key.label}\n${key.id}` : key?.id || key))
+          .join('\n\n'),
+      ]]
     : []),
   ['Raw request value', rawValue],
 ];
@@ -302,6 +308,10 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
   if (hasPrimaryInfo) rows.push(['Required signatures', primaryInfo.minimumSignatures ?? 1]);
   const ackRows = primaryAckRows(added, removed);
   const actionValue = primaryActionValue(added.length, removed.length);
+  // When the caption is a warning, the signature rule goes on the card as a line.
+  const linesWithRule = ruleLine
+    ? [...lines, {label: 'Signatures', value: ruleLine}]
+    : lines;
 
   if (walletLosesControl) {
     return {
@@ -309,7 +319,7 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
       kind: 'primary',
       kicker: 'Primary control',
       value: actionValue,
-      lines,
+      lines: linesWithRule,
       caption: 'Wallet loses control',
       tone: 'danger',
       losesWalletControl: true,
@@ -336,7 +346,7 @@ const buildPrimaryReviewItem = (primaryChanges, primaryInfo) => {
     kind: 'primary',
     kicker: 'Primary control',
     value: actionValue,
-    lines,
+    lines: needsAdditionalSignatures ? linesWithRule : lines,
     caption: needsAdditionalSignatures
       ? 'Your wallet will need additional signatures after this update'
       : ruleLine
