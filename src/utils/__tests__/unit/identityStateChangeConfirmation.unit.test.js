@@ -7,12 +7,19 @@ let mockState;
 jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   ActivityIndicator: 'ActivityIndicator',
   Alert: {alert: jest.fn()},
+  // The app is in the foreground, so the slide can commit.
+  AppState: {currentState: 'active', addEventListener: () => ({remove: () => {}})},
   ScrollView: 'ScrollView',
   TouchableOpacity: 'TouchableOpacity',
   View: 'View',
 }));
 jest.mock('react-native-paper', () => ({Button: 'Button', Portal: 'Portal', Text: 'Text'}));
-jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+// A shared value keeps its identity across renders, as on device. The stock
+// mock makes a new one per render, which resets the slide's gesture epoch.
+jest.mock('react-native-reanimated', () => ({
+  ...require('react-native-reanimated/mock'),
+  useSharedValue: init => require('react').useRef({value: init}).current,
+}));
 jest.mock('@react-navigation/native', () => {
   const navigation = {isFocused: () => true, addListener: () => jest.fn(), getParent: () => undefined};
   return {useNavigation: () => navigation};
@@ -303,10 +310,15 @@ it('invalidates a funded review when the mounted screen receives a different req
   const {renderer, details} = setup();
   await selectSource(renderer);
   expect(slide(renderer).props.disabled).toBe(false);
+  // The user completes the slide on the old review. The slide commits on a
+  // later frame, and the different request arrives before that frame.
+  const track = slide(renderer).findAll(node => typeof node.props.onAccessibilityAction === 'function')[0];
+  act(() => track.props.onAccessibilityAction({nativeEvent: {actionName: 'activate'}}));
   const previousProps = renderer.root.findByType(ConfirmPayStep).props;
   const replacement = {...details, containsRequestID: () => true, requestID: {toAddress: () => 'different-request'}};
   act(() => renderer.update(<ConfirmPayStep {...previousProps} details={replacement} />));
   expect(renderer.root.findAllByType(SlideToConfirm)).toHaveLength(0);
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 100)); });
   expect(mockSubmitReviewedIdentityUpdate).not.toHaveBeenCalled();
   renderer.unmount();
 });

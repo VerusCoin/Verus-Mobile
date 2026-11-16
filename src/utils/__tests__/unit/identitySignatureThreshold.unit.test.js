@@ -1,5 +1,6 @@
 let mockState;
 const mockRequestWalletUnlock = jest.fn();
+const mockHandleIdentityUpdate = jest.fn();
 
 jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Platform: {OS: 'ios'},
@@ -35,11 +36,40 @@ jest.mock('../../api/channels/verusid/callCreators', () => ({getFriendlyNameMap:
 jest.mock('../../CoinData/CoinData', () => ({getSystemNameFromSystemId: value => value}));
 jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {}}));
 jest.mock('../../clipboard/clipboard', () => ({copyToClipboard: jest.fn()}));
+// GenericRequestHome owns the request session. Its detail handlers read the
+// network, so they are stubbed; the identity update review stays real.
+jest.mock('../../../store', () => ({__esModule: true, default: {getState: () => mockState, subscribe: () => () => {}, dispatch: jest.fn()}}));
+jest.mock('verusid-ts-client', () => ({primitives: require('verus-typescript-primitives')}));
+jest.mock('lottie-react-native', () => 'LottieView');
+jest.mock('../../../containers/DeepLink/GenericRequestLoading', () => ({
+  __esModule: true, default: 'GenericRequestLoading', GENERIC_REQUEST_LOADING_STEPS: {},
+}));
+jest.mock('../../deeplink/handlers/identityUpdateRequestDetailsHandler', () => ({
+  handleIdentityUpdateRequestDetailsVDXFObject: (...args) => mockHandleIdentityUpdate(...args),
+}));
+jest.mock('../../deeplink/handlers/authenticationRequestDetailsHandler', () => ({}));
+jest.mock('../../deeplink/handlers/verusPayInvoiceDetailsHandler', () => ({}));
+jest.mock('../../deeplink/handlers/provisionIdentityDetailsHandler', () => ({}));
+jest.mock('../../deeplink/handlers/appEncryptionRequestHandler', () => ({}));
+jest.mock('../../deeplink/handlers/createWalletBackupDetailsHandler', () => ({}));
+jest.mock('../../deeplink/handlers/spendableKeyDetailsHandler', () => ({}));
+jest.mock('../../deeplink/handlers/userDataRequestHandler', () => ({}));
+jest.mock('../../deeplink/handlers/dataPacketRequestHandler', () => ({}));
+jest.mock('../../deeplink/isDeeplinkHandlerInstalled', () => ({isDeeplinkHandlerInstalled: async () => false}));
+jest.mock('../../deeplink/pendingDeeplinkStorage', () => ({markPendingDeeplinkComplete: jest.fn()}));
+jest.mock('../../../containers/DeepLink/InvoiceInfo/InvoiceInfo', () => 'InvoiceInfo');
+jest.mock('../../../containers/DeepLink/AuthenticationRequestInfo/AuthenticationRequestInfo', () => 'AuthenticationRequestInfo');
+jest.mock('../../../containers/DeepLink/AppEncryptionRequestInfo/AppEncryptionRequestInfo', () => 'AppEncryptionRequestInfo');
+jest.mock('../../../containers/DeepLink/WalletBackupRequestInfo/WalletBackupRequestInfo', () => 'WalletBackupRequestInfo');
+jest.mock('../../../containers/DeepLink/SpendableKeyRequestInfo/SpendableKeyRequestInfo', () => 'SpendableKeyRequestInfo');
+jest.mock('../../../containers/DeepLink/UserDataRequestInfo/UserDataRequestInfo', () => 'UserDataRequestInfo');
+jest.mock('../../../containers/DeepLink/DataPacketRequestInfo/DataPacketRequestInfo', () => 'DataPacketRequestInfo');
 
 const React = require('react');
 const {act, create} = require('react-test-renderer');
 const AppButton = require('../../../components/AppButton').default;
 const IdentityUpdateRequestInfo = require('../../../containers/DeepLink/IdentityUpdateRequestInfo/IdentityUpdateRequestInfo').default;
+const GenericRequestHome = require('../../../containers/DeepLink/GenericRequestHome/GenericRequestHome').default;
 const {ContentMultiMapRemoveKey, DataStringKey, GenericRequest, IDENTITY_CREDENTIAL, IdentityUpdateRequestDetails, IdentityUpdateRequestOrdinalVDXFObject, KvMap, PartialIdentity, PartialSignData} = require('verus-typescript-primitives');
 const {VERUSID_CMM_INFO, VERUSID_CMM_DATA} = require('../../constants/verusidObjectData');
 const {createAlert} = require('../../../actions/actions/alert/dispatchers/alert');
@@ -51,9 +81,39 @@ const currentIdentity = {
   recoveryauthority: 'current-recovery', revocationauthority: 'current-revocation',
   flags: 0, timelock: 0, contentmultimap: {},
 };
-const requestEnvelope = () => new GenericRequest({details: [new IdentityUpdateRequestOrdinalVDXFObject({
-  data: IdentityUpdateRequestDetails.fromCLIJson({name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV'}),
+const requestEnvelope = (name = 'T1') => new GenericRequest({details: [new IdentityUpdateRequestOrdinalVDXFObject({
+  data: IdentityUpdateRequestDetails.fromCLIJson({name, parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV'}),
 })]});
+// The handler output for one request: what GenericRequestHome passes on to
+// the identity update review.
+const handledRequest = (updates, extra = {}) => (request, response) => Promise.resolve({
+  response,
+  handledIndices: [],
+  displayProps: {
+    subjectIdentity: {fullyqualifiedname: 'T1@', identity: currentIdentity},
+    subjectIdentityContent: {fullyqualifiedname: 'T1@', identity: currentIdentity},
+    identityUpdates: updates,
+    identityPreviewPrepared: false,
+    friendlyNames: {},
+    coinObj: {id: 'VRSC', mainnet_id: 'VRSC', seconds_per_block: 60},
+    chainInfo: {blocks: 100},
+    sigtime: 1,
+    ...extra,
+  },
+});
+const homeProps = {navigation: {navigate: jest.fn(), addListener: () => () => {}, isFocused: () => true}, cancel: jest.fn(), setLoading: jest.fn()};
+// A new deeplink replaces the request: GenericRequestHome keys its session by
+// the request data, so the old review unmounts and the new one starts fresh.
+const renderHome = async name => {
+  let renderer;
+  await act(async () => {
+    renderer = create(<GenericRequestHome {...homeProps} deeplinkData={requestEnvelope(name).toBuffer().toString('hex')} />);
+  });
+  return renderer;
+};
+const replaceHomeRequest = (renderer, name) => act(async () => {
+  renderer.update(<GenericRequestHome {...homeProps} deeplinkData={requestEnvelope(name).toBuffer().toString('hex')} />);
+});
 const renderRequest = (updates, identity = currentIdentity, props = {}) => {
   let renderer;
   act(() => {
@@ -114,7 +174,8 @@ beforeEach(() => {
     },
     sendModal: {type: null},
     modal: {stack: []},
-    settings: {generalWalletSettings: {}},
+    deeplink: {passthrough: {}, requestId: 1},
+    settings: {generalWalletSettings: {enableExperimentalGenericRequests: true}},
   };
 });
 
@@ -179,20 +240,24 @@ describe('private address removal review', () => {
 });
 
 describe('identity signature-threshold review', () => {
-  it('returns to review and requires a new acknowledgement when the request changes', () => {
-    const renderer = renderRequest({minimumsignatures: 2});
+  it('returns to review and requires a new acknowledgement when the request changes', async () => {
+    mockHandleIdentityUpdate
+      .mockImplementationOnce(handledRequest({minimumsignatures: 2}))
+      .mockImplementationOnce(handledRequest({minimumsignatures: 2, recoveryauthority: 'replacement-recovery'}));
+    const renderer = await renderHome('T1');
     goToRiskReview(renderer);
     acknowledgeRisks(renderer);
     expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(1);
-    const previousProps = renderer.root.findByType(IdentityUpdateRequestInfo).props;
-    act(() => renderer.update(<IdentityUpdateRequestInfo {...previousProps}
-      identityUpdates={{minimumsignatures: 2, recoveryauthority: 'replacement-recovery'}} />));
+    await replaceHomeRequest(renderer, 'T2');
+    expect(mockHandleIdentityUpdate).toHaveBeenCalledTimes(2);
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(0);
     expect(renderer.root.findAllByType('ReviewStep')).toHaveLength(1);
     goToRiskReview(renderer);
     act(() => nextButton(renderer).props.onPress());
     expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(0);
     expect(understand(renderer)).toBeDefined();
-    expect(renderedText(renderer)).toContain('Change recovery authority');
+    // The acknowledgement covers the replacement's own recovery change.
+    expect(renderedText(renderer)).toContain('New recovery ID replacement-recovery');
     renderer.unmount();
   });
 
@@ -329,22 +394,40 @@ describe('identity signature-threshold review', () => {
     renderer.unmount();
   });
 
-  it('returns a replacement content request to its own first-screen review', () => {
+  it('returns a replacement content request to its own first-screen review', async () => {
     const makeDetails = message => IdentityUpdateRequestDetails.fromCLIJson({
       name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
       contentmultimap: {[DataStringKey.vdxfid]: {data: {message}}},
     }).toBuffer().toString('hex');
-    const renderer = renderRequest({}, currentIdentity, {detailsBufferString: makeDetails('Old request')});
+    mockHandleIdentityUpdate
+      .mockImplementationOnce(handledRequest({}, {detailsBufferString: makeDetails('Old request')}))
+      .mockImplementationOnce(handledRequest({}, {detailsBufferString: makeDetails('Replacement request')}));
+    const renderer = await renderHome('T1');
     goToConfirm(renderer);
     expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(1);
-    const previousProps = renderer.root.findByType(IdentityUpdateRequestInfo).props;
-    act(() => renderer.update(<IdentityUpdateRequestInfo {...previousProps}
-      detailsBufferString={makeDetails('Replacement request')} />));
+    await replaceHomeRequest(renderer, 'T2');
     expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(0);
+    expect(renderer.root.findAllByType('ReviewStep')).toHaveLength(1);
     const updates = goToContent(renderer).displayUpdates[VERUSID_CMM_INFO.key];
     expect(Object.values(updates)).toHaveLength(1);
     expect(Object.values(updates)[0].signData.data.toString('utf8')).toBe('Replacement request');
     renderer.unmount();
+  });
+
+  it('shows how long an expiring request stays valid in the requester sheet', () => {
+    // The request card passes these sections to its requester sheet.
+    const sheetRows = renderer => renderer.root.findByType('ReviewStep').props.requestCard
+      .props.sections.flatMap(section => section.rows);
+    // The identity update handler passes the request details as a buffer.
+    // Height 130 at chain height 100 is 30 blocks of 60 seconds.
+    const expiring = IdentityUpdateRequestDetails.fromCLIJson({name: 'T1', parent: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV'}, {expiryheight: 130});
+    const renderer = renderRequest({}, currentIdentity, {detailsBufferString: expiring.toBuffer().toString('hex')});
+    expect(sheetRows(renderer)).toContainEqual({label: 'Expires', value: '30 minutes'});
+    renderer.unmount();
+
+    const lasting = renderRequest({});
+    expect(sheetRows(lasting).map(row => row.label)).not.toContain('Expires');
+    lasting.unmount();
   });
 
   it('preserves the generic request network through final confirmation', () => {
@@ -364,15 +447,20 @@ describe('identity signature-threshold review', () => {
     mockState.authentication.accounts = [{testnetOverrides: {}}];
     let finishUnlock;
     mockRequestWalletUnlock.mockReturnValueOnce(new Promise(resolve => { finishUnlock = resolve; }));
-    const renderer = renderRequest({minimumsignatures: 2});
+    mockHandleIdentityUpdate
+      .mockImplementationOnce(handledRequest({minimumsignatures: 2}))
+      .mockImplementationOnce(handledRequest({minimumsignatures: 2, recoveryauthority: 'new-recovery'}));
+    const renderer = await renderHome('T1');
     act(() => nextButton(renderer).props.onPress());
     expect(mockRequestWalletUnlock).toHaveBeenCalledTimes(1);
-    const previousProps = renderer.root.findByType(IdentityUpdateRequestInfo).props;
-    act(() => renderer.update(<IdentityUpdateRequestInfo {...previousProps} identityUpdates={{minimumsignatures: 2, recoveryauthority: 'new-recovery'}} />));
+    await replaceHomeRequest(renderer, 'T2');
+    expect(renderer.root.findAllByType('ReviewStep')).toHaveLength(1);
+    // The unlock from the replaced review finishes late.
     mockState.authentication.signedIn = true;
     await act(async () => finishUnlock({}));
     expect(renderer.root.findAllByType('ReviewStep')).toHaveLength(1);
     expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(0);
+    expect(renderedText(renderer)).not.toContain('Understand high-risk changes');
     renderer.unmount();
   });
 
@@ -430,6 +518,18 @@ describe('identity signature-threshold review', () => {
     expect(renderedText(renderer)).toContain('New recovery ID new-recovery');
     expect(renderedText(renderer)).toContain('Lock identity funds');
     expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(0);
+    renderer.unmount();
+  });
+
+  // Ported from the ContentStep case "omits the section when there are no
+  // content changes (undefined)": the parent leaves the Content step out.
+  it('omits the content step when the request has no content changes', () => {
+    const renderer = renderRequest({});
+    expect(reviewCounts(renderer).content).toBe(0);
+    expect(renderer.root.findAllByType('ContentStep')).toHaveLength(0);
+    act(() => nextButton(renderer).props.onPress());
+    expect(renderer.root.findAllByType('ContentStep')).toHaveLength(0);
+    expect(renderer.root.findAllByType('ConfirmPayStep')).toHaveLength(1);
     renderer.unmount();
   });
 

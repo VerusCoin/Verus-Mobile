@@ -136,6 +136,14 @@ const openOptions = async () => {
 const choose = (view, label) => act(async () => {find(view, label).props.onPress();});
 const pageParams = displayName => ({chain: 'VRSCTEST', identityAddress: 'iAlice', displayName});
 
+const pageScope = (accountHash = 'alice', sessionEpoch = 1) => ({sessionScoped: true, accountHash, sessionEpoch});
+// A signed-in wallet switch: the store moves to another session while this
+// page stays mounted, and the page renders again with the new account.
+const switchSession = async (view, accountHash, sessionEpoch) => {
+  mockState = stateFor(accountHash, sessionEpoch);
+  await act(async () => {view.update(<SignedInVerusIdDetails />);});
+};
+
 test.each([['transfer', 'Transfer VerusID', 'IdentityTransfer'], ['modify', 'Modify VerusID', 'IdentityModify']])(
   '%s opens the correct identity screen after the native sheet has dismissed',
   async (action, label, screen) => {
@@ -153,6 +161,21 @@ test.each([['transfer', 'Transfer VerusID', 'IdentityTransfer'], ['modify', 'Mod
   },
 );
 
+// The real sheet keeps its rows on screen during the close animation, so a
+// second row can be tapped before the first choice runs.
+test('a second tap during the close cannot replace the intended action', async () => {
+  const view = await renderPage();
+  await openOptions();
+  const pressUnlinkRow = find(view, 'Unlink VerusID').props.onPress;
+  await choose(view, 'Transfer VerusID');
+  await act(async () => {pressUnlinkRow();});
+  expect(mockNavigate).not.toHaveBeenCalled();
+  await closeSheet(optionsSheet(view));
+  expect(unlinkSheet(view).props.visible).toBe(false);
+  expect(mockNavigate).toHaveBeenCalledTimes(1);
+  expect(mockNavigate).toHaveBeenCalledWith('IdentityManagement', {screen: 'IdentityTransfer', params: pageParams('alice.VRSCTEST@')});
+});
+
 test('unlink retains the selected identity and original account scope', async () => {
   const view = await renderPage();
   await openOptions();
@@ -163,7 +186,7 @@ test('unlink retains the selected identity and original account scope', async ()
   expect(mockUnlinkVerusId).not.toHaveBeenCalled();
   await choose(view, 'Unlink alice.VRSCTEST@');
   await flush();
-  expect(mockUnlinkVerusId).toHaveBeenCalledWith('iAlice', 'VRSCTEST', {sessionScope: expect.any(Object)});
+  expect(mockUnlinkVerusId).toHaveBeenCalledWith('iAlice', 'VRSCTEST', {sessionScope: pageScope('alice', 1)});
   expect(mockNavigate).not.toHaveBeenCalled();
 });
 
@@ -178,35 +201,70 @@ test('cancel closes the chooser without taking an identity action', async () => 
   expect(mockUnlinkVerusId).not.toHaveBeenCalled();
 });
 
-test.each([['transfer', 'Transfer VerusID'], ['modify', 'Modify VerusID']])(
+test.each([['transfer', 'Transfer VerusID'], ['modify', 'Modify VerusID'], ['unlink', 'Unlink VerusID']])(
   'an account change between choosing %s and native dismissal cancels the action',
   async (action, label) => {
     const view = await renderPage();
     await openOptions();
     await choose(view, label);
-    mockState = stateFor('bob', 2);
+    await switchSession(view, 'bob', 2);
     await closeSheet(optionsSheet(view));
     expect(mockNavigate).not.toHaveBeenCalled();
+    expect(unlinkSheet(view).props.visible).toBe(false);
+    expect(mockUnlinkVerusId).not.toHaveBeenCalled();
   },
 );
 
-test('an account change between choosing unlink and native dismissal cancels the action', async () => {
+test('an account change after the unlink sheet opens cancels the unlink', async () => {
   const view = await renderPage();
   await openOptions();
   await choose(view, 'Unlink VerusID');
-  mockState = stateFor('bob', 2);
   await closeSheet(optionsSheet(view));
-  await choose(view, 'Unlink alice.VRSCTEST@');
+  expect(unlinkSheet(view).props.visible).toBe(true);
+  const pressUnlink = find(view, 'Unlink alice.VRSCTEST@').props.onPress;
+  await switchSession(view, 'bob', 2);
+  // The unlink button of the sheet that was on screen for alice.
+  await act(async () => {pressUnlink();});
   await flush();
   expect(mockUnlinkVerusId).not.toHaveBeenCalled();
+  expect(mockNavigate).not.toHaveBeenCalled();
+  expect(mockGoBack).not.toHaveBeenCalled();
 });
 
 test('a same-account logout and login invalidates an already-open action sheet', async () => {
   const view = await renderPage();
   await openOptions();
+  // The same account object comes back, so the page does not render again.
   mockState = stateFor('alice', 3);
   await choose(view, 'Transfer VerusID');
   await closeSheet(optionsSheet(view));
+  expect(mockNavigate).not.toHaveBeenCalled();
+});
+
+test('account changes close both identity sheets and clear any pending action', async () => {
+  const view = await renderPage();
+  await openOptions();
+  await choose(view, 'Unlink VerusID');
+  await closeSheet(optionsSheet(view));
+  expect(unlinkSheet(view).props.visible).toBe(true);
+  await openOptions();
+  const pressTransferRow = find(view, 'Transfer VerusID').props.onPress;
+  await act(async () => {pressTransferRow();});
+  await switchSession(view, 'bob', 2);
+  expect(optionsSheet(view).props.visible).toBe(false);
+  expect(unlinkSheet(view).props.visible).toBe(false);
+  await closeSheet(optionsSheet(view));
+  expect(mockNavigate).not.toHaveBeenCalled();
+  expect(mockUnlinkVerusId).not.toHaveBeenCalled();
+});
+
+test('unmounting the page cancels an action awaiting native dismissal', async () => {
+  const view = await renderPage();
+  await openOptions();
+  await choose(view, 'Transfer VerusID');
+  const finishClose = optionsSheet(view).props.onClosed;
+  await act(async () => {view.unmount();});
+  await act(async () => {finishClose();});
   expect(mockNavigate).not.toHaveBeenCalled();
 });
 
