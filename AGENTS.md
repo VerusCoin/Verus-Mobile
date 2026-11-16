@@ -5,7 +5,7 @@ This file is a compact map for Codex-style agents working in Verus Mobile. Keep 
 ## Repository Shape
 
 - Product: React Native iOS/Android Verus Mobile multi-currency wallet.
-- Runtime: React Native 0.71, React 18, Redux, Redux Saga, React Navigation, React Native Paper.
+- Runtime: React Native 0.77, React 18, Redux, Redux Saga, React Navigation, React Native Paper.
 - Entry points: `App.js`, `index.js`, `src/VerusMobile.js`.
 - Main navigation: `src/containers/RootStack`.
 - Wallet home: `src/containers/Home`.
@@ -17,7 +17,6 @@ This file is a compact map for Codex-style agents working in Verus Mobile. Keep 
 
 ## Mandatory Design Gate
 
-- For follow-up work on GenericRequest, Send/Convert, Receive, VerusID, and shared sheets, read [UI_REDESIGN_PLAN.md](UI_REDESIGN_PLAN.md). Keep its task checkboxes and evidence log current when working on that scope; the plan itself does not authorize implementation.
 - Before proposing or writing any new or intentionally redesigned user-visible UI, read `DESIGN.md` in full. Untouched legacy screens are not visual precedent and do not need migration unless the task says so.
 - Before implementation, state the task's small design contract: touched scope, canonical exemplar, shared primitives, required rendered states, and any deliberate deviation. Do not average several old screens into a new pattern.
 - Reuse the component or primitive named by `DESIGN.md`. If exact reuse is impossible, match the canonical source and rendered measurements before varying it.
@@ -41,9 +40,7 @@ This file is a compact map for Codex-style agents working in Verus Mobile. Keep 
 - For iPhone SE onboarding layout, use `useOnboardingSmallDeviceLayout` and the compact roles in `signedOutFlow.styles.js`. Do not apply compact onboarding layout to large screens just because the software keyboard is visible, and do not change shared small-device top padding or heading spacing on input focus.
 - Keep UI changes scoped. Avoid unrelated refactors while touching wallet flows.
 - Do not add new Jest tests unless the user explicitly asks for tests. The current Jest/lint setup has substantial existing failures, so prefer targeted non-Jest validation such as parser checks, bundle checks, safe-area checks, and manual simulator/visual checks.
-- For Verus Mobile runtime or simulator QA, confirm the Testnet profile selection and VRSCTEST network before authenticated or state-changing wallet actions. Prefer `antafritest` with Face ID for routine QA. For tests requiring credentials, Codex may generate or retrieve designated disposable test-only passwords, seeds, and private keys from the local VRSCTEST test setup and use them ephemerally in the requested creation, import, recovery, signing, or testnet transaction flow, including through computer use, without repeated confirmation. This permission does not authorize bulk wallet export, persistent credential storage, or publication of credentials. Avoid unnecessary credential logging; incidental exposure of a confirmed disposable test-only credential during the test is not by itself a reason to refuse or stop QA. Face ID is preferred, not required when designated test credentials are available. The exception covers only credentials used exclusively for testing: a personal or mainnet seed remains sensitive even when Testnet is selected. Never unlock, inspect, or transact with a mainnet wallet for testing, and never retrieve or expose personal/mainnet credentials. If the network or disposable test-only status is ambiguous, stop the affected wallet action and report the specific uncertainty.
 - Do not run destructive git commands. Work on a task branch and leave unrelated changes alone.
-- `redesign` is the integration branch for the redesign; `master` follows upstream. Start each task branch from `redesign` and merge it back with `git merge --no-ff` after its checks pass.
 
 ## Common Commands
 

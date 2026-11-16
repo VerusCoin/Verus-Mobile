@@ -26,7 +26,6 @@
     "check:safe-areas": "node scripts/check-safe-area.js",
     "check:search-fields": "node scripts/check-search-fields.js src",
     "check:send-wizard-options": "node scripts/check-send-wizard-options.js",
-    "check:spendable-key-review": "node scripts/check-spendable-key-review.js",
     "update-verus-libs": "node tools/update-verus-libs.cjs"
   },
   "dependencies": {
