@@ -4,12 +4,17 @@ const mockApi = {
   approveCommitment: jest.fn(), prepareRegistration: jest.fn(), approveRegistration: jest.fn(),
   retryBroadcast: jest.fn(), reconcileRegistration: jest.fn(), refreshRegistrationReview: jest.fn(),
   findExistingRegistration: jest.fn(), linkRegisteredIdentity: jest.fn(), deleteRegistration: jest.fn(),
+  getRegistrationEstimate: jest.fn(),
+  registrationQuotesEqual: (...args) => jest.requireActual('../../identityRegistration/costs').registrationQuotesEqual(...args),
 };
 let mockState;
 const mockAlert = jest.fn();
 const mockScrollTo = jest.fn();
 const mockPublishRegistrationJobs = jest.fn();
 const mockClearRegistrationJobs = jest.fn();
+const mockUpdateRegistrationUiState = jest.fn();
+const mockReadRegistrationBalances = jest.fn();
+const mockCheckRegistrationFunds = jest.fn();
 const mockGetRegistrationReferralInfo = jest.fn();
 const mockRegistrationReferralNamespace = jest.fn();
 jest.mock('../../identityRegistration', () => mockApi);
@@ -20,19 +25,35 @@ jest.mock('../../identityRegistration/referrals', () => ({
 jest.mock('../../../actions/actions/services/dispatchers/verusid/registration', () => ({
   publishRegistrationJobs: (...args) => mockPublishRegistrationJobs(...args),
   clearRegistrationJobs: (...args) => mockClearRegistrationJobs(...args),
+  updateRegistrationUiState: (...args) => mockUpdateRegistrationUiState(...args),
+}));
+jest.mock('../../identityRegistration/funding', () => ({
+  ...jest.requireActual('../../identityRegistration/funding'),
+  readRegistrationBalances: (...args) => mockReadRegistrationBalances(...args),
+  checkRegistrationFunds: (...args) => mockCheckRegistrationFunds(...args),
 }));
 jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState)}));
-jest.mock('@react-navigation/native', () => ({useFocusEffect: callback => require('react').useEffect(callback, [callback])}));
+jest.mock('@react-navigation/native', () => ({
+  useFocusEffect: callback => require('react').useEffect(callback, [callback]),
+  useNavigation: () => ({isFocused: () => true, addListener: () => jest.fn(), getParent: () => undefined}),
+}));
+jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+jest.mock('../../../components/SemiModal', () => ({visible, children}) => visible ? children : null);
+jest.mock('../../identityLinking/identityLinking', () => ({
+  captureIdentityLinkContext: jest.fn(), discoverLinkableIdentities: jest.fn(), linkSelectedIdentities: jest.fn(),
+}));
+jest.mock('../../../actions/actions/notifications/dispatchers/notifications', () => ({dispatchRemoveNotification: jest.fn()}));
 jest.mock('@react-navigation/elements', () => ({useHeaderHeight: () => 96}));
 jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   AppState: {currentState: 'active', addEventListener: () => ({remove: jest.fn()})},
-  View: 'View', Pressable: 'Pressable', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView',
-  RefreshControl: 'RefreshControl', Alert: {alert: mockAlert}, Keyboard: {dismiss: jest.fn()},
+  View: 'View', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView',
+  RefreshControl: 'RefreshControl', Alert: {alert: mockAlert}, Keyboard: {dismiss: jest.fn(), addListener: () => ({remove: jest.fn()})},
   Platform: {OS: 'ios'}, StyleSheet: {create: value => value, hairlineWidth: 1},
   useWindowDimensions: () => ({width: 320, height: 640, fontScale: 2}),
 }));
-jest.mock('react-native-paper', () => ({Text: 'Text', TextInput: 'TextInput', ActivityIndicator: 'ActivityIndicator'}));
-jest.mock('react-native-safe-area-context', () => ({useSafeAreaInsets: () => ({bottom: 20})}));
+jest.mock('react-native-paper', () => ({
+  ...jest.requireActual('react-native-paper'), Portal: 'Portal', Text: 'Text', TextInput: 'TextInput', ActivityIndicator: 'ActivityIndicator',
+}));
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
 jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {findCoinObj: () => undefined}}));
 
@@ -44,10 +65,17 @@ const {
 } = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/RegistrationScreens');
 const {CostReview, AmountRows} = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/RegistrationComponents');
 const AppButton = require('../../../components/AppButton').default;
+const SlideToConfirm = require('../../../components/SlideToConfirm').default;
+const TextAction = require('../../../components/TextAction').default;
+const AcknowledgeSheet = require('../../../components/AcknowledgeSheet').default;
 const {preferredRegistrationFundingSource, registrationFundingSources} = require('../../../containers/Services/ServiceComponents/VerusIdService/IdentityRegistration/fundingSources');
-const quote = {totalOperationRequired: {chain: '100010000'}, totalRequired: {chain: '100000000'}, commitmentFee: '10000', systemID: 'chain'};
+const quote = {
+  branch: 'native', systemID: 'chain', parentID: 'chain', issuerID: 'chain', commitmentFee: '10000',
+  registrationOffer: '100000000', nativeFee: '0', importFee: '0', transferFee: '0', referralPayments: [],
+  totalOperationRequired: {chain: '100010000'}, totalRequired: {chain: '100000000'},
+};
 const review = {
-  jobId: 'job', revision: 4, approvalToken: 'review-token', status: 'commitment_prepared', displayName: 'alice@',
+  jobId: 'job', revision: 4, approvalToken: 'review-token', status: 'commitment_prepared', displayName: 'alice@', chainTicker: 'VRSC',
   quote, systemId: 'chain', currencyNames: {chain: 'VRSC'}, identityAddress: 'identity',
   identity: {primaryaddresses: ['wallet']}, fundingName: 'Wallet address',
   fundingAddress: 'wallet', signingAddress: 'wallet', linked: false,
@@ -61,14 +89,15 @@ const textContent = node => typeof node === 'string' ? node : (node.children || 
 const button = (view, label) => view.root.findAllByType('Pressable').find(node =>
   node.props.accessibilityRole === 'button' && node.findAllByType('Text').some(text => textContent(text) === label));
 const checkbox = view => view.root.findAllByType('Pressable').find(node => node.props.accessibilityRole === 'checkbox');
+// A footer action is a button or a slide. It lives in the fixed footer, never in the scrolling content.
 const footerAction = (view, label) => {
-  const matches = node => node.props.accessibilityRole === 'button' && node.props.accessibilityLabel === label;
-  const buttons = view.root.findAllByType('Pressable').filter(matches);
-  expect(buttons).toHaveLength(1);
-  expect(view.root.findByType('ScrollView').findAllByType('Pressable').filter(matches)).toHaveLength(0);
-  const footerButtons = view.root.findByProps({testID: 'registration-footer'}).findAllByType('Pressable').filter(matches);
-  expect(footerButtons).toEqual(buttons);
-  return buttons[0];
+  const matches = node => (node.type === SlideToConfirm && node.props.label === label) ||
+    (node.type === AppButton && node.props.children === label);
+  const found = view.root.findAll(matches);
+  expect(found).toHaveLength(1);
+  expect(view.root.findByType('ScrollView').findAll(matches)).toHaveLength(0);
+  expect(view.root.findByProps({testID: 'registration-footer'}).findAll(matches)).toEqual(found);
+  return found[0];
 };
 const radio = (view, label) => view.root.findAllByType('Pressable').find(node =>
   node.props.accessibilityRole === 'radio' && node.props.accessibilityLabel === label);
@@ -86,10 +115,14 @@ const enterReferral = async (view, referral) => {
   await act(async () => referralField(view).props.onChangeText(referral));
 };
 let views;
+const makeNavigation = overrides => ({
+  navigate: jest.fn(), replace: jest.fn(), addListener: jest.fn(() => jest.fn()),
+  getParent: () => ({goBack: jest.fn(), reset: jest.fn()}), ...overrides,
+});
 const mount = async (Component, props = {}) => {
   let view;
   await act(async () => {
-    view = create(<Component navigation={props.navigation || {navigate: jest.fn(), replace: jest.fn()}} route={{params: {jobId: 'job'}}} {...props} />, {
+    view = create(<Component navigation={props.navigation || makeNavigation()} route={{params: {jobId: 'job'}}} {...props} />, {
       createNodeMock: node => node.type === 'ScrollView' ? {scrollTo: mockScrollTo} : null,
     });
   });
@@ -112,7 +145,12 @@ beforeEach(() => {
     authentication: {activeAccount: {keys: {VRSC: {vrpc: {addresses: ['wallet']}}}}},
     coins: {activeCoinsForUser: [{id: 'VRSC', system_id: 'chain', currency_id: 'chain', display_ticker: 'VRSC'}]},
     channelStore_verusid: {registrationJobs: {}},
+    settings: {generalWalletSettings: {}}, modal: {stack: []}, ledger: {balances: {}, rates: {}},
   };
+  mockUpdateRegistrationUiState.mockReset().mockResolvedValue(undefined);
+  mockReadRegistrationBalances.mockReset().mockResolvedValue({status: 'ready', amounts: {chain: '10'}});
+  mockCheckRegistrationFunds.mockReset().mockResolvedValue({status: 'enough'});
+  mockApi.getRegistrationEstimate.mockReset().mockResolvedValue({...review, status: 'commitment_confirmed'});
   setSavedReview({...review});
   mockApi.reconcileRegistration.mockResolvedValue({...review});
   mockApi.approveCommitment.mockResolvedValue({...review, status: 'commitment_broadcast'});
@@ -299,51 +337,51 @@ it('keeps the recovery controls and saved rows when clearing registration data f
   expect(button(view, 'Clear all registration data')).toBeDefined();
 });
 
+const secondPayment = status => {
+  mockApi.prepareRegistration.mockResolvedValue({...review, status: 'registration_prepared'});
+  mockApi.refreshRegistrationReview.mockResolvedValue({...review, status: 'registration_prepared'});
+  mockApi.getRegistrationEstimate.mockResolvedValue({...review, status});
+};
+
 it.each([
-  ['commitment', IdentityCommitmentReview, 'commitment_prepared', 'Pay & commit name'],
-  ['registration', IdentityRegistrationReview, 'registration_prepared', 'Pay & register identity'],
-])('keeps the %s approval checkbox together with its single fixed payment action', async (_, Component, status, label) => {
+  ['commitment', IdentityCommitmentReview, 'commitment_prepared', 'Slide to start'],
+  ['registration', IdentityRegistrationProgress, 'registration_prepared', 'Slide to create'],
+])('keeps the %s approval together with its single fixed payment action', async (_, Component, status, label) => {
   setSavedReview({...review, status});
+  secondPayment(status);
   const view = await mount(Component);
-  expect(footerAction(view, label).props.disabled).toBe(true);
-  const footer = view.root.findByProps({testID: 'registration-footer'});
-  const checks = footer.findAllByType('Pressable').filter(node => node.props.accessibilityRole === 'checkbox');
-  expect(checks).toHaveLength(1);
-  expect(checks[0]).toBe(checkbox(view));
-  expect(view.root.findByType('ScrollView').findAllByType('Pressable')
-    .filter(node => node.props.accessibilityRole === 'checkbox')).toHaveLength(0);
-  expect(view.root.findByType('ScrollView').findAllByType(CostReview)).toHaveLength(1);
-  await press(checks[0]);
+  // One deliberate slide replaces the cost checkbox and the payment button.
+  expect(footerAction(view, label).props.disabled).toBe(false);
+  expect(view.root.findAllByType(SlideToConfirm)).toHaveLength(1);
+  expect(view.root.findByType('ScrollView').findAllByType(SlideToConfirm)).toHaveLength(0);
+  expect(mockApi.approveCommitment).not.toHaveBeenCalled();
+  expect(mockApi.approveRegistration).not.toHaveBeenCalled();
+});
+
+it.each([
+  ['commitment', IdentityCommitmentReview, 'commitment_prepared', 'Slide to start'],
+  ['registration', IdentityRegistrationProgress, 'registration_prepared', 'Slide to create'],
+])('retains a named disabled %s payment action while its review is loading', async (_, Component, status, label) => {
+  secondPayment(status);
+  let finishLoading;
+  mockApi.getRegistrationReview.mockReturnValueOnce(new Promise(resolve => {finishLoading = resolve;}));
+  const view = await mount(Component);
+  const action = footerAction(view, label);
+  expect(action.props.disabled).toBe(true);
+  expect(action.props.loading).toBeFalsy();
+  expect(action.findAllByType('ActivityIndicator')).toHaveLength(0);
+  await act(async () => finishLoading({...review, status}));
   expect(footerAction(view, label).props.disabled).toBe(false);
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
   expect(mockApi.approveRegistration).not.toHaveBeenCalled();
 });
 
 it.each([
-  ['commitment', IdentityCommitmentReview, 'commitment_prepared', 'Pay & commit name'],
-  ['registration', IdentityRegistrationReview, 'registration_prepared', 'Pay & register identity'],
-])('retains a named disabled %s payment action while its review is loading', async (_, Component, status, label) => {
-  let finishLoading;
-  mockApi.getRegistrationReview.mockReturnValueOnce(new Promise(resolve => {finishLoading = resolve;}));
-  const view = await mount(Component);
-  const action = footerAction(view, label);
-  expect(action.props.disabled).toBe(true);
-  expect(action.props.accessibilityState.busy).toBe(false);
-  expect(action.findAllByType('ActivityIndicator')).toHaveLength(0);
-  await act(async () => finishLoading({...review, status}));
-  expect(footerAction(view, label).props.disabled).toBe(true);
-  expect(mockApi.approveCommitment).not.toHaveBeenCalled();
-  expect(mockApi.approveRegistration).not.toHaveBeenCalled();
-});
-
-it.each([
-  ['commitment_prepared', 'Review commitment'],
-  ['commitment_expired', 'Review replacement'],
-  ['commitment_confirmed', 'Continue registration'],
-  ['registration_prepared', 'Continue registration'],
-  ['registration_expired', 'Continue registration'],
-  ['registered', 'Link to wallet'],
-  ['complete', 'Done'],
+  ['commitment_prepared', 'Slide to start'],
+  ['commitment_expired', 'Slide to start'],
+  ['commitment_confirmed', 'Slide to create'],
+  ['registration_prepared', 'Slide to create'],
+  ['registration_expired', 'Slide to create'],
   ['commitment_broadcast', 'Done for now'],
   ['registration_broadcast', 'Done for now'],
   ['commitment_signed', 'Retry sending'],
@@ -351,118 +389,96 @@ it.each([
   ['commitment_spent', 'Check status'],
 ])('keeps the %s progress action in the fixed footer without a duplicate scrolling action', async (status, label) => {
   setSavedReview({...review, status});
+  mockApi.getRegistrationEstimate.mockResolvedValue({...review, status});
+  mockApi.prepareRegistration.mockResolvedValue({...review, status: 'registration_prepared'});
+  mockApi.refreshRegistrationReview.mockResolvedValue({...review, status: 'registration_prepared'});
   const view = await mount(IdentityRegistrationProgress);
-  expect(footerAction(view, label).props.disabled).toBe(false);
+  footerAction(view, label);
+});
+
+it.each([['registered', 'VerusID created'], ['complete', 'VerusID created']])('shows the %s result with its Link VerusID action instead of the progress footer', async (status, title) => {
+  setSavedReview({...review, status});
+  const view = await mount(IdentityRegistrationProgress);
+  expect(textContent(view.root)).toContain(title);
+  expect(view.root.findAllByType(AppButton).some(node => node.props.children === 'Link VerusID')).toBe(true);
+  expect(view.root.findAllByProps({testID: 'registration-footer'})).toHaveLength(0);
 });
 
 it('keeps a failed initial progress check retryable through one footer action', async () => {
   mockApi.reconcileRegistration.mockRejectedValueOnce(new Error('Connection unavailable'));
   const view = await mount(IdentityRegistrationProgress);
-  await press(footerAction(view, 'Check status'));
+  await press(footerAction(view, 'Try again'));
   expect(mockApi.reconcileRegistration).toHaveBeenCalledTimes(2);
-  footerAction(view, 'Review commitment');
+  footerAction(view, 'Slide to start');
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
 });
 
 it('requires explicit commitment cost acceptance and does not also approve registration', async () => {
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
+  const navigation = makeNavigation();
   const view = await mount(IdentityCommitmentReview, {navigation});
-  expect(button(view, 'Pay & commit name').props.disabled).toBe(true);
-  expect(mockApi.approveCommitment).not.toHaveBeenCalled();
-  expect(textContent(view.root)).toContain('Estimated total');
+  expect(textContent(view.root)).toContain('You pay');
   expect(textContent(view.root)).toContain('1.0001 VRSC');
-  await press(checkbox(view));
-  expect(button(view, 'Pay & commit name').props.disabled).toBe(false);
-  await press(button(view, 'Pay & commit name'));
+  expect(mockApi.approveCommitment).not.toHaveBeenCalled();
+  expect(footerAction(view, 'Slide to start').props.disabled).toBe(false);
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
   expect(mockApi.approveCommitment).toHaveBeenCalledTimes(1);
   expect(mockApi.approveCommitment).toHaveBeenCalledWith('job', 'review-token', expect.any(Object));
   expect(mockApi.approveRegistration).not.toHaveBeenCalled();
   expect(navigation.replace).toHaveBeenCalledWith('IdentityRegistrationProgress', {jobId: 'job'});
 });
 
-it('pulling to refresh a price clears the previous acceptance and displays the new total', async () => {
-  const nextQuote = {...quote, totalRequired: {chain: '200000000'}, totalOperationRequired: {chain: '200010000'}};
-  mockApi.refreshRegistrationReview.mockResolvedValue({...review, quote: nextQuote, approvalToken: 'new-price'});
-  const view = await mount(IdentityCommitmentReview);
-  await press(checkbox(view));
-  expect(button(view, 'Review options')).toBeUndefined();
-  await pullRefresh(view);
-  expect(button(view, 'Pay & commit name').props.disabled).toBe(true);
-  expect(checkbox(view).props.accessibilityState.checked).toBe(false);
-  expect(textContent(view.root)).toContain('2.0001 VRSC');
-  expect(mockApi.approveCommitment).not.toHaveBeenCalled();
-  await press(checkbox(view));
-  await press(button(view, 'Pay & commit name'));
-  expect(mockApi.approveCommitment).toHaveBeenCalledWith('job', 'new-price', expect.any(Object));
-});
-
-it('does not animate the payment button while only refreshing its costs', async () => {
-  const view = await mount(IdentityCommitmentReview);
-  await press(checkbox(view));
-  let finishRefresh;
-  mockApi.refreshRegistrationReview.mockReturnValueOnce(new Promise(resolve => {finishRefresh = resolve;}));
-  const control = view.root.findByType('ScrollView').props.refreshControl;
-  await act(async () => { control.props.onRefresh(); });
-  const payment = button(view, 'Pay & commit name');
-  expect(payment.props.disabled).toBe(true);
-  expect(payment.props.accessibilityState.busy).toBe(false);
-  expect(payment.findAllByType('ActivityIndicator')).toHaveLength(0);
-  expect(view.root.findByType('ScrollView').props.refreshControl.props.refreshing).toBe(true);
-  expect(mockApi.approveCommitment).not.toHaveBeenCalled();
-  await act(async () => finishRefresh({...review}));
-  expect(checkbox(view).props.accessibilityState.checked).toBe(false);
-});
-
 it.each([
-  [IdentityCommitmentReview, 'commitment_prepared', 'Pay & commit name', 'approveCommitment'],
-  [IdentityRegistrationReview, 'registration_prepared', 'Pay & register identity', 'approveRegistration'],
+  [IdentityCommitmentReview, 'commitment_prepared', 'Slide to start', 'approveCommitment'],
+  [IdentityRegistrationProgress, 'registration_prepared', 'Slide to create', 'approveRegistration'],
 ])('prevents double taps from signing either payment twice', async (Component, status, label, method) => {
   let complete;
   setSavedReview({...review, status});
+  secondPayment(status);
   mockApi[method].mockReturnValue(new Promise(resolve => {complete = resolve;}));
   const view = await mount(Component);
-  await press(checkbox(view));
-  const onPress = button(view, label).props.onPress;
-  act(() => {onPress(); onPress();});
+  const onPress = footerAction(view, label).props.onPress;
+  await act(async () => {onPress(); onPress();});
   expect(mockApi[method]).toHaveBeenCalledTimes(1);
   await act(async () => complete({...review, status: status.replace('prepared', 'broadcast')}));
 });
 
 it('continuing after confirmation prepares a separate registration review without paying', async () => {
   setSavedReview({...review, status: 'commitment_confirmed', commitmentTxid: 'txid'});
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
+  mockApi.prepareRegistration.mockResolvedValue({...review, status: 'registration_prepared'});
+  const navigation = makeNavigation();
   const view = await mount(IdentityRegistrationProgress, {navigation});
-  await press(button(view, 'Continue registration'));
   expect(mockApi.prepareRegistration).toHaveBeenCalledWith({jobId: 'job'}, expect.any(Object));
   expect(mockApi.approveRegistration).not.toHaveBeenCalled();
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
-  expect(navigation.navigate).toHaveBeenCalledWith('IdentityRegistrationReview', {jobId: 'job'});
+  expect(footerAction(view, 'Slide to create').props.disabled).toBe(false);
+  expect(navigation.navigate).not.toHaveBeenCalled();
 });
 
 it('does not offer to register an unconfirmed name commitment', async () => {
   setSavedReview({...review, status: 'commitment_broadcast', commitmentTxid: 'txid'});
   const view = await mount(IdentityRegistrationProgress);
-  expect(button(view, 'Continue registration')).toBeUndefined();
+  expect(footerAction(view, 'Slide to create').props.disabled).toBe(true);
+  expect(mockApi.prepareRegistration).not.toHaveBeenCalled();
   expect(textContent(view.root)).toContain('Confirming commitment');
-  expect(button(view, 'Done for now')).toBeDefined();
+  expect(footerAction(view, 'Done for now')).toBeDefined();
 });
 
 it('keeps passive status checks out of action loading and stops polling when ready', async () => {
   jest.useFakeTimers();
   setSavedReview({...review, status: 'commitment_broadcast'});
+  mockApi.prepareRegistration.mockResolvedValue({...review, status: 'registration_prepared'});
   const view = await mount(IdentityRegistrationProgress);
-  expect(mockApi.getRegistrationReview).not.toHaveBeenCalled();
   expect(mockApi.reconcileRegistration).toHaveBeenCalledTimes(1);
   let finishPoll;
   mockApi.reconcileRegistration.mockReturnValueOnce(new Promise(resolve => {finishPoll = resolve;}));
   await act(async () => { jest.advanceTimersByTime(20000); });
   expect(mockApi.reconcileRegistration).toHaveBeenCalledTimes(2);
-  expect(button(view, 'Done for now').props.disabled).toBe(false);
-  expect(button(view, 'Check status').props.disabled).not.toBe(true);
+  expect(footerAction(view, 'Done for now').props.disabled).toBeFalsy();
+  expect(footerAction(view, 'Slide to create').props.loading).toBeFalsy();
   expect(view.root.findAllByType('ActivityIndicator')).toHaveLength(0);
   expect(mockApi.reconcileRegistration.mock.calls[1][1]).toMatchObject({registrationBackground: true});
   await act(async () => finishPoll({...review, status: 'commitment_confirmed'}));
-  expect(button(view, 'Continue registration').props.disabled).toBe(false);
+  expect(footerAction(view, 'Slide to create').props.disabled).toBe(false);
   await act(async () => { jest.advanceTimersByTime(60000); });
   expect(mockApi.reconcileRegistration).toHaveBeenCalledTimes(2);
   expect(view.root.findAllByType('ActivityIndicator')).toHaveLength(0);
@@ -471,6 +487,7 @@ it('keeps passive status checks out of action loading and stops polling when rea
 it('aborts a passive check before a foreground action and ignores its stale result', async () => {
   jest.useFakeTimers();
   setSavedReview({...review, status: 'commitment_broadcast'});
+  mockApi.prepareRegistration.mockResolvedValue({...review, status: 'registration_prepared'});
   const view = await mount(IdentityRegistrationProgress);
   let finishPoll;
   mockApi.reconcileRegistration
@@ -478,14 +495,14 @@ it('aborts a passive check before a foreground action and ignores its stale resu
     .mockResolvedValueOnce({...review, status: 'commitment_confirmed'});
   await act(async () => { jest.advanceTimersByTime(20000); });
   const passiveContext = mockApi.reconcileRegistration.mock.calls[1][1];
-  await act(async () => { button(view, 'Check status').props.onPress(); });
+  await act(async () => { view.root.findByType('ScrollView').props.refreshControl.props.onRefresh(); });
   expect(passiveContext.signal.aborted).toBe(true);
   expect(mockApi.reconcileRegistration).toHaveBeenCalledTimes(2);
   await act(async () => finishPoll({...review, status: 'registered'}));
   expect(mockApi.reconcileRegistration).toHaveBeenCalledTimes(3);
   expect(mockApi.reconcileRegistration.mock.calls[2][1].registrationBackground).toBeUndefined();
-  expect(button(view, 'Continue registration')).toBeDefined();
-  expect(button(view, 'Link to wallet')).toBeUndefined();
+  expect(footerAction(view, 'Slide to create')).toBeDefined();
+  expect(textContent(view.root)).not.toContain('VerusID created');
   expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(0);
 });
 
@@ -506,22 +523,22 @@ it('aborts passive work when progress unmounts', async () => {
 
 it('requires a fresh acceptance for the registration payment and distinguishes the already-paid commitment', async () => {
   setSavedReview({...review, status: 'registration_prepared'});
-  const view = await mount(IdentityRegistrationReview);
-  expect(button(view, 'Pay & register identity').props.disabled).toBe(true);
-  expect(view.root.findByType(CostReview).props.stage).toBe('registration');
-  expect(textContent(view.root)).toContain('Commitment already paid');
-  expect(checkbox(view).props.accessibilityState.checked).toBe(false);
-  await press(checkbox(view));
-  await press(button(view, 'Pay & register identity'));
+  secondPayment('registration_prepared');
+  const view = await mount(IdentityRegistrationProgress);
+  expect(textContent(view.root)).toContain('Confirmed.');
+  expect(textContent(view.root)).toContain('Registration');
+  expect(footerAction(view, 'Slide to create').props.disabled).toBe(false);
+  await act(async () => footerAction(view, 'Slide to create').props.onPress());
   expect(mockApi.approveRegistration).toHaveBeenCalledWith('job', 'review-token', expect.any(Object));
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
 });
 
 it('saves a payment review for later without approving either payment', async () => {
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
+  const goBack = jest.fn();
+  const navigation = makeNavigation({getParent: () => ({goBack, reset: jest.fn()})});
   const view = await mount(IdentityCommitmentReview, {navigation});
-  await press(button(view, 'Save for later'));
-  expect(navigation.navigate).toHaveBeenCalledWith('IdentityRegistrationStart');
+  await press(footerAction(view, 'Save for later'));
+  expect(goBack).toHaveBeenCalledTimes(1);
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
   expect(mockApi.approveRegistration).not.toHaveBeenCalled();
 });
@@ -718,8 +735,8 @@ it('uses the selected network wallet’s private address when creating an identi
 
 it('includes the private receiving address in the identity review', async () => {
   setSavedReview({...review, identity: {...review.identity, privateaddress: PRIVATE_ADDRESS}});
-  const view = await mount(IdentityRegistrationReview);
-  await press(button(view, 'Identity details'));
+  const view = await mount(IdentityCommitmentReview);
+  await press(view.root.findAllByType(TextAction).find(node => node.props.children === 'Transaction details'));
   expect(textContent(view.root)).toContain('Private address');
   expect(textContent(view.root)).toContain(PRIVATE_ADDRESS);
 });
@@ -774,45 +791,49 @@ it.each([
 });
 
 it('links a confirmed identity in one tap and returns after linking', async () => {
+  jest.useFakeTimers();
   const registered = {...review, status: 'registered', linked: false, commitmentHeight: 10, registrationTxid: 'registration-txid'};
   setSavedReview(registered);
-  const goBack = jest.fn();
-  const navigation = {navigate: jest.fn(), replace: jest.fn(), addListener: jest.fn(() => jest.fn()), getParent: () => ({goBack})};
+  const reset = jest.fn();
+  const navigation = makeNavigation({getParent: () => ({goBack: jest.fn(), reset})});
   const view = await mount(IdentityRegistrationProgress, {navigation});
+  const appButton = label => view.root.findAllByType(AppButton).find(node => node.props.children === label);
   expect(mockApi.linkRegisteredIdentity).not.toHaveBeenCalled();
   expect(textContent(view.root)).toContain('VerusID created');
-  expect(view.root.findAllByType(AppButton).some(node => node.props.children === 'Not now')).toBe(true);
-  expect(button(view, 'Pay & register identity')).toBeUndefined();
-  await press(view.root.findAllByType(AppButton).find(node => node.props.children === 'Link to wallet'));
+  expect(appButton('Not now')).toBeDefined();
+  expect(view.root.findAllByType(SlideToConfirm)).toHaveLength(0);
+  await press(appButton('Link VerusID'));
   expect(mockApi.linkRegisteredIdentity).toHaveBeenCalledTimes(1);
   expect(mockApi.linkRegisteredIdentity).toHaveBeenCalledWith('job', expect.any(Object));
   expect(mockApi.approveRegistration).not.toHaveBeenCalled();
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
   expect(mockAlert).not.toHaveBeenCalled();
-  expect(goBack).toHaveBeenCalledTimes(1);
+  expect(textContent(view.root)).toContain('alice@ is linked');
+  await press(appButton('Done'));
+  await act(async () => { jest.advanceTimersByTime(1000); });
+  expect(reset).toHaveBeenCalledTimes(1);
 });
 
 it('stops passive polling after registration is ready to link and links once during repeated taps', async () => {
   jest.useFakeTimers();
   setSavedReview({...review, status: 'registered', linked: false});
-  const goBack = jest.fn();
-  const navigation = {navigate: jest.fn(), replace: jest.fn(), addListener: jest.fn(() => jest.fn()), getParent: () => ({goBack})};
+  const reset = jest.fn();
+  const navigation = makeNavigation({getParent: () => ({goBack: jest.fn(), reset})});
   let finishLinking;
   mockApi.linkRegisteredIdentity.mockReturnValueOnce(new Promise(resolve => { finishLinking = resolve; }));
   const view = await mount(IdentityRegistrationProgress, {navigation});
   const initialChecks = mockApi.reconcileRegistration.mock.calls.length;
-  const linkButton = () => view.root.findAllByType(AppButton).find(node => node.props.children === 'Link to wallet');
+  const linkButton = () => view.root.findAllByType(AppButton).find(node => node.props.children === 'Link VerusID');
   const link = linkButton().props.onPress;
   await act(async () => { link(); link(); });
   expect(mockApi.linkRegisteredIdentity).toHaveBeenCalledTimes(1);
-  expect(linkButton().props).toMatchObject({disabled: true, loading: true});
-  expect(goBack).not.toHaveBeenCalled();
+  expect(linkButton().props.disabled).toBe(true);
+  expect(reset).not.toHaveBeenCalled();
   await act(async () => jest.advanceTimersByTime(20000));
   expect(mockApi.reconcileRegistration).toHaveBeenCalledTimes(initialChecks);
   await act(async () => finishLinking({...review, status: 'complete', linked: true}));
   expect(mockApi.linkRegisteredIdentity).toHaveBeenCalledTimes(1);
   expect(mockAlert).not.toHaveBeenCalled();
-  expect(goBack).toHaveBeenCalledTimes(1);
 });
 
 it('keeps the full cost estimate visible when the wallet needs more funding', async () => {
@@ -1093,18 +1114,34 @@ it.each([
   expect(mockApi.approveRegistration).not.toHaveBeenCalled();
 });
 
+// Delete is in the About this registration sheet. Each sheet closes before the next action runs.
+const openDelete = async view => {
+  await press(view.root.findAll(node => node.props.accessibilityLabel === 'About this registration' && node.props.onPress)[0]);
+  await press(view.root.findAllByType(TextAction).find(node => node.props.children === 'Delete registration'));
+  await act(async () => { jest.advanceTimersByTime(1000); });
+};
+const confirmDelete = async view => {
+  await press(view.root.findAllByType(AppButton).find(node => node.props.children === 'Delete'));
+  await act(async () => { jest.advanceTimersByTime(1000); });
+};
+
 it('warns that the original paid commitment fee is lost forever before deleting progress', async () => {
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
-  setSavedReview({...review, status: 'commitment_confirmed', deletionKind: 'commitment', commitmentFee: '20000', chainTicker: 'VRSC'});
+  jest.useFakeTimers();
+  const goBack = jest.fn();
+  const navigation = makeNavigation({getParent: () => ({goBack, reset: jest.fn()})});
+  const paid = {...review, status: 'commitment_confirmed', deletionKind: 'commitment', commitmentFee: '20000', chainTicker: 'VRSC'};
+  setSavedReview(paid);
+  mockApi.prepareRegistration.mockResolvedValue({...paid, status: 'registration_prepared'});
   const view = await mount(IdentityRegistrationProgress, {navigation});
-  await press(button(view, 'Delete saved registration'));
+  await openDelete(view);
   expect(mockApi.deleteRegistration).not.toHaveBeenCalled();
-  expect(mockAlert.mock.calls[0][1]).toContain('0.0002 VRSC commitment fee will be lost forever');
-  expect(mockAlert.mock.calls[0][1]).toContain('cannot finish this registration');
-  expect(mockAlert.mock.calls[0][1]).not.toContain('0.0001');
-  await act(async () => mockAlert.mock.calls[0][2].find(action => action.text === 'Delete').onPress());
+  const message = view.root.findByType(AcknowledgeSheet).props.message;
+  expect(message).toContain('0.0002 VRSC commitment fee is lost');
+  expect(message).toContain('cannot finish this registration');
+  expect(message).not.toContain('0.0001');
+  await confirmDelete(view);
   expect(mockApi.deleteRegistration).toHaveBeenCalledWith('job', 'commitment', expect.any(Object));
-  expect(navigation.navigate).toHaveBeenCalledWith('IdentityRegistrationStart');
+  expect(goBack).toHaveBeenCalledTimes(1);
   expect(mockApi.retryBroadcast).not.toHaveBeenCalled();
 });
 
@@ -1120,24 +1157,25 @@ it('shows the exact paid-commitment loss warning from a home summary', async () 
 });
 
 it('never offers deletion for an unsettled signed registration', async () => {
+  jest.useFakeTimers();
   setSavedReview({...review, status: 'registration_broadcast', deletionKind: null});
   const progress = await mount(IdentityRegistrationProgress);
-  expect(button(progress, 'Delete saved registration')).toBeUndefined();
-  mockState.channelStore_verusid.registrationJobs.saved = {id: 'saved', displayName: 'saved@', status: 'registration_signed', deletionKind: null, createdAt: 1};
-  const home = await mount(IdentityRegistrationStart);
-  expect(home.root.findAllByProps({accessibilityLabel: 'Delete saved registration for saved@'})).toHaveLength(0);
+  await press(progress.root.findAll(node => node.props.accessibilityLabel === 'About this registration' && node.props.onPress)[0]);
+  expect(progress.root.findAllByType(TextAction).filter(node => node.props.children === 'Delete registration')).toHaveLength(0);
   expect(mockApi.deleteRegistration).not.toHaveBeenCalled();
 });
 
 it('passes the deletion kind the user confirmed and keeps a changed registration when deletion is rejected', async () => {
-  const navigation = {navigate: jest.fn(), replace: jest.fn()};
+  jest.useFakeTimers();
+  const goBack = jest.fn();
+  const navigation = makeNavigation({getParent: () => ({goBack, reset: jest.fn()})});
   setSavedReview({...review, status: 'commitment_prepared', deletionKind: 'draft'});
   mockApi.deleteRegistration.mockRejectedValueOnce(new Error('Registration changed. Review its updated status before deleting.'));
   const view = await mount(IdentityRegistrationProgress, {navigation});
-  await press(button(view, 'Delete saved registration'));
-  await act(async () => mockAlert.mock.calls[0][2].find(action => action.text === 'Delete').onPress());
+  await openDelete(view);
+  await confirmDelete(view);
   expect(mockApi.deleteRegistration).toHaveBeenCalledWith('job', 'draft', expect.any(Object));
-  expect(navigation.navigate).not.toHaveBeenCalled();
+  expect(goBack).not.toHaveBeenCalled();
   expect(textContent(view.root)).toContain('Registration changed. Review its updated status before deleting.');
 });
 
@@ -1157,68 +1195,23 @@ it('offers linked root and chain identities on a PBaaS network without duplicati
 });
 
 it('a rejected price approval exposes an immediate refresh and requires renewed acceptance', async () => {
-  mockApi.approveCommitment.mockRejectedValueOnce(new Error('Registration costs changed. Review the updated amounts.'));
-  const view = await mount(IdentityCommitmentReview);
-  await press(checkbox(view));
-  await press(button(view, 'Pay & commit name'));
-  expect(button(view, 'Pay & commit name').props.disabled).toBe(true);
-  expect(button(view, 'Refresh review')).toBeDefined();
-  await press(button(view, 'Refresh review'));
-  expect(checkbox(view).props.accessibilityState.checked).toBe(false);
-  expect(button(view, 'Pay & commit name').props.disabled).toBe(true);
+  mockApi.approveCommitment.mockRejectedValueOnce(Object.assign(new Error('Registration costs changed. Review the updated amounts.'), {code: 'REVIEW_CHANGED'}));
+  const navigation = makeNavigation();
+  const view = await mount(IdentityCommitmentReview, {navigation});
+  await act(async () => footerAction(view, 'Slide to start').props.onPress());
+  // The screen reads the changed review at once; it does not move on or pay again.
+  expect(mockApi.getRegistrationReview).toHaveBeenCalledTimes(2);
   expect(mockApi.approveCommitment).toHaveBeenCalledTimes(1);
-});
-
-it('keeps manual review retries out of the pull indicator and reveals pull errors after refreshing stops', async () => {
-  mockApi.approveCommitment.mockRejectedValueOnce(new Error('Registration costs changed.'));
-  const view = await mount(IdentityCommitmentReview);
-  const refreshControl = () => view.root.findByType('ScrollView').props.refreshControl;
-  const indicatorStateWhenScrolled = [];
-  mockScrollTo.mockImplementation(() => indicatorStateWhenScrolled.push(refreshControl().props.refreshing));
-  await press(checkbox(view));
-  await press(button(view, 'Pay & commit name'));
-  const initialErrorScrolls = mockScrollTo.mock.calls.length;
-  expect(initialErrorScrolls).toBeGreaterThan(0);
-
-  let failManualRefresh;
-  mockApi.refreshRegistrationReview.mockReturnValueOnce(new Promise((_, reject) => {failManualRefresh = reject;}));
-  const manualRefresh = button(view, 'Refresh review').props.onPress;
-  await act(async () => {manualRefresh();});
-  expect(refreshControl().props.refreshing).toBe(false);
-  expect(view.root.findAllByProps({accessibilityRole: 'alert'})).toHaveLength(0);
-  expect(mockScrollTo).toHaveBeenCalledTimes(initialErrorScrolls);
-  await act(async () => failManualRefresh(new Error('Connection unavailable')));
-  const manualErrorScrolls = mockScrollTo.mock.calls.length;
-  expect(manualErrorScrolls).toBeGreaterThan(initialErrorScrolls);
-  expect(refreshControl().props.refreshing).toBe(false);
-
-  let failPullRefresh;
-  mockApi.refreshRegistrationReview.mockReturnValueOnce(new Promise((_, reject) => {failPullRefresh = reject;}));
-  await act(async () => {refreshControl().props.onRefresh();});
-  expect(refreshControl().props.refreshing).toBe(true);
-  expect(mockScrollTo).toHaveBeenCalledTimes(manualErrorScrolls);
-  await act(async () => failPullRefresh(new Error('Connection unavailable')));
-  expect(refreshControl().props.refreshing).toBe(false);
-  expect(mockScrollTo.mock.calls.length).toBeGreaterThan(manualErrorScrolls);
-  expect(mockScrollTo).toHaveBeenLastCalledWith({y: 0, animated: true});
-  expect(indicatorStateWhenScrolled.every(refreshing => refreshing === false)).toBe(true);
-  expect(view.root.findByProps({accessibilityRole: 'alert'}).findByType('Text').children.join('')).toBe('Connection unavailable');
-
-  let finishAccessibleRefresh;
-  mockApi.refreshRegistrationReview.mockReturnValueOnce(new Promise(resolve => {finishAccessibleRefresh = resolve;}));
-  await act(async () => {
-    view.root.findByType('ScrollView').props.onAccessibilityAction({nativeEvent: {actionName: 'refresh'}});
-  });
-  expect(refreshControl().props.refreshing).toBe(false);
-  await act(async () => finishAccessibleRefresh({...review}));
-  expect(mockApi.refreshRegistrationReview).toHaveBeenCalledTimes(3);
+  expect(navigation.replace).not.toHaveBeenCalled();
+  expect(footerAction(view, 'Slide to start').props.disabled).toBe(false);
 });
 
 it('a failed saved-review load offers a retry without leaving the screen', async () => {
-  mockApi.getRegistrationReview.mockRejectedValueOnce(new Error('Connection unavailable'));
+  mockApi.getRegistrationReview.mockRejectedValueOnce(Object.assign(new Error('Network Error'), {code: 'ERR_NETWORK'}));
   const view = await mount(IdentityCommitmentReview);
-  await press(footerAction(view, 'Try again'));
+  expect(footerAction(view, 'Slide to start').props.disabled).toBe(true);
+  await press(view.root.findAllByType(TextAction).find(node => node.props.children === 'Try again'));
   expect(mockApi.getRegistrationReview).toHaveBeenCalledTimes(2);
-  expect(footerAction(view, 'Pay & commit name').props.disabled).toBe(true);
+  expect(footerAction(view, 'Slide to start').props.disabled).toBe(false);
   expect(mockApi.approveCommitment).not.toHaveBeenCalled();
 });
