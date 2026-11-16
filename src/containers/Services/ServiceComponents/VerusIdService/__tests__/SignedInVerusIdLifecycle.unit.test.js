@@ -5,12 +5,13 @@
      close animation. The delayed callback must validate against the exact
      session scope that began the unlink, not the scope of the current render,
      or a rerender/session change lets the old callback navigate.
-  2. A READY resume that never settles must not permanently lock the
-     component. A session/epoch change has to release the single-flight gate
-     for the new session while stale completions stay inert.
+  2. A READY row stays usable after a session/epoch change. Its "Link" action
+     opens the Link VerusIDs page for the row's network. Until 63289e4b the
+     row could also resume a login ("Link and login") behind a single-flight
+     gate; that action is gone, so the two gate tests went with it.
 
   Both cases exercise the real production handlers through a rendered
-  component with deferred promises rather than a source-shape assertion.
+  component rather than a source-shape assertion.
 */
 import React from 'react';
 import {act, create} from 'react-test-renderer';
@@ -28,6 +29,7 @@ const mockSetUserCoins = jest.fn(activeCoins => ({
   payload: {activeCoinsForUser: activeCoins},
 }));
 const mockProcessVerusId = jest.fn();
+const mockNavigate = jest.fn();
 const mockDispatch = jest.fn();
 const mockGoBack = jest.fn();
 let mockHeaderRight = null;
@@ -103,11 +105,17 @@ jest.mock('../../../../../images/customIcons', () => ({
 }));
 jest.mock('lottie-react-native', () => 'LottieView');
 jest.mock('lucide-react-native', () => ({
+  AtSign: 'AtSign',
   Check: 'Check',
+  CircleAlert: 'CircleAlert',
   Copy: 'Copy',
   ExternalLink: 'ExternalLink',
+  Info: 'Info',
+  Lock: 'Lock',
+  LogIn: 'LogIn',
   Pencil: 'Pencil',
   Plus: 'Plus',
+  Wallet: 'Wallet',
 }));
 jest.mock(
   '../../../../../containers/DeepLink/components/VerusIdIdentityPickerSheet/LinkExistingVerusIdSheet',
@@ -426,7 +434,7 @@ describe('SignedInVerusIdDetails unlink dismissal lifecycle', () => {
   });
 });
 
-describe('SignedInVerusIdService READY resume ownership', () => {
+describe('SignedInVerusIdService READY row action', () => {
   const buildController = () => ({
     state: {linkedIds: {}},
     props: {
@@ -436,7 +444,7 @@ describe('SignedInVerusIdService READY resume ownership', () => {
         testnetOverrides: {},
       },
       loading: false,
-      navigation: buildNavigation(),
+      navigation: {...buildNavigation(), navigate: mockNavigate},
     },
     getLinkedIds: jest.fn(),
   });
@@ -458,7 +466,7 @@ describe('SignedInVerusIdService READY resume ownership', () => {
     )[0];
 
   // Walks up from the row's name to the row's own press target, which is the
-  // TouchableOpacity the READY "Link"/"Link and login" action installs.
+  // TouchableOpacity the READY "Link" action installs.
   const pressReadyRow = renderer => {
     let cursor = findReadyRow(renderer);
     while (cursor && typeof cursor.props?.onPress !== 'function') {
@@ -474,34 +482,23 @@ describe('SignedInVerusIdService READY resume ownership', () => {
     setSessionWithPending({sessionEpoch: 1});
   });
 
-  it('starts a READY action in the new session after an unresolved epoch-1 resume', async () => {
-    let resolveSecond;
-    mockProcessVerusId
-      .mockImplementationOnce(() => new Promise(() => {}))
-      .mockImplementationOnce(
-        () =>
-          new Promise(resolve => {
-            resolveSecond = resolve;
-          }),
-      );
+  it('opens the Link VerusIDs page for the row network, also after a session change', async () => {
     const controller = buildController();
     const renderer = await renderService(controller);
 
-    const row = findReadyRow(renderer);
-    expect(row).toBeTruthy();
+    expect(findReadyRow(renderer)).toBeTruthy();
 
-    // Epoch-1 resume never settles and stays single-flight within its session.
     await act(async () => {
       pressReadyRow(renderer);
     });
-    expect(mockProcessVerusId).toHaveBeenCalledTimes(1);
-    await act(async () => {
-      pressReadyRow(renderer);
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenLastCalledWith('LinkIdentities', {
+      chain: 'VRSCTEST',
     });
-    expect(mockProcessVerusId).toHaveBeenCalledTimes(1);
+    // The row no longer resumes the stored login request.
+    expect(mockProcessVerusId).not.toHaveBeenCalled();
 
-    // A same-account epoch change must release the gate without the old run
-    // settling, so the new session can start its own READY action.
+    // A same-account epoch change keeps the stored row; its action still works.
     setSessionWithPending({sessionEpoch: 2});
     await act(async () => {
       renderer.update(<SignedInVerusIdService controller={controller} />);
@@ -511,66 +508,10 @@ describe('SignedInVerusIdService READY resume ownership', () => {
     await act(async () => {
       pressReadyRow(renderer);
     });
-    expect(mockProcessVerusId).toHaveBeenCalledTimes(2);
-
-    const guard = mockProcessVerusId.mock.calls[1][6];
-    expect(guard()).toBe(true);
-
-    await act(async () => {
-      resolveSecond('dismissed');
+    expect(mockNavigate).toHaveBeenCalledTimes(2);
+    expect(mockNavigate).toHaveBeenLastCalledWith('LinkIdentities', {
+      chain: 'VRSCTEST',
     });
-    await flush();
-  });
-
-  it('keeps stale epoch-1 completion inert after the new session starts', async () => {
-    let rejectFirst;
-    mockProcessVerusId
-      .mockImplementationOnce(
-        () =>
-          new Promise((_resolve, reject) => {
-            rejectFirst = reject;
-          }),
-      )
-      .mockImplementationOnce(() => new Promise(() => {}));
-    const controller = buildController();
-    const renderer = await renderService(controller);
-
-    await act(async () => {
-      pressReadyRow(renderer);
-    });
-    const staleGuard = mockProcessVerusId.mock.calls[0][6];
-
-    setSessionWithPending({sessionEpoch: 2});
-    await act(async () => {
-      renderer.update(<SignedInVerusIdService controller={controller} />);
-    });
-    await flush();
-
-    await act(async () => {
-      pressReadyRow(renderer);
-    });
-    expect(mockProcessVerusId).toHaveBeenCalledTimes(2);
-
-    // The old run finally settles after the new session has started. Its guard
-    // must be stale, so its fallback sheet must not open and it must not clear
-    // the new session's single-flight gate.
-    expect(staleGuard()).toBe(false);
-    await act(async () => {
-      rejectFirst(new Error('stale failure'));
-    });
-    await flush();
-
-    // The stale rejection did not reopen the manual fallback sheet...
-    expect(findByLabelNoThrow(renderer, 'VerusID name or i-Address')).toBeFalsy();
-
-    // ...and the new session's run is still in flight, so a third tap is still
-    // blocked by single-flight.
-    await act(async () => {
-      pressReadyRow(renderer);
-    });
-    expect(mockProcessVerusId).toHaveBeenCalledTimes(2);
+    expect(mockProcessVerusId).not.toHaveBeenCalled();
   });
 });
-
-const findByLabelNoThrow = (renderer, label) =>
-  renderer.root.findAll(node => node.props?.accessibilityLabel === label)[0];

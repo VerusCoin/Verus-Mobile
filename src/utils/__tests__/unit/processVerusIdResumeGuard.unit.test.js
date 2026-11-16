@@ -46,7 +46,9 @@ describe('processVerusId resume guard', () => {
     await processVerusId(props, 'payload', null, null, 'generic');
 
     expect(props.dispatch).toHaveBeenCalledTimes(1);
-    expect(props.navigation.navigate).toHaveBeenCalledWith('DeepLink');
+    expect(props.navigation.navigate).toHaveBeenCalledWith('DeepLink', {
+      screen: 'VerifyDeepLink',
+    });
   });
 
   it('does not dispatch or navigate when the guard is already stale', async () => {
