@@ -640,7 +640,7 @@ describe('wallet backup NFC writer', () => {
     expect(mockNfcManager.isEnabled).not.toHaveBeenCalled();
 
     mockNfcManager.isEnabled.mockResolvedValueOnce(false);
-    await expect(write(null)).rejects.toThrow('NFC is disabled on this device.');
+    await expect(write(null)).rejects.toThrow('NFC is off. Turn it on in Settings, then try again.');
     expect(mockNfcManager.start).not.toHaveBeenCalled();
     expect(mockNfcManager.cancelTechnologyRequest).not.toHaveBeenCalled();
   });
