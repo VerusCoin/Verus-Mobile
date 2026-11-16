@@ -1,17 +1,20 @@
 let mockState;
 const mockValidate = jest.fn();
 const mockAlert = jest.fn();
-const mockOpenAuth = jest.fn();
+const mockUnlock = jest.fn();
 const mockDispatch = jest.fn();
 const mockRenderGeneric = jest.fn();
 
 jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({View: 'View'}));
-jest.mock('@react-navigation/native', () => ({CommonActions: {reset: value => ({type: 'RESET', ...value})}}));
+jest.mock('@react-navigation/native', () => ({
+  CommonActions: {reset: value => ({type: 'RESET', ...value})},
+  useFocusEffect: effect => require('react').useEffect(effect, [effect]),
+}));
+jest.mock('react-native-paper', () => ({...jest.requireActual('react-native-paper'), Portal: 'Portal'}));
 jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({useSelector: selector => selector(mockState), useDispatch: () => mockDispatch}));
 jest.mock('../../../hooks/useObjectSelector', () => ({useObjectSelector: selector => selector(mockState)}));
 jest.mock('../../../selectors/authentication', () => ({selectHasAuthenticatedSession: state => state.authentication.signedIn}));
 jest.mock('../../../store', () => ({getState: () => mockState}));
-jest.mock('../../../styles', () => ({flexBackground: {}}));
 jest.mock('../../../components/AnimatedActivityIndicatorBox', () => 'Loading');
 jest.mock('../../../containers/DeepLink/LoginRequestInfo/LoginRequestInfo', () => 'LoginRequestInfo');
 jest.mock('../../../containers/DeepLink/InvoiceInfo/InvoiceInfo', () => 'InvoiceInfo');
@@ -40,7 +43,9 @@ jest.mock('verusid-ts-client', () => ({primitives: {
   },
 }}));
 jest.mock('../../../actions/actions/alert/dispatchers/alert', () => ({createAlert: (...args) => mockAlert(...args)}));
-jest.mock('../../../actions/actions/sendModal/dispatchers/sendModal', () => ({openAuthenticateUserModal: (...args) => mockOpenAuth(...args)}));
+jest.mock('../../../actions/actions/walletUnlock/dispatchers/walletUnlock', () => ({
+  requestWalletUnlock: (...args) => mockUnlock(...args), WALLET_UNLOCK_CANCELLED: 'WALLET_UNLOCK_CANCELLED',
+}));
 jest.mock('../../../actions/actionCreators', () => ({resetDeeplinkData: requestId => ({type: 'RESET_DEEPLINK', ...(requestId == null ? {} : {expectedRequestId: requestId})})}));
 jest.mock('../../vrpc/vrpcInterface', () => ({initEndpoint: jest.fn()}));
 jest.mock('../../api/channels/vrpc/callCreators', () => ({getInfo: async () => ({result: {blocks: 100, chainid: 'system-id'}})}));
@@ -76,21 +81,26 @@ const replace = async (view, marker = 'replacement') => {
   mockState = {...mockState, deeplink: {id: 'generic', data: hex(marker), requestId: mockState.deeplink.requestId + 1}};
   await act(async () => { view.update(<DeepLink {...props} />); });
 };
+const rawText = node => typeof node === 'string' ? node : (node.children || []).map(rawText).join('');
+// A request that ends resets only its own id, so the reducer ignores the reset once a replacement is current.
+const dispatchedActions = () => mockDispatch.mock.calls.map(([action]) => action).filter(action => action.type !== 'REMOVE_MODAL');
 const expectNoOldEffects = (closed = false) => {
   expect(mockAlert).not.toHaveBeenCalled();
-  if (closed) expect(mockDispatch).toHaveBeenCalledWith({type: 'RESET_DEEPLINK', expectedRequestId: 1});
-  else expect(mockDispatch).not.toHaveBeenCalled();
+  const dispatched = dispatchedActions();
+  if (closed) expect(dispatched).toContainEqual({type: 'RESET_DEEPLINK', expectedRequestId: 1});
+  else dispatched.forEach(action => expect(action).toEqual({type: 'RESET_DEEPLINK', expectedRequestId: 1}));
   expect(props.navigation.dispatch).not.toHaveBeenCalled();
 };
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockValidate.mockReset().mockResolvedValue(true);
-  props = {navigation: {dispatch: jest.fn()}};
+  mockUnlock.mockReset().mockResolvedValue(undefined);
+  props = {navigation: {dispatch: jest.fn(), addListener: jest.fn(() => jest.fn())}};
   views = new Set();
   mockState = {deeplink: {id: 'generic', data: hex('original'), requestId: 1},
     authentication: {signedIn: true, accounts: [{testnetOverrides: {}}], activeAccount: {testnetOverrides: {}}},
-    alert: {active: false}, sendModal: {visible: false, type: null}};
+    alert: {active: false}, sendModal: {visible: false, type: null}, modal: {stack: []}};
 });
 afterEach(() => {
   views.forEach(view => act(() => view.unmount()));
@@ -120,74 +130,84 @@ it.each(['resolve', 'reject'])('ignores a pending generic validation %s after un
   expectNoOldEffects(true);
 });
 
-it.each(['replace', 'unmount'])('cancels the delegated sign-in timer on %s', async change => {
-  jest.useFakeTimers();
+it.each(['replace', 'unmount'])('ignores a late delegated sign-in unlock after %s', async change => {
+  const unlock = deferred();
+  mockUnlock.mockReturnValueOnce(unlock.promise);
   mockState.authentication.signedIn = false;
   mockState.deeplink.data = hex('delegated');
   const view = await mount();
+  expect(mockUnlock).toHaveBeenCalledTimes(1);
   expect(mockValidate).not.toHaveBeenCalled();
   if (change === 'replace') await replace(view);
   else unmount(view);
-  act(() => jest.advanceTimersByTime(1000));
-  expect(mockOpenAuth).not.toHaveBeenCalled();
+  await act(async () => unlock.resolve());
   expectNoOldEffects(change === 'unmount');
-  if (change === 'replace') expect(view.root.findByType('GenericRequestHome').props.deeplinkData).toBe(hex('replacement'));
+  if (change === 'replace') {
+    expect(view.root.findByType('GenericRequestHome').props.deeplinkData).toBe(hex('replacement'));
+    expect(mockRenderGeneric.mock.calls.every(([screen]) => screen.deeplinkData === hex('replacement'))).toBe(true);
+  } else expect(mockRenderGeneric).not.toHaveBeenCalled();
 });
 
 it.each(['delegated', 'self-scoped', 'upload'])('opens the current %s sign-in prompt once and validates after sign-in', async marker => {
-  jest.useFakeTimers();
+  const unlock = deferred();
+  mockUnlock.mockReturnValueOnce(unlock.promise);
   mockState.authentication.signedIn = false;
   mockState.deeplink.data = hex(marker);
   const view = await mount();
-  act(() => jest.advanceTimersByTime(1000));
-  expect(mockOpenAuth).toHaveBeenCalledTimes(1);
+  expect(mockUnlock).toHaveBeenCalledTimes(1);
+  expect(mockUnlock).toHaveBeenCalledWith(expect.objectContaining({reason: 'delegated-signer-verification'}));
   expect(mockValidate).not.toHaveBeenCalled();
-  mockState = {...mockState, authentication: {...mockState.authentication, signedIn: true}};
-  await act(async () => view.update(<DeepLink {...props} />));
+  await act(async () => unlock.resolve());
+  expect(mockUnlock).toHaveBeenCalledTimes(1);
   expect(mockValidate).toHaveBeenCalledTimes(1);
   expect(view.root.findByType('GenericRequestHome').props.deeplinkData).toBe(hex(marker));
   expectNoOldEffects();
 });
 
 it('rejects an unsigned explicit scope without requesting sign-in', async () => {
-  jest.useFakeTimers();
   mockState.authentication.signedIn = false;
   mockState.deeplink.data = hex('unsigned-scoped');
   mockValidate.mockRejectedValueOnce(new Error('This type of request requires a signature'));
-  const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+  const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
   try {
-    await mount();
-    act(() => jest.advanceTimersByTime(1000));
+    const view = await mount();
     expect(mockValidate).toHaveBeenCalledTimes(1);
-    expect(mockOpenAuth).not.toHaveBeenCalled();
-    expect(mockAlert).toHaveBeenCalledWith('Error', 'This type of request requires a signature');
+    expect(mockUnlock).not.toHaveBeenCalled();
+    expect(rawText(view.root)).toContain('Cannot open request');
+    expect(rawText(view.root)).not.toContain('requires a signature');
+    expect(view.root.findAllByType('GenericRequestHome')).toHaveLength(0);
   } finally {
-    error.mockRestore();
+    warn.mockRestore();
   }
 });
 
 it('does not resume an old delegated request when sign-in and replacement arrive together', async () => {
-  jest.useFakeTimers();
+  mockUnlock.mockReturnValueOnce(deferred().promise);
   mockState.authentication.signedIn = false;
   mockState.deeplink.data = hex('delegated');
   const view = await mount();
   mockState = {...mockState, authentication: {...mockState.authentication, signedIn: true},
     deeplink: {id: 'generic', data: hex('replacement'), requestId: mockState.deeplink.requestId + 1}};
   await act(async () => view.update(<DeepLink {...props} />));
-  act(() => jest.advanceTimersByTime(1000));
   expect(mockValidate.mock.calls.map(([request]) => request.marker)).toEqual(['replacement']);
-  expect(mockOpenAuth).not.toHaveBeenCalled();
+  expect(mockUnlock).toHaveBeenCalledTimes(1);
   expect(view.root.findByType('GenericRequestHome').props.deeplinkData).toBe(hex('replacement'));
   expectNoOldEffects();
 });
 
 it('rejects an unsupported standalone identity-update protocol without processing it', async () => {
-  mockState.deeplink = {id: 'identity', data: {details: {identity: {}}}};
-  const view = await mount();
-  expect(mockAlert).toHaveBeenCalledWith('Unsupported', 'Unsupported request');
-  expect(mockDispatch).toHaveBeenCalledWith({type: 'RESET_DEEPLINK'});
-  expect(mockValidate).not.toHaveBeenCalled();
-  expect(view.root.findAllByType('GenericRequestHome')).toHaveLength(0);
+  mockState.deeplink = {id: 'identity', data: {details: {identity: {}}}, requestId: 1};
+  const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const view = await mount();
+    expect(rawText(view.root)).toContain('Unsupported request');
+    expect(mockValidate).not.toHaveBeenCalled();
+    expect(view.root.findAllByType('GenericRequestHome')).toHaveLength(0);
+    await act(async () => view.root.findAll(node => node.props.onPress && rawText(node) === 'Close')[0].props.onPress());
+    expect(mockDispatch).toHaveBeenCalledWith({type: 'RESET_DEEPLINK', expectedRequestId: 1});
+  } finally {
+    warn.mockRestore();
+  }
 });
 
 it('a signed-out upload without a matching profile does not reach the local preview handler', async () => {
@@ -195,11 +215,16 @@ it('a signed-out upload without a matching profile does not reach the local prev
   mockState.authentication.activeAccount = null;
   mockState.authentication.accounts = [];
   mockState.deeplink.data = hex('upload');
-  await mount();
-  expect(mockValidate).not.toHaveBeenCalled();
-  expect(mockRenderGeneric).not.toHaveBeenCalled();
-  expect(mockAlert).toHaveBeenCalledWith('Cannot continue', expect.stringContaining('No mainnet profiles'));
-  expect(mockDispatch).toHaveBeenCalledWith({type: 'RESET_DEEPLINK'});
+  const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const view = await mount();
+    expect(mockValidate).not.toHaveBeenCalled();
+    expect(mockRenderGeneric).not.toHaveBeenCalled();
+    expect(rawText(view.root)).toContain('No mainnet wallet');
+    expect(rawText(view.root)).toContain('This request needs a mainnet wallet. Add one, then open the request again.');
+  } finally {
+    warn.mockRestore();
+  }
 });
 
 it('clears the current request on flow removal while preserving an identical replacement', async () => {
@@ -207,7 +232,7 @@ it('clears the current request on flow removal while preserving an identical rep
   const oldRequestId = mockState.deeplink.requestId;
   mockState = {...mockState, deeplink: {...mockState.deeplink, requestId: oldRequestId + 1}};
   unmount(view);
-  expect(mockDispatch).not.toHaveBeenCalled();
+  expect(dispatchedActions()).toEqual([{type: 'RESET_DEEPLINK', expectedRequestId: oldRequestId}]);
 });
 
 it('leaves a cleared flow quietly after sign-out instead of showing unsupported-request errors', async () => {
@@ -216,6 +241,6 @@ it('leaves a cleared flow quietly after sign-out instead of showing unsupported-
     deeplink: {id: null, data: {}, requestId: 2}};
   await act(async () => view.update(<DeepLink {...props} />));
   expect(mockAlert).not.toHaveBeenCalled();
-  expect(mockDispatch).not.toHaveBeenCalled();
+  expect(dispatchedActions()).toEqual([{type: 'RESET_DEEPLINK', expectedRequestId: 1}]);
   expect(props.navigation.dispatch).toHaveBeenCalledWith(expect.objectContaining({routes: [{name: 'SignedOutStack'}]}));
 });
