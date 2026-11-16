@@ -5,10 +5,12 @@ const mockRevokeRender = jest.fn(() => null);
 const mockRecoverRender = jest.fn(() => null);
 jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({Alert: {alert: jest.fn()}, ScrollView: 'ScrollView', View: 'View', TouchableOpacity: 'TouchableOpacity'}));
 jest.mock('../../../store', () => ({getState: () => mockState}));
-jest.mock('react-native-paper', () => ({Text: 'Text'}));
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useFocusEffect: effect => require('react').useEffect(effect, [effect]),
+}));
 jest.mock('../../../components/Button', () => 'Button');
 jest.mock('../../../components/AnimatedSuccessCheckmark', () => 'SuccessCheckmark');
-jest.mock('../../../styles', () => ({}));
 jest.mock('../../clipboard/clipboard', () => ({copyToClipboard: jest.fn()}));
 jest.mock('../../fullyqualifiedname', () => ({convertFqnToDisplayFormat: value => value}));
 jest.mock('../../CoinData/CoinData', () => ({explorers: {VRSC: 'https://example.invalid'}}));
@@ -17,7 +19,7 @@ jest.mock('../../../hooks/useObjectSelector', () => ({useObjectSelector: selecto
 jest.mock('../../identityUpdate/verifiedSubmission', () => ({assertIdentityUpdateContext: (...args) => mockAssertContext(...args), submitReviewedIdentityUpdate: (...args) => mockSubmit(...args)}));
 jest.mock('../../seedCrypt', () => ({decryptkey: () => 'seed'}));
 jest.mock('../../keys', () => ({deriveKeyPair: async () => ({privKey: 'authority-key'})}));
-jest.mock('../../CoinData/CoinsList', () => ({coinsList: {VRSC: {}}}));
+jest.mock('../../CoinData/CoinDirectory', () => ({CoinDirectory: {findSystemCoinObj: () => ({id: 'VRSC'})}}));
 jest.mock('../../../actions/actions/sendModal/dispatchers/sendModal', () => ({closeSendModal: jest.fn()}));
 jest.mock('../../../components/SendModal/RevokeIdentity/RevokeIdentityConfirm/RevokeIdentityConfirm.render', () => ({RevokeIdentityConfirmRender: (...args) => mockRevokeRender(...args)}));
 jest.mock('../../../components/SendModal/RecoverIdentity/RecoverIdentityConfirm/RecoverIdentityConfirm.render', () => ({RecoverIdentityConfirmRender: (...args) => mockRecoverRender(...args)}));
@@ -27,6 +29,9 @@ const {act, create} = require('react-test-renderer');
 const Revoke = require('../../../components/SendModal/RevokeIdentity/RevokeIdentityConfirm/RevokeIdentityConfirm').default;
 const Recover = require('../../../components/SendModal/RecoverIdentity/RecoverIdentityConfirm/RecoverIdentityConfirm').default;
 const {API_SEND} = require('../../constants/intervalConstants');
+
+// Submit stays off until the review is acknowledged.
+const acknowledge = render => act(async () => render.mock.calls.at(-1)[0].onAcknowledgedChange(true));
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -49,6 +54,7 @@ test.each([[Revoke, mockRevokeRender, 'authority-key'], [Recover, mockRecoverRen
       navigation: {navigate: jest.fn()}, setLoading: jest.fn(), setPreventExit: jest.fn(), setModalHeight: jest.fn()};
     let mounted;
     act(() => { mounted = create(<Component {...props} />); });
+    await acknowledge(render);
     await act(async () => render.mock.calls.at(-1)[0].submitData());
     const call = mockSubmit.mock.calls[0][0];
     expect(call.context).toBe(context);
@@ -74,6 +80,7 @@ test.each([[Revoke, mockRevokeRender], [Recover, mockRecoverRender]])(
     mockSubmit.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
     let mounted;
     act(() => { mounted = create(<Component {...props} />); });
+    await acknowledge(render);
     let pending;
     await act(async () => { pending = render.mock.calls.at(-1)[0].submitData(); await Promise.resolve(); });
     mockState.sendModal = {...mockState.sendModal, requestId: 'replacement-request'};
@@ -98,6 +105,7 @@ test.each([[Revoke, mockRevokeRender], [Recover, mockRecoverRender]])(
     mockAssertContext.mockImplementation(() => { throw cancelled; });
     let mounted;
     act(() => { mounted = create(<Component {...props} />); });
+    await acknowledge(render);
     await act(async () => render.mock.calls.at(-1)[0].submitData());
     expect(props.setLoading.mock.calls).toEqual([[true], [false]]);
     expect(props.setPreventExit.mock.calls).toEqual([[true], [false]]);
@@ -117,6 +125,7 @@ test.each([[Revoke, mockRevokeRender], [Recover, mockRecoverRender]])(
     mockSubmit.mockRejectedValueOnce(Object.assign(new Error('Delivery not confirmed'), {code: 'BROADCAST_UNKNOWN', txid: 'uncertain-tx'}));
     let mounted;
     act(() => { mounted = create(<Component {...props} />); });
+    await acknowledge(render);
     const submit = render.mock.calls.at(-1)[0].submitData;
     await act(async () => submit());
     await act(async () => submit());
@@ -146,14 +155,17 @@ test.each([
   const text = view.root.findAllByType('Text').map(node => node.children.join('')).join(' ');
   expect(text).toContain('Delivery not confirmed');
   expect(text).toContain('uncertain-tx');
-  expect(text).toContain('Check its status before starting a new review');
+  expect(text).toContain('Check the transaction before you start another review');
   expect(text).not.toContain('has been revoked');
   expect(text).not.toContain('has been recovered');
   expect(view.root.findAllByType('SuccessCheckmark')).toHaveLength(0);
-  const buttons = view.root.findAllByType('Button');
-  expect(buttons.map(button => button.props.children)).toEqual(['Details', 'Close']);
-  act(() => buttons[0].props.onPress());
-  act(() => buttons[1].props.onPress());
+  const actions = [
+    view.root.findAll(node => node.props.label === 'View transaction' && node.props.onPress)[0],
+    view.root.findAll(node => node.props.testID === 'revokeRecover.result.done' && node.props.onPress)[0],
+  ];
+  expect(actions.map(action => action.props.label || action.props.children)).toEqual(['View transaction', 'Done']);
+  act(() => actions[0].props.onPress());
+  act(() => actions[1].props.onPress());
   expect(openExplorer).toHaveBeenCalledTimes(1);
   expect(finishSend).toHaveBeenCalledTimes(1);
   expect(mockSubmit).not.toHaveBeenCalled();
