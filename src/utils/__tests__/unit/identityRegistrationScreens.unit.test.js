@@ -1004,6 +1004,8 @@ it('compares confirmed native balances exactly and ignores other currencies and 
   expect(preferredRegistrationFundingSource([], coin, balances)).toBeUndefined();
 });
 
+const openDetails = async view => press(view.root.findAllByType(TextAction).find(node => node.props.children === 'Transaction details'));
+
 it('shows friendly identity names and only reveals full addresses when explicitly requested', async () => {
   const ownAddress = `i${'A'.repeat(33)}`;
   const fundingAddress = `i${'B'.repeat(33)}`;
