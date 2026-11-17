@@ -2,13 +2,22 @@ jest.mock('axios', () => ({
   post: jest.fn(),
 }));
 
-jest.mock('react-native', () => ({
-  Linking: {
-    openURL: jest.fn(),
-  },
-  Platform: {
-    OS: 'ios',
-  },
+jest.mock('react-native', () =>
+  require('../../../tests/helpers/mockReactNative')({
+    Linking: {
+      openURL: jest.fn(),
+    },
+    Platform: {
+      OS: 'ios',
+    },
+  }),
+);
+
+// The delivery module reads the app-encryption session from the store. The
+// real store loads every saga and service, which this selection test does not need.
+jest.mock('../../../store', () => ({
+  __esModule: true,
+  default: {getState: jest.fn(() => ({}))},
 }));
 
 jest.mock('../../CoinData/CoinDirectory', () => ({

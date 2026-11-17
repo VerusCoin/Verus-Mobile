@@ -39,7 +39,7 @@ This file is a compact map for Codex-style agents working in Verus Mobile. Keep 
 - For redesigned signed-out onboarding/login UI, follow `DESIGN.md`, `src/theme/onboarding`, and `src/styles/components/signedOutFlow.styles.js`. Treat untouched legacy surfaces as outside that scope unless the task explicitly migrates them.
 - For iPhone SE onboarding layout, use `useOnboardingSmallDeviceLayout` and the compact roles in `signedOutFlow.styles.js`. Do not apply compact onboarding layout to large screens just because the software keyboard is visible, and do not change shared small-device top padding or heading spacing on input focus.
 - Keep UI changes scoped. Avoid unrelated refactors while touching wallet flows.
-- Do not add new Jest tests unless the user explicitly asks for tests. The current Jest/lint setup has substantial existing failures, so prefer targeted non-Jest validation such as parser checks, bundle checks, safe-area checks, and manual simulator/visual checks.
+- Run the Jest suites that cover the code you change (`corepack pnpm test <path>`) and report failures. Do not change or remove a test to make it pass without stating why. Add a new Jest test only when the user asks or when a defect fix needs one to reproduce the defect. The live-network suites in `src/utils/__tests__/int` and `src/utils/__tests__/api` call real services and can fail on rate limits; judge them apart from the unit suites. Jest does not replace parser, bundle, safe-area, and simulator or visual checks for UI work.
 - Do not run destructive git commands. Work on a task branch and leave unrelated changes alone.
 
 ## Common Commands
@@ -102,7 +102,7 @@ For PBaaS and Verus currencies, keep the active coin and active subwallet explic
 1. Map the current flow from code before editing.
 2. Name the data contract being changed.
 3. Implement the smallest coherent change.
-4. Validate with targeted commands that currently work; avoid adding or relying on Jest coverage unless explicitly requested.
+4. Validate with the narrowest checks that cover the change: the related Jest suites, the check scripts, and a bundle build.
 5. For UI work, validate with a simulator or visual artifact before calling it done.
 6. If a repeated agent mistake appears, encode it in a focused doc or test rather than adding broad prose here.
 
