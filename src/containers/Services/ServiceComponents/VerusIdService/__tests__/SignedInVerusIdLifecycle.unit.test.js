@@ -449,14 +449,28 @@ describe('SignedInVerusIdService READY row action', () => {
     getLinkedIds: jest.fn(),
   });
 
+  let mountedService = null;
+
   const renderService = async (controller) => {
     let renderer;
     await act(async () => {
       renderer = create(<SignedInVerusIdService controller={controller} />);
     });
     await flush();
+    mountedService = renderer;
     return renderer;
   };
+
+  // The tab renders a list. A mounted list keeps a timer that would fire in
+  // the next test file of the same Jest worker, so every test unmounts it.
+  afterEach(async () => {
+    if (!mountedService) return;
+    const renderer = mountedService;
+    mountedService = null;
+    await act(async () => {
+      renderer.unmount();
+    });
+  });
 
   // The row name is split into styled parts; its accessibility label keeps
   // the whole name.
