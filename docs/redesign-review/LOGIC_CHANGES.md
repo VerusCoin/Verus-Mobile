@@ -2,7 +2,7 @@
 
 This file lists every change in this pull request that is not pure layout, style or copy. It covers wallet logic, storage, network, Redux, native code and build files.
 
-- Base: `upstream/ui-redesign` at `525aa859`. Head: the PR branch at `49fe2b8c`.
+- Base: `upstream/ui-redesign` at `525aa859`. Head: the PR branch at `263473d8` (app code unchanged since `49fe2b8c`).
 - `upstream/ui-redesign` is an ancestor of the head. No upstream commit is missing. Where the PR replaces recent upstream code on purpose, [DIFFERENCES_FROM_UPSTREAM.md](DIFFERENCES_FROM_UPSTREAM.md) gives the upstream commit and the reason.
 - Review guide and UI areas: [README.md](README.md).
 

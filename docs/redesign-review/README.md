@@ -12,7 +12,7 @@ This guide is for the review of the UI redesign pull request into `ui-redesign`.
 - A new UI for the whole app: signed out, Home, asset detail, Receive, Send and Convert, requests, VerusID, Services, Scan and Settings.
 - One design system: semantic light and dark theme, Inter typography, shared components, bottom sheets, safe-area footers. The rules are in [`DESIGN.md`](../../DESIGN.md) and [`TYPOGRAPHY.md`](../../TYPOGRAPHY.md); `pnpm check:design` enforces part of them.
 - The logic changes the new screens need, and fixes found while testing them. They are listed one by one in [LOGIC_CHANGES.md](LOGIC_CHANGES.md).
-- Size: 916 files, about +131,700 / -25,400 lines against `upstream/ui-redesign` `525aa859`, head `49fe2b8c`. About 179 merge commits on the first-parent line; each subject names one change.
+- Size: 916 files, about +131,700 / -25,400 lines against `upstream/ui-redesign` `525aa859`, last code commit `263473d8`. About 179 merge commits on the first-parent line; each subject names one change.
 
 ### What the PR is not
 
@@ -155,7 +155,11 @@ Covers GenericRequest, sign-in (authentication), identity update, app encryption
 
 **Try it.** Open testnet request links (sign-in, identity update, credential, data packet, invoice) from a browser on the device. Open one while the wallet is locked. Open an expired one. Open one twice.
 
-Screenshots: none for this area. These flows need a live request link or an NFC card, and the capture run did not use one.
+| Identity update request, first step | Content step |
+|---|---|
+| <img src="https://raw.githubusercontent.com/Meyse/Verus-Mobile/89453801481d38148496d98b64120a4740868dbf/screens/58-request-identity-update-first-step-light.png" width="200" alt="Identity update request, first step"> | <img src="https://raw.githubusercontent.com/Meyse/Verus-Mobile/89453801481d38148496d98b64120a4740868dbf/screens/59-request-identity-update-content-step-light.png" width="200" alt="Identity update request, Content step"> |
+
+Both screenshots come from a real testnet request (content add, signed by a test VerusID) opened on the iOS Simulator on 2026-11-17. The request was not approved. The other request types have no screenshots: they need their own live link or an NFC card.
 
 ### 2.7 VerusID
 
@@ -347,7 +351,7 @@ Only what a record shows is listed here. Source reading and device runs are kept
 
 ### Static checks
 
-- At the head `49fe2b8c`, the iOS and Android production JS bundles build and `check:design` passes.
+- At `49fe2b8c`, the iOS and Android production JS bundles build. At the last code commit `263473d8`, `check:design` passes. The commits after `49fe2b8c` change only test files, `AGENTS.md` and this guide, so the bundles are the same.
 - At `01996b42` (before the Jest repair and the later fixes), these passed: `check:design` (39 canonical sources; card palette contrast minimum 5.014:1), `check:identity-authority-funding`, `check:search-fields`, `check:send-wizard-options`, `check:safe-areas --changed`, `scripts/check-generic-request-completion-flow.js` (11 cases), `scripts/check-stack-freeze.cjs` (iOS and Android modes).
 - Four other check scripts failed at that point because they compared old text or outputs. They are removed from this PR (`a29c8c91`).
 - A relative-import scan found 0 unresolved imports in `src`, `App.js` and `index.js`.
@@ -355,7 +359,7 @@ Only what a record shows is listed here. Source reading and device runs are kept
 
 ### Jest
 
-Run on both sides on 2026-11-16. Upstream: 2630 of 2773 pass. PR branch: 2637 of 2811 pass. Compared per test name, 25 tests pass on upstream and fail here: 23 live CoinPaprika tests and 2 tests of the upstream registration start screen. 63 upstream test names are ported to the redesigned screens under new names, renamed to the intended behavior, or removed with removed behavior. Details per suite: [Jest status](DIFFERENCES_FROM_UPSTREAM.md#jest-status).
+Upstream ran on 2026-11-16: 2630 of 2773 pass. The PR branch ran three times at `263473d8` on 2026-11-17, each time with the same result: 2642 of 2813 pass. Compared per test name, 25 tests pass on upstream and fail here: 23 live CoinPaprika tests and 2 tests of the upstream registration start screen. No other unit test fails only here. 63 upstream test names are ported to the redesigned screens under new names, renamed to the intended behavior, or removed with removed behavior. Details per suite: [Jest status](DIFFERENCES_FROM_UPSTREAM.md#jest-status).
 
 The suites were updated for the redesigned screens (shared setup in `debug/setupJest.js`, helpers in `src/tests/helpers/`). Where a test found upstream behavior that the redesign had lost, the product was fixed.
 
@@ -372,7 +376,18 @@ The suites were updated for the redesigned screens (shared setup in `debug/setup
 | `cdfa403e` | `RegistrationScreens.js` | No "Preparing…" while a saved commitment review only loads. |
 | `b29f108e` | `ContentStep.js`, `VerusIdContentChangeCard.js` | The identity update Content step shows upstream's warning again: "On-chain history persists, even after content is removed." |
 
-Evidence: unit tests `identityActions`, `homeSessionTransitions`, `coinMenuWalletLifecycle`, `identityManagementScreens`, `identityRegistrationScreens` and `identityContentReviewScreen`; both production JS bundles build; `check:design` passes. Rendered on the iOS Simulator with a forced state, each in light and dark: the registration storage notice, its confirmation sheet and the Transfer footer error. The storage notice was rendered before the label fix `74a10cc4`. The other fixes did not run on a device (see below).
+Evidence: unit tests `identityActions`, `homeSessionTransitions`, `coinMenuWalletLifecycle`, `identityManagementScreens`, `identityRegistrationScreens` and `identityContentReviewScreen`; both production JS bundles build; `check:design` passes. Rendered on the iOS Simulator with a forced state, each in light and dark: the registration storage notice, its confirmation sheet and the Transfer footer error. The storage notice was rendered again after the label fix `74a10cc4` (2026-11-17, forced state): the "Try again" label is fully visible in light and dark, and a tap on it keeps the notice without a crash. What ran on a device and what did not is listed below.
+
+### Independent review of the late fixes
+
+A second model reviewed the nine fix commits on 2026-11-17. It read the callers; it did not use a device. It found no regression in the session guards, the options sheet, the card chooser guard, the Transfer error, the loading text and the Content note. A data refresh does not cancel a valid Transfer, Modify or Unlink; only authentication, sign-out or a password reset does. "Clear all registration data" has no path around its confirmation.
+
+It reported two limits. They are not fixed in this PR:
+
+- `0f3c634b` (plausible, not reproduced): for a pre-launch currency that has no cards, if the launch lookup fails once, a tap on its Home row does nothing until Home gets focus again. Before the guard, the tap opened the asset screen.
+- `c76a2671` (confirmed in the source): after "Try again" on the storage notice, the notice hides while the read runs. With a slow read, "No VerusID yet" can show until the read ends.
+
+It also noted two limits of the new tests: the registration storage cases mount the notice in a substitute tab, and the cancel and dismiss cases call the cancel callback directly, so they do not prove the backdrop or Android Back wiring.
 
 ### Device runs
 
@@ -384,6 +399,8 @@ All device runs used the public VRSCTEST testnet (some also a private test chain
 - **Flag removal.** iOS Simulator smoke run: unlock, Home, asset detail, Receive, Send and Convert entry, all tabs, Settings, lock and unlock, with no error on screen or in Metro. Not run on Android.
 - **Physical iPhone.** Request flows (identity update, provisioning) ran on a physical iPhone; 13 request and VerusID fixes followed and were checked on iOS Simulator (normal and SE) and on Android normal (light).
 - **Home total and value chart.** iOS 26.5 Simulator, testnet wallet: the total equals the shown rows; hide and show across a restart; the chart with delayed price requests; cold start; ranges; light and dark.
+- **PR branch as an app (2026-11-17).** iOS 26.5 Simulator, JavaScript from the PR branch at `5299beb0` (the same app code as `263473d8`), with the env values of this PR: no Ethereum keys, public testnet server. Passed: unlock; Home total and chart ranges; asset screen and transaction sheet; quick repeated taps on an asset row (one screen opens, no empty card chooser); Receive; Send up to Confirm; Convert entry; Manage assets; VerusID list and page; the options menu (Transfer and Modify open, the Unlink sheet opens and was cancelled, a quick second tap opens nothing more); the New VerusID name step; Services; Scan; Settings; lock and unlock; dark mode on Home, the asset screen and the VerusID page. A real identity update request opened, showed the Content step note above the content change, and was left without approval. Seen because the build has no Ethereum keys: the Home notice "Could not connect" and one toast "no runners?!" from the Ethereum provider on the Send Amount step.
+- **Send on the PR branch.** The Send wizard ran twice to Confirm (0.01 VRSCTEST to a VerusID of the same wallet, fee 0.0001 VRSCTEST from the testnet server). The final slide was not done: the test tool could not drag on that day. No file under `src/containers/SendWizard`, `src/utils/api/channels` or `src/utils/web3` changed after `af256d5d`, the commit before the pull request was prepared.
 
 ### Not verified on a device
 
@@ -391,5 +408,6 @@ All device runs used the public VRSCTEST testnet (some also a private test chain
 - NFC reads and writes on a physical card for every entry (Android emulators have no NFC).
 - Android dark mode for the last request fixes; Android normal size for some request flows.
 - Home total and value chart: not run on Android; chart scrub and pull to refresh not checked.
-- Fixes from the upstream tests: the two VerusID page session guards, the Home and card chooser guards, the registration loading text, the "Try again" label after `74a10cc4`, and the Content step note inside a real request.
+- Fixes from the upstream tests: the two VerusID page session guards with a real wallet switch, the Home guard for an asset whose cards rebuild, and the registration loading text. Unit tests cover them. The storage notice ran with a forced state only.
+- A real send from the PR branch after the last merges (see Device runs).
 - Any mainnet flow.

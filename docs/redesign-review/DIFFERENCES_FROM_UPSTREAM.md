@@ -2,7 +2,7 @@
 
 This file lists every place where the pull request deliberately differs from, or replaces, recent upstream work on `ui-redesign`. Nothing here is a merge accident. Each item names the upstream commit, what the PR does instead, the fork commit and the reason.
 
-- Base: `upstream/ui-redesign` at `525aa859`. Head: `49fe2b8c`.
+- Base: `upstream/ui-redesign` at `525aa859`. Last code commit: `263473d8`.
 - Logic details: [LOGIC_CHANGES.md](LOGIC_CHANGES.md). Review guide: [README.md](README.md).
 
 ## Decisions by the design owner
@@ -116,17 +116,18 @@ How the upstream suites were updated:
 - Where the PR changes logic on purpose, the expectation follows the change and the commit names it. Examples: mempool reads in `vrpcRefresh` and `walletRefreshCoordinator` (`07452edb`, `db7bf214`); boolean `getblock` verbosity and the saved first broadcast time in `identityRegistration`, `identityRegistrationSdk`, `vrpcRegistrationBatching` and `identityDurableFunding` (`34a6f549`, `39268c3b`, `853c51c6`, `c5d17c6e`); `shareAttempt` in `giftCard` (`311d6ad9`); the mempool funding reads in `spendableKey` and `currencyTransferIntent` (`60757c5e`); the own-address refusal in `identityManagementUpdate` (`a56f6ba7`); the "NFC is off" and "Z recovery secret" text in `walletBackupNfc` and `getKeyMaterial` (`4b39d58b`).
 - Where a test found upstream behavior that the redesign had lost, the product was fixed. Eight fixes came from this; see [README.md, section 5](README.md#fixes-found-by-the-upstream-tests).
 - `walletBackupRequestSession` keeps the older button labels (`Write NFC Backup`), as part of the `8872ea1b` decision.
+- `SignedInVerusIdLifecycle` (a suite that exists only here): its two tests of the "Link and login" resume gate on a ready VerusID request are replaced by one test of the current "Link" action, which opens the Link VerusIDs page. `63289e4b` removed the resume action from the VerusID tab (`7c7335ce`). The suite unmounts the tab after each test (`aa1b067a`).
 
 ## Jest status
 
-Full suite, same machine, `--maxWorkers=3`, on 2026-11-16.
+Full suite, same machine, `--maxWorkers=3`. Upstream ran on 2026-11-16. The PR branch ran three times on 2026-11-17, each time with the same result.
 
 | Side | Suites | Failed suites | Tests | Passed | Failed | Skipped |
 |---|---|---|---|---|---|---|
 | `upstream/ui-redesign` `525aa859` | 193 | 15 | 2773 | 2630 | 75 | 68 |
-| PR branch `49fe2b8c` | 202 | 19 | 2811 | 2637 | 106 | 68 |
+| PR branch `263473d8` | 202 | 16 | 2813 | 2642 | 103 | 68 |
 
-Compared per test name, 25 tests pass on upstream and fail on the PR branch in this run.
+Compared per test name, 25 tests pass on upstream and fail on the PR branch in each of the three runs.
 
 **2 tests in `identityRegistrationScreens`.** "waits for saved summaries before showing an empty registration list or enabling creation" and "keeps last known registrations visible but disables actions until their summaries reload". Both mount upstream's registration start screen (`IdentityRegistrationStart`) and test its loading states. The redesign replaced that screen with the VerusID tab, which has no summary wait, so the element is undefined. The other storage cases of that screen now mount the VerusID tab (`c76a2671`).
 
@@ -158,11 +159,15 @@ Compared per test name, 25 tests pass on upstream and fail on the PR branch in t
 
 ### Failing tests that exist only on the PR branch
 
-| Tests | Suite | Cause |
+None in the unit suites. Three suites failed only here until 2026-11-17 and are repaired (`7c7335ce`):
+
+| Suite | Cause | Repair |
 |---|---|---|
-| 2 | `SignedInVerusIdLifecycle` (VerusID service `__tests__`) | The two READY resume tests. The READY row now opens the Link VerusID list instead of resuming. The suite repair (`c15ee073`) does not cover this behavior change. |
-| 1 | `processVerusIdResumeGuard` | Cause not recorded. |
-| Suite does not load | `genericRequestDelivery` | Cause not recorded. Delivery is also covered by `genericRequestCompletionLifecycle`, which drives `createGenericResponseDelivery`. |
+| `processVerusIdResumeGuard` | The test expected `navigate('DeepLink')`. The app passes `{screen: 'VerifyDeepLink'}` too, as upstream does. | Expectation corrected. |
+| `genericRequestDelivery` | The suite did not load: its `react-native` mock had no `Dimensions`, and the delivery module imports the store. | The test uses the shared `react-native` mock and a small store mock. |
+| `SignedInVerusIdLifecycle` (VerusID service `__tests__`) | The icon mock lacked six icons. Two tests covered a resume action that `63289e4b` removed. | Icons added; the two tests are replaced by one test of the current action. |
+
+Three more tests of `api/coinpaprika.int.test.js` have names that exist only here. They fail with the same rate-limit error as the rest of that file.
 
 Other failures are the same on both sides: live network tests (`int/composite`, `int/electrum`, `int/dlight`, `api/coinpaprika`) and 1 test in `giftCard`. Five `int/electrum` suites do not load on either side.
 
