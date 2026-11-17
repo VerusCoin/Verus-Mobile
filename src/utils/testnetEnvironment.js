@@ -3,6 +3,18 @@
 // from general wallet settings once at startup, so changing it needs a reload.
 // Keep this module free of app imports: CoinDirectory and the web3 layer read it.
 
+import {PRIVATE_TESTNET_VRPC_ENDPOINT} from '../../env/index';
+
+// The private Verus API is not public. A developer build names it in the local
+// `env/main.*.json` files as "PRIVATE_TESTNET_VRPC_ENDPOINT". Without that
+// value the private environment does not exist.
+const privateVrpcEndpoint =
+  typeof PRIVATE_TESTNET_VRPC_ENDPOINT === 'string'
+    ? PRIVATE_TESTNET_VRPC_ENDPOINT.trim()
+    : '';
+
+export const hasPrivateTestnetEnvironment = () => privateVrpcEndpoint.length > 0;
+
 export const TESTNET_ENVIRONMENT_PUBLIC = 'public';
 export const TESTNET_ENVIRONMENT_PRIVATE = 'private';
 
@@ -16,7 +28,7 @@ export const TESTNET_ENVIRONMENTS = {
     bridgeDelegator: '0xcaa98a4ec79dac8a06cb3bfdcf5351b6576d939f',
   },
   [TESTNET_ENVIRONMENT_PRIVATE]: {
-    vrpcEndpoints: ['https://ptestapi.verustest.net'],
+    vrpcEndpoints: [privateVrpcEndpoint],
     disableDlight: true,
     explorerUrl: null, // Private-chain transactions have no public explorer.
     bridgeDelegator: '0x98f58684b05e7d40719e61955015af91ef7e77d3',
@@ -25,9 +37,11 @@ export const TESTNET_ENVIRONMENTS = {
 
 let activeEnvironment = TESTNET_ENVIRONMENT_PUBLIC;
 
+// A stored private choice without an endpoint falls back to public. It must
+// not pair the private bridge contract with the public Verus API.
 export const normalizeTestnetEnvironment = environment =>
-  Object.prototype.hasOwnProperty.call(TESTNET_ENVIRONMENTS, environment)
-    ? environment
+  environment === TESTNET_ENVIRONMENT_PRIVATE && hasPrivateTestnetEnvironment()
+    ? TESTNET_ENVIRONMENT_PRIVATE
     : TESTNET_ENVIRONMENT_PUBLIC;
 
 export const setTestnetEnvironment = environment => {
