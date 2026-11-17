@@ -1,14 +1,15 @@
 import React, {useState} from 'react';
-import {ScrollView, View, TouchableOpacity} from 'react-native';
+import {ScrollView, View} from 'react-native';
+import TextAction from '../../../components/TextAction';
+import AppButton from '../../../components/AppButton';
 import Styles from '../../../styles/index';
 import {primitives} from 'verusid-ts-client';
 import {createAlert} from '../../../actions/actions/alert/dispatchers/alert';
-import {Text} from 'react-native-paper';
-import Button from '../../../components/Button';
+import {Button, Text} from 'react-native-paper';
 import {handleRedirect} from '../../../utils/deeplink/handleRedirect';
 import AnimatedSuccessCheckmark from '../../../components/AnimatedSuccessCheckmark';
 import {copyToClipboard} from '../../../utils/clipboard/clipboard';
-import {CommonActions} from '@react-navigation/native';
+import {exitRequestToStack} from '../exitRequest';
 import Colors from '../../../globals/colors';
 import {URL} from 'react-native-url-polyfill';
 import AnimatedActivityIndicator from '../../../components/AnimatedActivityIndicator';
@@ -32,12 +33,7 @@ const LoginRequestComplete = props => {
 
   const cancel = () => {
     dispatch(resetDeeplinkData());
-    props.navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{name: 'SignedInStack'}],
-      }),
-    );
+    exitRequestToStack(props.navigation, 'SignedInStack');
   };
 
   let redirectsObj = {};
@@ -117,29 +113,23 @@ const LoginRequestComplete = props => {
           )}
         </View>
         {redirectinfo != null && (
-          <TouchableOpacity
-            onPress={() =>
-              copyToClipboard(redirectinfo.uri, {
-                title: 'URL copied',
-                message: `${redirectinfo.uri} copied to clipboard.`,
-              })
-            }
-            style={{
-              width: '75%',
-            }}>
-            <Text
-              style={{
-                textAlign: 'center',
-                fontSize: 20,
-                color: Colors.verusDarkGray,
-              }}>
+          <View style={{width: '75%'}}>
+            <Text style={{textAlign: 'center', fontSize: 20, color: Colors.verusDarkGray}}>
               {`Press done to complete login${extraInfo}`}
-              <Text
-                style={{color: Colors.basicButtonColor, textAlign: 'center'}}>
-                {urlDisplayString}
-              </Text>
             </Text>
-          </TouchableOpacity>
+            <TextAction
+              onPress={() =>
+                copyToClipboard(redirectinfo.uri, {
+                  title: 'URL copied',
+                  message: `${redirectinfo.uri} copied to clipboard.`,
+                })
+              }
+              accessibilityLabel={`Copy ${urlDisplayString}`}
+              themeMode="light"
+              style={{alignSelf: 'center'}}>
+              {urlDisplayString}
+            </TextAction>
+          </View>
         )}
         <View
           style={{
@@ -148,17 +138,18 @@ const LoginRequestComplete = props => {
             justifyContent: 'space-evenly',
             paddingTop: 16,
           }}>
-          <Button
-            textColor={Colors.warningButtonColor}
+          <AppButton
+            variant="secondary"
             style={{width: 148}}
             disabled={loading}
             onPress={() => cancel()}>
             Cancel
-          </Button>
+          </AppButton>
           <Button
             buttonColor={Colors.verusGreenColor}
             textColor={Colors.secondaryColor}
             style={{width: 148}}
+            labelStyle={{fontSize: 18}}
             disabled={loading}
             onPress={() => completeDeeplink()}>
             Done

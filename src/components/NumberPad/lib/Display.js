@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { TouchableOpacity, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import {Text, withTheme} from 'react-native-paper';
 
 import NumberPadContext from './NumberPadContext';
 import styles from './styles';
@@ -21,7 +21,7 @@ const format = (string, initial, decimals = 8) => {
   return `${whole}${decimal ? '.' : ''}${part}`;
 };
 
-export default class Display extends Component {
+class Display extends Component {
   static contextType = NumberPadContext;
 
   static propTypes = {
@@ -154,10 +154,16 @@ export default class Display extends Component {
     const style = [
       { flexDirection: 'row' },
       this.props.style,
+      {
+        backgroundColor: this.props.theme.colors.surface,
+        borderBottomColor: this.props.theme.colors.disabled,
+      },
       active ? this.props.activeStyle : null,
+      active ? {backgroundColor: this.props.theme.colors.background} : null,
     ];
     const textStyle = [
       this.props.textStyle,
+      {color: this.props.theme.colors.text},
       active ? this.props.activeTextStyle : null,
     ];
     const cursorStyle = [this.props.cursorStyle];
@@ -178,3 +184,5 @@ export default class Display extends Component {
     );
   }
 }
+
+export default withTheme(Display);

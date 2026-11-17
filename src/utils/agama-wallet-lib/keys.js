@@ -6,7 +6,6 @@ const ethersWallet = require('ethers')
 const wif = require('wif');
 const { sha256 } = require('../crypto/hash');
 const { secp256k1 } = require('@noble/curves/secp256k1');
-const { Alert } = require('react-native');
 
 const wifToWif = (_wif, network) => {
   const key = new bitcoin.ECPair.fromWIF(_wif, network, true);
@@ -46,9 +45,12 @@ const seedToWif = (seed, network, iguana) => {
       if (dBig === BigInt(0)) {
         throw new Error('derived private key scalar is out of range');
       } else if (dBig >= n) {
-        Alert.alert(
-          'Private Key Warning',
-          'The derived private key scalar is ≥ curve order. Some wallets may behave inconsistently when importing it. Consider generating a new seed.'
+        // Required here, not at the top, so that this key library does not
+        // load the Redux store.
+        const { createAlert } = require('../../actions/actions/alert/dispatchers/alert');
+        createAlert(
+          'Key may not work in other wallets',
+          'Consider a new Secret Recovery Phrase.'
         );
       }
 

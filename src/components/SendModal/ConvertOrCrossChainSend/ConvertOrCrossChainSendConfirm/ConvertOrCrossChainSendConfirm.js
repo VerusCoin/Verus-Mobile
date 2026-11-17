@@ -1,9 +1,9 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {ScrollView, View, TouchableOpacity, Alert} from 'react-native';
-import {List, Divider, Text} from 'react-native-paper';
-import Button from '../../../Button';
+import {Button, List, Divider, Text} from 'react-native-paper';
 import {useDispatch} from 'react-redux';
 import {expireCoinData} from '../../../../actions/actionCreators';
+import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import {
   API_GET_BALANCES,
@@ -16,6 +16,10 @@ import {
 import {
   CONVERT_OR_CROSS_CHAIN_SLIPPAGE_WARNING_THRESHOLD,
   SEND_MODAL_FORM_STEP_FORM,
+  SEND_MODAL_INVOICE_CONTEXT,
+  SEND_MODAL_DISABLED_INPUTS,
+  SEND_MODAL_AMOUNT_FIELD,
+  SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_FORM_STEP_RESULT,
   SEND_MODAL_PRICE_ESTIMATE,
 } from '../../../../utils/constants/sendModal';
@@ -35,12 +39,15 @@ import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AnimatedActivityIndicatorBox from '../../../AnimatedActivityIndicatorBox';
 
+import InvoicePaymentReview from '../../../../containers/DeepLink/InvoiceInfo/InvoicePaymentReview';
+
 function ConvertOrCrossChainSendConfirm({
   navigation,
   route,
   setLoading,
   setModalHeight,
   setPreventExit,
+  cancel,
 }) {
   const sendModal = useObjectSelector(state => state.sendModal);
   const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
@@ -57,10 +64,13 @@ function ConvertOrCrossChainSendConfirm({
     }
   });
 
-  const [params, setParams] = useState(route.params.preflight);
+  // Invoice screens remain mounted while preparing; use the latest reviewed preflight.
+  const params = route.params.preflight;
   const [confirmationFields, setConfirmationFields] = useState([]);
   const [closedAccordions, setClosedAccordions] = useState({});
   const [broadcastStatusUnknown, setBroadcastStatusUnknown] = useState(false);
+  // Invoice mode shows a failed send above the Send action.
+  const [sendError, setSendError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const submissionInFlight = useRef(false);
   const dispatch = useDispatch();
@@ -102,6 +112,7 @@ function ConvertOrCrossChainSendConfirm({
 
   useEffect(() => {
     setLoading(true);
+    setSendError(null);
 
     // Destructuring params
     const {
@@ -391,7 +402,7 @@ function ConvertOrCrossChainSendConfirm({
     setTimeout(() => {
       scrollRef.current?.flashScrollIndicators();
     }, 500);
-  }, []);
+  }, [params]);
 
   const toggleAccordion = key => {
     setClosedAccordions({
@@ -409,6 +420,7 @@ function ConvertOrCrossChainSendConfirm({
     if (submissionInFlight.current || broadcastStatusUnknown) return;
     submissionInFlight.current = true;
 
+    setSendError(null);
     setSubmitting(true);
     await setPreventExit(true);
 
@@ -427,19 +439,35 @@ function ConvertOrCrossChainSendConfirm({
         params
       );
 
-      if (res.err) throw new Error(res.result);
-      else
+      if (res.err) {
+        const sendError = new Error(res.result);
+        sendError.ambiguousBroadcast = res.ambiguousBroadcast === true;
+        throw sendError;
+      } else
         navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, {
           ...res.result,
           output,
           destination: toAddress,
         });
     } catch (e) {
+      console.warn(e);
+      // An unknown broadcast shows on the screen: the footnote and a
+      // disabled "Status unknown" action.
       if (e.ambiguousBroadcast === true) {
         setBroadcastStatusUnknown(true);
-        Alert.alert('Broadcast status unknown', e.message);
       } else {
-        Alert.alert('Error', e.message);
+        const message = `The ${
+          output.burn === true ? 'burn' : 'payment'
+        } was not sent. Check your connection and try again.`;
+
+        if (sendModal.data[SEND_MODAL_INVOICE_CONTEXT]) setSendError(message);
+        // The old non-invoice confirm has no inline error state.
+        else {
+          createAlert(
+            output.burn === true ? 'Burn not sent' : 'Payment not sent',
+            message,
+          );
+        }
       }
     } finally {
       dispatch(expireCoinData(sendModal.coinObj.id, API_GET_FIATPRICE));
@@ -491,6 +519,26 @@ function ConvertOrCrossChainSendConfirm({
     );
   };
 
+  if (sendModal.data[SEND_MODAL_INVOICE_CONTEXT]) {
+    const locked = sendModal.data[SEND_MODAL_DISABLED_INPUTS] || {};
+    return (
+      <InvoicePaymentReview
+        params={params}
+        sendModal={sendModal}
+        confirmationFields={confirmationFields}
+        networkName={networkName}
+        onSend={submitData}
+        submitting={submitting}
+        broadcastStatusUnknown={broadcastStatusUnknown}
+        sendError={sendError}
+        onBack={
+          locked[SEND_MODAL_AMOUNT_FIELD] && locked[SEND_MODAL_TO_ADDRESS_FIELD]
+            ? cancel
+            : goBack
+        }
+      />
+    );
+  }
   if (submitting) return <AnimatedActivityIndicatorBox />;
 
   return (

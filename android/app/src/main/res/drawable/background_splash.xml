@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item
-        android:drawable="@color/white"/>
+    <item>
+        <bitmap
+            android:gravity="fill"
+            android:src="@drawable/verus_startup_background" />
+    </item>
 
     <item
         android:width="200dp"
-        android:height="200dp"
-        android:drawable="@mipmap/icon"
+        android:height="57dp"
+        android:drawable="@drawable/verus_startup_logo"
         android:gravity="center" />
 
 </layer-list>

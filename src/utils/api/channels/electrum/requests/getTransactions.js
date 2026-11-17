@@ -144,7 +144,9 @@ export const getParsedTransactionList = (coinObj, activeUser, maxlength) => {
         else error = true
       }
 
-      if (error) Alert.alert(`Error reading transaction list for ${coinObj.display_ticker}. This may indicate electrum server maintenence.`)
+      // This runs on every background refresh, so it only logs. Alert was
+      // never imported here, so the old alert threw and failed the whole list.
+      if (error) console.warn(`Could not read every ${coinObj.display_ticker} transaction. The electrum server may be in maintenance.`)
       
       resolve({...header, result: _parsedTxList})
     })

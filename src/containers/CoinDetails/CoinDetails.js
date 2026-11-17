@@ -25,7 +25,7 @@ import {
  } from '../../actions/actionCreators';
 import { NavigationActions } from '@react-navigation/compat'
 import Styles from '../../styles/index'
-import { refreshActiveChainLifecycles } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
+import { refreshLifecyclesAfterAssetChange } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import Colors from "../../globals/colors";
 import { CoinLogos, getCoinLogo } from "../../utils/CoinData/CoinData";
 import {scopeSessionAction} from '../../actions/actions/updates/sessionRequests';
@@ -104,7 +104,7 @@ class CoinDetails extends Component {
           scopeSessionAction(setUserCoinsAction, sessionScope),
         );
 
-        refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
+        refreshLifecyclesAfterAssetChange(this.state.fullCoinData, setUserCoinsAction.payload.activeCoinsForUser);
 
         this.setState({ isActive: true, loading: false });
       } else {
@@ -156,7 +156,7 @@ class CoinDetails extends Component {
             ) : (
               <StandardButton
                 color={Colors.linkButtonColor}
-                title="Add coin"
+                title="ADD COIN"
                 onPress={() => this._handleAddCoin()}
               />
             )}

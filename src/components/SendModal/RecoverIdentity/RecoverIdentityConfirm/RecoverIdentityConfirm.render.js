@@ -1,71 +1,95 @@
 import React from 'react';
-import {Text} from 'react-native-paper';
-import { ScrollView, View, SafeAreaView } from 'react-native';
-import Button from '../../../Button';
-import Colors from '../../../../globals/colors';
-import Styles from '../../../../styles';
-import VerusIdObjectData from '../../../VerusIdObjectData';
-import { VERUSID_AUTH_INFO, VERUSID_BASE_INFO, VERUSID_PRIMARY_ADDRESS, VERUSID_PRIVATE_ADDRESS, VERUSID_PRIVATE_INFO, VERUSID_RECOVERY_AUTH, VERUSID_REVOCATION_AUTH, VERUSID_STATUS } from '../../../../utils/constants/verusidObjectData';
+import AppButton from '../../../AppButton';
+import RevokeRecoverFlowScaffold, {
+  RevokeRecoverStepCopy,
+} from '../../../../containers/RevokeRecover/RevokeRecoverFlowScaffold';
+import {
+  RevokeRecoverAcknowledgement,
+  RevokeRecoverLoadingState,
+  RevokeRecoverNotice,
+} from '../../../../containers/RevokeRecover/RevokeRecoverFlowParts';
+import RecoveryValues, {
+  IdentityContext,
+  RecoveryValue,
+  identityName,
+  recoveryValues,
+} from '../../../../containers/RevokeRecover/RecoveryValues';
 
-export const RecoverIdentityConfirmRender = ({ fee, feeCurrency, targetId, friendlyNames, goBack, submitData, ownedByUser, ownedAddress, sendModal, revocationAddr, recoveryAddr, primaryAddr, privateAddr }) => {
+export const RecoverIdentityConfirmRender = ({
+  acknowledged,
+  fee,
+  feeCurrency,
+  friendlyNames,
+  goBack,
+  loading,
+  networkName,
+  onAcknowledgedChange,
+  primaryAddr,
+  privateAddr,
+  recoveryAddr,
+  revocationAddr,
+  submitData,
+  submitError,
+  targetId,
+}) => {
+  if (loading)
+    return (
+      <RevokeRecoverFlowScaffold
+        backDisabled
+        showBack={false}
+        showProgress={false}
+        headerTitle="Submitting recovery"
+        keyboardAvoiding={false}>
+        <RevokeRecoverLoadingState body="Keep Verus Mobile open while the transaction is submitted." />
+      </RevokeRecoverFlowScaffold>
+    );
+
   return (
-    <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite, height: '100%' }}>
-      <VerusIdObjectData
-        verusId={targetId}
-        friendlyNames={friendlyNames}
-        ownedByUser={false}
-        ownedAddress={ownedAddress}
-        updates={{
-          [VERUSID_AUTH_INFO.key]: {
-            [VERUSID_RECOVERY_AUTH.key]: recoveryAddr ? {
-              data: recoveryAddr
-            } : null,
-            [VERUSID_REVOCATION_AUTH.key]: revocationAddr ? {
-              data: revocationAddr
-            } : null,
-            [`${VERUSID_PRIMARY_ADDRESS.key}:0`]: primaryAddr ? {
-              data: primaryAddr
-            } : null,
-          },
-          [VERUSID_PRIVATE_INFO.key]: {
-            [VERUSID_PRIVATE_ADDRESS.key]: privateAddr ? {
-              data: privateAddr
-            } : null,
-          },
-          [VERUSID_BASE_INFO.key]: {
-            [VERUSID_STATUS.key]: {
-              data: "Active"
-            }
-          }
-        }}
-        StickyFooterComponent={
-          <View
-            style={{
-              backgroundColor: 'white',
-              width: '100%',
-              flexDirection: 'column',
-              justifyContent: 'space-evenly',
-              paddingVertical: 20
-            }}>
-            <Text style={{textAlign: 'center', marginBottom: 12}}>Network fee: {fee} {feeCurrency}</Text>
-            <View style={{flexDirection: 'row', justifyContent: 'space-evenly'}}>
-            <Button
-              textColor={Colors.warningButtonColor}
-              style={{ width: 148 }}
-              onPress={goBack}>
-              Back
-            </Button>
-            <Button
-              buttonColor={Colors.verusGreenColor}
-              textColor={Colors.secondaryColor}
-              style={{ width: 148 }}
-              onPress={submitData}>
-              Recover
-            </Button>
-            </View>
-          </View>
-        }
+    <RevokeRecoverFlowScaffold
+      headerTitle="Review recovery"
+      error={submitError}
+      onBack={goBack}
+      progress={0.85}
+      actions={submitError ? (
+        <AppButton onPress={goBack} testID="revokeRecover.reviewAgain">
+          Review again
+        </AppButton>
+      ) : (
+        <>
+          <RevokeRecoverAcknowledgement
+            label="I checked these changes"
+            onValueChange={onAcknowledgedChange}
+            value={acknowledged}
+          />
+          <AppButton
+            disabled={!acknowledged}
+            onPress={submitData}
+            testID="revokeRecover.submit">
+            Submit recovery
+          </AppButton>
+        </>
+      )}>
+      <IdentityContext
+        name={identityName(targetId)}
+        networkName={networkName}
+        status="Revoked → Active"
       />
-    </SafeAreaView>
+      <RevokeRecoverStepCopy body="Recovery changes control of this VerusID. Check the values below." />
+      <RecoveryValues
+        values={recoveryValues({
+          targetId,
+          primaryAddr,
+          recoveryAddr,
+          revocationAddr,
+          privateAddr,
+          friendlyNames,
+        })}
+        title="Values after recovery"
+      />
+      <RecoveryValue label="Network fee" value={`${fee} ${feeCurrency}`} />
+      {submitError ? (
+        <RevokeRecoverNotice tone="danger">{submitError}</RevokeRecoverNotice>
+      ) : null}
+    </RevokeRecoverFlowScaffold>
   );
 };

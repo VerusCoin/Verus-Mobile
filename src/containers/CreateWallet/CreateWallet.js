@@ -1,38 +1,58 @@
 import {createStackNavigator} from '@react-navigation/stack';
 import React, {useState} from 'react';
+import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import CreateSeedStackScreens from './Forms/CreateSeed/CreateSeed';
 import ImportWalletStackScreens from './Forms/ImportWallet/ImportWallet';
 import WalletIntro from './Forms/WalletIntro';
+import {getKey} from '../../utils/keyGenerator/keyGenerator';
 const CreateWalletStack = createStackNavigator();
 
-export default function CreateWalletStackScreens({ navigation, createProfile }) {
+export default function CreateWalletStackScreens({
+  createProfile,
+  initialFlow = 'choice',
+  testProfile = false,
+}) {
   const [newSeed, setNewSeed] = useState(null)
-  const [testProfile, setTestProfile] = useState(false)
   const [importedSeed, setImportedSeed] = useState(null)
 
-  const completeSeedSetup = (asNew, useSeedAsZ, importedSeedOverride) => {
+  const ensureNewSeed = async () => {
+    if (newSeed) return newSeed;
+
+    try {
+      const seed = await getKey(256);
+
+      setNewSeed(seed);
+      return seed;
+    } catch (e) {
+      createAlert('Error', 'Error generating Secret Recovery Phrase.');
+      console.warn(e);
+      return null;
+    }
+  };
+
+  const completeSeedSetup = (asNew, useSeedAsZ, seedOverride) => {
     return createProfile(
       asNew
-        ? newSeed
-        : (importedSeedOverride != null ? importedSeedOverride : importedSeed),
+        ? (seedOverride != null ? seedOverride : newSeed)
+        : (seedOverride != null ? seedOverride : importedSeed),
       testProfile,
       useSeedAsZ,
     )
   }
 
+  const initialRouteName = initialFlow === 'create' ? 'CreateSeed' : 'WalletIntro';
+
   return (
-    <CreateWalletStack.Navigator>
+    <CreateWalletStack.Navigator initialRouteName={initialRouteName}>
       <CreateWalletStack.Screen
         name="WalletIntro"
         options={{
           headerShown: false,
         }}>
-        {() => (
+        {({navigation}) => (
           <WalletIntro
             navigation={navigation}
-            newSeed={newSeed}
-            setNewSeed={setNewSeed}
-            setTestProfile={setTestProfile}
+            ensureNewSeed={ensureNewSeed}
             testProfile={testProfile}
           />
         )}
@@ -42,13 +62,14 @@ export default function CreateWalletStackScreens({ navigation, createProfile }) 
         options={{
           headerShown: false,
         }}>
-        {() => (
+        {({navigation, route}) => (
           <CreateSeedStackScreens
             navigation={navigation}
-            newSeed={newSeed}
-            setNewSeed={setNewSeed}
-            onComplete={(useSeedAsZ) => completeSeedSetup(true, useSeedAsZ)}
-            testProfile={testProfile}
+            newSeed={route.params?.seed || newSeed}
+            ensureNewSeed={ensureNewSeed}
+            onComplete={(useSeedAsZ, seedOverride) =>
+              completeSeedSetup(true, useSeedAsZ, seedOverride)
+            }
           />
         )}
       </CreateWalletStack.Screen>
@@ -57,7 +78,7 @@ export default function CreateWalletStackScreens({ navigation, createProfile }) 
         options={{
           headerShown: false,
         }}>
-        {() => (
+        {({navigation}) => (
           <ImportWalletStackScreens
             navigation={navigation}
             importedSeed={importedSeed}

@@ -11,23 +11,93 @@
 
   This screen should always be reset to, not just navigated to, so that the 
   user cannot go back.
+
+  It looks like the request loading screen (GenericRequestLoading): the 7-bar
+  loader, the task as a short title, and "Keep the app open." A slow task
+  adds a longer line after 15 seconds (owner chose variation A, 2026-10-22).
+  The card claim passes its own illustration in place of the loader, with
+  animated styles for its hand-off (ClaimingFundsView).
 */
 
-import React, { Component } from "react";
+import React, { Component, useMemo } from "react";
 import { 
   View, 
   Text, 
-  Alert
+  Alert,
+  StatusBar,
+  StyleSheet,
 } from "react-native";
+import LottieView from 'lottie-react-native';
+import Animated from 'react-native-reanimated';
 import { CommonActions } from '@react-navigation/native';
 import { connect } from 'react-redux';
 import { clearSecureLoadingData, setSecureLoadingData, signOut } from '../../actions/actionCreators';
-import { Icon } from "react-native-elements";
-import styles from './SecureLoading.styles'
-import AnimatedActivityIndicator from "../../components/AnimatedActivityIndicator";
+import { useOnboardingTheme } from '../../theme/onboarding';
+import { fontStyle } from '../../globals/fonts';
 
 const DEFAULT_TIMEOUT = 30000
-const DEFAULT_MESSAGE = "Loading..."
+const SLOW_TASK_DELAY = 15000
+const DEFAULT_MESSAGE = "Loading"
+const KEEP_OPEN_MESSAGE = "Keep the app open."
+const SLOW_MESSAGE = "This is taking longer than usual. Keep the app open."
+
+// Also used by the card claim while its transactions are broadcast. An
+// `illustration` replaces the loader; `contentStyle` and `statusStyle` let it
+// fade the screen and the line.
+export const SecureLoadingView = ({
+  contentStyle,
+  errorMsg,
+  illustration,
+  message,
+  slow,
+  status,
+  statusStyle,
+}) => {
+  const theme = useOnboardingTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const failed = status === "error" && Boolean(errorMsg);
+
+  return (
+    <View style={styles.root}>
+      <StatusBar
+        barStyle={theme.isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.colors.background}
+      />
+      <Animated.View
+        accessibilityLiveRegion="polite"
+        style={[styles.content, contentStyle]}>
+        {failed ? null : illustration ? (
+          <View
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={styles.illustration}>
+            {illustration}
+          </View>
+        ) : (
+          <LottieView
+            source={require('../../animations/loading_7bars.json')}
+            autoPlay
+            loop
+            style={styles.animation}
+          />
+        )}
+        <Text accessibilityRole="header" style={styles.title}>
+          {failed ? errorMsg : message}
+        </Text>
+        {failed ? null : (
+          <Animated.Text
+            style={[
+              styles.status,
+              illustration && styles.statusReserved,
+              statusStyle,
+            ]}>
+            {slow || status === "timeout" ? SLOW_MESSAGE : KEEP_OPEN_MESSAGE}
+          </Animated.Text>
+        )}
+      </Animated.View>
+    </View>
+  );
+};
 
 class SecureLoading extends Component {
   constructor() {
@@ -43,7 +113,8 @@ class SecureLoading extends Component {
       onError: null,
       successMsg: null,
       errorMsg: null,
-      status: 'loading'
+      status: 'loading',
+      slow: false,
     };
   }
 
@@ -59,6 +130,9 @@ class SecureLoading extends Component {
     this.timeoutTimer = setTimeout(() => {
       this.setState({status: 'timeout'})
     }, DEFAULT_TIMEOUT)
+    this.slowTimer = setTimeout(() => {
+      this.setState({slow: true})
+    }, SLOW_TASK_DELAY)
 
     if (data) {
       this.setState(
@@ -148,7 +222,7 @@ class SecureLoading extends Component {
       ],
     });
 
-    this.props.navigation.closeDrawer();
+    if (this.props.navigation.closeDrawer) this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction)
   }
 
@@ -160,31 +234,67 @@ class SecureLoading extends Component {
       "restart the app.");
   }
 
+  componentWillUnmount() {
+    clearTimeout(this.timeoutTimer);
+    clearTimeout(this.slowTimer);
+  }
+
   render() {
     return (
-      <View style={styles.loadingRoot}>
-        {(this.state.status === "loading" ||
-          (this.state.status === "success" && !this.state.successMsg) ||
-          (this.state.status !== "error" && !this.state.errorMsg)) && (
-          <AnimatedActivityIndicator style={{ width: 128 }} />
-        )}
-        {this.state.status === "success" && this.state.successMsg && (
-          <Icon name="check" color="#50C3A5" size={45} />
-        )}
-        {this.state.status === "error" && this.state.errorMsg && (
-          <Icon name="close" color="rgba(206,68,70,1)" size={45} />
-        )}
-        <Text style={styles.loadingLabel}>
-          {this.state.status === "success" && this.state.successMsg
-            ? this.state.successMsg
-            : this.state.status === "error" && this.state.errorMsg
-            ? this.state.errorMsg
-            : this.state.message}
-        </Text>
-      </View>
+      <SecureLoadingView
+        errorMsg={this.state.errorMsg}
+        message={this.state.message}
+        slow={this.state.slow}
+        status={this.state.status}
+      />
     );
   }
 }
+
+const createStyles = theme =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.screenPadding,
+      paddingBottom: 60,
+    },
+    // The request loading screen's loader, title and status sizes.
+    animation: {
+      width: 132,
+      height: 96,
+      marginBottom: 26,
+    },
+    // The same gap under an illustration, so the title stays in place.
+    illustration: {
+      marginBottom: 26,
+    },
+    title: {
+      color: theme.colors.textPrimary,
+      fontSize: 24,
+      lineHeight: 31,
+      textAlign: 'center',
+      ...fontStyle('semiBold'),
+    },
+    status: {
+      color: theme.colors.textSecondary,
+      fontSize: 15,
+      lineHeight: 22,
+      marginTop: 8,
+      textAlign: 'center',
+      ...fontStyle('regular'),
+    },
+    // Room for the two-line slow message, so a moving illustration does not
+    // jump when it appears.
+    statusReserved: {
+      minHeight: 44,
+    },
+  });
 
 const mapStateToProps = state => ({
   activeAccount: state.authentication.activeAccount,

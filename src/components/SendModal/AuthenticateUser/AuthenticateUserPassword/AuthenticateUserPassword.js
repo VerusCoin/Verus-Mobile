@@ -1,13 +1,13 @@
 import React from 'react';
 import { useEffect, useState } from "react"
 import { Keyboard, ScrollView, TouchableWithoutFeedback, View } from "react-native";
-import { Checkbox, TextInput } from "react-native-paper";
-import Button from "../../../Button";
-import { useDispatch, useSelector } from 'react-redux';
+import Colors from '../../../../globals/colors';
+import AppButton from '../../../AppButton';
+import {Button,  TextInput } from "react-native-paper";
+import { useDispatch } from 'react-redux';
 import { initializeAccountData } from "../../../../actions/actionDispatchers";
 import {setBiometry} from '../../../../actions/actionCreators';
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import Colors from '../../../../globals/colors';
 import styles from "../../../../styles";
 import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_USER_TO_AUTHENTICATE } from "../../../../utils/constants/sendModal";
 import { getSupportedBiometryType } from '../../../../utils/keychain/keychain';
@@ -62,10 +62,6 @@ const loginFailureMessage = error => {
 const AuthenticateUserPassword = props => {
   const dispatch = useDispatch();
   const [password, setPassword] = useState("")
-  const defaultAccount = useSelector(
-    state => state.settings.generalWalletSettings.defaultAccount,
-  );
-
   const accounts = useObjectSelector(state => state.authentication.accounts)
   const activeAccount = useObjectSelector(state => state.authentication.activeAccount)
   const data = useObjectSelector(state => state.sendModal.data)
@@ -75,8 +71,6 @@ const AuthenticateUserPassword = props => {
     props.route.params?.account,
     data[SEND_MODAL_USER_TO_AUTHENTICATE],
   );
-  const defaultAccountSelected = account != null && defaultAccount === account.accountHash
-  const [makeDefaultAccount, setMakeDefaultAccount] = useState(defaultAccountSelected)
 
   const [internalLoading, setInternalLoading] = useState(false)
 
@@ -87,11 +81,7 @@ const AuthenticateUserPassword = props => {
     Keyboard.dismiss();
 
     try {
-      await initializeAccountData(
-        account,
-        key,
-        makeDefaultAccount
-      );
+      await initializeAccountData(account, key);
 
       setInternalLoading(false);
       await props.setPreventExit(false);
@@ -120,7 +110,7 @@ const AuthenticateUserPassword = props => {
       try {
         const password = await getBiometricPassword(
           account.accountHash,
-          'Authenticate to unlock profile',
+          'Authenticate to unlock wallet',
         );
 
         if (password != null) {
@@ -147,7 +137,7 @@ const AuthenticateUserPassword = props => {
     onMount();
   }, []);
 
-  goBack = () => {
+  const goBack = () => {
     Keyboard.dismiss();
     
     props.navigation.navigate(SEND_MODAL_FORM_STEP_FORM);
@@ -176,15 +166,6 @@ const AuthenticateUserPassword = props => {
           secureTextEntry={true}
         />
       </View>
-      <View style={styles.wideBlock}>
-        <Checkbox.Item
-          color={Colors.primaryColor}
-          label={'Make default'}
-          status={makeDefaultAccount ? 'checked' : 'unchecked'}
-          onPress={() => setMakeDefaultAccount(!makeDefaultAccount)}
-          mode="android"
-        />
-      </View>
       <View
         style={{
           ...styles.fullWidthBlock,
@@ -193,12 +174,12 @@ const AuthenticateUserPassword = props => {
           justifyContent: 'space-between',
           display: 'flex',
         }}>
-        <Button
-          textColor={Colors.warningButtonColor}
+        <AppButton
+          variant="secondary"
           style={{width: 148}}
           onPress={() => goBack()}>
           Back
-        </Button>
+        </AppButton>
         <Button
           buttonColor={Colors.verusGreenColor}
           textColor={password.length == 0 ? Colors.lightGrey : Colors.secondaryColor}

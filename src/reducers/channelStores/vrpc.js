@@ -43,14 +43,19 @@ export const channelStore_vrpc = (state = {
         ...state,
         vrpcEndpoints: {},
       }
-    case CLOSE_VRPC_CHANNEL:
+    case CLOSE_VRPC_CHANNEL: {
+      const watchedAddresses = {...state.watchedAddresses};
+      delete watchedAddresses[action.payload.chainTicker];
+
       return {
         ...state,
         openCoinChannels: {
           ...state.openCoinChannels,
           [action.payload.chainTicker]: false
         },
+        watchedAddresses,
       }
+    }
     case SIGN_OUT_COMPLETE:
       return {
         openCoinChannels: {},

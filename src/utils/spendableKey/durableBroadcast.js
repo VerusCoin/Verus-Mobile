@@ -98,7 +98,7 @@ export const resolveIdentityUpdateLockContext = async (context, receipt) => {
 
   const block = readResult(
     await guardedRead(context, () =>
-      getBlock(receipt.systemId, found.blockhash, 1),
+      getBlock(receipt.systemId, found.blockhash, true),
     ),
   );
 
@@ -120,7 +120,7 @@ export const resolveIdentityUpdateLockContext = async (context, receipt) => {
   // A block hash alone does not prove the transaction is still on the active chain.
   const activeBlock = readResult(
     await guardedRead(context, () =>
-      getBlock(receipt.systemId, String(block.height), 1),
+      getBlock(receipt.systemId, String(block.height), true),
     ),
   );
 

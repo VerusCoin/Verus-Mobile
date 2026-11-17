@@ -8,10 +8,8 @@
 */
 
 import React, { Component } from "react";
-import { 
-  View
-} from "react-native";
-import styles from './LoadingScreen.styles';
+import StartupCover from '../../components/StartupCover';
+import {OnboardingThemeProvider} from '../../theme/onboarding';
 
 export default class LoadingScreen extends Component {
   constructor(props) {
@@ -20,7 +18,9 @@ export default class LoadingScreen extends Component {
 
   render() {
     return (
-      <View style={styles.loadingRoot} />
+      <OnboardingThemeProvider>
+        <StartupCover loading />
+      </OnboardingThemeProvider>
     );
   }
 }

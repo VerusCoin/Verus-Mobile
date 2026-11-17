@@ -7,10 +7,9 @@ import {
 import * as wyre from "../channels/wyre/callCreators";
 import * as vrpc from "../channels/vrpc/callCreators";
 import { getWeb3ProviderForNetwork } from "../../web3/provider";
-import { ETH_CONTRACT_ADDRESS } from "../../constants/web3Constants";
+import { ETH_CONTRACT_ADDRESS, ETH_SEPOLIA } from "../../constants/web3Constants";
 import {
-  ETH_HOMESTEAD,
-  ETH_GOERLI
+  ETH_HOMESTEAD
 } from "../../../../env/index";
 
 const CONVERSION_PATH_FUNCTION_MAP = {
@@ -18,7 +17,7 @@ const CONVERSION_PATH_FUNCTION_MAP = {
   [VRPC]: (coinObj, channel, params) => {
     const [channelName, iAddress, systemId] = channel.split('.')
 
-    return vrpc.getCurrencyConversionPaths(systemId, params.src, coinObj.testnet ? ETH_GOERLI : ETH_HOMESTEAD);
+    return vrpc.getCurrencyConversionPaths(systemId, params.src, coinObj.testnet ? ETH_SEPOLIA : ETH_HOMESTEAD);
   },
   [ERC20]: (coinObj, channel, params) => {
     return vrpc.getCurrencyConversionPaths(

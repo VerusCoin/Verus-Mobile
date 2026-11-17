@@ -1,7 +1,9 @@
 import React from 'react';
-import { ScrollView, View, SafeAreaView } from 'react-native';
-import Button from '../../../Button';
+import { ScrollView, View } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {Button} from 'react-native-paper';
 import Colors from '../../../../globals/colors';
+import AppButton from '../../../AppButton';
 import Styles from '../../../../styles';
 import VerusIdObjectData from '../../../VerusIdObjectData';
 
@@ -22,12 +24,12 @@ export const LinkIdentityConfirmRender = ({ verusId, friendlyNames, goBack, subm
               justifyContent: 'space-evenly',
               paddingVertical: 20
             }}>
-            <Button
-              textColor={Colors.warningButtonColor}
+            <AppButton
+              variant="secondary"
               style={{ width: 148 }}
               onPress={goBack}>
               Back
-            </Button>
+            </AppButton>
             <Button
               buttonColor={Colors.verusGreenColor}
               textColor={Colors.secondaryColor}

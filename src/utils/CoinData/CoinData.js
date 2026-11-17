@@ -15,6 +15,7 @@ import {
   WALLET_APP_MANAGE
 } from "../constants/apps";
 import { CoinDirectory } from './CoinDirectory';
+import { getTestnetExplorer } from '../testnetEnvironment';
 
 export const getDefaultApps = (coinObj) => {
   const coinName = coinObj.display_name
@@ -105,9 +106,10 @@ export const explorers = {
   KMD: 'https://kmdexplorer.io',
   OOT: 'https://explorer.utrum.io',
   VRSC: 'https://insight.verus.io',
-  VRSCTEST: 'https://testex.verus.io',
+  // Resolve after startup settings load, as with endpoint/bridge overrides.
+  get VRSCTEST() { return getTestnetExplorer(); },
   ETH: 'https://etherscan.io',
-  GETH: 'https://goerli.etherscan.io',
+  GETH: 'https://sepolia.etherscan.io',
   RFOX: 'https://etherscan.io',
   BAT: 'https://etherscan.io',
   DAI: 'https://etherscan.io',
@@ -158,6 +160,9 @@ export const CoinLogos = {
   ["iC5TQFrFXSYLQGkiZ8FYmZHFJzaRF5CYgE"]: CoinLogoIcons.web3.EURC, // EURC on Verus
   ["iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2"]: CoinLogoIcons.pbaas.VARRR,
   ["iJ3WZocnjG9ufv7GKUA4LijQno5gTMb7tP"]: CoinLogoIcons.pbaas.CHIPS,
+  ["i9nLSK4S1U5sVMq4eJUHR1gbFALz56J9Lj"]: CoinLogoIcons.web3.SCRVUSD,
+  ["iQ1mX2VtESKfJ3PoWVcYKfnDEpYkWW59ZB"]: CoinLogoIcons.web3.CRVUSD,
+  ["i9oCSqKALwJtcv49xUKS2U2i79h1kX6NEY"]: CoinLogoIcons.web3.USDT,
 
   // web3 protocol
   BAT: CoinLogoIcons.web3.BAT,

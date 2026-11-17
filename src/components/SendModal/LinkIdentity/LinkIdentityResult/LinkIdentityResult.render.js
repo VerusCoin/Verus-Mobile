@@ -1,7 +1,6 @@
 import React from 'react';
 import {ScrollView, View, TouchableOpacity} from 'react-native';
-import {Text} from 'react-native-paper';
-import Button from '../../../Button';
+import {Button, Text} from 'react-native-paper';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
@@ -68,6 +67,7 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
           buttonColor={Colors.verusGreenColor}
           textColor={Colors.secondaryColor}
           style={{width: 148}}
+          labelStyle={{fontSize: 18}}
           onPress={finishSend}>
           Done
         </Button>

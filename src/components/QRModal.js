@@ -18,8 +18,7 @@ import Modal from '../components/Modal'
 import { CameraRoll } from "@react-native-camera-roll/camera-roll";
 import QRCode from 'react-native-qrcode-svg'
 import AlertAsync from "react-native-alert-async"
-import { IconButton, Text } from "react-native-paper"
-import Button from "./Button"
+import { Button, IconButton, Text } from "react-native-paper"
 import RNFS from "react-native-fs"
 //import Share from 'react-native-share';
 import Colors from '../globals/colors';

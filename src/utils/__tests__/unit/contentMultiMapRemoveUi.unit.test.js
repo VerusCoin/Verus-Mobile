@@ -11,7 +11,7 @@ const buildRemoveUi = (action, overrides = {}) => buildContentMultiMapRemoveUi({
 describe('content multimap removal review', () => {
   it('describes action 1 as one hash-matching instance, without inferring a match from the value count', () => {
     const ui = buildRemoveUi(1);
-    expect(ui.summary).toBe('Remove one current matching value under VDXF Profile');
+    expect(ui.summary).toBe('Remove one active matching value under VDXF Profile');
     expect(ui.detailBody).toContain('whose hash matches the requested hash, if any');
     expect(ui.effectNote).toContain('If a matching value is found, one instance is removed');
     expect(ui.effectNote).toContain('Other values are not removed');
@@ -21,7 +21,7 @@ describe('content multimap removal review', () => {
 
   it('describes action 2 as removing all matching values, conditionally', () => {
     const ui = buildRemoveUi(2);
-    expect(ui.summary).toBe('Remove all current matching values under VDXF Profile');
+    expect(ui.summary).toBe('Remove all active matching values under VDXF Profile');
     expect(ui.detailBody).toContain('whose hash matches the requested hash, if any');
     expect(ui.effectNote).toContain('If matching values are found, all of them are removed');
     expect(ui.effectNote).toContain('Nonmatching values are not removed');
@@ -54,11 +54,11 @@ describe('content multimap removal review', () => {
     expect(buildRemoveUi(1, {removeMeta: null})).toBeNull();
   });
 
-  it.each([1, 2, 3])('reports no current target values for action %s even when other keys have content', action => {
+  it.each([1, 2, 3])('reports no active target values for action %s even when other keys have content', action => {
     const ui = buildRemoveUi(action, {currentContentMultiMap: {other: ['unrelated']}});
     expect(ui.currentValueCount).toBe(0);
     expect(ui.isNoOp).toBe(true);
-    expect(ui.emptyStateNote).toContain('No current values were found under this key');
+    expect(ui.emptyStateNote).toContain('No active values were found under this key');
   });
 
   it('reports an empty map for action 4', () => {
@@ -66,7 +66,7 @@ describe('content multimap removal review', () => {
     expect(ui.isNoOp).toBe(true);
     expect(ui.currentKeyCount).toBe(0);
     expect(ui.currentValueCount).toBe(0);
-    expect(ui.emptyStateNote).toContain('No current content was found');
+    expect(ui.emptyStateNote).toContain('No active content was found');
   });
 
   it.each([1, 2, 3, 4])('preserves the history note for action %s', action => {

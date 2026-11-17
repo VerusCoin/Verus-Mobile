@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import {transparentDustError} from '../../../../transactions/transparentDust';
 import { getAddressBalances } from "./getAddressBalances";
 import { coinsToSats, satsToCoins } from "../../../../math";
 import { DEST_ID, DEST_PKH, TransferDestination, fromBase58Check, toIAddress } from "verus-typescript-primitives";
@@ -6,7 +7,7 @@ import { Transaction, networks, smarttxs } from "@bitgo/utxo-lib";
 import { calculateCurrencyTransferFee } from "./calculateCurrencyTransferFee";
 import { getInfo } from "./getInfo";
 import { fundRawTransaction } from "./fundRawTransaction";
-import { getAddressUtxos, getSpendableUtxos } from "./getAddressUtxos";
+import { getSpendableUtxosWithMempoolInfo } from "./getAddressUtxos";
 import { getCurrency, getIdentity } from "../../verusid/callCreators";
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData";
 import { estimateConversion } from "./estimateConversion";
@@ -16,10 +17,10 @@ import {
   IS_TOKEN_FLAG,
 } from "../../../../constants/currencies";
 import { coinsList } from "../../../../CoinData/CoinsList";
-import { getSendCurrencyTransaction } from "./getSendCurrencyTransaction";
+import { getSendCurrencyTransaction, SEND_CURRENCY_PARENT_FEE } from "./getSendCurrencyTransaction";
 import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../constants/constants";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
-import { Alert } from "react-native";
+import { createAlert } from "../../../../../actions/actions/alert/dispatchers/alert";
 import { getCurrencyTransferIntentContext, validateCurrencyTransferTag } from "./currencyTransferIntent";
 import {
   BURN_CHANGE_PRICE_PARENT_TRANSACTION_FEE,
@@ -110,6 +111,9 @@ export const preflight = async (coinObj, activeUser, address, amount, params, ch
               : systemId,
         value: satsToCoins(valueBn).toString(),
         toAddress: address,
+        // Keep the typed name, and expose the exact destination encoded in
+        // this prepared transaction for review without another name lookup.
+        resolvedToAddress: preflightRes.result.output.address.getAddressString(),
         fromAddress: source,
         amountSubmitted: amount.toString(),
         names: preflightRes.result.names,
@@ -232,6 +236,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
   const currencyDefs = new Map();
   let nativeFeesPaid = BigNumber(0);
   let _feeamount;
+  let hasUnconfirmedIncoming = false;
   delete output.bridgeprelaunch
 
   try {
@@ -318,7 +323,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       output.burn === true
         ? BURN_CHANGE_PRICE_PARENT_TRANSACTION_FEE
         : isConversionOrExport || isBasicNativeSend
-          ? 0.0001
+          ? SEND_CURRENCY_PARENT_FEE
           : 0.0002;
 
     const useSendCurrencyOutput =
@@ -390,6 +395,12 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       nativeFeesPaid = nativeFeesPaid.plus(BigNumber(_feeamount));
     }
 
+    // Also identify incoming funds before the balance check can report a
+    // shortfall. Own pending change is already included in the funding list.
+    const fundingUtxos = await getSpendableUtxosWithMempoolInfo(systemId, currency, [source]);
+    const utxoList = fundingUtxos.utxos;
+    hasUnconfirmedIncoming = fundingUtxos.hasUnconfirmedIncoming;
+
     const balanceRes = await getAddressBalances(systemId, [source]);
     if (balanceRes.error) throw new Error(balanceRes.error.message);
 
@@ -399,7 +410,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const txSatsBn = BigNumber(output.satoshis);
 
     if (isNativeSend && (txSatsBn.plus(nativeFeesPaid)).isGreaterThan(balanceBn)) {
-      output.satoshis = txSatsBn.minus(nativeFeesPaid).toString();
+      output.satoshis = balanceBn.minus(nativeFeesPaid).toString();
       const newTxSatsBn = BigNumber(output.satoshis);
 
       if (
@@ -408,6 +419,13 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       ) {
         throw new Error('Insufficient funds.');
       }
+    }
+
+    // Check the final payment after fee subtraction. Invoice and request
+    // payments also use this builder, without the Amount screen.
+    if (isNativeSend && !convertto && !address.isETHAccount() && output.burn !== true && !output.mintnew) {
+      const dustError = transparentDustError(coinObj, channelId, satsToCoins(BigNumber(output.satoshis)));
+      if (dustError) throw new Error(dustError);
     }
 
     const infoRes = await getInfo(systemId);
@@ -429,9 +447,10 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
 
           if (destIdRes.error) throw new Error("Unable to verify presence of " + addrName + "@ on destination network. It may need to be exported to the " + exportDefinition.fullyqualifiedname + " chain.");
         } else {
-          Alert.alert(
-            'Warning',
-            `Cannot verify that destination VerusID exists on destination network. If you would like to continue, be aware that funds sent to ${addrName}@ on ${exportDefinition.fullyqualifiedname} may not be spendable if the VerusID is not yet exported. Adding ${exportDefinition.fullyqualifiedname} as a currency card to your wallet may allow Verus Mobile to automatically verify this and avoid this warning.`
+          // A Confirm row would be better; that needs SendWizard changes.
+          createAlert(
+            'Destination VerusID not verified',
+            `The wallet cannot check that ${addrName}@ exists on ${exportDefinition.fullyqualifiedname}. If it does not, the funds may not be spendable. Add ${exportDefinition.fullyqualifiedname} to your assets so the wallet can check.`
           )
         }
       }
@@ -515,8 +534,6 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       }
     }
 
-    const utxoList = await getSpendableUtxos(systemId, currency, [source]);
-
     const fundRes = await fundRawTransaction(
       systemId,
       unfundedTxHex,
@@ -571,6 +588,25 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       }
     })
 
+    // The intent check binds both bridge fee legs to the candidate. Funding
+    // validation supplies the total actually paid, including the parent fee.
+    // Keep this split with the same hex that will be signed, never a new quote.
+    let feeDetails;
+    if (exportto) {
+      const bridgeCurrency = approvedTransfer?.context.fees.currency || _feecurrency || systemId;
+      const bridgeSatoshis = BigNumber(approvedTransfer?.totalFeeSatoshis ?? _feeamount ?? 0);
+      const network = {...validation.fees};
+      const networkRemainder = BigNumber(network[bridgeCurrency] || 0).minus(bridgeSatoshis);
+      if (!networkRemainder.isFinite() || networkRemainder.isNegative()) {
+        throw new Error('Bridge fee does not match the validated transaction fees.');
+      }
+      network[bridgeCurrency] = networkRemainder.toFixed(0);
+      feeDetails = {
+        bridge: {[bridgeCurrency]: bridgeSatoshis.toFixed(0)},
+        network,
+      };
+    }
+
     const preflightTx = Transaction.fromHex(fundRes.result.hex, networks.verus);
 
     const inputs = []
@@ -614,6 +650,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       result: {
         output,
         validation,
+        feeDetails,
         hex: fundRes.result.hex,
         names: friendlyNames,
         deltas,
@@ -630,21 +667,25 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     let message = e.message;
 
     if (message != null && typeof message === 'string' && message.includes('Insufficient funds')) {
-      const systemName = friendlyNames.has(systemId)
-        ? friendlyNames.get(systemId)
-        : systemId
-      const feeCurrencyName = output.feecurrency
-        ? friendlyNames.has(output.feecurrency)
-          ? friendlyNames.get(output.feecurrency)
-          : output.feecurrency
-        : systemName;
-      const nativeFeeAmount = satsToCoins(nativeFeesPaid).toString();
+      if (hasUnconfirmedIncoming) {
+        message = 'Part of your balance is still being confirmed. Wait for the next block, then try again.';
+      } else {
+        const systemName = friendlyNames.has(systemId)
+          ? friendlyNames.get(systemId)
+          : systemId
+        const feeCurrencyName = output.feecurrency
+          ? friendlyNames.has(output.feecurrency)
+            ? friendlyNames.get(output.feecurrency)
+            : output.feecurrency
+          : systemName;
+        const nativeFeeAmount = satsToCoins(nativeFeesPaid).toString();
 
-      message = `Insufficient funds. Ensure you have at least ${
-        (output.feecurrency == null || output.feecurrency === systemId)
-          ? nativeFeeAmount
-            : satsToCoins(BigNumber(_feeamount)).toString()
-            } ${feeCurrencyName} on the ${systemName} network to fund the fee for transaction.`;
+        message = `Insufficient funds. Ensure you have at least ${
+          (output.feecurrency == null || output.feecurrency === systemId)
+            ? nativeFeeAmount
+              : satsToCoins(BigNumber(_feeamount)).toString()
+              } ${feeCurrencyName} on the ${systemName} network to fund the fee for transaction.`;
+      }
     }
 
     return {

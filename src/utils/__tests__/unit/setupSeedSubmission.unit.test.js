@@ -2,7 +2,7 @@ const mockParseDlightSeed = jest.fn();
 const mockAlert = jest.fn();
 const mockGetKey = jest.fn();
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Alert: {alert: mockAlert},
   Keyboard: {dismiss: jest.fn()},
   Platform: {OS: 'android'},

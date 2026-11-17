@@ -22,7 +22,7 @@ import Coins from './coins-icon.png';
 import TransactionLogos from './transactions/index'
 
 import VerusPayLogo from './verusPay.svg'
-import VerusLogo from './VerusLogo.svg'
+import VerusLogo from './VerusLogo'
 import VerusIdLogo from './VerusIdLogo.svg'
 import VerusPayTextLogo from './VerusPayTextLogo.svg'
 import AddCoinLogo from './coinAdd.svg'

@@ -3,8 +3,7 @@ import { closeSendModal } from "../../../../actions/actions/sendModal/dispatcher
 import { explorers } from "../../../../utils/CoinData/CoinData";
 import { openUrl } from "../../../../utils/linking";
 import { ScrollView, View, TouchableOpacity } from "react-native";
-import { Text } from "react-native-paper";
-import Button from "../../../Button";
+import { Button, Text } from "react-native-paper";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
@@ -110,6 +109,7 @@ const TraditionalCryptoSendResult = (props) => {
           <Button
             textColor={Colors.primaryColor}
             style={{width: 148}}
+            labelStyle={{fontSize: 18}}
             onPress={() => openExplorer()}>
             Details
           </Button>
@@ -118,6 +118,7 @@ const TraditionalCryptoSendResult = (props) => {
           buttonColor={Colors.verusGreenColor}
           textColor={Colors.secondaryColor}
           style={{width: 148}}
+          labelStyle={{fontSize: 18}}
           onPress={() => finishSend()}>
           Done
         </Button>

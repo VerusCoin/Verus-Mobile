@@ -10,8 +10,32 @@
 #import "AppDelegate.h"
 
 #import <React/RCTBundleURLProvider.h>
+#import <React/RCTConstants.h>
 #import <React/RCTLinkingManager.h>
 #import <ReactAppDependencyProvider/RCTAppDependencyProvider.h>
+
+@interface VerusRootViewController : UIViewController
+@end
+
+@implementation VerusRootViewController
+
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection
+{
+  [super traitCollectionDidChange:previousTraitCollection];
+
+  if (@available(iOS 13.0, *)) {
+    if (previousTraitCollection.userInterfaceStyle != self.traitCollection.userInterfaceStyle) {
+      [[NSNotificationCenter defaultCenter]
+          postNotificationName:RCTUserInterfaceStyleDidChangeNotification
+                        object:self
+                      userInfo:@{
+                        RCTUserInterfaceStyleDidChangeNotificationTraitCollectionKey : self.traitCollection,
+                      }];
+    }
+  }
+}
+
+@end
 
 @implementation AppDelegate
 
@@ -50,6 +74,11 @@
 #else
   return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
 #endif
+}
+
+- (UIViewController *)createRootViewController
+{
+  return [VerusRootViewController new];
 }
 
 @end

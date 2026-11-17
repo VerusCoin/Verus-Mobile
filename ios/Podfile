@@ -137,7 +137,8 @@ target 'verusmobile' do
   pod 'MnemonicSwift', '~> 2.0.0'
   pod 'SwiftNIO', '2.40.0'
   pod 'CocoaAsyncSocket'
-  pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec', :modular_headers => false
+  # Swift video and Lottie pods need glog's module map with static linking.
+  pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec', :modular_headers => true
 
   post_install do |installer|
     react_native_post_install(
@@ -158,7 +159,12 @@ target 'verusmobile' do
            config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << '_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION=1'
         end
 
-        # fmt 11's consteval format strings fail to compile under newer Xcode clang in C++20.
+        if target.name == 'Yoga'
+          config.build_settings['OTHER_CPLUSPLUSFLAGS'] ||= ['$(inherited)']
+          config.build_settings['OTHER_CPLUSPLUSFLAGS'] << '-Wno-deprecated-literal-operator'
+        end
+
+        # fmt 11 consteval format strings require C++17 with newer Xcode.
         if target.name == 'fmt'
           config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
         end

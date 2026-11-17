@@ -6,13 +6,14 @@ import {
   View,
   KeyboardAvoidingView
 } from "react-native";
-import { Text } from 'react-native-paper'
-import Button from '../../../../../components/Button'
+import { Text, Button } from 'react-native-paper'
+import { openLinkIdentityModal } from "../../../../../actions/actions/sendModal/dispatchers/sendModal";
 import ServiceLogos from '../../../../../images/servicelogo/index'
 import { VERUSID_SERVICE_ID } from "../../../../../utils/constants/services";
 import Colors from "../../../../../globals/colors";
 import { openUrl } from "../../../../../utils/linking";
 import { VERUSID_NETWORK_DEFAULT } from "../../../../../../env/index";
+import { CoinDirectory } from "../../../../../utils/CoinData/CoinDirectory";
 
 const VERUS_ID_URL = "https://docs.verus.io/verusid/"
 
@@ -48,7 +49,7 @@ class VerusIdServiceIntroSlider extends Component {
           textColor={Colors.secondaryColor}
           onPress={() => openUrl(VERUS_ID_URL)}
         >
-          {"Learn more"}
+          {"Learn More"}
         </Button>
         <Text style={{textAlign: 'center', width: '80%', color: 'white', marginTop: 12}}>
           Create an identity or continue a saved registration. Review commitment and registration costs before paying.
@@ -75,23 +76,23 @@ class VerusIdServiceIntroSlider extends Component {
         key={key}
       >
         <Text style={{ textAlign: "center", width: "75%", color: "white" }}>
-          {"Find identities connected to this wallet address, then choose which ones to link."}
+          {"To link a VerusID, press the button below and enter the name of a VerusID controlled by the wallet address for this profile."}
         </Text>
         <Button
           style={{ marginTop: 16 }}
           mode="contained"
           buttonColor={Colors.secondaryColor}
-          onPress={() => this.props.navigation.navigate('LinkIdentities', {chain: identityNetwork})}
+          onPress={() => openLinkIdentityModal(CoinDirectory.findCoinObj(identityNetwork))}
         >
-          {"Link identities"}
+          {"Link VerusID"}
         </Button>
         <Button
           style={{marginTop: 16}}
           mode="contained"
           buttonColor={Colors.secondaryColor}
-          onPress={() => this.props.navigation.navigate('IdentityRegistration', {
-            screen: 'IdentityRegistrationStart', params: {coinId: identityNetwork},
-          })}
+          onPress={() => this.props.navigation.navigate('IdentityTab', {screen: 'IdentityRegistration', params: {
+            originTab: 'ServicesHome', screen: 'IdentityRegistrationCreate', params: {coinId: identityNetwork},
+          }})}
         >
           Register VerusID
         </Button>

@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
 import { Component } from "react"
+import { DeviceEventEmitter } from "react-native";
 import { connect } from 'react-redux'
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import {
@@ -15,9 +16,8 @@ import {
   LINK_IDENTITY_SEND_MODAL,
   AUTHENTICATE_USER_SEND_MODAL,
   PROVISION_IDENTITY_SEND_MODAL,
-  ADD_PBAAS_CURRENCY_MODAL,
+  SEND_MODAL_PROVISION_IDENTITY_BACK_TARGET_AUTH_PICKER,
   CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
-  ADD_ERC20_TOKEN_MODAL,
   REVOKE_IDENTITY_SEND_MODAL,
   RECOVER_IDENTITY_SEND_MODAL,
 } from "../../utils/constants/sendModal";
@@ -29,6 +29,10 @@ class SendModal extends Component {
   constructor(props) {
     super(props);
 
+    this.identitySafetyRequestCloseHandler = null;
+    this.setIdentitySafetyRequestCloseHandler =
+      this.setIdentitySafetyRequestCloseHandler.bind(this);
+
     this.DEFAULT_MODAL_HEIGHTS = {
       [TRADITIONAL_CRYPTO_SEND_MODAL]: 624,
       [CONVERSION_SEND_MODAL]: 624,
@@ -37,8 +41,6 @@ class SendModal extends Component {
       [LINK_IDENTITY_SEND_MODAL]: 442,
       [PROVISION_IDENTITY_SEND_MODAL]: 442,
       [AUTHENTICATE_USER_SEND_MODAL]: 442,
-      [ADD_PBAAS_CURRENCY_MODAL]: 442,
-      [ADD_ERC20_TOKEN_MODAL]: 442,
       [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: 696,
       [REVOKE_IDENTITY_SEND_MODAL]: 442,
       [RECOVER_IDENTITY_SEND_MODAL]: 624,
@@ -54,6 +56,7 @@ class SendModal extends Component {
       persistFormDataOnClose: false,
       loading: false,
       preventExit: false,
+      returnToAuthenticationIdentityPickerOnClosed: false,
       modalHeight: this.DEFAULT_MODAL_HEIGHTS[props.sendModal.type]
     };
   }
@@ -147,6 +150,17 @@ class SendModal extends Component {
     setSendModalDataField(key, value);
   }
 
+  setIdentitySafetyRequestCloseHandler(handler) {
+    this.identitySafetyRequestCloseHandler =
+      typeof handler === 'function' ? handler : null;
+  }
+
+  handleIdentitySafetyRequestClose() {
+    if (this.identitySafetyRequestCloseHandler?.()) return;
+
+    this.cancel();
+  }
+
   showHelpModal() {
     createAlert("Help", this.props.sendModal.helpText);
   }
@@ -163,6 +177,39 @@ class SendModal extends Component {
         }
       );
     });
+  }
+
+  backToAuthenticationIdentityPicker() {
+    if (this.state.loading || this.state.preventExit) return;
+
+    this.setState(
+      {
+        persistFormDataOnClose: true,
+        returnToAuthenticationIdentityPickerOnClosed: true,
+      },
+      () => {
+        setSendModalVisible(false);
+      },
+    );
+  }
+
+  handleProvisionIdentitySheetClosed() {
+    if (!this.state.returnToAuthenticationIdentityPickerOnClosed) return;
+
+    this.setState(
+      {
+        persistFormDataOnClose: false,
+        returnToAuthenticationIdentityPickerOnClosed: false,
+      },
+      () => {
+        closeSendModal();
+        requestAnimationFrame(() => {
+          DeviceEventEmitter.emit(
+            SEND_MODAL_PROVISION_IDENTITY_BACK_TARGET_AUTH_PICKER,
+          );
+        });
+      },
+    );
   }
 
   cancel() {

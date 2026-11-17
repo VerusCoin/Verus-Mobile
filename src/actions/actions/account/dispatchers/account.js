@@ -1,4 +1,4 @@
-import { ADDRESS_BLOCKLIST_FROM_WEBSERVER, LOADING_ACCOUNT, VALIDATING_ACCOUNT } from "../../../../utils/constants/constants";
+import { LOADING_ACCOUNT, VALIDATING_ACCOUNT } from "../../../../utils/constants/constants";
 import { signIntoAuthenticatedAccount, signOut } from "../../../actionCreators";
 import { COIN_MANAGER_MAP, fetchActiveCoins, setUserCoins } from "../../coins/Coins";
 import {
@@ -16,6 +16,8 @@ import { initSettings, saveGeneralSettings } from "../../WalletSettings";
 import { DISABLED_CHANNELS } from '../../../../../env/index'
 import store from "../../../../store";
 import { getAddressBlocklistFromServer } from "../../../../utils/api/channels/general/addressBlocklist/getAddressBlocklist";
+import { normalizeLastOpenedAccountTimestamps } from "../../../../utils/account/accountActivity";
+import {getAccountNetworkKey} from '../../../../utils/account/accountNetwork';
 import {loadServiceStoredDataForUser} from '../../../../utils/asyncStore/serviceStoredDataStorage';
 import {initSession} from '../../../../utils/auth/authBox';
 import {removeSessionCredential} from '../../../../utils/keychain/keychain';
@@ -298,8 +300,8 @@ export const awaitPendingAccountTeardowns = async () => {
 export const initializeAccountData = async (
   account,
   password,
-  makeDefault = false,
   setInitStep = () => {},
+  alertOnFail = true,
   initializationId = beginAccountInitialization(),
 ) => {
   const startingSessionScope = captureSessionScope(store.getState());
@@ -313,7 +315,12 @@ export const initializeAccountData = async (
   };
 
   setInitStep(VALIDATING_ACCOUNT);
-  const accountAuthenticator = await validateLogin(account, password, true);
+  const accountAuthenticator = await validateLogin(
+    account,
+    password,
+    true,
+    alertOnFail,
+  );
   assertInitializationActive();
 
   if (accountAuthenticator) {
@@ -323,12 +330,20 @@ export const initializeAccountData = async (
     );
     assertInitializationActive();
 
-    if (makeDefault) {
-      await saveGeneralSettings({
-        defaultAccount: account.accountHash,
-      });
-      assertInitializationActive();
-    }
+    const generalWalletSettings =
+      store.getState().settings.generalWalletSettings;
+    const lastOpenedAccountTimestamps = {
+      ...normalizeLastOpenedAccountTimestamps(
+        generalWalletSettings.lastOpenedAccountTimestamps,
+      ),
+      [account.accountHash]: Date.now(),
+    };
+
+    await saveGeneralSettings({
+      lastOpenedAccountTimestamps,
+      lastWalletNetwork: getAccountNetworkKey(account),
+    });
+    assertInitializationActive();
 
     const coinList = await fetchActiveCoins();
     assertInitializationActive();
@@ -343,8 +358,6 @@ export const initializeAccountData = async (
     store.dispatch(settingsAction);
 
     try {
-      const { addressBlocklist } = store.getState().settings.generalWalletSettings;
-
       const fetchedBlocklist = await getAddressBlocklistFromServer();
       assertInitializationActive();
       const currentBlocklist = [];
@@ -529,8 +542,8 @@ export const clearActiveAccountLifecycles = (
 export const refreshAccountData = async (
   accountHash,
   password,
-  makeDefault = false,
-  setInitStep = () => {}
+  setInitStep = () => {},
+  alertOnFail = true,
 ) => {
   const initializationId = beginAccountInitialization();
   await clearActiveAccountLifecycles();
@@ -545,8 +558,8 @@ export const refreshAccountData = async (
   return await initializeAccountData(
     newAccount,
     password,
-    makeDefault,
     setInitStep,
+    alertOnFail,
     initializationId,
   );
 };

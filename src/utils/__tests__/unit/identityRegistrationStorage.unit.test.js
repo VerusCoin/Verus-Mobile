@@ -826,7 +826,7 @@ describe('durable identity registration storage', () => {
     expect(mockReconcile).toHaveBeenCalledWith('job-a', {...context(), registrationBackground: true});
     const notices = registrationNotifications(lastSummary().payload.registrationJobs, 'account-a');
     expect(notices).toHaveLength(1);
-    expect(notices[0].statusText).toBe('Registration awaiting confirmation');
+    expect(notices[0].statusText).toBe('Confirming registration');
   });
 
   it('keeps registered identities pending explicit linking and rechecks their confirmation', async () => {
@@ -856,15 +856,15 @@ describe('durable identity registration storage', () => {
     let notices = registrationNotifications(lastSummary().payload.registrationJobs, 'account-a');
     expect(notices).toHaveLength(1);
     expect(notices[0].persistent).toBe(true);
-    expect(notices[0].statusText).toBe('Name commitment awaiting confirmation');
+    expect(notices[0].statusText).toBe('Confirming commitment');
     await updateRegistrationJob('job-a', {status: 'commitment_confirmed'}, context());
     notices = registrationNotifications(lastSummary().payload.registrationJobs, 'account-a');
-    expect(notices[0].body).toBe('Continue registration');
+    expect(notices[0].body).toBe('Continue');
     const navigate = jest.fn();
     notices[0].onAction({navigation: {navigate}});
-    expect(navigate).toHaveBeenCalledWith('ServicesHome', {
+    expect(navigate).toHaveBeenCalledWith('IdentityTab', {
       screen: 'IdentityRegistration',
-      params: {screen: 'IdentityRegistrationProgress', params: {jobId: 'job-a'}},
+      params: {originTab: 'WalletHome', screen: 'IdentityRegistrationProgress', params: {jobId: 'job-a'}},
     });
     expect(registrationNotifications(lastSummary().payload.registrationJobs, 'account-b')).toEqual([]);
     await updateRegistrationJob('job-a', {status: 'complete', linked: true}, context());

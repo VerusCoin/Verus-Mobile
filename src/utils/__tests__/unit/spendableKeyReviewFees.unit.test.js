@@ -1,6 +1,12 @@
-jest.mock('react-native', () => ({Alert: {alert: jest.fn()}}));
+jest.mock('../../../actions/actions/alert/dispatchers/alert', () => {
+  let settle = () => {};
+  return {
+    createAlert: jest.fn(() => new Promise(resolve => { settle = resolve; })),
+    resolveAlert: jest.fn(result => settle(result)),
+  };
+});
 jest.mock('../../spendableKey/durableBroadcast', () => ({verifyPendingIdentityFunding: jest.fn()}));
-const {Alert} = require('react-native');
+const {createAlert} = require('../../../actions/actions/alert/dispatchers/alert');
 const {verifiedClaimFees, confirmVerifiedClaimFees} = require('../../spendableKey/reviewFees');
 const {verifyPendingIdentityFunding} = require('../../spendableKey/durableBroadcast');
 const plan = () => ({transactions: [
@@ -22,7 +28,7 @@ test.each(['NaN', '-1', '0.5'])('rejects invalid fee %s', value => {
 });
 test('cancel leaves the claim unapproved', async () => {
   const pending = confirmVerifiedClaimFees(plan(), currency => currency === 'native' ? 'VRSCTEST' : 'Reserve');
-  const [, message, buttons] = Alert.alert.mock.calls[0];
+  const [, message, buttons] = createAlert.mock.calls[0];
   expect(message).toContain('0.0003 VRSCTEST');
   expect(message).toContain('0.0000005 Reserve');
   buttons[0].onPress();
@@ -30,11 +36,14 @@ test('cancel leaves the claim unapproved', async () => {
 });
 test('only explicit confirmation approves the claim', async () => {
   const pending = confirmVerifiedClaimFees(plan());
-  Alert.alert.mock.calls[0][2][1].onPress();
+  createAlert.mock.calls[0][2][1].onPress();
   await expect(pending).resolves.toBe(true);
 });
 test('dismissal also cancels approval', async () => {
+  // The app alert sheet runs the cancel-style action when it is dismissed.
   const pending = confirmVerifiedClaimFees(plan());
-  Alert.alert.mock.calls[0][3].onDismiss();
+  const [, , buttons, options] = createAlert.mock.calls[0];
+  expect(options.cancelable).toBe(true);
+  buttons.find(button => button.style === 'cancel').onPress();
   await expect(pending).resolves.toBe(false);
 });

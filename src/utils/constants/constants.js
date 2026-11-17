@@ -80,15 +80,13 @@ export const TOTAL = 'total'
 export const WYRE_URL = 'https://api.sendwyre.com';
 export const WYRE_REFERRER_ACCOUNT_ID = 'verus-valu';
 
-// Biometry
-export const BIOMETRY_WARNING = "Enabling biometric authentication relies on the security of your operating system keychain, and device's biometric hardware to keep your password safe.\n\nBy continuing, you acknowledge the risks associated with doing so."
-
 // ETH Network IDs
 export const ETH_NETWORK_IDS = {
     ['homestead']: BigInt(1),
     ['ropsten']: BigInt(3),
     ['rinkeby']: BigInt(4),
     ['goerli']: BigInt(5),
+    ['sepolia']: BigInt(11155111),
     ['kovan']: BigInt(42)
 }
 

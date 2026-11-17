@@ -1,7 +1,6 @@
 import React, { Component } from "react"
 import { ScrollView, View } from 'react-native'
-import { Text } from 'react-native-paper'
-import Button from '../Button'
+import { Text, Button } from 'react-native-paper'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from "../../globals/colors";
 import Styles from "../../styles";

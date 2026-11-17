@@ -3,44 +3,24 @@
   user-decided app settings.
 */
 
-import { MAX_VERIFICATION, DEFAULT_PRIVATE_ADDRS, ADDRESS_BLOCKLIST_FROM_WEBSERVER } from '../utils/constants/constants'
+import { MAX_VERIFICATION, DEFAULT_PRIVATE_ADDRS } from '../utils/constants/constants'
 import {
   SET_COIN_LIST,
   SET_ALL_SETTINGS,
   SET_CONFIG_SECTION,
   SET_GENERAL_WALLET_SETTINGS_STATE,
+  SET_CARD_STACK_PREFERENCES,
   SET_COIN_SETTINGS_STATE,
   SET_BUY_SELL_SETTINGS_STATE
 } from '../utils/constants/storeType'
 import { DLIGHT_PRIVATE } from '../utils/constants/intervalConstants'
-import { USD } from '../utils/constants/currencies'
+import {
+  DEFAULT_SETTINGS,
+  normalizeGeneralWalletSettings,
+  normalizeSettings,
+} from '../utils/settings/settingsDefaults'
 
-export const settings = (state = {
-  btcFeesAdvanced: false,
-  extendedCoinInfo: false,
-  extendedTxInfo: false,
-  pinForTxs: false,
-  activeConfigSection: null,
-  generalWalletSettings: {
-    maxTxCount: 10,
-    minGasPriceGwei: 1,
-    displayCurrency: USD,
-    defaultAccount: null,
-    homeCardDragDetection: false,
-    allowSettingVerusPaySlippage: false, 
-    enableSendCoinCameraToggle: false,
-    enableExperimentalGenericRequests: false,
-    ackedCurrencyDisclaimer: false,
-    addressBlocklistDefinition: {
-      type: ADDRESS_BLOCKLIST_FROM_WEBSERVER,
-      data: null
-    },
-    addressBlocklist: [],
-    vrpcOverrides: {} // {[systemId]: [vrpcEndpoint1, vrpcEndpoint2, ...]}
-  },
-  buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
-  coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general'], privateAddrs: 100}}
-}, action) => {
+export const settings = (state = DEFAULT_SETTINGS, action) => {
   switch (action.type) {
     case SET_COIN_LIST:
       //TODO: Change this when activeCoinList is an object
@@ -79,11 +59,11 @@ export const settings = (state = {
           ...newCoinSettings
         },
       };
-    case SET_ALL_SETTINGS: 
-      return {
+    case SET_ALL_SETTINGS:
+      return normalizeSettings({
         ...state,
-        ...action.settings
-      }
+        ...action.settings,
+      })
     case SET_CONFIG_SECTION:
       return {
         ...state,
@@ -92,8 +72,29 @@ export const settings = (state = {
     case SET_GENERAL_WALLET_SETTINGS_STATE:
       return {
         ...state,
-        generalWalletSettings: action.state
+        generalWalletSettings: normalizeGeneralWalletSettings({
+          ...action.state,
+          // A settings write may finish after a new card choice. Loading uses
+          // SET_ALL_SETTINGS; write completions must keep the live choices.
+          cardStackPreferencesByAccount:
+            state.generalWalletSettings.cardStackPreferencesByAccount,
+        })
       }
+    case SET_CARD_STACK_PREFERENCES: {
+      const {accountHash, coinId, preferences} = action.payload;
+      const byAccount =
+        state.generalWalletSettings.cardStackPreferencesByAccount || {};
+      return {
+        ...state,
+        generalWalletSettings: {
+          ...state.generalWalletSettings,
+          cardStackPreferencesByAccount: {
+            ...byAccount,
+            [accountHash]: {...byAccount[accountHash], [coinId]: preferences},
+          },
+        },
+      };
+    }
     case SET_COIN_SETTINGS_STATE:
       return {
         ...state,

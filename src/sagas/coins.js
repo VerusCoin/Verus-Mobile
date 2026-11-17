@@ -7,16 +7,27 @@ import {
   LOG_NEW_CHANNELS,
   SET_USER_COINS,
   SET_USER_COINS_COMPLETE,
+  SET_BALANCE_SHOW,
 } from '../utils/constants/storeType';
 import { getDefaultSubWallets } from '../utils/defaultSubWallets';
 import { getVerusIdCurrency } from '../utils/CoinData/CoinData';
 import { IS_PBAAS_CHAIN } from '../utils/constants/currencies';
 import { coinsList } from '../utils/CoinData/CoinsList';
 import {sessionActionIsCurrent} from '../actions/actions/updates/sessionRequests';
+import {ensureIdentityColorSlots} from '../utils/subwallet/identityColorSettings';
 import {convertFqnToDisplayFormat} from '../utils/fullyqualifiedname';
+import {saveBalanceVisibility} from '../utils/asyncStore/balancePrivacyStorage';
 
 export default function* setUserCoinsSaga() {
-  yield all([takeEvery(SET_USER_COINS, handleFinishSetUserCoins)]);
+  yield all([
+    takeEvery(SET_USER_COINS, handleFinishSetUserCoins),
+    takeEvery(SET_BALANCE_SHOW, persistBalanceVisibility),
+  ]);
+}
+
+function* persistBalanceVisibility() {
+  const showBalance = yield select(state => state.coins.showBalance);
+  yield call(saveBalanceVisibility, showBalance);
 }
 
 function* handleFinishSetUserCoins(action) {
@@ -33,6 +44,19 @@ function* handleFinishSetUserCoins(action) {
     );
     const linkedIds =
       verusIdStoredData.linked_ids == null ? {} : verusIdStoredData.linked_ids;
+    if (!sessionActionIsCurrent(yield select(), action)) return;
+    // Card colors are cosmetic. An unexpected failure here must never stop
+    // the wallet from publishing its cards.
+    try {
+      yield call(
+        ensureIdentityColorSlots,
+        (yield select()).authentication.activeAccount?.accountHash,
+        linkedIds,
+      );
+    } catch (colorError) {
+      console.warn('Could not prepare identity card colors.', colorError);
+    }
+    if (!sessionActionIsCurrent(yield select(), action)) return;
     const state = store.getState()
     const { watchedAddresses } = state.channelStore_vrpc
 
@@ -76,7 +100,7 @@ function* handleFinishSetUserCoins(action) {
         ? setVrpcChannels(Object.keys(watchedAddresses[coinObj.id]))
         : [];
       
-      allNewChannels = [...(new Set([...verusIdChannels, ...vrpcChannels]))];
+      allNewChannels.push(...verusIdChannels, ...vrpcChannels);
 
       coinStatus[coinObj.id] = PRE_DATA;
       allSubWallets[coinObj.id] = getDefaultSubWallets(
@@ -103,7 +127,7 @@ function* handleFinishSetUserCoins(action) {
   yield put({
     type: LOG_NEW_CHANNELS,
     payload: {
-      channels: allNewChannels
+      channels: [...new Set(allNewChannels)]
     },
     meta: action.meta,
   });

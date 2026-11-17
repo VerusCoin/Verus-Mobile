@@ -1,16 +1,21 @@
 import { Component } from "react"
 import { connect } from 'react-redux'
 import { VrpcOverridesRender } from "./VrpcOverrides.render"
-import { Alert } from "react-native";
 import { saveGeneralSettings } from "../../../../actions/actionCreators";
 import { coinsList } from "../../../../utils/CoinData/CoinsList";
 import { VerusdRpcInterface } from "verusd-rpc-ts-client";
 import { timeout } from "../../../../utils/promises";
-import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
+import { createAlert, resolveAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { getAuthDataForUrl } from "../../../../utils/url";
 
-const EDIT = 'edit'
-const RESET_TO_DEFAULT = 'default'
+const SERVER_ERRORS = {
+  invalidUrl: "Enter a valid server URL.",
+  unreachable: "Could not reach this server. Check the address.",
+  otherNetwork: "This server runs another network.",
+  listedNetwork: "This network is already listed. Edit its server instead.",
+};
+
+const isServerUrl = value => /^https?:\/\/[^\s/?#]+/i.test(value);
 
 class VrpcOverrides extends Component {
   constructor() {
@@ -28,81 +33,18 @@ class VrpcOverrides extends Component {
       vrpcOverridesSettings: {
         vrpcOverrides: {}
       },
-      editPropertyModal: {
-        open: false,
-        label: "",
-        systemid: null
-      },
-      addVrpcOverrideModal: {
-        open: false,
-        label: "",
-        systemid: null
-      },
+      // The sheet content stays while the sheet closes. systemid is null when
+      // the user adds a server for a new network.
+      serverSheet: null,
+      serverSheetVisible: false,
       systems: {
         ...this.DEFAULT_SYSTEMS
-      },
-      loading: false
+      }
     };
-
-    this.EDIT_PROPERTY_BUTTONS = [{
-      key: EDIT,
-      title: "Edit"
-    },
-    {
-      key: RESET_TO_DEFAULT,
-      title: "Reset to default"
-    }]
   }
 
   componentDidMount() {
     this.loadSettings();
-  }
-
-  closeEditPropertyModal() {
-    this.setState({
-      editPropertyModal: {
-        open: false,
-        label: "",
-        systemid: null
-      }
-    })
-  }
-
-  openEditPropertyModal(label, systemid = null) {
-    this.setState({
-      editPropertyModal: {
-        open: true,
-        label,
-        systemid
-      }
-    })
-  }
-
-  selectEditPropertyButton(button) {
-    switch (button) {
-      case EDIT:
-        this.setState({
-          addVrpcOverrideModal: {
-            open: true,
-            label: "Edit RPC Server",
-            systemid: this.state.editPropertyModal.systemid
-          }
-        })
-        break;
-      case RESET_TO_DEFAULT:
-        const systemid = this.state.editPropertyModal.systemid;
-
-        this.setState({
-          editPropertyModal: {
-            open: false,
-            label: "",
-            systemid: null
-          }
-        }, () => this.editVrpcOverride(null, systemid))
-        break;
-      default:
-        break;
-    }
   }
 
   componentDidUpdate(lastProps) {
@@ -111,86 +53,173 @@ class VrpcOverrides extends Component {
     }
   }
 
-  finishAddVrpcOverrideModal(server, systemid) {
-    this.setState({
-      addVrpcOverrideModal: {
-        open: false,
-        label: "",
-        systemid: null
-      }
-    }, () => this.editVrpcOverride(server, systemid))
+  getCurrentServer(system) {
+    const overrides = this.state.vrpcOverridesSettings.vrpcOverrides;
+
+    return overrides && overrides[system.system_id]
+      ? overrides[system.system_id][0]
+      : system.vrpc_endpoints[0];
   }
 
-  editVrpcOverride(server, systemid) {
-    if (!server || server.length === 0) {
-      let vrpcOverrides = this.state.vrpcOverridesSettings.vrpcOverrides ? {...this.state.vrpcOverridesSettings.vrpcOverrides} : {};
+  openServerSheet(system) {
+    const defaultSystem = this.DEFAULT_SYSTEMS[system.system_id];
+    const named = system.display_name && system.display_name !== system.system_id;
 
-      delete vrpcOverrides[systemid];
-      this.updateVrpcOverrides(vrpcOverrides);
-    } else {
-      this.setState({
-        loading: true
-      }, async () => {
-        let vrpcOverrides = this.state.vrpcOverridesSettings.vrpcOverrides ? {...this.state.vrpcOverridesSettings.vrpcOverrides} : {};
-        const authData = getAuthDataForUrl(server);
-        const testInterface = new VerusdRpcInterface("", server, undefined, undefined, authData);
-        const testResult = await timeout(10000, testInterface.getInfo());
+    this.setState({
+      serverSheet: {
+        systemid: system.system_id,
+        title: named ? `${system.display_name} server` : "RPC server",
+        initialValue: this.getCurrentServer(system),
+        defaultServer: defaultSystem ? defaultSystem.vrpc_endpoints[0] : null,
+      },
+      serverSheetVisible: true
+    });
+  }
 
-        if (testResult.result && (testResult.result.chainid === systemid || !systemid)) {
-          vrpcOverrides[testResult.result.chainid] = [server];
+  openAddServerSheet() {
+    this.setState({
+      serverSheet: {
+        systemid: null,
+        title: "Add RPC server",
+        initialValue: "",
+        defaultServer: null,
+      },
+      serverSheetVisible: true
+    });
+  }
 
-          if (!systemid && this.state.systems.hasOwnProperty(testResult.result.chainid)) {
-            throw new Error("Cannot add another copy of existing system, edit the server for that system instead.")
-          } else if (!systemid && !this.state.systems.hasOwnProperty(testResult.result.chainid)) {
-            this.updateVrpcOverrides(vrpcOverrides, {
-              ...this.state.systems,
-              [testResult.result.chainid]: {
-                vrpc_endpoints: [server],
-                system_id: testResult.result.chainid,
-                display_name: testResult.result.chainid
-              }
-            });
-          } else {
-            this.updateVrpcOverrides(vrpcOverrides);
-          }
-        } else {
-          this.setState({
-            loading: false
-          }, () => createAlert(
-            "Error", 
-            (testResult.result && (testResult.result.chainid !== systemid)) ? 
-              `RPC server appears to be for different system than requested (${testResult.result.chainid})` 
-                : 
-              "Failed to connect to the RPC server. Please check the server address and try again.")
-            );
-        }
-      })
+  closeServerSheet() {
+    this.setState({ serverSheetVisible: false });
+  }
+
+  clearServerSheet() {
+    this.setState({ serverSheet: null });
+  }
+
+  // Resolves to {chainid} or {error}. It never rejects: a bad URL, a network
+  // error and the timeout all become a short message under the field.
+  async checkServer(server) {
+    if (!isServerUrl(server)) return { error: SERVER_ERRORS.invalidUrl };
+
+    try {
+      const authData = getAuthDataForUrl(server);
+      const testInterface = new VerusdRpcInterface("", server, undefined, undefined, authData);
+      const testResult = await timeout(10000, testInterface.getInfo());
+      const chainid = testResult && testResult.result ? testResult.result.chainid : null;
+
+      if (!chainid) {
+        console.warn(
+          `RPC server check failed: ${testResult && testResult.error ? testResult.error.message : "no chain ID"}`
+        );
+        return { error: SERVER_ERRORS.unreachable };
+      }
+
+      return { chainid };
+    } catch (e) {
+      console.warn(`RPC server check failed: ${e && e.message ? e.message : e}`);
+      return { error: SERVER_ERRORS.unreachable };
     }
   }
 
-  openAddVrpcServerModal() {
-    this.setState({
-      addVrpcOverrideModal: {
-        open: true,
-        label: "Add RPC Server",
-        systemid: null
-      }
-    })
+  // Called by the server sheet. Returns an error string to show under the
+  // field, true when the sheet closes, or false when a save alert shows.
+  async saveServer(value) {
+    const sheet = this.state.serverSheet;
+
+    if (!sheet) return false;
+
+    const server = value.trim();
+    const { systemid, defaultServer, initialValue } = sheet;
+    const vrpcOverrides = this.state.vrpcOverridesSettings.vrpcOverrides ? {...this.state.vrpcOverridesSettings.vrpcOverrides} : {};
+
+    if (systemid && server === initialValue) {
+      this.closeServerSheet();
+      return true;
+    }
+
+    // The default server needs no check: this is "Reset to default".
+    if (systemid && defaultServer && server === defaultServer) {
+      delete vrpcOverrides[systemid];
+      return this.saveAndClose(vrpcOverrides);
+    }
+
+    const { chainid, error } = await this.checkServer(server);
+
+    if (error) return error;
+    if (systemid && chainid !== systemid) return SERVER_ERRORS.otherNetwork;
+    if (!systemid && this.state.systems.hasOwnProperty(chainid)) return SERVER_ERRORS.listedNetwork;
+
+    vrpcOverrides[chainid] = [server];
+
+    return this.saveAndClose(
+      vrpcOverrides,
+      systemid
+        ? this.state.systems
+        : {
+            ...this.state.systems,
+            [chainid]: {
+              vrpc_endpoints: [server],
+              system_id: chainid,
+              display_name: chainid
+            }
+          }
+    );
   }
 
-  updateVrpcOverrides(overrides, systems = this.state.systems) {
-    this.setState(
-      { vrpcOverridesSettings: { ...this.state.vrpcOverridesSettings, vrpcOverrides: overrides }, loading: true, systems },
-      async () => {
-        try {
-          await this.saveSettings()
-        } catch(e) {
-          Alert.alert('Error', e.message)
-        }
+  // A network that the user added has no default server. Removing its server
+  // removes the network from the list, as "Reset to default" did.
+  async removeServer() {
+    const sheet = this.state.serverSheet;
 
-        this.setState({ loading: false });
-      }
+    if (!sheet || !sheet.systemid) return;
+
+    const confirmed = await createAlert(
+      "Remove this server?",
+      "The wallet stops using it after a restart.",
+      [
+        { text: "Remove", onPress: () => resolveAlert(true) },
+        { text: "Not now", style: "cancel", onPress: () => resolveAlert(false) },
+      ]
     );
+
+    if (!confirmed || this.state.serverSheet !== sheet) return;
+
+    const vrpcOverrides = this.state.vrpcOverridesSettings.vrpcOverrides ? {...this.state.vrpcOverridesSettings.vrpcOverrides} : {};
+
+    delete vrpcOverrides[sheet.systemid];
+    await this.saveAndClose(vrpcOverrides);
+  }
+
+  async saveAndClose(overrides, systems) {
+    const saved = await this.updateVrpcOverrides(overrides, systems);
+
+    if (saved) this.closeServerSheet();
+
+    return saved;
+  }
+
+  // Resolves to true when the overrides are saved. On failure the list shows
+  // the stored servers again and an alert explains what to do.
+  updateVrpcOverrides(overrides, systems = this.state.systems) {
+    return new Promise(resolve => {
+      this.setState(
+        { vrpcOverridesSettings: { ...this.state.vrpcOverridesSettings, vrpcOverrides: overrides }, systems },
+        async () => {
+          try {
+            await this.saveSettings();
+            resolve(true);
+          } catch(e) {
+            console.warn(`Failed to save RPC servers: ${e && e.message ? e.message : e}`);
+            this.loadSettings();
+            createAlert(
+              "Server not saved",
+              "The wallet could not save the RPC server. Try again."
+            );
+            resolve(false);
+          }
+        }
+      );
+    });
   }
 
   async saveSettings() {

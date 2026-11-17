@@ -1,32 +1,33 @@
 import {useEffect, useState} from 'react';
-import {closeSendModal} from '../../../../actions/actions/sendModal/dispatchers/sendModal';
-import { RevokeIdentityResultRender } from './RevokeIdentityResult.render';
-import { SEND_MODAL_REVOKE_RECOVER_COMPLETE, SEND_MODAL_SYSTEM_ID } from '../../../../utils/constants/sendModal';
-import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
-import { explorers } from '../../../../utils/CoinData/CoinData';
-import { openUrl } from '../../../../utils/linking';
-import { useObjectSelector } from '../../../../hooks/useObjectSelector';
+import {RevokeIdentityResultRender} from './RevokeIdentityResult.render';
+import {
+  SEND_MODAL_REVOKE_RECOVER_COMPLETE,
+  SEND_MODAL_SYSTEM_ID,
+} from '../../../../utils/constants/sendModal';
+import {CoinDirectory} from '../../../../utils/CoinData/CoinDirectory';
+import {explorers} from '../../../../utils/CoinData/CoinData';
+import {openUrl} from '../../../../utils/linking';
+import {useObjectSelector} from '../../../../hooks/useObjectSelector';
 
-const RevokeIdentityResult = (props) => {
+const RevokeIdentityResult = props => {
   const sendModal = useObjectSelector(state => state.sendModal);
   const {data} = sendModal;
-  const [targetId, setTargetId] = useState(props.route.params == null ? {} : props.route.params.targetId);
-  const [txid, setTxid] = useState(props.route.params.txid);
+  const targetId = props.route.params?.targetId || {};
+  const txid = props.route.params?.txid;
   const [networkObj, setNetworkObj] = useState(null);
 
   useEffect(() => {
     try {
-      const systemObj = CoinDirectory.findSystemCoinObj(data[SEND_MODAL_SYSTEM_ID]);
+      const systemObj = CoinDirectory.findSystemCoinObj(
+        data[SEND_MODAL_SYSTEM_ID],
+      );
       setNetworkObj(systemObj);
-    } catch(e) {}
-  }, [])
+    } catch (e) {}
+  }, []);
 
   const finishSend = async () => {
-    await props.updateSendFormData(
-      SEND_MODAL_REVOKE_RECOVER_COMPLETE,
-      true,
-    );
-    closeSendModal()
+    await props.updateSendFormData(SEND_MODAL_REVOKE_RECOVER_COMPLETE, true);
+    await props.setVisible(false);
   };
 
   const openExplorer = () => {
@@ -36,12 +37,12 @@ const RevokeIdentityResult = (props) => {
   };
 
   return RevokeIdentityResultRender({
+    deliveryUnknown: props.route.params?.deliveryUnknown === true,
     targetId,
     networkObj,
     finishSend,
     txid,
-    deliveryUnknown: !!props.route.params.deliveryUnknown,
-    openExplorer
+    openExplorer,
   });
 };
 

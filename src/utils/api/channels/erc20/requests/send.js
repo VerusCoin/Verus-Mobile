@@ -1,3 +1,4 @@
+import {confirmedPlainSendFee} from '../../../../web3/plainSendFees';
 import { ethers } from "ethers"
 import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 import { ERC20, ETH } from "../../../../constants/intervalConstants"
@@ -14,6 +15,8 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
 
     /** @type {BigInt} */
     const gasLimit = passthrough.params.gasLimit;
+    const confirmedFee = passthrough.params.networkFeeChoice
+      ? confirmedPlainSendFee(passthrough.params) : null;
 
     const maxFeeAllowed = maxFeePerGas * gasLimit;
 
@@ -21,7 +24,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
     
     const privKey = await requestPrivKey(coinObj.id, ERC20);
     const contract = Web3Provider.getContract(coinObj.currency_id);
-    const currentMaxFeePerGas = (await Web3Provider.InfuraProvider.getFeeData()).maxFeePerGas;
+    const currentMaxFeePerGas = confirmedFee ? maxFeePerGas : (await Web3Provider.InfuraProvider.getFeeData()).maxFeePerGas;
 
     if (currentMaxFeePerGas == null) throw new Error("Couldn't get current gas price");
 
@@ -33,6 +36,9 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
     
     const estFee = gasEst * currentMaxFeePerGas;
 
+    if (confirmedFee && gasEst > confirmedFee.gasLimit) {
+      throw new Error('Gas estimate exceeds the confirmed gas limit. Review this transaction again.');
+    }
     if (estFee > maxFeeAllowed) {
       throw new Error("Estimated fee exceeds maximum fee calculated in confirm step. Try sending again to recalculate fee.")
     }
@@ -41,7 +47,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
       () => signableContract.transfer(
         address,
         amountBn,
-        { gasLimit: gasLimit, maxFeePerGas: maxFeePerGas }
+        { gasLimit: gasLimit, maxFeePerGas: maxFeePerGas, ...(confirmedFee ? {maxPriorityFeePerGas: confirmedFee.maxPriorityFeePerGas} : {}) }
       ),
       () => signableContract.balanceOf.staticCall(
         signableContract.runner.address, { blockTag: 'pending' },

@@ -22,6 +22,15 @@ import {
   sessionScopeIsCurrent,
 } from '../actions/actions/updates/sessionRequests';
 
+import {
+  createGenericRequestRejectionError,
+  GENERIC_REQUEST_REJECTION_CODES,
+  getRequestLinkRejection,
+} from '../utils/deeplink/genericRequestRejection';
+
+const REPEATED_REFUSAL_WINDOW_MS = 5000;
+let lastRefusedLink = {url: null, at: 0};
+
 const parserIsCurrent = (state, source) =>
   state.deeplink.requestId === source.requestId &&
   sessionScopeIsCurrent(state, source.sessionScope);
@@ -40,7 +49,12 @@ function* handleDeeplinkUrl(action) {
     }));
 
     try {
-      if (urlstring.length >= MAX_DEEPLINK_STRING_LENGTH) throw new Error("Deeplink URL max length exceeded.");
+      if (urlstring.length >= MAX_DEEPLINK_STRING_LENGTH) {
+        throw createGenericRequestRejectionError(
+          GENERIC_REQUEST_REJECTION_CODES.LINK_TOO_LONG,
+          'Request link exceeds the length limit.',
+        );
+      }
       const url = new URL(urlstring);
 
       const isInternalProtocol = url.protocol === `${DEEPLINK_PROTOCOL_URL_STRING}${VERUS_MOBILE_GENERIC_REQUEST_HANDLER_ID}:`;
@@ -162,9 +176,17 @@ function* handleDeeplinkUrl(action) {
       }
     } catch (e) {
       if (!(yield select(parserIsCurrent, source))) return;
-      console.error(e)
-      
-      createAlert('Error', e.message);
+      // The same link can arrive twice (link event and launch link). Show
+      // one sheet for it, not one sheet per delivery.
+      const now = Date.now();
+      if (lastRefusedLink.url === urlstring && now - lastRefusedLink.at < REPEATED_REFUSAL_WINDOW_MS) {
+        console.warn('Request link refused again; sheet already shown', e?.code || 'unreadable');
+        return;
+      }
+      lastRefusedLink = {url: urlstring, at: now};
+      console.warn('Request link refused', e?.code || 'unreadable');
+      const rejection = getRequestLinkRejection(e);
+      yield call(createAlert, rejection.title, rejection.message);
     }
   }
 }

@@ -1,4 +1,5 @@
 import Colors from "../globals/colors";
+import {fontStyle} from "../globals/fonts";
 
 export default tables = {
   infoTable: {
@@ -27,6 +28,6 @@ export default tables = {
   infoTableHeaderCell: {
     fontSize: 16,
     color: Colors.quaternaryColor,
-    fontFamily: 'Avenir-Black',
+    ...fontStyle('black'),
   }
 }

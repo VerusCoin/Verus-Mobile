@@ -8,8 +8,8 @@
   if they are flagged to be updated in the redux store.
 */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import {AppState} from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import {AppState, InteractionManager} from 'react-native';
 import {
   setActiveCoin,
   setActiveApp,
@@ -19,7 +19,7 @@ import {
   expireServiceData,
   saveGeneralSettings,
 } from '../../actions/actionCreators';
-import { CommonActions, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
   API_GET_FIATPRICE,
   API_GET_BALANCES,
@@ -30,6 +30,8 @@ import {
   API_GET_SERVICE_PAYMENT_METHODS,
   API_GET_SERVICE_RATES,
   API_GET_SERVICE_NOTIFICATIONS,
+  API_SEND,
+  DLIGHT_PRIVATE,
 } from '../../utils/constants/intervalConstants';
 import { USD } from '../../utils/constants/currencies';
 import {
@@ -39,27 +41,67 @@ import {
 } from '../../actions/actionDispatchers';
 import BigNumber from 'bignumber.js';
 import {
+  extractErrorData,
   extractLedgerData,
 } from '../../utils/ledger/extractLedgerData';
-import { HomeRender, HomeRenderCoinsList, HomeRenderWidget } from './Home.render';
+import { runRefreshUpdates } from '../../utils/updates/runRefreshUpdates';
+import { useNetInfo } from '@react-native-community/netinfo';
+import {
+  HOME_NOTICE_EMPTY,
+  HOME_NOTICE_FOUND,
+  HOME_NOTICE_OFFLINE,
+  HOME_NOTICE_SYNC,
+  HOME_NOTICE_UNREACHABLE,
+} from './HomeWidgets/HomeNotice';
+import {
+  getUnreviewedNewAssetHoldings,
+  markFoundAssetsReviewed,
+} from '../../utils/assets/assetManagementService';
 import { extractDisplaySubWallets } from '../../utils/subwallet/extractSubWallets';
+import {getOpeningSubWallet} from '../../utils/subwallet/getOpeningSubWallet';
+import {
+  getPrivateSyncPercent,
+  isPrivateCard,
+  selectPrivateWalletInfo,
+} from '../../utils/subwallet/privateWallet';
 import {
   CURRENCY_WIDGET_TYPE,
   TOTAL_UNI_BALANCE_WIDGET_TYPE,
   VERUSID_WIDGET_TYPE,
 } from '../../utils/constants/widgets';
 import { createAlert } from '../../actions/actions/alert/dispatchers/alert';
-import { VERUSID_SERVICE_ID } from '../../utils/constants/services';
-import { dragDetectionEnabled } from '../../utils/dragDetection';
-import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
-import {
-  openAddErc20TokenModal,
-  openAddPbaasCurrencyModal,
-} from '../../actions/actions/sendModal/dispatchers/sendModal';
 import { useSelector, useDispatch } from 'react-redux';
 import store from '../../store';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
 import {refreshRegistrationJobs} from '../../actions/actions/services/dispatchers/verusid/registration';
+import SignedInWalletHome from './SignedInWalletHome';
+import usePortfolioHistory from '../../utils/portfolioHistory/usePortfolioHistory';
+import {usePrelaunchAssets} from '../../utils/preconversion/usePrelaunch';
+import {getCurrencyDisplay} from '../SendWizard/wizardUtils';
+import {
+  getManagedAssetBalance,
+  isAssetShown,
+  isTestnetAccount,
+  uniqueAssets,
+} from '../../utils/assets/assetIdentity';
+import {getAssetPresentation} from '../../utils/assets/assetPresentation';
+import {
+  CONVERSION_DISABLED,
+} from '../../../env/index';
+import {
+  WALLET_APP_RECEIVE,
+  WALLET_APP_SEND,
+} from '../../utils/constants/apps';
+import {
+  isConversionChannel,
+  SEND_WIZARD_MODE,
+} from '../SendWizard/wizardUtils';
+
+const getAssetStatusDescription = coin => {
+  if (coin.mapped_to) return `Mapped · ${coin.display_ticker}`;
+  if (coin.testnet) return 'Testnet';
+  return coin.display_ticker;
+};
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -68,16 +110,23 @@ const Home = () => {
   const activeCoinsForUser = useObjectSelector((state) => state.coins.activeCoinsForUser);
 
   const activeAccount = useObjectSelector((state) => state.authentication.activeAccount);
-  const testnetOverrides = useObjectSelector(
-    (state) => state.authentication.activeAccount?.testnetOverrides || {},
-  );
+  const assetManagement = useObjectSelector(state => state.assetManagement);
+  const ledgerBalances = useObjectSelector(state => state.ledger.balances);
   const balances = useObjectSelector((state) =>
     extractLedgerData(state, 'balances', API_GET_BALANCES),
   );
   const rates = useObjectSelector((state) => state.ledger.rates);
   const allSubWallets = useObjectSelector((state) => extractDisplaySubWallets(state));
+  const privateWalletInfo = useObjectSelector(selectPrivateWalletInfo);
   const activeSubWallets = useObjectSelector((state) => state.coinMenus.activeSubWallets);
+  const userSelectedSubWallets = useObjectSelector(state => state.coinMenus.userSelectedSubWallets || {});
+  const cardStackPreferences = useObjectSelector(state =>
+    state.settings.generalWalletSettings.cardStackPreferencesByAccount?.[activeAccount?.accountHash] || {},
+  );
   const widgetOrder = useObjectSelector((state) => state.widgets.order);
+  // A currency before its launch shows when it launches and what this wallet
+  // pre-converted to it, instead of a price.
+  const {assets: prelaunchAssets} = usePrelaunchAssets(activeCoinsForUser, allSubWallets);
 
   const homeCardDragDetection = useSelector(
     (state) => state.settings.generalWalletSettings.homeCardDragDetection,
@@ -85,27 +134,32 @@ const Home = () => {
   const displayCurrency = useSelector(
     (state) => state.settings.generalWalletSettings.displayCurrency || USD,
   );
+  const showBalance = useSelector(state => state.coins.showBalance);
+  const testnetPrices = useSelector(state => state.settings.generalWalletSettings.testnetPrices === true);
 
-  const [totalFiatBalance, setTotalFiatBalance] = useState(0);
+  const [totalFiatBalance, setTotalFiatBalance] = useState(null);
   const [totalCryptoBalances, setTotalCryptoBalances] = useState({});
+  const [balanceAccountHash, setBalanceAccountHash] = useState(null);
   const [loading, setLoading] = useState(false);
+  const refreshRun = useRef(0);
+  const balanceErrors = useObjectSelector((state) =>
+    extractErrorData(state, API_GET_BALANCES),
+  );
+  const {isConnected} = useNetInfo();
+  // Verus currencies on the wallet's addresses that are not in the wallet yet
+  // and that the user has not reviewed or dismissed on Home.
+  const foundAssets = useObjectSelector(getUnreviewedNewAssetHoldings);
+  const reviewFoundAssets = useCallback(() => {
+    markFoundAssetsReviewed(foundAssets.map(holding => holding.currencyId))
+      .catch(error => console.warn(error));
+  }, [foundAssets]);
   const [listItemHeights, setListItemHeights] = useState({});
   const [widgets, setWidgets] = useState([]);
-  const [displayCurrencyModalOpen, setDisplayCurrencyModalOpen] = useState(false);
-  const [editingCards, setEditingCards] = useState(false);
   const [expandedListItems, setExpandedListItems] = useState({});
 
   const LIST_ITEM_INITIAL_HEIGHT = 58;
   const LIST_ITEM_MARGIN = 8;
   const LIST_ITEM_ANIMATION_DURATION = 250;
-
-  const isDragDetectionEnabled = () => {
-    return dragDetectionEnabled(homeCardDragDetection);
-  };
-
-  const handleSetEditingCards = (editing) => {
-    setEditingCards(editing);
-  };
 
   const sortWidgets = useCallback(() => {
     setWidgets((prevWidgets) => {
@@ -116,11 +170,15 @@ const Home = () => {
     });
   }, [widgetOrder]);
 
+  // Locking the wallet clears the account while Home is still mounted.
+  const accountHash = activeAccount?.accountHash ?? null;
+  const [syncNoticeDismissed, setSyncNoticeDismissed] = useState(false);
+  // This dismissal belongs to the open wallet, not its saved settings.
+  useEffect(() => setSyncNoticeDismissed(false), [accountHash]);
+
   const getWidgets = useCallback(async () => {
+    if (accountHash == null) return;
     setWidgets([]);
-    // The previous Home can remain mounted while its navigator exits. Account
-    // teardown must not read or save widgets for the next login session.
-    if (!activeAccount?.accountHash) return;
     let widgetsList = [...Object.keys(widgetOrder)].sort((a, b) => {
       return widgetOrder[a] <= widgetOrder[b] ? -1 : 1;
     });
@@ -148,7 +206,7 @@ const Home = () => {
     // Add the balance widget if not present
     if (!widgetsList.includes(TOTAL_UNI_BALANCE_WIDGET_TYPE)) {
       widgetsList.push(TOTAL_UNI_BALANCE_WIDGET_TYPE);
-      dispatchAddWidget(TOTAL_UNI_BALANCE_WIDGET_TYPE, activeAccount.accountHash);
+      dispatchAddWidget(TOTAL_UNI_BALANCE_WIDGET_TYPE, accountHash);
     }
 
     // Add currency widgets for active coins
@@ -157,68 +215,38 @@ const Home = () => {
 
       if (!widgetsList.includes(currencyWidgetId)) {
         widgetsList.push(currencyWidgetId);
-        dispatchAddWidget(currencyWidgetId, activeAccount.accountHash);
+        dispatchAddWidget(currencyWidgetId, accountHash);
       }
     }
 
     // Add the VerusID widget if not present
     if (!widgetsList.includes(VERUSID_WIDGET_TYPE)) {
       widgetsList.push(VERUSID_WIDGET_TYPE);
-      dispatchAddWidget(VERUSID_WIDGET_TYPE, activeAccount.accountHash);
+      dispatchAddWidget(VERUSID_WIDGET_TYPE, accountHash);
     }
 
     setWidgets(widgetsList);
-  }, [activeAccount?.accountHash, activeCoinsForUser, widgetOrder]);
-
-  const handleWidgetPress = (widgetId) => {
-    if (!activeAccount?.accountHash) return;
-    const widgetSplit = widgetId.split(':');
-    const widgetType = widgetSplit[0];
-
-    const widgetOnPress = {
-      [CURRENCY_WIDGET_TYPE]: () => {
-        const coinId = widgetSplit[1];
-        const coinObj = activeCoinsForUser.find((x) => x.id === coinId);
-
-        if (coinObj) {
-          const subWallets = allSubWallets[coinId] || [];
-          const selectedWallet = subWallets.find(wallet =>
-            wallet.id === activeSubWallets[coinId]?.id,
-          ) || subWallets[0];
-
-          // Unlinking can remove the selected identity, and a profile change
-          // can temporarily leave a coin without initialized wallets.
-          if (selectedWallet) openCoin(coinObj, selectedWallet);
-        }
-      },
-      [TOTAL_UNI_BALANCE_WIDGET_TYPE]: () => {
-        setDisplayCurrencyModalOpen(true);
-      },
-      [VERUSID_WIDGET_TYPE]: () => {
-        navigation.navigate('ServicesHome', {
-          screen: 'Service',
-          params: {service: VERUSID_SERVICE_ID},
-          initial: false,
-        });
-      },
-    };
-
-    if (widgetOnPress[widgetType]) {
-      widgetOnPress[widgetType]();
-    }
-  };
+  }, [accountHash, activeCoinsForUser, widgetOrder]);
 
   const setDisplayCurrencyFunc = async (currency) => {
     try {
       dispatch(await saveGeneralSettings({ displayCurrency: currency }));
     } catch (e) {
-      createAlert('Error setting display currency', e.message);
+      console.warn(e);
+      createAlert(
+        'Display currency not changed',
+        'The wallet could not save the new currency. Try again.',
+      );
     }
   };
 
   useFocusEffect(
     useCallback(() => {
-      refresh(false);
+      // Start the data refresh after the Back animation ends, so Home shows
+      // at once instead of after a long JS block.
+      const refreshTask = InteractionManager.runAfterInteractions(() => {
+        refresh(false);
+      });
       const resumeRegistrations = () => {
         if (!store.getState().authentication.activeAccount) return;
         // A suspended app may miss polling intervals. Reconcile protected jobs
@@ -229,7 +257,10 @@ const Home = () => {
       const subscription = AppState.addEventListener('change', state => {
         if (state === 'active') resumeRegistrations();
       });
-      return () => subscription.remove();
+      return () => {
+        refreshTask.cancel();
+        subscription.remove();
+      };
     }, []),
   );
 
@@ -241,7 +272,11 @@ const Home = () => {
     const totalBalances = getTotalBalances();
     setTotalFiatBalance(totalBalances.fiat);
     setTotalCryptoBalances(totalBalances.crypto);
-  }, [balances, displayCurrency, activeCoinsForUser, allSubWallets]);
+    setBalanceAccountHash(accountHash);
+  }, [
+    balances, ledgerBalances, assetManagement.snapshots, assetManagement.preferences,
+    assetManagement.ready, displayCurrency, activeCoinsForUser, allSubWallets, rates, accountHash,
+  ]);
 
   useEffect(() => {
     getWidgets();
@@ -253,8 +288,7 @@ const Home = () => {
 
   const refresh = useCallback(
     async (showLoading = false) => {
-      // Only pull-to-refresh controls the spinner. Background refreshes must
-      // neither reveal it nor dismiss a manual refresh that is still running.
+      const run = showLoading ? ++refreshRun.current : null;
       if (showLoading) setLoading(true);
 
       const serviceUpdates = [
@@ -289,22 +323,19 @@ const Home = () => {
       }
 
       await walletRefresh;
-      if (showLoading) setLoading(false);
+      if (showLoading && run === refreshRun.current) setLoading(false);
     },
     [activeCoinsForUser, dispatch],
   );
 
   const resetToScreen = (route, title, data) => {
-    const resetAction = CommonActions.reset({
-      index: 1,
-      routes: [
-        { name: 'Home' },
-        { name: route, params: { title: title, data: data } },
-      ],
-    });
+    if (route === 'CoinMenus') {
+      navigation.navigate(route, {title, data});
+      return;
+    }
 
-    navigation.closeDrawer();
-    navigation.dispatch(resetAction);
+    const mainNavigation = navigation.getParent()?.getParent();
+    (mainNavigation || navigation).navigate(route, {title, data});
   };
 
   const forceUpdate = () => {
@@ -324,37 +355,31 @@ const Home = () => {
 
   const getTotalBalances = () => {
     let _totalFiatBalance = BigNumber(0);
+    let fiatComplete = true;
     let coinBalances = {};
 
-    activeCoinsForUser.forEach((coinObj) => {
+    uniqueAssets(activeCoinsForUser).filter(coin =>
+      Boolean(coin.testnet) === isTestnetAccount(activeAccount)).forEach((coinObj) => {
       const key = coinObj.id;
-      coinBalances[coinObj.id] = BigNumber(0);
+      const balance = getManagedAssetBalance(coinObj, allSubWallets[key], ledgerBalances, assetManagement.snapshots);
+      coinBalances[key] = balance.total;
 
-      (allSubWallets[coinObj.id] || []).forEach((wallet) => {
-        if (balances[coinObj.id] != null && balances[coinObj.id][wallet.id] != null) {
-          coinBalances[coinObj.id] = coinBalances[coinObj.id].plus(
-            balances[key] &&
-              balances[key][wallet.id] &&
-              balances[key][wallet.id].total != null
-              ? BigNumber(balances[key][wallet.id].total)
-              : BigNumber(0),
-          );
-        }
-      });
+      // The value record keeps the amount of a hidden asset. The total counts
+      // only the assets on Home.
+      if (!isAssetShown(coinObj, assetManagement.preferences)) return;
 
       const rate = getRate(key, displayCurrency);
 
       if (rate != null) {
         const price = BigNumber(rate);
-
-        _totalFiatBalance = _totalFiatBalance.plus(
-          coinBalances[coinObj.id].multipliedBy(price),
-        );
+        if (!balance.complete) fiatComplete = false;
+        if (balance.total != null) _totalFiatBalance = _totalFiatBalance.plus(balance.total.multipliedBy(price));
       }
     });
 
     return {
-      fiat: _totalFiatBalance.toNumber(),
+      // The Show on Home choices are not known before the assets are ready.
+      fiat: fiatComplete && assetManagement.ready ? _totalFiatBalance.toNumber() : null,
       crypto: coinBalances,
     };
   };
@@ -371,13 +396,19 @@ const Home = () => {
       : null;
   };
 
-  const _verusPay = () => {
-    navigation.navigate('VerusPay');
-  };
-
   const openCoin = (coinObj, subWallet) => {
-    if (subWallet != null) {
-      dispatch(setCoinSubWallet(coinObj.id, subWallet));
+    const openingCard = subWallet || getOpeningSubWallet({
+      cards: allSubWallets[coinObj.id],
+      balances: balances[coinObj.id],
+      activeSubWallet: activeSubWallets[coinObj.id],
+      userSelectedSubWallet: userSelectedSubWallets[coinObj.id],
+      savedSelectedId: cardStackPreferences[coinObj.id]?.selectedId,
+    });
+    // While cards rebuild, an ordinary asset would open on an empty card
+    // chooser. A pre-launch currency opens on its own screen without cards.
+    if (openingCard == null && !prelaunchAssets.has(coinObj.id)) return;
+    if (openingCard != null) {
+      dispatch(setCoinSubWallet(coinObj.id, openingCard));
     }
     dispatch(setActiveCoin(coinObj));
     dispatch(setActiveApp(coinObj.default_app));
@@ -386,58 +417,296 @@ const Home = () => {
     resetToScreen('CoinMenus', 'Overview');
   };
 
-  const _addCoin = () => {
-    navigation.navigate('AddCoin', { refresh: refresh });
+  const findSection = (coinObj, sectionKey) => {
+    for (const [appKey, app] of Object.entries(coinObj.apps || {})) {
+      const section = (app.data || []).find(item => item.key === sectionKey);
+
+      if (section) return {appKey, section};
+    }
+
+    return null;
   };
 
-  const _addPbaasCurrency = async () => {
-    openAddPbaasCurrencyModal(
-      CoinDirectory.findCoinObj(testnetOverrides.VRSC ? testnetOverrides.VRSC : 'VRSC'),
-    );
+  const actionSources = useCallback(
+    action => {
+      const sectionKey =
+        action === 'wallet-receive' ? WALLET_APP_RECEIVE : WALLET_APP_SEND;
+
+      return activeCoinsForUser.flatMap(coinObj => {
+        return (allSubWallets[coinObj.id] || [])
+          .map(card => {
+            const channel = card.api_channels?.[API_SEND];
+            const hasBalance = BigNumber(
+              balances?.[coinObj.id]?.[card.id]?.total || 0,
+            ).isGreaterThan(0);
+            const compatible = card.compatible_apps.includes(sectionKey);
+            const actionAvailable =
+              action === 'wallet-receive'
+                ? compatible
+                : compatible &&
+                  Boolean(channel) &&
+                  hasBalance &&
+                  (action !== 'wallet-convert' ||
+                    (!CONVERSION_DISABLED && isConversionChannel(channel)));
+            const section = actionAvailable
+              ? findSection(coinObj, sectionKey)
+              : null;
+
+            if (!section) return null;
+
+            return {
+              key: `${coinObj.id}:${card.id}`,
+              title: `${coinObj.display_name} · ${card.name}`,
+              description: card.network
+                ? `${coinObj.display_ticker} on ${card.network}`
+                : coinObj.display_ticker,
+              coinObj,
+              card,
+              ...section,
+            };
+          })
+          .filter(Boolean);
+      });
+    },
+    [activeCoinsForUser, allSubWallets, balances],
+  );
+
+  const openActionSource = (source) => {
+    dispatch(setCoinSubWallet(source.coinObj.id, source.card, true));
+    dispatch(setActiveCoin(source.coinObj));
+    dispatch(setActiveApp(source.appKey));
+    dispatch(setActiveSection(source.section));
+    resetToScreen('CoinMenus', source.section.name);
   };
 
-  const _addErc20Token = () => {
-    openAddErc20TokenModal(
-      CoinDirectory.findCoinObj(testnetOverrides.ETH ? testnetOverrides.ETH : 'ETH'),
+  const signedInAssets = useMemo(() => {
+    if (!assetManagement.ready) return [];
+    return uniqueAssets(activeCoinsForUser)
+      .filter(coin => Boolean(coin.testnet) === isTestnetAccount(activeAccount) &&
+        isAssetShown(coin, assetManagement.preferences))
+      .map(coin => {
+        const cards = allSubWallets[coin.id] || [];
+        const presentation = getAssetPresentation(coin, {cards});
+        const holding = getManagedAssetBalance(coin, cards, ledgerBalances, assetManagement.snapshots);
+        const balance = holding.total;
+        const rate = getRate(coin.id, displayCurrency);
+        const fiatValue = rate == null || balance == null || !holding.complete ? null : balance.multipliedBy(rate).toNumber();
+        const preferredCard = getOpeningSubWallet({
+          cards,
+          balances: balances[coin.id],
+          activeSubWallet: activeSubWallets[coin.id],
+          userSelectedSubWallet: userSelectedSubWallets[coin.id],
+          savedSelectedId: cardStackPreferences[coin.id]?.selectedId,
+        });
+        const statusDescription = getAssetStatusDescription(coin);
+        const prelaunchInfo = prelaunchAssets.get(coin.id);
+        const prelaunch = prelaunchInfo
+          ? {
+              badge: prelaunchInfo.facts?.countdown
+                ? `Launches ${prelaunchInfo.facts.countdown}`
+                : 'Pre-launch',
+              preconverted: prelaunchInfo.totals?.length
+                ? prelaunchInfo.totals
+                    .map(total => `${BigNumber(total.amount)
+                      .decimalPlaces(4, BigNumber.ROUND_DOWN)
+                      .toFormat()} ${getCurrencyDisplay(
+                        total.currencyId,
+                        prelaunchInfo.facts?.names?.[total.currencyId],
+                      ).ticker}`)
+                    .join(' + ')
+                : null,
+            }
+          : null;
+
+        return {
+          coin,
+          prelaunch,
+          presentation,
+          balance,
+          balanceComplete: holding.complete,
+          rate,
+          fiatValue,
+          cardCount: cards.length,
+          preferredCard,
+          statusDescription,
+        };
+      })
+      .sort((a, b) => {
+        const fundedOrder = Number(b.balance?.isGreaterThan(0) || false) - Number(a.balance?.isGreaterThan(0) || false);
+        if (fundedOrder !== 0) return fundedOrder;
+        if (a.fiatValue != null && b.fiatValue != null && a.fiatValue !== b.fiatValue) {
+          return b.fiatValue - a.fiatValue;
+        }
+        if (a.fiatValue != null && b.fiatValue == null) return -1;
+        if (a.fiatValue == null && b.fiatValue != null) return 1;
+        return a.presentation.name.localeCompare(b.presentation.name);
+      });
+  }, [
+    activeCoinsForUser,
+    activeSubWallets,
+    userSelectedSubWallets,
+    cardStackPreferences,
+    allSubWallets,
+    balances,
+    displayCurrency,
+    rates,
+    totalCryptoBalances,
+    activeAccount,
+    assetManagement,
+    ledgerBalances,
+    prelaunchAssets,
+  ]);
+
+  // One card under the balance: the connection first, because balances are
+  // not known without it; then Verus currencies found on the wallet's
+  // addresses (never added by themselves); then private sync and an empty wallet.
+  // Private sync and Wyre service errors do not count for the connection.
+  const homeNotice = useMemo(() => {
+    if (isConnected === false) return {kind: HOME_NOTICE_OFFLINE};
+
+    const balanceFailed = signedInAssets.some(({coin}) =>
+      (allSubWallets[coin.id] || []).some((card) => {
+        const channel = card.api_channels?.[API_GET_BALANCES];
+        const parentChannel = channel?.split('.')[0];
+
+        return (
+          channel != null &&
+          parentChannel !== DLIGHT_PRIVATE &&
+          parentChannel !== WYRE_SERVICE &&
+          balanceErrors?.[coin.id]?.[card.id] != null
+        );
+      }),
     );
-  };
+    if (balanceFailed) return {kind: HOME_NOTICE_UNREACHABLE};
+    if (!assetManagement.ready) return null;
+
+    // Found currencies wait for the user's review, also when Home has funds.
+    if (foundAssets.length > 0) {
+      return {kind: HOME_NOTICE_FOUND, count: foundAssets.length};
+    }
+    if (accountHash && !syncNoticeDismissed) {
+      // SET_INFO stores the Dlight result at info[dlight_private][coin.id].
+      // Include hidden active assets, but only this account's network and cards.
+      const syncing = activeCoinsForUser
+        .filter(coin => Boolean(coin.testnet) === isTestnetAccount(activeAccount) &&
+          (allSubWallets[coin.id] || []).some(isPrivateCard))
+        .map(coin => getPrivateSyncPercent(privateWalletInfo[coin.id]))
+        .filter(percent => percent != null && percent < 99);
+      if (syncing.length > 0) {
+        return {kind: HOME_NOTICE_SYNC, percent: Math.floor(Math.min(...syncing))};
+      }
+    }
+    if (prelaunchAssets.size > 0) return null;
+
+    // Empty only when every transparent and VerusID card is known to hold 0,
+    // pending funds included, and hidden assets too. A private card that has
+    // not synced yet does not block it.
+    const walletEmpty = uniqueAssets(activeCoinsForUser)
+      .filter(coin => Boolean(coin.testnet) === isTestnetAccount(activeAccount))
+      .every(coin => {
+        const cards = allSubWallets[coin.id] || [];
+        const privateCards = cards.filter(card => card.id === 'PRIVATE_WALLET');
+        const otherCards = cards.filter(card => card.id !== 'PRIVATE_WALLET');
+        const others = getManagedAssetBalance(coin, otherCards, ledgerBalances, assetManagement.snapshots);
+        const privateBalance = getManagedAssetBalance(coin, privateCards, ledgerBalances, assetManagement.snapshots);
+
+        return (
+          (otherCards.length === 0 || (others.complete && others.total.isZero())) &&
+          (privateBalance.total == null || privateBalance.total.isZero())
+        );
+      });
+
+    return walletEmpty ? {kind: HOME_NOTICE_EMPTY} : null;
+  }, [
+    activeAccount,
+    accountHash,
+    activeCoinsForUser,
+    allSubWallets,
+    assetManagement,
+    balanceErrors,
+    foundAssets,
+    isConnected,
+    ledgerBalances,
+    prelaunchAssets,
+    privateWalletInfo,
+    signedInAssets,
+    syncNoticeDismissed,
+  ]);
+
+  // Update as soon as the connection returns, without a pull.
+  const wasOffline = useRef(false);
+  useEffect(() => {
+    if (isConnected === false) {
+      wasOffline.current = true;
+    } else if (isConnected === true && wasOffline.current) {
+      wasOffline.current = false;
+      forceUpdate();
+    }
+  }, [isConnected]);
+
+  // The chart draws the Home total, so it uses the same assets.
+  const shownCoins = useMemo(
+    () => activeCoinsForUser.filter(coin => isAssetShown(coin, assetManagement.preferences)),
+    [activeCoinsForUser, assetManagement.preferences],
+  );
+  const portfolioHistory = usePortfolioHistory({
+    account: activeAccount,
+    activeCoins: shownCoins,
+    balances: totalCryptoBalances,
+    total: balanceAccountHash === accountHash ? totalFiatBalance : null,
+    rates,
+    currency: displayCurrency,
+    ready: assetManagement.ready && balanceAccountHash === accountHash,
+    refreshing: loading,
+    testnetPrices,
+  });
+
+  const mainNavigation = navigation.getParent()?.getParent();
+  const receiveAvailable = actionSources('wallet-receive').length > 0;
+  const sendAvailable = actionSources('wallet-send').length > 0;
+  const convertAvailable = actionSources('wallet-convert').length > 0;
 
   return (
-    <HomeRender
-      dragDetectionEnabled={isDragDetectionEnabled}
-      displayCurrencyModalOpen={displayCurrencyModalOpen}
+    <SignedInWalletHome
+      assets={signedInAssets}
+      hiddenAssetCount={uniqueAssets(activeCoinsForUser).filter(coin =>
+        Boolean(coin.testnet) === isTestnetAccount(activeAccount) &&
+        !isAssetShown(coin, assetManagement.preferences)).length}
+      assetsReady={assetManagement.ready}
+      assetsLoadError={assetManagement.loadError}
+      homeNotice={homeNotice}
       displayCurrency={displayCurrency}
-      setDisplayCurrency={setDisplayCurrencyFunc}
-      setDisplayCurrencyModalOpen={setDisplayCurrencyModalOpen}
-      editingCards={editingCards}
-      setEditingCards={handleSetEditingCards}
-      _addCoin={_addCoin}
-      _verusPay={_verusPay}
-      _addPbaasCurrency={_addPbaasCurrency}
-      _addErc20Token={_addErc20Token}
-      forceUpdate={forceUpdate}
       loading={loading}
-      HomeRenderCoinsList={() =>
-        HomeRenderCoinsList({
-          widgets,
-          dragDetectionEnabled: isDragDetectionEnabled,
-          editingCards,
-          loading,
-          forceUpdate,
-          handleWidgetPress,
-          dispatch,
-          navigation,
-          activeAccount,
-          totalCryptoBalances,
-          totalFiatBalance,
-          HomeRenderWidget: (widgetId) =>
-            HomeRenderWidget({
-              widgetId,
-              totalCryptoBalances,
-              totalFiatBalance,
-            }),
+      showBalance={showBalance}
+      totalFiatBalance={balanceAccountHash === accountHash ? totalFiatBalance : null}
+      history={portfolioHistory}
+      onToggleBalance={() => dispatch({type: 'SET_BALANCE_SHOW'})}
+      onSelectDisplayCurrency={setDisplayCurrencyFunc}
+      onRefresh={forceUpdate}
+      onOpenAsset={openCoin}
+      convertAvailable={convertAvailable}
+      receiveAvailable={receiveAvailable}
+      sendAvailable={sendAvailable}
+      onReceive={() => (mainNavigation || navigation).navigate('ReceiveAssetsList')}
+      onSend={() =>
+        (mainNavigation || navigation).navigate('SendWizard', {
+          mode: SEND_WIZARD_MODE.SEND,
         })
       }
+      onConvert={() =>
+        (mainNavigation || navigation).navigate('SendWizard', {
+          mode: SEND_WIZARD_MODE.CONVERT,
+        })
+      }
+      onManageAssets={() =>
+        (mainNavigation || navigation).navigate('ManageAssets')
+      }
+      onReviewFoundAssets={() => {
+        reviewFoundAssets();
+        (mainNavigation || navigation).navigate('ManageAssets');
+      }}
+      onDismissFoundAssets={reviewFoundAssets}
+      onDismissSyncNotice={() => setSyncNoticeDismissed(true)}
     />
   );
 };

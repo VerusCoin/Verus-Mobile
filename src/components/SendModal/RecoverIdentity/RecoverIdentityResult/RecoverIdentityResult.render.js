@@ -1,116 +1,27 @@
 import React from 'react';
-import {ScrollView, View, TouchableOpacity} from 'react-native';
-import {Text} from 'react-native-paper';
-import Button from '../../../Button';
-import Colors from '../../../../globals/colors';
-import Styles from '../../../../styles';
-import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
-import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
-import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
-import { explorers } from '../../../../utils/CoinData/CoinData';
+import RevokeRecoverSubmittedResult from '../../../../containers/RevokeRecover/RevokeRecoverSubmittedResult';
+import {explorers} from '../../../../utils/CoinData/CoinData';
+import {identityName} from '../../../../containers/RevokeRecover/RecoveryValues';
 
-export const RecoverIdentityResultRender = ({targetId, networkObj, finishSend, txid, deliveryUnknown, openExplorer}) => {
-  const formattedFriendlyName = convertFqnToDisplayFormat(targetId.fullyqualifiedname);
-
-  return (
-    <ScrollView
-      style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
-      contentContainerStyle={{
-        ...Styles.focalCenter,
-        justifyContent: 'space-between',
-      }}>
-      <TouchableOpacity
-        onPress={() =>
-          copyToClipboard(targetId.identity.identityaddress, {
-            title: 'Address copied',
-            message: `${targetId.identity.identityaddress} copied to clipboard.`,
-          })
-        }
-        style={{
-          width: '75%',
-          marginTop: 16,
-        }}>
-        <Text
-          numberOfLines={3}
-          style={{
-            textAlign: 'center',
-            fontSize: 20,
-            color: Colors.verusDarkGray,
-          }}>
-          {deliveryUnknown ? 'Delivery not confirmed' : `${formattedFriendlyName} recovered!`}
-        </Text>
-      </TouchableOpacity>
-      {!deliveryUnknown && <View style={{paddingVertical: 16}}>
-        <AnimatedSuccessCheckmark
-          style={{
-            width: 128,
-          }}
-        />
-      </View>}
-      <View style={{width: '75%'}}>
-        <Text
-          style={{
-            textAlign: 'center',
-            fontSize: 20,
-            color: Colors.verusDarkGray,
-          }}>
-          {deliveryUnknown
-            ? 'The network may have received this transaction. Check its status before starting a new review.'
-            : `Your VerusID has been recovered on the ${networkObj ? networkObj.display_name : '???'} blockchain.`}
-        </Text>
-      </View>
-      <View style={{paddingVertical: 8, width: '75%'}}>
-        <Text
-          style={{
-            textAlign: 'center',
-            fontSize: 20,
-            color: Colors.verusDarkGray,
-          }}>
-          {deliveryUnknown ? 'This screen will not send the transaction again.' : 'This action may take a few minutes to confirm on-chain.'}
-        </Text>
-      </View>
-      <View
-        style={{
-          width: '90%',
-          flexDirection: 'row',
-          justifyContent: 'space-evenly',
-        }}>
-        {networkObj != null && explorers[networkObj.id] != null && (
-          <Button
-            textColor={Colors.primaryColor}
-            style={{width: 148}}
-            onPress={openExplorer}>
-            Details
-          </Button>
-        )}
-        <Button
-          buttonColor={Colors.verusGreenColor}
-          textColor={Colors.secondaryColor}
-          style={{width: 148}}
-          onPress={finishSend}>
-          {deliveryUnknown ? 'Close' : 'Done'}
-        </Button>
-      </View>
-      <TouchableOpacity
-        onPress={() =>
-          copyToClipboard(txid, {
-            title: 'Transaction ID copied',
-            message: `${txid} copied to clipboard.`,
-          })
-        }
-        style={{
-          width: '75%',
-        }}>
-        <Text
-          numberOfLines={1}
-          style={{
-            textAlign: 'center',
-            fontSize: 14,
-            color: Colors.verusDarkGray,
-          }}>
-          {`id: ${txid}`}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
-};
+export const RecoverIdentityResultRender = ({
+  deliveryUnknown,
+  finishSend,
+  networkObj,
+  openExplorer,
+  targetId,
+  txid,
+  values,
+}) => (
+  <RevokeRecoverSubmittedResult
+    deliveryUnknown={deliveryUnknown}
+    action="recovery"
+    values={values}
+    identityName={identityName(targetId)}
+    networkName={networkObj?.display_name || 'the selected blockchain'}
+    onDone={finishSend}
+    onViewTransaction={
+      networkObj && explorers[networkObj.id] ? openExplorer : null
+    }
+    txid={txid}
+  />
+);

@@ -62,6 +62,7 @@ export const handleCreateWalletBackupDetailsVDXFObject = async (
       backupCompletionKey: completionKey,
       backupType: detail.data.backupType.toNumber(),
       showSpendableKeyBackupChoice:
+        state.deeplink?.passthrough?.walletBackupSetup !== true &&
         state.deeplink?.passthrough?.fromNfc === true &&
         requestHasSpendableKeyDetail(request) &&
         hasMatchingExistingProfile(

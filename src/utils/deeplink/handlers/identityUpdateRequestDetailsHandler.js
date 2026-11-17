@@ -1,3 +1,8 @@
+import {
+  assertIdentityUpdateRequestSupported,
+  createGenericRequestRejectionError,
+  GENERIC_REQUEST_REJECTION_CODES,
+} from '../genericRequestRejection';
 import { DefinedKey, IdentityUpdateRequestOrdinalVDXFObject, GenericRequest, GenericResponse, DATA_TYPE_DEFINEDKEY, IDENTITY_CREDENTIAL, fqnToAddress, toIAddress, getDataKey } from "verus-typescript-primitives";
 import VrpcProvider from '../../vrpc/vrpcInterface';
 import { getBlock } from "../../api/channels/vrpc/requests/getBlock";
@@ -15,6 +20,41 @@ import {createLocalIdentityUploadCrypto} from '../../identityUpdate/localUploadC
 import {identityToDisplayJson} from '../../identityUpdate/identityDisplay';
 import {cloneIdentityUpdateRequest} from '../../identityUpdate/cloneRequest';
 import {assertIdentityUpdateRequestConstraints} from '../validator/identityUpdateRequestValidator';
+import {dropEmptyIdentityContent, validatePartialIdentityDefinition} from 'verusid-ts-client/lib/identity/identityValidation';
+import {validateLocalIdentityUploadRequest} from 'verusid-ts-client/lib/identity/localUpdateData';
+import {validAddress} from 'verusid-ts-client/lib/identity/fundingPrimitives';
+import {IdentityID} from 'verus-typescript-primitives';
+import BN from 'bn.js';
+
+const identityUpdateRefusal = message => createGenericRequestRejectionError(
+  GENERIC_REQUEST_REJECTION_CODES.IDENTITY_UPDATE_REFUSED, message,
+);
+
+// Same envelope checks, in the same order, as the SDK's
+// prepareIdentityUpdateTransaction preflight. They fail the same way on every
+// try, so the screen shows the reason and no retry.
+const validateRequestEnvelope = details => {
+  if (!BN.isBN(details.flags) || details.flags.isNeg() || details.flags.gtn(31)) {
+    throw new Error('Unsupported identity update request flags.');
+  }
+  if (details.expires() || details.expiryHeight !== undefined) {
+    if (!BN.isBN(details.expiryHeight) ||
+        details.expiryHeight.isNeg() ||
+        details.expiryHeight.bitLength() > 32) {
+      throw new Error('Invalid identity update request expiry height.');
+    }
+  }
+  if (details.containsSystem() || details.systemID !== undefined) {
+    if (!(details.systemID instanceof IdentityID)) {
+      throw new Error('Invalid identity update request system.');
+    }
+    validAddress(details.systemID.toAddress(), true);
+  }
+  if ((details.containsTxid() || details.txid !== undefined) &&
+      (!Buffer.isBuffer(details.txid) || details.txid.length !== 32)) {
+    throw new Error('Invalid identity update request txid.');
+  }
+};
 
 /**
  * @param {GenericRequest} request
@@ -31,6 +71,7 @@ import {assertIdentityUpdateRequestConstraints} from '../validator/identityUpdat
  *    coinObj: any;
  *    chainInfo: any;
  *    subjectIdentity: any;
+ *    subjectIdentityContent: any;
  *    identityUpdates: any;
  *    friendlyNames: any;
  *    cmmDataKeys: any;
@@ -47,11 +88,24 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
    */
   const details = request.getDetails(detailIndex);
 
-  if (details == null) throw new Error("Invalid index for request details");
-  if (!(details instanceof IdentityUpdateRequestOrdinalVDXFObject)) throw new Error("Identity update request details not found at specified index");
+  if (details == null) throw identityUpdateRefusal("Invalid index for request details");
+  if (!(details instanceof IdentityUpdateRequestOrdinalVDXFObject)) throw identityUpdateRefusal("Identity update request details not found at specified index");
 
   const rootSystem = request.isTestnet() ? 'VRSCTEST' : 'VRSC';
   const requestDetails = cloneIdentityUpdateRequest(details.data, rootSystem);
+  // Redesign: refuse unsupported upload options with their own message before any lookup.
+  assertIdentityUpdateRequestSupported(requestDetails);
+  // Match the SDK's local preflight on a separate copy. Empty-key cleanup must
+  // not change the request passed to the builder or returned in display props.
+  const validationRequest = cloneIdentityUpdateRequest(requestDetails, rootSystem);
+  dropEmptyIdentityContent(validationRequest.identity);
+  try {
+    validateRequestEnvelope(validationRequest);
+    validatePartialIdentityDefinition(validationRequest.identity);
+    validateLocalIdentityUploadRequest(validationRequest, request.isTestnet());
+  } catch (error) {
+    throw identityUpdateRefusal(error.message);
+  }
   const requestSystem = requestDetails.containsSystem()
     ? requestDetails.systemID.toAddress()
     : rootSystem;
@@ -83,11 +137,11 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
 
   if (requestDetails.identity.containsFlags && requestDetails.identity.containsFlags()) {
     if (subjectIdClass.hasActiveCurrency() !== requestDetails.identity.hasActiveCurrency()) {
-      throw new Error("Cannot change active currency status.");
+      throw identityUpdateRefusal("Cannot change active currency status.");
     }
 
     if (subjectIdClass.hasTokenizedIdControl() !== requestDetails.identity.hasTokenizedIdControl()) {
-      throw new Error("Cannot change tokenized id control status.");
+      throw identityUpdateRefusal("Cannot change tokenized id control status.");
     }
   }
 
@@ -175,7 +229,7 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
         if (knownVDXFKey != null) continue;
 
         if (fqnNamespace !== reqSigner) {
-          throw new Error(`Cannot update with key not in signer namespace (key namespace is ${fqnSplit[0]}@)`);
+          throw identityUpdateRefusal(`Cannot update with key not in signer namespace (key namespace is ${fqnSplit[0]}@)`);
         }
 
         cmmDataKeys[dataKey] = {
@@ -187,7 +241,7 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
         const knownKeyName = getKnownVDXFKeyName(key);
 
         if (!knownKeyName) {
-          throw new Error("Cannot update with unknown key " + key);
+          throw identityUpdateRefusal("Cannot update with unknown key " + key);
         }
       }
     }
@@ -200,10 +254,19 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
     partialIdentity.contentMultiMap.kvContent.hasAddress(IDENTITY_CREDENTIAL.vdxfid)
   );
 
+  // Credentials are encrypted to the VerusID's own private address. Without one,
+  // fee preparation would fail later with the same cause, so refuse now. The
+  // match with the wallet's Z recovery secret needs the key and stays at fee time.
+  if (hasEncryptedKeys && !subjectIdentity.identity?.privateaddress) {
+    throw identityUpdateRefusal(
+      'This VerusID has no private address, which credentials need for encryption. Add one, then open the request again.',
+    );
+  }
+
   // Credential encryption via signDataMap is not supported on mobile
   if (requestDetails.containsSignData()) {
     if (requestDetails.signDataMap.hasAddress(IDENTITY_CREDENTIAL.vdxfid)) {
-      throw new Error('Encrypted credentials in signDataMap are not supported on mobile');
+      throw identityUpdateRefusal('Encrypted credentials in signDataMap are not supported on mobile');
     }
   }
 
@@ -257,7 +320,7 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
     );
     if (contentRes.error) throw new Error(contentRes.error.message);
     if (contentRes.result.identity.identityaddress !== identityAddress) {
-      throw new Error('Identity content does not match the identity being updated');
+      throw identityUpdateRefusal('Identity content does not match the identity being updated');
     }
     displaySubjectIdentity = {
       ...subjectIdentity,
@@ -303,6 +366,8 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
       signerSystemName,
       signerIdentityID,
       subjectIdentity: displaySubjectIdentity,
+      // The redesigned review compares requested content with this accumulated content.
+      subjectIdentityContent: displaySubjectIdentity,
       identityUpdates,
       identityPreviewPrepared,
       coinObj,

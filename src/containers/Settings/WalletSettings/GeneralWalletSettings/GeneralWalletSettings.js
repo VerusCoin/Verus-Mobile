@@ -4,478 +4,347 @@
   display size.
 */
 
-import React, {useState, useEffect, useRef} from 'react';
-import {
-  View,
-  ScrollView,
-  Keyboard,
-  ActivityIndicator,
-  TouchableOpacity,
-  Platform,
-  Alert,
-} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {ActivityIndicator, StyleSheet} from 'react-native';
+import AlertAsync from 'react-native-alert-async';
 import {useDispatch} from 'react-redux';
-import Styles from '../../../../styles/index';
-import Colors from '../../../../globals/colors';
-import {
-  CURRENCY_NAMES,
-  SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES,
-} from '../../../../utils/constants/currencies';
-import NumberPadModal from '../../../../components/NumberPadModal/NumberPadModal';
-import {Divider, List, Portal, Text, Switch} from 'react-native-paper';
-import Button from '../../../../components/Button';
-import ListSelectionModal from '../../../../components/ListSelectionModal/ListSelectionModal';
 import {saveGeneralSettings} from '../../../../actions/actionCreators';
-import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
-import {NavigationActions} from '@react-navigation/compat';
-import { ADDRESS_BLOCKLIST_FROM_WEBSERVER } from '../../../../utils/constants/constants';
-import { useObjectSelector } from '../../../../hooks/useObjectSelector';
-import { MINIMUM_GAS_PRICE_GWEI } from '../../../../utils/constants/web3Constants';
+import {switchTestnetEnvironment} from '../../../../actions/actions/testnetEnvironment';
+import { refreshTestnetPrices } from '../../../../actions/actions/wallet/dispatchers/general/updates';
+import {useObjectSelector} from '../../../../hooks/useObjectSelector';
+import {useOnboardingTheme} from '../../../../theme/onboarding';
+import {MINIMUM_GAS_PRICE_GWEI} from '../../../../utils/constants/web3Constants';
+import {
+  getTestnetEnvironment,
+  hasPrivateTestnetEnvironment,
+  TESTNET_ENVIRONMENT_PRIVATE,
+  TESTNET_ENVIRONMENT_PUBLIC,
+} from '../../../../utils/testnetEnvironment';
+import {DisplayCurrencySheet} from '../../../Home/components/SignedInWalletSheets';
+import {
+  SettingsRow,
+  SettingsScreen,
+  SettingsSection,
+  SettingsSwitchRow,
+} from '../../components/SettingsScaffold';
+import SettingsFieldSheet from '../../components/SettingsFieldSheet';
+import StatusBadge from '../../../../components/StatusBadge';
 
-const NO_DEFAULT = 'None';
+const NOT_SAVED = 'Not saved. Try again.';
 
-const WalletSettings = props => {
-  const isMounted = useRef(false);
+// The value is a whole number: the ETH fee code reads the gas price with
+// BigInt().
+const NUMBER_SETTINGS = {
+  minGasPriceGwei: {
+    title: 'Min. ETH gas price',
+    label: 'Gwei',
+    helper: 'A whole number, 0 or higher.',
+    error: 'Enter a whole number, 0 or higher.',
+    min: 0,
+    max: Number.MAX_SAFE_INTEGER,
+  },
+};
+
+const hasSetting = (settings, key) =>
+  Object.prototype.hasOwnProperty.call(settings, key);
+
+const validateNumberSetting = (key, value) => {
+  const config = NUMBER_SETTINGS[key];
+  const text = value == null ? '' : value.toString().trim();
+
+  if (!/^\d+$/.test(text)) return config.error;
+
+  const number = Number(text);
+
+  if (number < config.min || number > config.max) return config.error;
+
+  return null;
+};
+
+const GeneralWalletSettings = () => {
   const generalWalletSettings = useObjectSelector(
     state => state.settings.generalWalletSettings,
   );
-  const accounts = useObjectSelector(state => state.authentication.accounts);
-  const activeAccount = useObjectSelector(
-    state => state.authentication.activeAccount,
-  );
   const dispatch = useDispatch();
+  const theme = useOnboardingTheme();
+  const isMounted = useRef(true);
+  const pendingSettingsRef = useRef({});
 
-  const [settings, setSettings] = useState({...generalWalletSettings});
-  const [homeCardDragDetection, setHomeCardDragDetection] = useState(
-    generalWalletSettings.homeCardDragDetection != null
-      ? generalWalletSettings.homeCardDragDetection
-      : false,
-  );
-  const [allowSettingVerusPaySlippage, setAllowSettingVerusPaySlippage] = useState(
-    !!generalWalletSettings.allowSettingVerusPaySlippage
-  );
-  const [enableSendCoinCameraToggle, setEnableSendCoinCameraToggle] = useState(
-    !!generalWalletSettings.enableSendCoinCameraToggle
-  );
-  const [enableExperimentalGenericRequests, setEnableExperimentalGenericRequests] = useState(
-    !!generalWalletSettings.enableExperimentalGenericRequests
-  );
-
-  const [errors, setErrors] = useState({
-    maxTxCount: false,
-    minGasPriceGwei: false,
-    displayCurrency: false,
-  });
-  const [loading, setLoading] = useState(false);
-  const [currentNumberInputModal, setCurrentNumberInputModal] = useState(null);
-  const [displayCurrencyModalOpen, setDisplayCurrencyModalOpen] =
+  const [pendingSettings, setPendingSettings] = useState({});
+  const [rowErrors, setRowErrors] = useState({});
+  const [numberSheet, setNumberSheet] = useState(null);
+  const [numberSheetVisible, setNumberSheetVisible] = useState(false);
+  const [displayCurrencySheetVisible, setDisplayCurrencySheetVisible] =
     useState(false);
-  const [defaultProfileModalOpen, setDefaultProfileModalOpen] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
 
-  const openNumberInputModal = inputKey => setCurrentNumberInputModal(inputKey);
-  const closeNumberInputModal = () => setCurrentNumberInputModal(null);
-  const openDisplayCurrencyModal = () => setDisplayCurrencyModalOpen(true);
-  const closeDisplayCurrencyModal = () => setDisplayCurrencyModalOpen(false);
-  const openDefaultProfileModal = () => setDefaultProfileModalOpen(true);
-  const closeDefaultProfileModal = () => setDefaultProfileModalOpen(false);
+  useEffect(
+    () => () => {
+      isMounted.current = false;
+    },
+    [],
+  );
 
-  const handleSubmit = () => {
-    Keyboard.dismiss();
-    validateFormData();
+  const displayedSetting = key =>
+    hasSetting(pendingSettings, key)
+      ? pendingSettings[key]
+      : generalWalletSettings[key];
+  const isSaving = key => hasSetting(pendingSettings, key);
+
+  const setRowError = (key, error) => {
+    if (!isMounted.current) return;
+
+    setRowErrors(current => {
+      if (!error && !current[key]) return current;
+
+      const next = {...current};
+      if (error) {
+        next[key] = error;
+      } else {
+        delete next[key];
+      }
+      return next;
+    });
   };
 
-  useEffect(() => {
+  const setPendingSetting = (key, value) => {
+    const nextPendingSettings = {
+      ...pendingSettingsRef.current,
+      [key]: value,
+    };
+    pendingSettingsRef.current = nextPendingSettings;
+
     if (isMounted.current) {
-      setSettings({
-        ...settings,
-        homeCardDragDetection,
-        allowSettingVerusPaySlippage,
-        enableSendCoinCameraToggle,
-        enableExperimentalGenericRequests
-      });
-      setHasChanges(true);
-    } else {
-      isMounted.current = true;
+      setPendingSettings(nextPendingSettings);
     }
-  }, [homeCardDragDetection, allowSettingVerusPaySlippage, enableSendCoinCameraToggle, enableExperimentalGenericRequests]);
+  };
 
-  const describeSlippage = () => {
-    createAlert(
-      "Slippage", 
-      "Before editing maximum slippage on your VerusPay invoices, ensure you are aware of the risks. " +
-      "The maximum slippage value is used to limit which currencies others will be allowed to pay your invoice with." + 
-      " The percentage value you set is the maximum allowed difference between the estimated conversion outcome of the payee's chosen " + 
-      "conversion path, and the real outcome. This value is calculated for each currency using factors that determine their" + 
-      " respective volatilites, like the amount of currency in their respective reserves. Setting a high slippage value introduces " + 
-      " the risk of receiving an amount of currency unexpectedly lower than what you set as the invoice amount."
-    )
-  }
+  const clearPendingSetting = key => {
+    const nextPendingSettings = {...pendingSettingsRef.current};
+    delete nextPendingSettings[key];
+    pendingSettingsRef.current = nextPendingSettings;
 
-  const toggleAllowSettingVerusPaySlippage = () => {
-    if (!allowSettingVerusPaySlippage) {
-      describeSlippage()
+    if (isMounted.current) {
+      setPendingSettings(nextPendingSettings);
     }
+  };
 
-    setAllowSettingVerusPaySlippage(!allowSettingVerusPaySlippage);
-  }
+  const persistSetting = async (key, value) => {
+    if (hasSetting(pendingSettingsRef.current, key)) return;
 
-  const toggleEnableSendCoinCameraToggle = () => {
-    setEnableSendCoinCameraToggle(!enableSendCoinCameraToggle);
-  }
+    setRowError(key, null);
 
-  const toggleEnableExperimentalGenericRequests = () => {
-    setEnableExperimentalGenericRequests(!enableExperimentalGenericRequests);
-  }
+    if (Object.is(generalWalletSettings[key], value)) return;
 
-  const saveSettings = async () => {
-    setLoading(true);
+    setPendingSetting(key, value);
+
     try {
-      const stateToSave = {
-        maxTxCount: Number(settings.maxTxCount),
-        minGasPriceGwei: settings.minGasPriceGwei == null || isNaN(settings.minGasPriceGwei) ? undefined : Number(settings.minGasPriceGwei),
-        displayCurrency: settings.displayCurrency,
-        defaultAccount:
-          settings.defaultAccount === NO_DEFAULT ? null : settings.defaultAccount,
-        homeCardDragDetection,
-        allowSettingVerusPaySlippage,
-        enableSendCoinCameraToggle,
-        enableExperimentalGenericRequests,
-        ackedCurrencyDisclaimer: settings.ackedCurrencyDisclaimer,
-        addressBlocklistDefinition:
-          settings.addressBlocklistDefinition == null
-            ? {
-                type: ADDRESS_BLOCKLIST_FROM_WEBSERVER,
-                data: null,
-              }
-            : settings.addressBlocklistDefinition,
-        addressBlocklist:
-          settings.addressBlocklist == null ? [] : settings.addressBlocklist,
-        vrpcOverrides: settings.vrpcOverrides == null ? {} : settings.vrpcOverrides,
-      };
-      const res = await saveGeneralSettings(stateToSave);
-      dispatch(res);
-      createAlert('Success', 'General wallet settings saved.');
-      setSettings({...stateToSave});
-      setLoading(false);
+      dispatch(await saveGeneralSettings({[key]: value}));
+      if (key === 'testnetPrices') refreshTestnetPrices();
     } catch (err) {
-      createAlert('Error', err.message);
-      console.warn(err.message);
-      setLoading(false);
+      // The row reverts to the stored value and shows a short error.
+      setRowError(key, NOT_SAVED);
+      console.warn(`Failed to save ${key}: ${err?.message || err}`);
+    } finally {
+      clearPendingSetting(key);
     }
   };
 
-  const handleError = (error, field) => {
-    Alert.alert(error);
-  };
+  const toggleTestnetEnvironment = async value => {
+    const environment = value
+      ? TESTNET_ENVIRONMENT_PRIVATE
+      : TESTNET_ENVIRONMENT_PUBLIC;
 
-  const back = () => {
-    props.navigation.dispatch(NavigationActions.back());
-  };
+    if (hasSetting(pendingSettingsRef.current, 'testnetEnvironment')) return;
 
-  const validateFormData = () => {
-    setErrors({maxTxCount: null, minGasPriceGwei: null, displayCurrency: null});
-    let _errors = false;
-    const _maxTxCount = settings.maxTxCount;
-    const _minGasPriceGwei = settings.minGasPriceGwei;
+    const confirmed = await AlertAsync(
+      value ? 'Switch to private testnet?' : 'Switch to public testnet?',
+      'The app reloads. Testnet currencies you added are removed and need to be added again.',
+      [
+        {text: 'Cancel', onPress: () => Promise.resolve(false), style: 'cancel'},
+        {text: 'Switch', onPress: () => Promise.resolve(true)},
+      ],
+      {cancelable: false},
+    );
 
-    if (
-      !_maxTxCount ||
-      _maxTxCount.length === 0 ||
-      isNaN(_maxTxCount) ||
-      Number(_maxTxCount) < 10 ||
-      Number(_maxTxCount) > 100
-    ) {
-      handleError('Please enter a valid number from 10 to 100', 'maxTxCount');
-      _errors = true;
-    } else if (
-      _minGasPriceGwei != null && (_minGasPriceGwei.length === 0 || isNaN(_minGasPriceGwei))
-    ) {
-      handleError('Please enter a valid minimum gas price in Gwei', '_minGasPriceGwei');
-      _errors = true;
-    }
+    if (!confirmed || !isMounted.current) return;
 
-    if (!_errors) {
-      saveSettings();
+    setRowError('testnetEnvironment', null);
+    setPendingSetting('testnetEnvironment', environment);
+
+    try {
+      await switchTestnetEnvironment(environment, dispatch);
+    } catch (err) {
+      setRowError('testnetEnvironment', NOT_SAVED);
+      console.warn(
+        `Failed to switch testnet environment: ${err?.message || err}`,
+      );
+      clearPendingSetting('testnetEnvironment');
     }
   };
 
-  const defaultAccount =
-    settings.defaultAccount == null
-      ? null
-      : accounts.find(item => item.accountHash === settings.defaultAccount);
-  const defaultAccountName = defaultAccount == null ? null : defaultAccount.id;
+  const openNumberSheet = key => {
+    const currentValue =
+      key === 'minGasPriceGwei' && displayedSetting(key) == null
+        ? Number(MINIMUM_GAS_PRICE_GWEI)
+        : Number(displayedSetting(key));
+
+    setNumberSheet({
+      key,
+      value: isNaN(currentValue) ? '' : String(currentValue),
+    });
+    setNumberSheetVisible(true);
+  };
+
+  const closeNumberSheet = () => setNumberSheetVisible(false);
+
+  const saveNumberSetting = value => {
+    const key = numberSheet?.key;
+
+    if (!key) return null;
+
+    const error = validateNumberSetting(key, value);
+
+    if (error) return error;
+
+    closeNumberSheet();
+    persistSetting(key, Number(value));
+    return true;
+  };
+
+  const numberSheetConfig = numberSheet
+    ? NUMBER_SETTINGS[numberSheet.key]
+    : null;
+
+  const savingIndicator = key =>
+    isSaving(key) ? (
+      <ActivityIndicator color={theme.colors.primary} size="small" />
+    ) : null;
 
   return (
-    <View style={Styles.defaultRoot}>
-      <Portal>
-        {currentNumberInputModal != null && (
-          <NumberPadModal
-            value={
-              settings[currentNumberInputModal] == null || isNaN(settings[currentNumberInputModal]) ? 
-                0
-                : 
-                Number(settings[currentNumberInputModal])
-            }
-            visible={currentNumberInputModal != null}
-            onChange={(number) => {
-              setSettings({
-                ...settings,
-                [currentNumberInputModal]: number.toString(),
-              });
-              setHasChanges(true);
-            }}
-            cancel={() => closeNumberInputModal()}
-            decimals={0}
+    <>
+      <SettingsScreen
+        safeAreaEdges={['left', 'right', 'bottom']}
+        testID="settings.general">
+        <SettingsSection title="Display">
+          <SettingsRow
+            accessibilityState={{busy: isSaving('displayCurrency')}}
+            description="Currency used to display wallet value"
+            disabled={isSaving('displayCurrency')}
+            icon="currency-usd"
+            onPress={() => setDisplayCurrencySheetVisible(true)}
+            error={rowErrors.displayCurrency}
+            testID="settings.general.displayCurrency"
+            title="Universal display currency"
+            trailing={savingIndicator('displayCurrency')}
+            value={displayedSetting('displayCurrency')}
           />
-        )}
-        {displayCurrencyModalOpen && (
-          <ListSelectionModal
-            title="Currencies"
-            selectedKey={settings.displayCurrency}
-            visible={displayCurrencyModalOpen}
-            onSelect={(item) => {
-              setSettings({
-                ...settings,
-                displayCurrency: item.key,
-              });
-              setHasChanges(true);
-            }}
-            data={SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES.map(key => ({
-              key,
-              title: key,
-              description: CURRENCY_NAMES[key],
-            }))}
-            cancel={() => closeDisplayCurrencyModal()}
-          />
-        )}
-        {defaultProfileModalOpen && (
-          <ListSelectionModal
-            title="Profiles"
-            selectedKey={settings.defaultAccount}
-            visible={defaultProfileModalOpen}
-            onSelect={(item) => {
-              setSettings({
-                ...settings,
-                defaultAccount: item.key,
-              });
-              setHasChanges(true);
-            }}
-            data={[
-              {
-                key: NO_DEFAULT,
-                title: 'None',
-                description: 'Manually select profile on app start',
-              },
-              ...accounts.map(item => ({
-                key: item.accountHash,
-                title: item.id,
-                description:
-                  item.id === activeAccount.id ? 'Currently logged in' : null,
-              })),
-            ]}
-            cancel={() => closeDefaultProfileModal()}
-          />
-        )}
-      </Portal>
-      <ScrollView style={Styles.fullWidth}>
-        <List.Subheader>{'Display Settings'}</List.Subheader>
-        <TouchableOpacity
-          onPress={() => openNumberInputModal('maxTxCount')}
-          style={{...Styles.flex}}>
-          <Divider />
-          <List.Item
-            title={'Max. Display TXs'}
-            description="Max. displayed Electrum transactions"
-            right={() => (
-              <Text style={Styles.listItemTableCell}>
-                {settings.maxTxCount}
-              </Text>
-            )}
-          />
-          <Divider />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => openDisplayCurrencyModal()}
-          style={{...Styles.flex}}>
-          <List.Item
-            title={'Universal Display Currency'}
-            description="The currency used to display value"
-            right={() => (
-              <Text style={Styles.listItemTableCell}>
-                {settings.displayCurrency}
-              </Text>
-            )}
-          />
-          <Divider />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            setHomeCardDragDetection(!homeCardDragDetection);
-          }}
-        >
-          <List.Item
-            title="Automatic Drag Detection"
-            description="Move home screen cards when dragged"
-            right={() => (
-              <View
-                style={{
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'flex-end',
-                }}
-              >
-                <Switch
-                  value={homeCardDragDetection}
-                  onValueChange={() => {
-                    setHomeCardDragDetection(!homeCardDragDetection);
-                  }}
-                  color={Colors.primaryColor}
-                />
-              </View>
-            )}
-          />
-          <Divider />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={toggleAllowSettingVerusPaySlippage}
-        >
-          <List.Item
-            title="Edit max VerusPay invoice slippage"
-            description="Show the option to edit maximum slippage when creating a VerusPay invoice with conversion"
-            right={() => (
-              <View
-                style={{
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'flex-end',
-                }}
-              >
-                <Switch
-                  value={allowSettingVerusPaySlippage}
-                  onValueChange={toggleAllowSettingVerusPaySlippage}
-                  color={Colors.primaryColor}
-                />
-              </View>
-            )}
-          />
-          <Divider />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={toggleEnableSendCoinCameraToggle}
-        >
-          <List.Item
-            title="Add toggle button for QR scanner"
-            description="Keep the QR scanner under the send tab off by default, and add a button to toggle it"
-            right={() => (
-              <View
-                style={{
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'flex-end',
-                }}
-              >
-                <Switch
-                  value={enableSendCoinCameraToggle}
-                  onValueChange={toggleEnableSendCoinCameraToggle}
-                  color={Colors.primaryColor}
-                />
-              </View>
-            )}
-          />
-          <Divider />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={toggleEnableExperimentalGenericRequests}
-        >
-          <List.Item
-            title="Enable experimental deeplinks"
+          <SettingsSwitchRow
+            busy={isSaving('enableExperimentalGenericRequests')}
             description="Allow deeplinks that include experimental features (identity update, app encryption, credentials, data packets, etc.)"
-            titleNumberOfLines={100}
             descriptionNumberOfLines={100}
-            right={() => (
-              <View
-                style={{
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'flex-end',
-                }}
-              >
-                <Switch
-                  value={enableExperimentalGenericRequests}
-                  onValueChange={toggleEnableExperimentalGenericRequests}
-                  color={Colors.primaryColor}
-                />
-              </View>
+            icon="link-variant"
+            last
+            onValueChange={value =>
+              persistSetting('enableExperimentalGenericRequests', value)
+            }
+            error={rowErrors.enableExperimentalGenericRequests}
+            testID="settings.general.enableExperimentalGenericRequests"
+            title="Enable experimental deeplinks"
+            value={displayedSetting('enableExperimentalGenericRequests')}
+          />
+        </SettingsSection>
+
+        <SettingsSection title="Ethereum">
+          <SettingsRow
+            accessibilityState={{busy: isSaving('minGasPriceGwei')}}
+            description="Minimum Gwei used for simple ETH and ERC20 transfers"
+            descriptionNumberOfLines={3}
+            disabled={isSaving('minGasPriceGwei')}
+            icon="gas-station-outline"
+            last
+            onPress={() => openNumberSheet('minGasPriceGwei')}
+            error={rowErrors.minGasPriceGwei}
+            testID="settings.general.minGasPriceGwei"
+            title="Min. ETH gas price"
+            trailing={savingIndicator('minGasPriceGwei')}
+            value={
+              displayedSetting('minGasPriceGwei') == null
+                ? Number(MINIMUM_GAS_PRICE_GWEI)
+                : displayedSetting('minGasPriceGwei')
+            }
+          />
+        </SettingsSection>
+
+        {__DEV__ && (
+          <SettingsSection title="Developer">
+            {hasPrivateTestnetEnvironment() && (
+              <SettingsSwitchRow
+                accessibilityLabel="Private testnet"
+                busy={isSaving('testnetEnvironment')}
+                description="Use the private Verus API and bridge contract"
+                icon="flask-outline"
+                onValueChange={toggleTestnetEnvironment}
+                error={rowErrors.testnetEnvironment}
+                testID="settings.general.testnetEnvironment"
+                title={
+                  getTestnetEnvironment() === TESTNET_ENVIRONMENT_PRIVATE ? (
+                    <StatusBadge
+                      label="Private testnet"
+                      tone="warning"
+                      style={styles.privateBadge}
+                    />
+                  ) : (
+                    'Private testnet'
+                  )
+                }
+                value={
+                  displayedSetting('testnetEnvironment') ===
+                  TESTNET_ENVIRONMENT_PRIVATE
+                }
+              />
             )}
-          />
-          <Divider />
-        </TouchableOpacity>
-        <List.Subheader>{'Start Settings'}</List.Subheader>
-        <TouchableOpacity
-          onPress={() => openDefaultProfileModal()}
-          style={{...Styles.flex}}>
-          <Divider />
-          <List.Item
-            title={'Default Profile'}
-            description="Automatically selected profile on app start"
-            right={() => (
-              <Text style={Styles.listItemTableCell}>
-                {defaultAccountName == null ? NO_DEFAULT : defaultAccountName}
-              </Text>
-            )}
-          />
-          <Divider />
-        </TouchableOpacity>
-        <List.Subheader>{'Other Settings'}</List.Subheader>
-        <TouchableOpacity
-          onPress={() => openNumberInputModal('minGasPriceGwei')}
-          style={{...Styles.flex}}>
-          <Divider />
-          <List.Item
-            title={'Min. ETH Gas Price (Gwei)'}
-            description="Min. gas price in Gwei when creating simple transfers on the Ethereum network (ETH/ERC20)"
-            descriptionNumberOfLines={10}
-            right={() => (
-              <Text style={Styles.listItemTableCell}>
-                {settings.minGasPriceGwei == null ? Number(MINIMUM_GAS_PRICE_GWEI) : settings.minGasPriceGwei}
-              </Text>
-            )}
-          />
-          <Divider />
-        </TouchableOpacity>
-      </ScrollView>
-      <View style={{...Styles.highFooterContainer, flex: 0, height: 100}}>
-        {loading ? (
-          <ActivityIndicator
-            animating={loading}
-            style={{
-              paddingTop: 32
-            }}
-            size="large"
-          />
-        ) : (
-          <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <Button
-              textColor={Colors.warningButtonColor}
-              onPress={back}
-              style={{ padding: 0, height: 36 }}
-            >
-              {"Back"}
-            </Button>
-            <Button
-              mode='contained'
-              onPress={handleSubmit}
-              disabled={!hasChanges}
-              style={{ padding: 0, height: 36 }}
-            >
-              {"Confirm"}
-            </Button>
-          </View>
+            <SettingsSwitchRow
+              busy={isSaving('testnetPrices')}
+              description="Show on-chain prices for testnet coins"
+              icon="currency-usd"
+              last
+              onValueChange={(value) => persistSetting('testnetPrices', value)}
+              error={rowErrors.testnetPrices}
+              testID="settings.general.testnetPrices"
+              title="Testnet prices"
+              value={displayedSetting('testnetPrices') === true}
+            />
+          </SettingsSection>
         )}
-      </View>
-    </View>
+      </SettingsScreen>
+      {numberSheetConfig ? (
+        <SettingsFieldSheet
+          helperText={numberSheetConfig.helper}
+          initialValue={numberSheet.value}
+          keyboardType="number-pad"
+          label={numberSheetConfig.label}
+          onClose={closeNumberSheet}
+          onClosed={() => setNumberSheet(null)}
+          onSave={saveNumberSetting}
+          saveAccessibilityLabel={`Save ${numberSheetConfig.title}`}
+          title={numberSheetConfig.title}
+          visible={numberSheetVisible}
+        />
+      ) : null}
+      <DisplayCurrencySheet
+        displayCurrency={displayedSetting('displayCurrency')}
+        onClose={() => setDisplayCurrencySheetVisible(false)}
+        onSelect={currency => persistSetting('displayCurrency', currency)}
+        visible={displayCurrencySheetVisible}
+      />
+    </>
   );
 };
 
-export default WalletSettings;
+export default GeneralWalletSettings;
+
+const styles = StyleSheet.create({
+  privateBadge: {
+    alignSelf: 'flex-start',
+  },
+});

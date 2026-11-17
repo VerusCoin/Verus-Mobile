@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, View, TouchableOpacity, Alert } from "react-native";
-import { ActivityIndicator, List, Divider, Text } from "react-native-paper";
-import Button from "../../../Button";
+import { ActivityIndicator, Button, List, Divider, Text } from "react-native-paper";
 import { useDispatch, useSelector } from 'react-redux'
 import { expireCoinData } from "../../../../actions/actionCreators";
 import { traditionalCryptoSend } from "../../../../actions/actionDispatchers";

@@ -1,5 +1,7 @@
 import VrpcProvider from "../../../../vrpc/vrpcInterface";
 
+export const SEND_CURRENCY_PARENT_FEE = 0.0001;
+
 export const getSendCurrencyTransaction = async (
   systemId,
   currency,
@@ -33,7 +35,7 @@ export const getSendCurrencyTransaction = async (
       params
     ],
     1,
-    0.0001,
+    SEND_CURRENCY_PARENT_FEE,
     true,
   );
 };

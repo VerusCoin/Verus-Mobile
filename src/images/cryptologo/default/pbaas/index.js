@@ -56,9 +56,10 @@ const RenderPbaasCurrencyLogo = (iAddr) => {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        {interiorColors.map(interiorColor => {
+        {interiorColors.map((interiorColor, index) => {
           return (
             <View
+              key={index}
               style={{
                 width: (size / 4),
                 height: (size / 4),

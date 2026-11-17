@@ -132,7 +132,7 @@ export const ledger = (state = initialLedgerState(), action) => {
         for (const newChannel of action.payload.channels) {
           if (!_state[ledgerKey][newChannel]) {
             _state[ledgerKey] = {
-              ...state[ledgerKey],
+              ..._state[ledgerKey],
               [newChannel]: {}
             }
           }

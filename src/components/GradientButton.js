@@ -5,10 +5,11 @@
     keeping the default gradient button API unchanged for ordinary taps.
 */
 import React, { useRef, useEffect, useState } from 'react';
-import { TouchableOpacity, View, Animated, Vibration, Platform } from 'react-native';
+import { AccessibilityInfo, TouchableOpacity, View, Animated, Vibration, Platform, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { gradientButtonStyles as styles } from '../styles';
+import {getButtonHitSlop, useButtonHeight} from '../hooks/useButtonHeight';
 
 const GradientButton = ({
   onPress,
@@ -26,32 +27,59 @@ const GradientButton = ({
   holdToConfirm = false,
   holdDuration = 2500,
   holdingText,
+  holdHint,
+  hitSlop,
 }) => {
+  const buttonHeight = useButtonHeight('primary', StyleSheet.flatten(style)?.height);
   const isOutlined = mode === 'outlined';
   const [isHolding, setIsHolding] = useState(false);
+  const [showHoldHint, setShowHoldHint] = useState(false);
   const holdProgress = useRef(new Animated.Value(0)).current;
   const holdTimer = useRef(null);
+  const hintTimer = useRef(null);
   const hasCompletedHold = useRef(false);
+  const hint = holdHint || (
+    typeof children === 'string' && /\bconvert\b/i.test(children)
+      ? 'Hold the button to convert.'
+      : typeof children === 'string' && /\bsend\b/i.test(children)
+        ? 'Hold the button to send.' : 'Hold the button to confirm.'
+  );
+
+  const clearHint = () => {
+    clearTimeout(hintTimer.current);
+    hintTimer.current = null;
+    setShowHoldHint(false);
+  };
+
+  const cancelHold = () => {
+    clearTimeout(holdTimer.current);
+    holdTimer.current = null;
+    holdProgress.stopAnimation();
+    holdProgress.setValue(0);
+    setIsHolding(false);
+  };
 
   // Cleanup timer on unmount
   useEffect(() => {
     return () => {
-      if (holdTimer.current) {
-        clearTimeout(holdTimer.current);
-      }
+      clearTimeout(holdTimer.current);
+      clearTimeout(hintTimer.current);
+      holdProgress.stopAnimation();
     };
   }, []);
 
   // Reset hold state when disabled changes
   useEffect(() => {
-    if (disabled) {
-      handlePressOut();
+    if (disabled || !holdToConfirm) {
+      cancelHold();
+      clearHint();
     }
-  }, [disabled]);
+  }, [disabled, holdToConfirm]);
 
   const handlePressIn = () => {
-    if (disabled || !holdToConfirm) return;
+    if (disabled || !holdToConfirm || holdTimer.current != null) return;
 
+    clearHint();
     setIsHolding(true);
     hasCompletedHold.current = false;
 
@@ -69,7 +97,10 @@ const GradientButton = ({
 
     // Set timer for hold completion
     holdTimer.current = setTimeout(() => {
+      holdTimer.current = null;
       hasCompletedHold.current = true;
+      setIsHolding(false);
+      holdProgress.setValue(0);
       // Success haptic feedback (iOS medium impact)
       if (Platform.OS === 'ios') {
         Vibration.vibrate([0, 50]);
@@ -81,28 +112,23 @@ const GradientButton = ({
       if (onPress) {
         onPress();
       }
-      
-      // Reset state
-      setIsHolding(false);
-      holdProgress.setValue(0);
+
     }, holdDuration);
   };
 
   const handlePressOut = () => {
-    if (!holdToConfirm || hasCompletedHold.current) return;
+    if (!holdToConfirm || hasCompletedHold.current || holdTimer.current == null) return;
 
-    // User released before completion
-    if (holdTimer.current) {
-      clearTimeout(holdTimer.current);
-      holdTimer.current = null;
-    }
-
-    // Stop and reset animation
-    holdProgress.stopAnimation(() => {
-      holdProgress.setValue(0);
-    });
-
-    setIsHolding(false);
+    cancelHold();
+    if (disabled) return;
+    // Use the existing label slot so feedback never moves the safe footer or
+    // covers a notice. The action label returns after three seconds.
+    setShowHoldHint(true);
+    AccessibilityInfo.announceForAccessibility(hint);
+    hintTimer.current = setTimeout(() => {
+      hintTimer.current = null;
+      setShowHoldHint(false);
+    }, 3000);
   };
 
   const handlePress = () => {
@@ -117,6 +143,8 @@ const GradientButton = ({
     let displayText = children;
     if (typeof children === 'string' && holdToConfirm && isHolding) {
       displayText = holdingText || 'Hold to confirm...';
+    } else if (holdToConfirm && showHoldHint) {
+      displayText = hint;
     }
 
     if (typeof displayText !== 'string') {
@@ -161,10 +189,13 @@ const GradientButton = ({
 
   return (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityState={{disabled: Boolean(disabled)}}
       onPress={handlePress}
       onPressIn={holdToConfirm ? handlePressIn : undefined}
       onPressOut={holdToConfirm ? handlePressOut : undefined}
       disabled={disabled}
+      hitSlop={getButtonHitSlop(buttonHeight, hitSlop)}
       activeOpacity={holdToConfirm ? 1 : 0.8}
       style={[
         styles.gradientButtonWrapper,
@@ -178,6 +209,7 @@ const GradientButton = ({
           borderColor: bottomColor,
         },
         style,
+        {height: buttonHeight},
       ]}
     >
       {!isOutlined && (

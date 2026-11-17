@@ -1,160 +1,109 @@
-import React from 'react';
-import {View, Dimensions} from 'react-native';
-import AppIntroSlider from 'react-native-app-intro-slider';
-import {Text, Paragraph} from 'react-native-paper';
-import Button from '../../components/Button';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import TallButton from '../../components/LargerButton';
-import Colors from '../../globals/colors';
-import {
-  VerusIdLogo
-} from '../../images/customIcons';
-import { useState } from 'react';
-import { useEffect } from 'react';
-import { SMALL_DEVICE_HEGHT } from '../../utils/constants/constants';
+import React, {useState} from 'react';
+import {Text, TouchableOpacity, View} from 'react-native';
+import {ChevronRight} from 'lucide-react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { NavigationActions } from '@react-navigation/compat';
+import {revokeRecoverFlowStyles as styles} from '../../styles';
+import {useAppTheme} from '../../theme/app';
+import RevokeRecoverFlowScaffold from './RevokeRecoverFlowScaffold';
+import RevokeRecoverAuthoritySheet from './RevokeRecoverAuthoritySheet';
 
-export default function RevokeRecoverSlider({ navigation, setIsRecovery }) {
-  const {height} = Dimensions.get('window');
+const ACTIONS = [
+  {
+    key: 'revoke',
+    title: 'Revoke a VerusID',
+    body: 'Disable an active identity after its keys may have been lost or compromised.',
+  },
+  {
+    key: 'recover',
+    title: 'Recover a VerusID',
+    body: 'Restore a revoked identity and assign a new primary address.',
+  },
+];
 
-  const [showIcons, setShowIcons] = useState(height > SMALL_DEVICE_HEGHT ? true : false);
-
-  useEffect(() => {
-    if (height > SMALL_DEVICE_HEGHT) {
-      setShowIcons(true);
-    } else {
-      setShowIcons(false);
-    }
-  })
-
-  const goToImportWallet = (recovery = false) => {
-    setIsRecovery(recovery);
-    navigation.navigate('ImportWallet');
-  }
-
-  const renderSlide = (key, icon, text, title) => {
-    return (
-      <View
-        style={{
-          backgroundColor: Colors.secondaryColor,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          flex: 1,
-          alignItems: 'center',
-        }}
-        key={key}>
-        {height >= SMALL_DEVICE_HEGHT && <VerusIdLogo width={'55%'} height={'10%'} style={{top: height / 2 - 260, position: 'absolute'}} />}
-        <View
-          style={{
-            alignItems: 'center',
-            position: 'absolute',
-            top: height / 2 - 110,
-          }}>
-          <Text
-            style={{
-              textAlign: 'center',
-              color: Colors.quaternaryColor,
-              fontSize: 28,
-              fontWeight: 'bold',
-            }}>
-            {title}
-          </Text>
-          <Paragraph
-            style={{
-              textAlign: 'center',
-              width: '75%',
-              marginTop: 24,
-              width: 280,
-              color: Colors.quaternaryColor,
-            }}>
-            {text}
-          </Paragraph>
-          {key === 1 && 
-            <View style={{ flexDirection: "row", width: "70%", marginTop: 24, justifyContent: "space-between" }}>
-              <Button
-                mode="text"
-                onPress={() => goToImportWallet(false)}
-                labelStyle={{ fontWeight: 'bold', color: Colors.primaryColor }}
-                style={{
-                  alignSelf: 'center',
-                  backgroundColor: Colors.secondaryColor,
-                }}>
-                {'Revoke'}
-              </Button>
-              <Button
-                mode="text"
-                onPress={() => goToImportWallet(true)}
-                labelStyle={{ fontWeight: 'bold', color: Colors.primaryColor }}
-                style={{
-                  alignSelf: 'center',
-                  backgroundColor: Colors.secondaryColor,
-                }}>
-                {'Recover'}
-              </Button>
-            </View>
-          }
-        </View>
-      </View>
-    );
+const RevokeRecoverSlider = ({
+  navigation,
+  onSelectImportMethod,
+  setImportedSeed,
+  setIsRecovery,
+}) => {
+  const theme = useAppTheme();
+  const [selection, setSelection] = useState(null);
+  const [authoritySheetVisible, setAuthoritySheetVisible] = useState(false);
+  const chooseAction = key => {
+    setSelection(key);
+    setImportedSeed(null);
+    setIsRecovery(key === 'recover');
+    setAuthoritySheetVisible(true);
   };
 
   return (
-    <SafeAreaView
-      style={{
-        backgroundColor: Colors.secondaryColor,
-        flex: 1,
-      }}>
-      <AppIntroSlider
-        showSkipButton={true}
-        showPrevButton={false}
-        showDoneButton={false}
-        renderItem={({item, index}) =>
-          renderSlide(index, item.icon, item.text, item.title)
-        }
-        bottomButton={true}
-        onSkip={() => navigation.dispatch(NavigationActions.back())}
-        data={[
-          {
-            key: 0,
-            title: 'Revocation/Recovery',
-            text: 'Here you can revoke access to a lost or compromised VerusID, or recover a revoked VerusID with a new set of keys.',
-          },
-          {
-            key: 2,
-            title: '',
-            text: 'To revoke, you will need access to the seed of your revocation VerusID. To recover, you will need access to the seed of your recovery VerusID.',
-          },
-        ]}
-        renderNextButton={() => {
+    <RevokeRecoverFlowScaffold
+      contentContainerStyle={{paddingTop: 24}}
+      headerTitle="Choose action"
+      onBack={() => navigation.goBack()}
+      progress={0.15}
+      overlayVisible={authoritySheetVisible}
+      overlay={
+        <RevokeRecoverAuthoritySheet
+          isRecovery={selection === 'recover'}
+          onClose={() => setAuthoritySheetVisible(false)}
+          onSelectMethod={onSelectImportMethod}
+          visible={authoritySheetVisible}
+        />
+      }>
+      <View style={styles.choiceGroup}>
+        {ACTIONS.map(action => {
+          const selected = selection === action.key;
           return (
-            <TallButton
-              mode="outlined"
-              labelStyle={{fontWeight: 'bold', color: Colors.primaryColor}}
-              style={{
-                alignSelf: 'center',
-                width: 280,
-                backgroundColor: Colors.secondaryColor,
-              }}>
-              {'Next'}
-            </TallButton>
+            <TouchableOpacity
+              key={action.key}
+              accessibilityRole="button"
+              accessibilityState={{selected}}
+              onPress={() => chooseAction(action.key)}
+              style={[
+                styles.choiceRow,
+                {
+                  backgroundColor: selected
+                    ? theme.colors.surfaceMuted
+                    : theme.colors.background,
+                },
+              ]}
+              testID={`revokeRecover.action.${action.key}`}>
+              <View style={styles.choiceCopy}>
+                <Text
+                  style={[
+                    theme.typography.titleRow,
+                    {color: theme.colors.textPrimary},
+                  ]}>
+                  {action.title}
+                </Text>
+                <Text
+                  style={[
+                    styles.choiceBody,
+                    {color: theme.colors.textSecondary},
+                  ]}>
+                  {action.body}
+                </Text>
+              </View>
+              {selected ? (
+                <MaterialCommunityIcons
+                  name="check-circle"
+                  size={23}
+                  color={
+                    theme.isDark
+                      ? theme.colors.textPrimary
+                      : theme.colors.primary
+                  }
+                />
+              ) : (
+                <ChevronRight size={23} color={theme.colors.textSubtle} />
+              )}
+            </TouchableOpacity>
           );
-        }}
-        renderSkipButton={() => {
-          return (
-            <TallButton
-              mode="text"
-              labelStyle={{fontWeight: 'bold', color: Colors.warningButtonColor}}
-              style={{
-                alignSelf: 'center',
-                width: 280,
-              }}>
-              {'Cancel'}
-            </TallButton>
-          );
-        }}
-      />
-    </SafeAreaView>
+        })}
+      </View>
+    </RevokeRecoverFlowScaffold>
   );
-}
+};
+
+export default RevokeRecoverSlider;

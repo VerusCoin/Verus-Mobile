@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Scale the source disc radius 172.7 to 27, and its center to (54, 54). -->
+    <group
+        android:pivotX="173.3"
+        android:pivotY="223.3"
+        android:scaleX="0.156340475"
+        android:scaleY="0.156340475"
+        android:translateX="-119.3"
+        android:translateY="-169.3">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M 87.23 113.20 C 92.98 108.23 100.09 103.67 108.03 104.40 C 114.53 105.02 118.68 110.90 122.48 115.57 C 139.00 138.48 151.93 163.72 164.80 188.79 C 181.51 165.77 198.49 142.81 217.91 121.96 C 223.51 116.15 229.20 110.16 236.29 106.14 C 242.18 102.87 249.16 105.49 254.62 108.41 C 271.12 117.80 283.55 134.90 285.70 153.96 C 285.88 157.40 286.47 161.31 284.23 164.26 C 272.64 182.00 259.44 198.63 246.67 215.54 C 215.51 256.33 183.64 296.57 152.12 337.09 C 151.05 338.58 149.87 340.01 148.40 341.12 C 143.56 333.69 139.09 326.04 134.82 318.29 C 115.70 283.95 97.45 249.12 80.34 213.74 C 74.04 200.19 67.40 186.74 62.60 172.57 C 58.60 160.51 60.38 146.82 66.89 135.97 C 72.13 127.16 79.49 119.84 87.23 113.20 Z" />
+    </group>
+</vector>

@@ -6,48 +6,91 @@
   deleting accounts etc.
 */
 
+import {INCORRECT_PASSWORD_MESSAGE} from '../../../utils/constants/errors';
 import React, { Component } from "react";
-import {resetToScreen} from '../../../utils/navigation/resetToScreen';
-import { ActivityIndicator, Divider, List, Portal } from "react-native-paper"
-import { 
-  View,
-  TouchableOpacity,
-  ScrollView
-} from "react-native";
-import { Text } from "react-native-paper"
+import {resetToScreen} from "../../../utils/navigation/resetToScreen";
+import {ActivityIndicator, Portal} from 'react-native-paper';
 import { connect } from 'react-redux';
-import Styles from '../../../styles/index'
 import {
   getSupportedBiometryType
 } from "../../../utils/keychain/keychain";
 import {
   addEncryptedKey,
   setBiometry,
-  setDisabledServices,
   setHideSeedWarnings,
   setKeyDerivationVersion,
   signOut,
 } from "../../../actions/actionCreators";
 import PasswordCheck from "../../../components/PasswordCheck";
+import BiometricAffordanceIcon, {
+  getBiometryPresentation,
+} from '../../../components/BiometricAffordanceIcon';
 import {
-  canEnableBiometry,
   canShowSeed,
 } from "../../../actions/actions/channels/dlight/dispatchers/AlertManager";
 import { createAlert, resolveAlert } from "../../../actions/actions/alert/dispatchers/alert";
 import { checkPinForUser } from "../../../utils/asyncStore/asyncStore";
-import { ENABLE_DLIGHT, APP_VERSION, WYRE_ACCESSIBLE } from '../../../../env/index'
+import {
+  ENABLE_DLIGHT,
+} from '../../../../env/index';
 import { dlightEnabled } from "../../../utils/enabledChannels";
 import SetupSeedModal from "../../../components/SetupSeedModal/SetupSeedModal";
 import { DLIGHT_PRIVATE, ELECTRUM } from "../../../utils/constants/intervalConstants";
-import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
-import { WYRE_SERVICE_ID } from "../../../utils/constants/services";
-import Colors from "../../../globals/colors";
+import SelectionSheet, { SelectionRow } from "../../../components/SelectionSheet";
+import useSheetDismissal from "../../../components/useSheetDismissal";
 import { removeBiometricPassword, storeBiometricPassword } from "../../../utils/keychain/biometrics";
 import { requestSeeds } from "../../../utils/auth/authBox";
+import {captureSessionScope, sessionScopeIsCurrent} from '../../../actions/actions/updates/sessionRequests';
+import store from '../../../store';
 import { isSeedPhrase } from "../../../utils/keys";
+import {
+  SettingsNotice,
+  SettingsProfileSummary,
+  SettingsRow,
+  SettingsScreen,
+  SettingsSection,
+  SettingsSwitchRow,
+} from '../components/SettingsScaffold';
+import KeychainEncryptionSettingRow from '../components/KeychainEncryptionSettingRow';
 
 const RESET_PWD = "ResetPwd"
 const REMOVE_PROFILE = "DeleteProfile"
+
+const KEY_DERIVATION_VERSION_OPTIONS = [
+  { value: 1, title: "Latest" },
+  { value: 0, title: "Legacy" },
+];
+
+const SETTING_NOT_SAVED = "Not saved. Try again.";
+
+// The same inline copy as the View recovery secrets password sheet.
+const getPasswordCheckError = (error) =>
+  error?.message === "Incorrect password"
+    ? INCORRECT_PASSWORD_MESSAGE
+    : "Unable to access this wallet. Try again.";
+
+// The choice applies after the sheet has closed, so the confirmation that
+// follows presents cleanly.
+const KeyDerivationVersionSheet = ({ visible, selectedVersion, onClose, onSelect }) => {
+  const dismissal = useSheetDismissal({ visible, onClose });
+
+  return (
+    <SelectionSheet
+      title="Key derivation version"
+      visible={visible}
+      onClose={dismissal.close}
+      onClosed={dismissal.onClosed}>
+      {KEY_DERIVATION_VERSION_OPTIONS.map((option) => (
+        <SelectionRow
+          key={option.value}
+          title={option.title}
+          selected={option.value === selectedVersion}
+          onPress={() => dismissal.dismiss(() => onSelect(option.value))}
+        />
+      ))}
+    </SelectionSheet>
+  );
+};
 
 class ProfileSettings extends Component {
   constructor(props) {
@@ -58,13 +101,17 @@ class ProfileSettings extends Component {
       loading: false,
       passwordDialogOpen: false,
       passwordDialogTitle: "",
-      supportedBiometryType: {
-        display_name: null,
-        biometry: false,
-      },
+      passwordDialogBody: null,
+      passwordDialogSubmitLabel: 'Continue',
+      passwordDialogAllowBiometry: true,
+      passwordError: null,
+      seedWarningError: null,
+      supportedBiometryType: null,
+      biometryCheckComplete: false,
       privateSeedModalOpen: false,
       keyDerivationVersionModalOpen: false,
       checkingNfcBackupSeed: false,
+      nfcBackupEligible: null,
       onPasswordCorrect: () => {},
     };
 
@@ -80,18 +127,76 @@ class ProfileSettings extends Component {
     navigation.navigate(screen);
   };
 
-  async componentDidMount() {
-    this.setState({ supportedBiometryType: await getSupportedBiometryType() });
+  componentDidMount() {
+    this._isMounted = true;
+    this._unsubscribeFocus = this.props.navigation.addListener(
+      'focus',
+      this.refreshProfileSettingsState,
+    );
+    this.refreshProfileSettingsState();
   }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+    this._unsubscribeFocus?.();
+  }
+
+  refreshProfileSettingsState = () => {
+    this.refreshSupportedBiometryType();
+    this.refreshNfcBackupEligibility();
+  };
+
+  refreshSupportedBiometryType = async () => {
+    try {
+      const supportedBiometryType = await getSupportedBiometryType();
+
+      if (this._isMounted) {
+        this.setState({
+          supportedBiometryType,
+          biometryCheckComplete: true,
+        });
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  refreshNfcBackupEligibility = async () => {
+    const accountHash = this.props.activeAccount?.accountHash;
+
+    try {
+      const seeds = await requestSeeds();
+      const nfcBackupEligible = this.is24WordMnemonic(seeds[ELECTRUM]);
+
+      if (
+        this._isMounted &&
+        this.props.activeAccount?.accountHash === accountHash
+      ) {
+        this.setState({nfcBackupEligible});
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  };
 
   closePasswordDialog = (cb) => {
     this.setState(
       {
         passwordDialogOpen: false,
+        passwordError: null,
         onPasswordCorrect: () => {},
       },
       cb
     );
+  };
+
+  // A wrong password keeps the sheet open and shows the error in it.
+  showPasswordError = (passwordCheck) => {
+    this.setState({ passwordError: getPasswordCheckError(passwordCheck.error) });
+  };
+
+  clearPasswordError = () => {
+    if (this.state.passwordError != null) this.setState({ passwordError: null });
   };
 
   resetToScreen = (route, title, data, fullReset) => {
@@ -103,43 +208,31 @@ class ProfileSettings extends Component {
       const { activeAccount } = this.props;
       const { supportedBiometryType } = this.state;
       const { biometry, accountHash, id } = activeAccount;
+      const biometryTitle =
+        getBiometryPresentation(supportedBiometryType).settingsTitle;
 
       this.closePasswordDialog(async () => {
         try {
           if (accountHash == null)
-            throw new Error("No account hash for profile: " + id);
+            throw new Error("No account hash for wallet: " + id);
 
           if (biometry) {
             await removeBiometricPassword(accountHash);
             this.props.dispatch(await setBiometry(accountHash, false));
-            createAlert(
-              "Success",
-              `${
-                supportedBiometryType.display_name
-              } authentication disabled for profile "${id}"`
-            );
           } else {
             await storeBiometricPassword(accountHash, passwordCheck.password);
             this.props.dispatch(await setBiometry(accountHash, true));
-            createAlert(
-              "Success",
-              `${
-                supportedBiometryType.display_name
-              } authentication enabled for profile "${id}"`
-            );
           }
         } catch (e) {
           console.warn(e);
           createAlert(
-            "Error",
-            `Failed to ${
-              biometry ? "disable" : "enable"
-            } biometric authentication (${supportedBiometryType.display_name}).`
+            `${biometryTitle} not turned ${biometry ? "off" : "on"}`,
+            `The wallet could not save ${biometryTitle}. Try again.`
           );
         }
       });
     } else {
-      createAlert("Authentication Error", "Incorrect password");
+      this.showPasswordError(passwordCheck);
     }
   };
 
@@ -147,9 +240,11 @@ class ProfileSettings extends Component {
     const { activeAccount } = this.props;
     const { hideSeedWarnings, accountHash, id } = activeAccount;
 
+    this.setState({ seedWarningError: null });
+
     try {
       if (accountHash == null)
-        throw new Error("No account hash for profile: " + id);
+        throw new Error("No account hash for wallet: " + id);
 
       if (hideSeedWarnings) {
         this.props.dispatch(await setHideSeedWarnings(accountHash, false));
@@ -158,31 +253,23 @@ class ProfileSettings extends Component {
       }
     } catch (e) {
       console.warn(e);
-      createAlert(
-        "Error",
-        `Failed to ${hideSeedWarnings ? "enable" : "disable"
-        } seed corruption warning.`
-      );
+      if (this._isMounted) this.setState({ seedWarningError: SETTING_NOT_SAVED });
     }
   };
 
   canSetUserKeyDerivationVersion = () => {
     return createAlert(
-      'Change key derivation version?',
-      "Changing the key derivation version will change how your addresses are derived from your " + 
-      "seed for this profile. This will log you out.",
+      "Change key derivation version?",
+      "This changes how the wallet derives addresses from its recovery secret. The wallet then signs out.",
       [
         {
-          text: 'No',
+          text: "Not now",
           onPress: () => resolveAlert(false),
-          style: 'cancel',
+          style: "cancel",
         },
-        {text: 'Yes', onPress: () => resolveAlert(true)},
-      ],
-      {
-        cancelable: true,
-      },
-    )
+        { text: "Change and sign out", onPress: () => resolveAlert(true) },
+      ]
+    );
   }
 
   setUserKeyDerivationVersion = async (keyDerivationVersion) => {
@@ -215,64 +302,12 @@ class ProfileSettings extends Component {
               }, 1000);
             });
           },
-          message: "Signing out...",
+          message: "Signing out",
           route: "Home",
           successMsg: "Signed out",
           errorMsg: "Failed to sign out",
         },
         true
-      );
-    }
-  };
-
-  canEnableWyre = () => {
-    return createAlert(
-      'Enable deprecated Wyre features?',
-      "Wyre wallet features are no longer supported. Only enable them if you already have a Wyre account you would like to access.",
-      [
-        {
-          text: 'Cancel',
-          onPress: () => resolveAlert(false),
-          style: 'cancel',
-        },
-        {text: 'Continue', onPress: () => resolveAlert(true)},
-      ],
-      {
-        cancelable: true,
-      },
-    )
-  }
-
-  canDisableWyre = () => {
-    return createAlert(
-      'Disable deprecated Wyre features?',
-      "Wyre wallet features are no longer supported. Disabling them will hide Wyre features from your wallet.",
-      [
-        {
-          text: 'Cancel',
-          onPress: () => resolveAlert(false),
-          style: 'cancel',
-        },
-        {text: 'Continue', onPress: () => resolveAlert(true)},
-      ],
-      {
-        cancelable: true,
-      },
-    )
-  }
-
-  toggleWyreEnabled = async () => {
-    if ((this.props.wyreEnabled && await this.canDisableWyre()) || (!this.props.wyreEnabled && await this.canEnableWyre())) {
-      const { activeAccount } = this.props;
-      const { accountHash, disabledServices } = activeAccount;
-
-      this.props.dispatch(
-        await setDisabledServices(
-          accountHash, 
-          {...disabledServices, 
-            [WYRE_SERVICE_ID]: disabledServices[WYRE_SERVICE_ID] ? false : true
-          }
-        )
       );
     }
   };
@@ -296,7 +331,7 @@ class ProfileSettings extends Component {
           });
       });
     } else {
-      createAlert("Authentication Error", "Incorrect password");
+      this.showPasswordError(passwordCheck);
     }
   };
 
@@ -325,56 +360,59 @@ class ProfileSettings extends Component {
             );
   
             createAlert(
-              "Success",
-              `Z Seed set for ${
-                this.props.activeAccount.id
-              }. Restart Verus Mobile and login to start using Z cards!`
+              "Z recovery secret saved",
+              "Restart the app and sign in to use private (Z) cards."
             );
           } catch(e) {
-            createAlert("Error", e.message);
+            console.warn(e);
+            createAlert(
+              "Z recovery secret not saved",
+              "The wallet could not save the secret. Try again."
+            );
           }
         })
       } else {
-        createAlert("Authentication Error", "Incorrect password");
+        this.showPasswordError(result);
       }
+    }, {
+      title: 'Save Z recovery secret',
+      body: 'Your password encrypts it on this phone.',
+      submitLabel: 'Save',
     })
   }
 
+  // The way out of this question opens the setup for another secret, so an
+  // outside tap does not answer it.
   canUseCurrentSeedForZ = () => {
     return createAlert(
-      "Use existing seed for Z?",
-      "Your current seed has been detected as a valid 24-word mnemonic. Would you like to use it as your Z (shielded address) seed?",
+      "Use your Secret Recovery Phrase for Z?",
+      "It is a valid 24-word BIP39 phrase, so it can also be the Z recovery secret.",
       [
         {
-          text: "No",
+          text: "Use another secret",
           onPress: () => resolveAlert(false),
           style: "cancel",
         },
-        { text: "Yes", onPress: () => resolveAlert(true) },
+        { text: "Use this phrase", onPress: () => resolveAlert(true) },
       ],
       {
-        cancelable: true,
+        cancelable: false,
       }
     );
   }
 
   canBackupCurrentProfileToNfc = () => {
     return createAlert(
-      "Backup profile to NFC?",
-      "This will write an NFC wallet backup for your current profile seed. If you manually setup your Z seed to be different from your main profile seed, this process will not backup your Z seed.\n\n" +
-        "If you choose an unencrypted backup on the next screen, anyone with the NFC card can access this wallet. Keep the card secure.\n\n" +
-        "Would you like to proceed?",
+      "Back up to an NFC card?",
+      "The card holds this wallet’s Secret Recovery Phrase. A separate Z recovery secret is not included. Without a password on the next step, anyone with the card can open this wallet.",
       [
         {
-          text: "No",
+          text: "Not now",
           onPress: () => resolveAlert(false),
           style: "cancel",
         },
-        { text: "Yes", onPress: () => resolveAlert(true) },
-      ],
-      {
-        cancelable: false,
-      }
+        { text: "Continue", onPress: () => resolveAlert(true) },
+      ]
     );
   }
 
@@ -405,12 +443,13 @@ class ProfileSettings extends Component {
 
   startNfcBackup = async (passwordCheck) => {
     if (!passwordCheck.valid) {
-      createAlert("Authentication Error", "Incorrect password");
+      this.showPasswordError(passwordCheck);
       return;
     }
 
     const { activeAccount } = this.props;
     const { id } = activeAccount;
+    const passwordScope = captureSessionScope(store.getState(), activeAccount.accountHash);
 
     this.closePasswordDialog(async () => {
       this.setState({ checkingNfcBackupSeed: true });
@@ -419,19 +458,20 @@ class ProfileSettings extends Component {
         const seeds = await checkPinForUser(passwordCheck.password, id);
         const primarySeed = seeds[ELECTRUM];
 
+        // The row then shows as disabled with its reason.
         if (!this.is24WordMnemonic(primarySeed)) {
-          createAlert(
-            "NFC Backup Unavailable",
-            "The current profile primary seed is not a valid 24 word mnemonic and cannot be written as an NFC wallet backup.",
-          );
+          this.setState({nfcBackupEligible: false});
           return;
         }
 
-        this.props.navigation.navigate("NfcBackup");
+        this.setState({nfcBackupEligible: true});
+        if (!sessionScopeIsCurrent(store.getState(), passwordScope)) return;
+        this.props.navigation.navigate("NfcBackup", {walletPasswordTypedScope: passwordScope});
       } catch (e) {
+        console.warn(e);
         createAlert(
-          "Error",
-          e.message || "Unable to check whether this profile can be backed up.",
+          "NFC backup not started",
+          "The wallet could not read its Secret Recovery Phrase. Try again.",
         );
       } finally {
         this.setState({ checkingNfcBackupSeed: false });
@@ -441,244 +481,239 @@ class ProfileSettings extends Component {
 
   openNfcBackup = async () => {
     if (await this.canBackupCurrentProfileToNfc()) {
-      this.openPasswordCheck(this.startNfcBackup);
+      this.openPasswordCheck(this.startNfcBackup, {
+        title: 'Back up to NFC',
+        body: 'The backup can use your wallet password as its lock.',
+        submitLabel: 'Back up to NFC',
+        allowBiometry: false,
+      });
     }
   }
 
-  openPasswordCheck = (onPasswordCorrect) =>
+  openPasswordCheck = (onPasswordCorrect, {title, body = null, submitLabel = 'Continue', allowBiometry = true}) =>
     this.setState({
       passwordDialogOpen: true,
-      passwordDialogTitle: `Enter password for "${
-        this.props.activeAccount.id
-      }"`,
+      passwordDialogTitle: title,
+      passwordDialogBody: body,
+      passwordDialogSubmitLabel: submitLabel,
+      passwordDialogAllowBiometry: allowBiometry,
+      passwordError: null,
       onPasswordCorrect,
     });
 
   renderSettingsList = () => {
-    const zSetupComplete = dlightEnabled()
+    const zSetupComplete = dlightEnabled();
+    const biometryEnabled = !!this.props.activeAccount.biometry;
+    const biometrySupported = !!this.state.supportedBiometryType?.biometry;
+    const biometryNeedsDeviceSetup =
+      biometryEnabled &&
+      this.state.biometryCheckComplete &&
+      !biometrySupported;
+    const showBiometry =
+      biometryEnabled || biometrySupported;
+    const biometryPresentation = getBiometryPresentation(
+      this.state.supportedBiometryType,
+    );
+    let biometryTitle = biometryPresentation.settingsSetupTitle;
+    let biometryValue = 'Off';
+    let biometryDescription;
+
+    if (biometryNeedsDeviceSetup) {
+      biometryTitle = 'Biometric unlock';
+      biometryValue = 'Needs device setup';
+      biometryDescription = 'Set up biometrics in device settings to use it again';
+    } else if (biometryEnabled) {
+      biometryTitle = biometryPresentation.settingsTitle;
+      biometryValue = 'On';
+    }
+    const showSeedWarning =
+      this.props.activeAccount.hideSeedWarnings ||
+      this.props.showHideSeedCorruptionSetting;
 
     return (
-      <ScrollView style={Styles.fullWidth}>
+      <SettingsScreen testID="settings.profile">
         <Portal>
-          <SetupSeedModal
-            animationType="slide"
-            transparent={false}
-            visible={this.state.privateSeedModalOpen}
-            cancel={() => {
-              this.setState({ privateSeedModalOpen: false });
-            }}
-            setSeed={(seed, channel) => this.addZSeed(seed, channel)}
-            channel={DLIGHT_PRIVATE}
-          />
-          {this.state.keyDerivationVersionModalOpen && (
-            <ListSelectionModal
-              flexHeight={1}
-              title="Key Derivation Versions"
-              selectedKey={this.props.activeAccount.keyDerivationVersion}
-              visible={this.state.keyDerivationVersionModalOpen}
-              onSelect={(item) => this.setUserKeyDerivationVersion(item.key)}
-              data={Object.keys(this.KEY_DERIVATION_VERSION_LABELS).map(
-                (key) => {
-                  return {
-                    key: Number(key),
-                    title: this.KEY_DERIVATION_VERSION_LABELS[key]
-                  };
-                }
-              )}
-              cancel={() => this.closeKeyDerivationVersionModal()}
+          {this.state.privateSeedModalOpen ? (
+            <SetupSeedModal
+              animationType="slide"
+              channel={DLIGHT_PRIVATE}
+              cancel={() => {
+                this.setState({privateSeedModalOpen: false});
+              }}
+              redesigned
+              setSeed={(seed, channel) => this.addZSeed(seed, channel)}
+              transparent={false}
+              visible
             />
-          )}
+          ) : null}
         </Portal>
-        {/* TODO: Add back in when more interesting profile data and/or settings are implemented
-          <TouchableOpacity onPress={() => this._openSettings(PROFILE_INFO)}>
-            <ListItem                       
-              title={<Text style={styles.coinItemLabel}>Profile Info</Text>}
-              leftIcon={{name: 'info'}}
-              containerStyle={{ borderBottomWidth: 0 }} 
-            />
-          </TouchableOpacity>*/}
-        <List.Subheader>{"Current Profile"}</List.Subheader>
-        <Divider />
-        <List.Item
-          title={this.props.activeAccount.id}
-          description={"Logged In"}
-          left={(props) => <List.Icon {...props} icon={"account"} />}
+        <SettingsProfileSummary
+          name={this.props.activeAccount.id}
+          subtitle={this.props.testAccount ? 'Testnet wallet' : null}
+          walletAvatar={this.props.activeAccount.walletAvatar}
         />
-        <Divider />
-        {
-          this.props.testAccount && (
-            <React.Fragment>
-              <List.Item
-                title={"Test Profile"}
-                description={'All testnet coins/currencies have no value and will disappear whenever their testnet is reset.'}
-                left={props => <List.Icon {...props} icon={'alert'} color={Colors.infoButtonColor}/>}
-              />
-              <Divider />
-            </React.Fragment>
-          )
-        }
-        <List.Subheader>{"Security Settings"}</List.Subheader>
-        <TouchableOpacity
-          onPress={async () => {
-            if (await canShowSeed()) this.openPasswordCheck(this.showSeed);
-          }}
-        >
-          <Divider />
-          <List.Item
-            title={"Recover Seed"}
-            left={(props) => <List.Icon {...props} icon={"lock-open"} />}
-            right={(props) => (
-              <List.Icon {...props} icon={"chevron-right"} size={20} />
-            )}
-          />
-          <Divider />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => this._openSettings(RESET_PWD)}>
-          <List.Item
-            title={"Change Password"}
-            left={(props) => <List.Icon {...props} icon={"lock-reset"} />}
-            right={(props) => (
-              <List.Icon {...props} icon={"chevron-right"} size={20} />
-            )}
-          />
-          <Divider />
-        </TouchableOpacity>
-        {(this.props.activeAccount.biometry ||
-          this.state.supportedBiometryType.biometry) && (
-          <TouchableOpacity
-            onPress={async () => {
-              if (this.props.activeAccount.biometry) {
-                this.openPasswordCheck(this.toggleBiometry);
-              } else if (await canEnableBiometry())
-                this.openPasswordCheck(this.toggleBiometry);
-            }}
-          >
-            <List.Item
-              title={`${
-                this.props.activeAccount.biometry ? "Disable" : "Setup"
-              } Biometric Authentication`}
-              left={(props) => <List.Icon {...props} icon={"lock"} />}
+        {this.props.testAccount ? (
+          <SettingsSection title="Wallet information">
+            <SettingsNotice
+              body="All testnet coins/currencies have no value and will disappear whenever their testnet is reset."
+              icon="alert-outline"
+              title="Testnet wallet information"
             />
-            <Divider />
-          </TouchableOpacity>
-        )}
-        {(this.props.activeAccount.hideSeedWarnings || this.props.showHideSeedCorruptionSetting) && <TouchableOpacity
-          onPress={() => this.toggleSeedCorruptionWarning()}
-        >
-          <List.Item
-            title={`${this.props.activeAccount.hideSeedWarnings ? "Show" : "Hide"} Seed Corruption Warnings`}
-            left={(props) => <List.Icon {...props} icon={"information"} />}
-            description={`On login, you ${this.props.activeAccount.hideSeedWarnings ? "will not" : "will"} be alerted if non-standard characters are detected in your profile seed, indicating potential seed corruption`}
-            descriptionNumberOfLines={100}
+          </SettingsSection>
+        ) : null}
+        <SettingsSection title="Security">
+          <SettingsRow
+            description="View your Secret Recovery Phrase and derived keys"
+            icon="key-outline"
+            onPress={async () => {
+              if (await canShowSeed()) {
+                this.openPasswordCheck(this.showSeed, {title: 'View recovery secrets'});
+              }
+            }}
+            testID="settings.profile.recoverSeed"
+            title="View recovery secrets"
           />
-          <Divider />
-        </TouchableOpacity>}
-        <List.Subheader>{"Key Settings"}</List.Subheader>
-        <TouchableOpacity
-          onPress={() => this.openKeyDerivationVersionModal()}
-          style={{ ...Styles.flex }}
-        >
-          <Divider />
-          <List.Item
-            title={"Key Derivation Version"}
-            right={() => (
-              <Text style={Styles.listItemTableCell}>
-                {
-                  this.KEY_DERIVATION_VERSION_LABELS[
-                    this.props.activeAccount.keyDerivationVersion
-                  ]
-                }
-              </Text>
-            )}
+          <SettingsRow
+            icon="lock-reset"
+            onPress={() => this._openSettings(RESET_PWD)}
+            testID="settings.profile.changePassword"
+            title="Change password"
           />
-          <Divider />
-        </TouchableOpacity>
+          {showBiometry ? (
+            <SettingsRow
+              accessibilityLabel={`${biometryTitle}, ${biometryValue}`}
+              description={biometryDescription}
+              leading={
+                <BiometricAffordanceIcon
+                  showFallback={biometryEnabled}
+                  size={19}
+                  supportedBiometryType={this.state.supportedBiometryType}
+                />
+              }
+              onPress={
+                biometryNeedsDeviceSetup
+                  ? undefined
+                  : () => this.openPasswordCheck(this.toggleBiometry, {
+                      title: biometryEnabled
+                        ? biometryPresentation.turnOffTitle
+                        : biometryPresentation.turnOnTitle,
+                      body: biometryEnabled
+                        ? null
+                        : biometryPresentation.passwordSetupBody,
+                      submitLabel: biometryEnabled ? 'Turn off' : 'Turn on',
+                    })
+              }
+              title={biometryTitle}
+              value={biometryValue}
+            />
+          ) : null}
+          <KeychainEncryptionSettingRow
+            last={!showSeedWarning}
+            navigation={this.props.navigation}
+          />
+          {showSeedWarning ? (
+            <SettingsSwitchRow
+              description="Alert on sign-in when non-standard characters may indicate damaged recovery data"
+              error={this.state.seedWarningError}
+              icon="alert-circle-outline"
+              last
+              onValueChange={() => this.toggleSeedCorruptionWarning()}
+              title="Recovery data integrity warnings"
+              value={!this.props.activeAccount.hideSeedWarnings}
+            />
+          ) : null}
+        </SettingsSection>
+        <SettingsSection title="Keys & backup">
+          <SettingsRow
+            icon="source-branch"
+            onPress={() => this.openKeyDerivationVersionModal()}
+            title="Key derivation version"
+            value={
+              this.KEY_DERIVATION_VERSION_LABELS[
+                this.props.activeAccount.keyDerivationVersion
+              ]
+            }
+          />
+          <SettingsRow
+            description={
+              this.state.nfcBackupEligible === false
+                ? 'Unavailable: this wallet does not use a 24-word BIP39 Secret Recovery Phrase'
+                : undefined
+            }
+            disabled={
+              this.state.checkingNfcBackupSeed ||
+              this.state.nfcBackupEligible === false
+            }
+            icon="credit-card-wireless-outline"
+            last={!ENABLE_DLIGHT}
+            onPress={this.openNfcBackup}
+            testID="settings.profile.nfcBackup"
+            title="Back up this wallet to NFC"
+            trailing={
+              this.state.checkingNfcBackupSeed ? (
+                <ActivityIndicator size="small" />
+              ) : null
+            }
+          />
+          {ENABLE_DLIGHT ? (
+            <SettingsRow
+              description={
+                zSetupComplete
+                  ? undefined
+                  : 'Adds private-transaction support after restart and login'
+              }
+              disabled={zSetupComplete}
+              icon="shield-key-outline"
+              last
+              onPress={this.handleZSeedSetup}
+              testID="settings.profile.zSeed"
+              title={
+                zSetupComplete
+                  ? 'Z recovery secret setup complete'
+                  : 'Set up Z recovery secret'
+              }
+              value={zSetupComplete ? 'Complete' : null}
+            />
+          ) : null}
+        </SettingsSection>
+        <KeyDerivationVersionSheet
+          onClose={this.closeKeyDerivationVersionModal}
+          onSelect={this.setUserKeyDerivationVersion}
+          selectedVersion={this.props.activeAccount.keyDerivationVersion}
+          visible={this.state.keyDerivationVersionModalOpen}
+        />
         <PasswordCheck
+          body={this.state.passwordDialogBody}
           cancel={() => this.closePasswordDialog()}
+          errorMessage={this.state.passwordError}
+          onInputChange={this.clearPasswordError}
+          redesigned
+          showWalletSummary={false}
+          suppressSystemAlerts={!this.state.passwordDialogAllowBiometry}
           submit={(result) => this.state.onPasswordCorrect(result)}
+          submitLabel={this.state.passwordDialogSubmitLabel}
           visible={this.state.passwordDialogOpen}
           title={this.state.passwordDialogTitle}
           userName={this.props.activeAccount.id}
           account={this.props.activeAccount}
-          allowBiometry={true}
+          allowBiometry={this.state.passwordDialogAllowBiometry}
         />
-        <List.Subheader>{"Profile Actions"}</List.Subheader>
-        <TouchableOpacity
-          onPress={this.openNfcBackup}
-          disabled={this.state.checkingNfcBackupSeed}
-        >
-          <Divider />
-          <List.Item
-            title={"Backup Current Profile to NFC"}
-            description={"Requires a 24-word mnemonic seed"}
-            left={(props) => <List.Icon {...props} icon={"credit-card-wireless"} />}
-            right={(props) =>
-              this.state.checkingNfcBackupSeed ? (
-                <ActivityIndicator {...props} size="small" />
-              ) : (
-                <List.Icon {...props} icon={"chevron-right"} />
-              )
-            }
+        <SettingsSection title="Wallet actions">
+          <SettingsRow
+            danger
+            icon="trash-can-outline"
+            last
+            onPress={() => this._openSettings(REMOVE_PROFILE)}
+            testID="settings.profile.delete"
+            title="Delete wallet"
           />
-        </TouchableOpacity>
-        {ENABLE_DLIGHT && (
-          <TouchableOpacity
-            onPress={this.handleZSeedSetup}
-            disabled={zSetupComplete}
-          >
-            <Divider />
-            <List.Item
-              title={
-                zSetupComplete
-                  ? "Z Seed Setup Complete"
-                  : "Setup Z (Shielded Address) Seed"
-              }
-              description={
-                zSetupComplete
-                  ? ""
-                  : "Setting up a Z Seed will allow you to use private transactions on compatible coins (after a restart)"
-              }
-              left={(props) => <List.Icon {...props} icon={"shield-key"} />}
-              descriptionNumberOfLines={100}
-            />
-          </TouchableOpacity>
-        )}
-        {
-          WYRE_ACCESSIBLE && !this.props.testAccount && (
-            <TouchableOpacity onPress={() => this.toggleWyreEnabled()}>
-              <Divider />
-              <List.Item
-                title={
-                  this.props.wyreEnabled
-                    ? 'Wyre Enabled'
-                    : 'Enable Deprecated Wyre Features'
-                }
-                description={
-                  this.props.wyreEnabled
-                    ? ''
-                    : 'Enabling deprecated Wyre features will allow you to access your existing Wyre account from the services tab'
-                }
-                left={props => <List.Icon {...props} icon={'account-cash'} />}
-                descriptionNumberOfLines={100}
-              />
-            </TouchableOpacity>
-          )
-        }
-        <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>
-          <Divider />
-          <List.Item
-            title={"Delete Profile"}
-            left={(props) => <List.Icon {...props} icon={"trash-can"} />}
-            right={(props) => <List.Icon {...props} icon={"chevron-right"} />}
-          />
-          <Divider />
-        </TouchableOpacity>
-      </ScrollView>
+        </SettingsSection>
+      </SettingsScreen>
     );
   };
 
   render() {
-    return <View style={Styles.defaultRoot}>{this.renderSettingsList()}</View>;
+    return this.renderSettingsList();
   }
 }
 
@@ -688,9 +723,6 @@ const mapStateToProps = state => {
     activeAccount: state.authentication.activeAccount,
     sessionEpoch: state.authentication.sessionEpoch,
     showHideSeedCorruptionSetting: state.authentication.showHideSeedCorruptionSetting,
-    wyreEnabled:
-      state.authentication.activeAccount != null &&
-      state.authentication.activeAccount.disabledServices[WYRE_SERVICE_ID] != true,
   };
 };
 

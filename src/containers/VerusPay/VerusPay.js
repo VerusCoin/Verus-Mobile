@@ -6,8 +6,9 @@
   user side of things.
 */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Alert, StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
 import base64url from 'base64url';
 import { URL } from 'react-native-url-polyfill';
@@ -24,7 +25,10 @@ import {
   API_GET_INFO,
   IS_PBAAS,
 } from '../../utils/constants/intervalConstants';
-import { conditionallyUpdateWallet } from '../../actions/actionDispatchers';
+import {
+  conditionallyUpdateWallet,
+  readDeeplinkFromNfc,
+} from '../../actions/actionDispatchers';
 import store from '../../store';
 import { Portal } from 'react-native-paper';
 import SubWalletSelectorModal from '../SubWalletSelect/SubWalletSelectorModal';
@@ -33,9 +37,8 @@ import {
   resolveAlert,
 } from '../../actions/actions/alert/dispatchers/alert';
 import QrScanner from '../../utils/QrScanner/QrScanner';
-import styles from '../../styles';
 import BarcodeReader from '../../components/BarcodeReader/BarcodeReader';
-import AnimatedActivityIndicator from '../../components/AnimatedActivityIndicator';
+import { useNfcSupported } from '../../hooks/useNfcSupported';
 import { openSubwalletSendModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
 import {
   SEND_MODAL_AMOUNT_FIELD,
@@ -45,8 +48,27 @@ import {
 import { SET_DEEPLINK_DATA } from '../../utils/constants/storeType';
 import { getCurrency } from '../../utils/api/channels/verusid/callCreators';
 import { CommonActions } from '@react-navigation/routers';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import BigNumber from 'bignumber.js';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
+import { useAppTheme } from '../../theme/app';
+import signedInCopy from '../../copy/signedIn';
+import AcknowledgeSheet from '../../components/AcknowledgeSheet';
+import { ASSET_NOT_ACTIVE } from '../../utils/QrScanner/QrScanner';
+import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
+import { addManagedAsset } from '../../utils/assets/assetManagementService';
+import { isTestnetAccount } from '../../utils/assets/assetIdentity';
+import {
+  getRecipientAddressType,
+  SEND_WIZARD_MODE,
+} from '../SendWizard/wizardUtils';
+import { countFundedSendCards } from '../SendWizard/scanRequest';
+
+const UNUSABLE_QR = {
+  title: 'Can’t use this QR code',
+  message: 'It is not an address or a payment request.',
+  confirmLabel: 'Scan again',
+};
 
 const VerusPay = (props) => {
   const navigation = useNavigation();
@@ -62,6 +84,17 @@ const VerusPay = (props) => {
   const [subWalletSelectorCoin, setSubWalletSelectorCoin] = useState(null);
   const [subWalletSelectorDisplayTicker, setSubWalletSelectorDisplayTicker] =
     useState(null);
+  // The Scan tab answers a code it cannot pay with a sheet, not an alert.
+  const [sheet, setSheet] = useState(UNUSABLE_QR);
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const scanBusy = useRef(false);
+
+  // A scan that opened Send, or a closed sheet, frees the scanner again.
+  useFocusEffect(
+    useCallback(() => {
+      scanBusy.current = false;
+    }, []),
+  );
 
   const activeCoinsForUser = useObjectSelector(
     (state) => state.coins.activeCoinsForUser,
@@ -76,7 +109,12 @@ const VerusPay = (props) => {
   const activeAlert = useObjectSelector((state) => state.alert.active);
   const sendModal = useObjectSelector((state) => state.sendModal);
 
-  const { containerStyle, acceptAddressOnly, channel, coinObj: propCoinObj, button, maskProps, cameraDisabled } = props;
+  const { containerStyle, acceptAddressOnly, channel, coinObj: propCoinObj, button, cameraDisabled } = props;
+  const theme = useAppTheme();
+  const nfcSupported = useNfcSupported();
+  // The general Scan screen also reads Verus NFC cards. Address-only scanners
+  // and callers with their own button keep their current controls.
+  const showNfcClaim = nfcSupported && !acceptAddressOnly && button == null;
 
   useEffect(() => {
     return () => {
@@ -180,7 +218,124 @@ const VerusPay = (props) => {
     );
   };
 
-  const onSuccess = (codes) => {
+  const showSheet = content => {
+    setSheet(content);
+    setSheetVisible(true);
+  };
+
+  // A request that names a network other than its asset's own warns on Confirm.
+  const getNetworkNotice = async (coin, system) => {
+    if (!system || !coin.tags?.includes(IS_PBAAS) || system === coin.system_id) {
+      return null;
+    }
+    let name = null;
+    try {
+      const response = await getCurrency(coin.system_id, system);
+      name = response.error ? null : response.result.fullyqualifiedname;
+    } catch (e) {}
+    return `This request is for ${coin.display_ticker} on ${
+      name || 'another network'
+    }. Check the network before you send.`;
+  };
+
+  // Every payment QR code opens Send. A request with an amount opens Confirm
+  // when one card can pay; Amount and Select asset fill the gaps.
+  const openScanSend = scan => {
+    const params = {
+      mode: SEND_WIZARD_MODE.SEND,
+      ...(scan.coinId ? {initialCoinId: scan.coinId} : {}),
+      scan,
+    };
+    const toConfirm =
+      scan.amount &&
+      scan.coinId &&
+      countFundedSendCards(store.getState(), scan.coinId, scan.address) === 1;
+
+    navigation.navigate(
+      'SendWizard',
+      toConfirm ? {...params, screen: 'SendWizardConfirm', initial: false} : params,
+    );
+  };
+
+  const scanToSend = async raw => {
+    const request = QrScanner.processGenericPaymentRequest(raw);
+    const {coinObj: coin, address, amount, note, system} = request;
+
+    if (coin == null) {
+      if (!getRecipientAddressType(address)) throw new Error(UNUSABLE_QR.message);
+      openScanSend({address});
+      return;
+    }
+    if (!coin.apps?.hasOwnProperty('wallet')) {
+      showSheet({...UNUSABLE_QR, message: `This wallet can’t send ${coin.display_ticker}.`});
+      return;
+    }
+    openScanSend({
+      address,
+      amount:
+        amount != null && BigNumber(amount).isGreaterThan(0)
+          ? BigNumber(amount).toFixed()
+          : null,
+      note: note || null,
+      notice: await getNetworkNotice(coin, system),
+      coinId: coin.id,
+    });
+  };
+
+  const offerToAddAsset = (notActive, raw) => {
+    let coin = null;
+    try {
+      coin = CoinDirectory.findCoinObj(notActive.coinId);
+    } catch (e) {}
+    if (!coin) {
+      showSheet(UNUSABLE_QR);
+      return;
+    }
+    // Never add a mainnet asset to a testnet wallet, or the other way round.
+    if (Boolean(coin.testnet) !== isTestnetAccount(activeAccount)) {
+      showSheet({
+        ...UNUSABLE_QR,
+        message: `This request is for ${coin.testnet ? 'testnet' : 'mainnet'}. Open a ${
+          coin.testnet ? 'testnet' : 'mainnet'
+        } wallet and scan it again.`,
+      });
+      return;
+    }
+    const name = coin.display_name;
+    showSheet({
+      title: `Add ${name}?`,
+      message: `This request asks for ${
+        notActive.amount ? `${notActive.amount} ` : ''
+      }${coin.display_ticker}. ${name} is not in your wallet yet.`,
+      confirmLabel: `Add ${name}`,
+      dismissLabel: 'Not now',
+      onConfirm: async () => {
+        scanBusy.current = true;
+        setLoading(true);
+        try {
+          const added = await addManagedAsset({coin});
+          // Load the new asset's balance first, so Send can find a card to pay from.
+          if (added?.id) {
+            await conditionallyUpdateWallet(
+              store.getState(),
+              dispatch,
+              added.id,
+              API_GET_BALANCES,
+            );
+          }
+          await scanToSend(raw);
+        } catch (e) {
+          showSheet({...UNUSABLE_QR, message: `Couldn’t add ${name}. Try again.`});
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+  };
+
+  const onSuccess = async (codes) => {
+    if (scanBusy.current) return;
+    scanBusy.current = true;
     try {
       let result = codes[0].value;
 
@@ -192,6 +347,17 @@ const VerusPay = (props) => {
           `Could not find deeplink uri in QR scan, falling back to payment request, error:  ${dlError.message}`,
         );
       }
+
+      if (!acceptAddressOnly) {
+        try {
+          await scanToSend(result);
+        } catch (scanError) {
+          if (scanError.code === ASSET_NOT_ACTIVE) offerToAddAsset(scanError, result);
+          else showSheet(UNUSABLE_QR);
+        }
+        return;
+      }
+      scanBusy.current = false;
 
       const paymentRequest = QrScanner.processGenericPaymentRequest(result);
       const {
@@ -254,6 +420,7 @@ const VerusPay = (props) => {
       }
     } catch (e) {
       console.warn(e);
+      scanBusy.current = false;
       errorHandler(e.message);
     }
   };
@@ -375,11 +542,20 @@ const VerusPay = (props) => {
     }
   };
 
-  const loadingState =
-    loading || activeAlert != null || sendModal.visible || props.showSpinner;
+  const cameraActive =
+    !cameraDisabled &&
+    !sheetVisible &&
+    !subWalletSelectorOpen &&
+    activeAlert == null &&
+    !sendModal.visible;
+  const scanActions = showNfcClaim
+    ? [{label: 'Scan NFC card', onPress: () => readDeeplinkFromNfc()}]
+    : [];
 
   return (
-    <View style={{ ...styles.blackRoot, ...containerStyle }}>
+    <SafeAreaView
+      edges={acceptAddressOnly ? [] : ['top', 'left', 'right']}
+      style={[scanStyles.screen, {backgroundColor: theme.colors.background}, containerStyle]}>
       <Portal>
         {subWalletSelectorOpen && (
           <SubWalletSelectorModal
@@ -400,31 +576,50 @@ const VerusPay = (props) => {
           />
         )}
       </Portal>
-      {loadingState ? (
-        <View style={styles.focalCenter}>
-          <AnimatedActivityIndicator
-            style={{
-              width: 128,
-            }}
-          />
+      {acceptAddressOnly ? null : (
+        <View style={scanStyles.header}>
+          <Text
+            accessibilityRole="header"
+            style={[theme.typography.headlineMd, {color: theme.colors.textPrimary}]}>
+            {signedInCopy.navigation.scan}
+          </Text>
         </View>
-      ) : (
-        <React.Fragment>
-          <BarcodeReader
-            prompt={
-              acceptAddressOnly
-                ? 'Scan an invoice or address'
-                : 'Scan a QR code'
-            }
-            onScan={(codes) => onSuccess(codes)}
-            cameraDisabled={cameraDisabled}
-            button={button}
-            maskProps={maskProps}
-          />
-        </React.Fragment>
       )}
-    </View>
+      <BarcodeReader
+        actions={scanActions}
+        active={cameraActive}
+        busy={loading || Boolean(props.showSpinner)}
+        includeBottomInset={false}
+        onScan={(codes) => onSuccess(codes)}>
+        {button ? button() : null}
+      </BarcodeReader>
+      <AcknowledgeSheet
+        confirmLabel={sheet.confirmLabel}
+        dismissLabel={sheet.dismissLabel}
+        message={sheet.message}
+        onAcknowledged={sheet.onConfirm}
+        onClose={() => {
+          setSheetVisible(false);
+          scanBusy.current = false;
+        }}
+        testID="scan-sheet"
+        title={sheet.title}
+        visible={sheetVisible}
+      />
+    </SafeAreaView>
   );
 };
+
+const scanStyles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  // The Services title spacing.
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+});
 
 export default VerusPay;

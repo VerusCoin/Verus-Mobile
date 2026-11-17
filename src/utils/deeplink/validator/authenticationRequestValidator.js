@@ -16,7 +16,9 @@ export const assertAuthenticationRequestNotExpired = (
   }
 
   if (details.expiryTime.lte(new BN(nowSeconds))) {
-    throw new Error("Authentication request has expired.");
+    const error = new Error("Authentication request has expired.");
+    error.code = 'AUTHENTICATION_REQUEST_EXPIRED';
+    throw error;
   }
 };
 

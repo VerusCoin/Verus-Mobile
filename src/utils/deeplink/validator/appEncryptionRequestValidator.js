@@ -12,6 +12,10 @@ import {
   I_ADDR_VERSION,
 } from "verus-typescript-primitives";
 import { BN } from "bn.js";
+import {
+  createGenericRequestRejectionError,
+  GENERIC_REQUEST_REJECTION_CODES,
+} from "../genericRequestRejection";
 
 const MAX_NATIVE_INDEX = new BN("2147483647");
 
@@ -55,7 +59,8 @@ export const validateAppEncryptionRequestDetails = async (request, details, deta
 
   // Viewing keys are sensitive too; every channel response must be encrypted.
   if (!details.hasEncryptResponseToAddress()) {
-    throw new Error(
+    throw createGenericRequestRejectionError(
+      GENERIC_REQUEST_REJECTION_CODES.PLAINTEXT_RESPONSE_UNSUPPORTED,
       "App encryption requests must specify encryptResponseToAddress.",
     );
   }

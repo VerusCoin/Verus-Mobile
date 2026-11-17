@@ -1,68 +1,45 @@
-import { BIOMETRY_WARNING } from "../../../../../utils/constants/constants"
 import { createAlert, resolveAlert } from "../../../alert/dispatchers/alert"
+
+// Private transactions, and VerusID management on VRSC, depend on this sync.
+const privateFeatures = (chainTicker) =>
+  chainTicker === 'VRSC'
+    ? 'private transactions and VerusID management'
+    : 'private transactions'
 
 export const canRetryDlightInitialization = (chainTicker) => {
   return createAlert(
-    'Blockchain Sync Failed',
-    'Something went wrong while trying to synchronize with the ' + chainTicker + ' blockchain. This may cause issues with private transactions' +
-    (chainTicker === 'VRSC' ? ' and Verus identity management.' : '.') + '\n\nWould you like to retry?\n\nThis can always be done later in settings.',
+    `Retry the ${chainTicker} sync?`,
+    `The wallet could not sync with the ${chainTicker} blockchain. Until it does, ${privateFeatures(chainTicker)} may not work.`,
     [
       {
-        text: 'No',
+        text: 'Not now',
         onPress: () => resolveAlert(false),
         style: 'cancel',
       },
-      {text: 'Yes', onPress: () => resolveAlert(true)},
+      {text: 'Retry', onPress: () => resolveAlert(true)},
     ],
-    {
-      cancelable: false,
-    },
-  )
-}
-
-export const canEnableBiometry = () => {
-  return createAlert(
-    "Enable biometric authentication?",
-    BIOMETRY_WARNING,
-    [
-      {
-        text: "No",
-        onPress: () => resolveAlert(false),
-        style: "cancel",
-      },
-      { text: "Yes", onPress: () => resolveAlert(true) },
-    ],
-    {
-      cancelable: false,
-    }
   )
 }
 
 export const canShowSeed = () => {
   return createAlert(
-    'Warning',
-    "The next screen will display your unencrypted wallet seed in plain text.\n\n" + 
-    "Be careful and take into consideration the fact that anyone with access to " + 
-    "this seed will have access to all the funds in its wallet.\n\nAre you sure you " +
-    "would like to proceed?",
+    'Show your recovery secrets?',
+    'The next screen shows your recovery secrets and private keys in plain text. Anyone who sees them can take your funds.',
     [
       {
-        text: 'No',
+        text: 'Not now',
         onPress: () => resolveAlert(false),
         style: 'cancel',
       },
-      {text: 'Yes', onPress: () => resolveAlert(true)},
+      {text: 'Show secrets', onPress: () => resolveAlert(true)},
     ],
-    {
-      cancelable: false,
-    },
   )
 }
 
 export const canCopySeed = () => {
   return createAlert(
-    "Copy Seed?",
-    "Would you like to use the same seed as both your primary seed, and secondary seed?." +
+    "Use the same recovery secret?",
+    "Would you like to use the same recovery secret as both your primary and secondary recovery secrets?" +
       "\n\n" +
       "If you use private addresses and transactions, this would make your private addresses derived from the same source as your transparent addresses.",
     [
@@ -79,21 +56,18 @@ export const canCopySeed = () => {
   );
 }
 
+// Resolves true when the user asks to try stopping the sync again.
 export const blockchainQuitError = (chainTicker) => {
   return createAlert(
-    'Blockchain Stop Failed',
-    'Something went wrong while trying to stop synchronizing with the ' + chainTicker + ' blockchain. This may cause issues with private transactions' +
-    chainTicker === 'VRSC' ? ' and Verus identity management.' : '.' + '\n\nIf they occur, try restarting Verus mobile.',
+    `Try to stop the ${chainTicker} sync again?`,
+    `The wallet could not stop syncing with the ${chainTicker} blockchain. If ${privateFeatures(chainTicker)} fail later, restart Verus Mobile.`,
     [
       {
-        text: 'No',
+        text: 'Not now',
         onPress: () => resolveAlert(false),
         style: 'cancel',
       },
-      {text: 'Yes', onPress: () => resolveAlert(true)},
+      {text: 'Try again', onPress: () => resolveAlert(true)},
     ],
-    {
-      cancelable: false,
-    },
   )
 }

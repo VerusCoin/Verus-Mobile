@@ -1,22 +1,11 @@
 /*
-  This component simply allows a user to scan a qr code 
+  This component simply allows a user to scan a qr code
   to fill out their wallet seed field
 */
 
 import React, { Component } from "react";
-import {
-  View,
-  StyleSheet,
-  Alert,
-  TouchableOpacity,
-  Text
-} from "react-native";
-import Button from "./Button";
-import Colors from "../globals/colors";
-import Styles from '../styles/index'
-import BarcodeReader from "./BarcodeReader/BarcodeReader";
-
-const FORMAT_UNKNOWN = "QR Data format unrecognized."
+import { createAlert } from "../actions/actions/alert/dispatchers/alert";
+import ScannerScreen from "./BarcodeReader/ScannerScreen";
 
 class ScanSeed extends Component {
   constructor(props) {
@@ -29,12 +18,13 @@ class ScanSeed extends Component {
     if (result != null && typeof result === "string" && result.length <= 5000 && this.props.onScan) {
       this.props.onScan(result)
     } else {
-      this.errorHandler(FORMAT_UNKNOWN)
+      this.errorHandler()
     }
   }
 
-  errorHandler = (error) => {
-    Alert.alert("Error", error);
+  // The same wording as the Scan tab.
+  errorHandler = () => {
+    createAlert("Can’t use this QR code", "It is not a recovery secret.");
     this.cancelHandler()
   }
 
@@ -46,46 +36,13 @@ class ScanSeed extends Component {
 
   render() {
     return (
-      <View style={Styles.blackRoot}>
-        <BarcodeReader
-          prompt="Scan a QR seed or private key"
-          onScan={(codes) => this.onSuccess(codes)}
-          button={() => (
-            <Button
-              mode="contained"
-              buttonColor={Colors.warningButtonColor}
-              onPress={this.cancelHandler}
-              style={{
-                marginBottom: 48
-              }}
-            >
-              {"Cancel"}
-            </Button>
-          )}
-        />
-      </View>
+      <ScannerScreen
+        onBack={this.cancelHandler}
+        onScan={(codes) => this.onSuccess(codes)}
+        title="Scan QR code"
+      />
     );
   }
 }
 
 export default ScanSeed;
-
-const styles = StyleSheet.create({
-  root: {
-    backgroundColor: "#232323",
-    flex: 1,
-    alignItems: "center"
-  },
-  singleButtonContainer: {
-    width: "75%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  cancelBtn: {
-    height: 46,
-    backgroundColor: "rgba(206,68,70,1)",
-    marginTop: 15,
-    marginBottom: 40
-  },
-});

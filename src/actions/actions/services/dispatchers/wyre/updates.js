@@ -10,7 +10,7 @@ export const updateWyreAccount = async channelStore => {
 
     if (!channelStore.authenticated) {
       const seed = (await requestSeeds())[WYRE_SERVICE];
-      if (seed == null) throw new Error('No Wyre seed present');
+      if (seed == null) throw new Error('No Wyre recovery secret present');
       accountId = (await WyreProvider.authenticate(seed)).authenticatedAs;
     }
 
@@ -30,7 +30,7 @@ export const updateWyrePaymentMethods = async channelStore => {
   try {
     if (!channelStore.authenticated) {
       const seed = (await requestSeeds())[WYRE_SERVICE];
-      if (seed == null) throw new Error('No Wyre seed present');
+      if (seed == null) throw new Error('No Wyre recovery secret present');
       await WyreProvider.authenticate(seed);
     }
 
@@ -77,7 +77,7 @@ export const updateWyreTransfers = async channelStore => {
   try {
     if (!channelStore.authenticated) {
       const seed = (await requestSeeds())[WYRE_SERVICE];
-      if (seed == null) throw new Error('No Wyre seed present');
+      if (seed == null) throw new Error('No Wyre recovery secret present');
       await WyreProvider.authenticate(seed);
     }
 

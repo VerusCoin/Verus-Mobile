@@ -70,11 +70,6 @@ export default styles = StyleSheet.create({
     borderTopColor: '#E8E8E8',
   },
   detailRowPressable: {},
-  detailRowWarning: {
-    backgroundColor: '#FFF3E0',
-    borderLeftWidth: 3,
-    borderLeftColor: '#E65100',
-  },
   detailLeft: {
     flex: 1,
     marginRight: 12,
@@ -318,7 +313,7 @@ export default styles = StyleSheet.create({
   },
   identitySelectName: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#666',
   },
   identitySelectNameSelected: {

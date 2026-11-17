@@ -33,6 +33,7 @@ import {
   SET_USER_COINS,
   SET_BALANCES,
   SET_BALANCE_SHOW,
+  SET_BALANCE_VISIBILITY,
   SET_ONE_BALANCE,
   SET_TRANSACTIONS,
   //SET_INTERVAL_ID,
@@ -71,7 +72,8 @@ import {
   SET_ETH_TX_RECEIPTS,
   ADD_ETH_TX_RECEIPT,
   SET_COIN_SUB_WALLET,
-  DISABLE_SELECT_DEFAULT_ACCOUNT,
+  SET_CARD_STACK_PREFERENCES,
+  TOGGLE_COIN_CARD_PIN,
   ADD_GOOD_SERVER,
   ADD_BAD_SERVER,
   SET_SECURE_LOADING_SUCCESS_DATA,
@@ -95,11 +97,6 @@ export const setAccounts = (accounts) => {
 //Reducer Name: authentication
 export const signIntoAuthenticatedAccount = () => {
   return { type: SIGN_IN_USER }
-}
-
-//Reducer Name: authentication
-export const disableSelectDefaultAccount = () => {
-  return { type: DISABLE_SELECT_DEFAULT_ACCOUNT }
 }
 
 //Reducer Name: authentication
@@ -285,6 +282,12 @@ export const setBalanceShow = () => {
   }
 }
 
+// Apply the phone's saved choice without toggling or writing it back.
+export const setBalanceVisibility = (showBalance) => ({
+  type: SET_BALANCE_VISIBILITY,
+  showBalance,
+});
+
 //Reducer name: ledger
 export const setOneBalance = (coinId, balance) => {
   return {
@@ -412,15 +415,26 @@ export const setActiveOverviewFilter = (chainTicker, filterType) => {
   }
 }
 
-export const setCoinSubWallet = (chainTicker, subWallet) => {
+export const setCoinSubWallet = (chainTicker, subWallet, userSelected = false) => {
   return {
     type: SET_COIN_SUB_WALLET,
     payload: {
       chainTicker,
-      subWallet
+      subWallet,
+      userSelected,
     }
   }
 }
+
+export const setCardStackPreferences = (accountHash, coinId, preferences) => ({
+  type: SET_CARD_STACK_PREFERENCES,
+  payload: {accountHash, coinId, preferences},
+});
+
+export const toggleCoinCardPin = (chainTicker, cardId, compact) => ({
+  type: TOGGLE_COIN_CARD_PIN,
+  payload: {chainTicker, cardId, compact},
+});
 
 //Reducer name: buySellCrypto
 export const setActiveSectionBuySellCrypto = (activeSection) => {

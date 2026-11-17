@@ -11,6 +11,8 @@ import { removeSpaces } from "../stringUtils";
 import { CoinDirectory } from "../CoinData/CoinDirectory";
 import { toLowerCaseCLocale } from "verus-typescript-primitives";
 
+export const ASSET_NOT_ACTIVE = 'ASSET_NOT_ACTIVE';
+
 class QrScanner {
   constructor() {}
 
@@ -97,9 +99,14 @@ class QrScanner {
             systemId
           );
         } else {
-          throw new Error(
+          const notActive = new Error(
             `This invoice is requesting funds in ${coinTicker}. Activate ${coinTicker} and re-scan to continue.`
           );
+          // The Scan tab offers to add the asset and continue.
+          notActive.code = ASSET_NOT_ACTIVE;
+          notActive.coinId = coinTicker;
+          notActive.amount = amount == null || !amount.isGreaterThan(0) ? null : amount.toFixed();
+          throw notActive;
         }
       } else {
         //TODO: Handle adding coin that doesn't exist yet in wallet here

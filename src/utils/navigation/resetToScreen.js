@@ -6,6 +6,6 @@ export const resetToScreen = (navigation, route, title, data, fullReset) => {
     : {index: 1, routes: [{name: 'Home'}, {name: route, params: {title, data}}]},
   );
 
-  navigation.closeDrawer();
+  if (navigation.closeDrawer) navigation.closeDrawer();
   navigation.dispatch(resetAction);
 };

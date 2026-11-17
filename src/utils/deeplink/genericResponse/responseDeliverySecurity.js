@@ -4,6 +4,11 @@ import {
 import {URL} from 'react-native-url-polyfill';
 import {ALLOW_HTTP_GENERIC_RESPONSE_POSTS} from '../../../../env/index';
 
+// HTTP response POSTs are a local development aid. Release builds always
+// require HTTPS, even when the env flag is left on.
+const ALLOW_HTTP_RESPONSE_POSTS =
+  __DEV__ && ALLOW_HTTP_GENERIC_RESPONSE_POSTS === true;
+
 const responsePostUriError = message => {
   const error = new Error(message);
   error.isResponsePostError = true;
@@ -27,7 +32,7 @@ export const assertNoPlaintextAppEncryptionResponse = response => {
 
 export const assertSecurePostResponseUri = (
   uriString,
-  allowHttp = ALLOW_HTTP_GENERIC_RESPONSE_POSTS,
+  allowHttp = ALLOW_HTTP_RESPONSE_POSTS,
 ) => {
   let url;
 

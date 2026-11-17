@@ -1,247 +1,162 @@
 /*
-  IdentityUpdateRequestInfo.styles 
-  - Shared layout and card styles for the identity update request flow.
+  IdentityUpdateRequestInfo.styles
+  - Theme-aware layout styles for the identity update request flow.
 */
-import { StyleSheet } from 'react-native';
-import Colors from '../../globals/colors';
+import {Platform, StyleSheet} from 'react-native';
+import {fontStyle} from '../../globals/fonts';
 
-// keep the stepper screen styling separate from the request parsing logic.
-export default StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-  header: {
-    marginBottom: 20,
-    marginTop: 8,
-  },
-  mainTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    letterSpacing: -0.2,
-    color: '#1A1A1A',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  requesterCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 0,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-    zIndex: 2,
-  },
-  requesterHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  requesterIconContainer: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  requesterTextContainer: {
-    flex: 1,
-  },
-  requesterLabel: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  requesterName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1A1A1A',
-  },
-  requesterDetailsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  chipContainer: {
-    backgroundColor: '#F5F5F5',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  expiryChip: {
-    backgroundColor: '#FFF7ED',
-    borderColor: '#FED7AA',
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  chipText: {
-    fontSize: 11,
-    color: '#666',
-    fontWeight: '600',
-  },
-  unsignedCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 0,
-    borderWidth: 1,
-    borderColor: '#FED7AA',
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    zIndex: 2,
-  },
-  targetCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-    zIndex: 2,
-  },
-  targetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  targetIconContainer: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  targetInfo: {
-    flex: 1,
-  },
-  targetLabel: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  targetName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#1A1A1A',
-  },
-  summaryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-  },
-  summaryTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1A1A',
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    gap: 24,
-    marginTop: 12,
-  },
-  summaryItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  summaryCount: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1A1A1A',
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  sectionHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    marginLeft: 8,
-  },
-  sectionContent: {
-    padding: 0,
-  },
-  footer: {
-    backgroundColor: 'white',
-    width: '100%',
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
-  },
-  ctaCol: {
-    flex: 1,
-    minWidth: 0,
-  },
-  secondaryCta: {
-    width: '100%',
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#EBF6FF',
-    borderWidth: 0,
-    elevation: 0,
-    shadowColor: 'transparent',
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  secondaryCtaContent: {
-    height: 44,
-  },
-  secondaryCtaLabel: {
-    color: Colors.primaryColor,
-    fontWeight: '700',
-    fontSize: 16,
-    letterSpacing: 0,
-    textTransform: 'none',
-  },
-  primaryCta: {
-    width: '100%',
-    alignSelf: 'stretch',
-    height: 44,
-    borderRadius: 22,
-  },
+const monospaceFont = Platform.select({
+  ios: 'Menlo',
+  android: 'monospace',
+  default: 'monospace',
 });
+
+const createIdentityUpdateRequestInfoStyles = theme =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    stepHeader: {
+      height: 44,
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: 0,
+      paddingBottom: 0,
+      backgroundColor: theme.colors.background,
+    },
+    backButton: {
+      width: 44,
+      height: 44,
+      marginLeft: -8,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.md,
+      paddingBottom: theme.spacing.xl,
+    },
+    header: {
+      marginBottom: 28,
+    },
+    subtitle: {
+      color: theme.colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+      letterSpacing: 0,
+      marginTop: 8,
+      ...fontStyle('regular'),
+    },
+    footer: {
+      backgroundColor: theme.colors.background,
+      paddingTop: theme.spacing.sm,
+    },
+    footerDetailsList: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.colors.border,
+      marginBottom: 24,
+    },
+    footerDetailRow: {
+      minWidth: 0,
+      minHeight: 45,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    footerDetailRowDivider: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.colors.border,
+    },
+    footerDetailLabel: {
+      ...theme.typography.bodySm,
+      color: theme.colors.textSecondary,
+      marginRight: 12,
+      minWidth: 112,
+      ...fontStyle('regular'),
+    },
+    footerDetailValue: {
+      flex: 1,
+      minWidth: 0,
+      color: theme.colors.textPrimary,
+      fontSize: 13,
+      lineHeight: 18,
+      letterSpacing: 0,
+      textAlign: 'right',
+      ...fontStyle('semiBold'),
+    },
+    footerChangeValueStack: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: 'stretch',
+      gap: 3,
+    },
+    footerStackedDetailValue: {
+      color: theme.colors.textPrimary,
+      fontSize: 13,
+      lineHeight: 18,
+      letterSpacing: 0,
+      textAlign: 'right',
+      ...fontStyle('semiBold'),
+    },
+    footerDetailValueDanger: {
+      color: theme.colors.dangerText,
+    },
+    rawDataSheetContent: {
+      flexShrink: 1,
+      minHeight: 0,
+      paddingHorizontal: theme.spacing.sheetPadding,
+      paddingTop: 22,
+      paddingBottom: theme.spacing.sheetPadding,
+    },
+    rawDataSheetTitle: {
+      color: theme.colors.textPrimary,
+      fontSize: 21,
+      lineHeight: 27,
+      letterSpacing: 0,
+      ...fontStyle('semiBold'),
+    },
+    rawDataSheetHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 18,
+      marginBottom: 8,
+    },
+    rawDataSheetLabel: {
+      color: theme.colors.textSubtle,
+      fontSize: 13,
+      lineHeight: 18,
+      letterSpacing: 0,
+      ...fontStyle('semiBold'),
+    },
+    rawDataSheetCopyButton: {
+      marginRight: -10,
+    },
+    rawDataSheetScroll: {
+      flexShrink: 1,
+      minHeight: 0,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.colors.border,
+      borderRadius: theme.rounded.md,
+      backgroundColor: theme.colors.surfaceRaised,
+    },
+    rawDataSheetScrollContent: {
+      padding: 12,
+    },
+    rawDataSheetValue: {
+      color: theme.colors.textPrimary,
+      fontSize: 13,
+      lineHeight: 19,
+      letterSpacing: 0,
+      fontFamily: monospaceFont,
+      fontWeight: Platform.OS === 'ios' ? '500' : 'normal',
+    },
+    rawDataSheetDone: {
+      marginTop: 22,
+    },
+  });
+
+export default createIdentityUpdateRequestInfoStyles;

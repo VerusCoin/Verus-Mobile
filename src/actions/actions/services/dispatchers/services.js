@@ -133,6 +133,28 @@ export const modifyServiceStoredDataForUser = async (
   });
 };
 
+// Remove one migrated service entry without decrypting unrelated entries.
+// Use the existing service queue so concurrent service writes cannot restore it.
+export const removeServiceStoredDataForUser = (service, accountHash, requestContext) => {
+  const sessionScope = getOriginatingSessionScope(accountHash, requestContext);
+  if (sessionScope.accountHash !== accountHash) {
+    throw new Error("Service data account does not match its originating session.");
+  }
+  assertOriginatingSessionCurrent(sessionScope, requestContext);
+  return queueServiceStorageWrite(async () => {
+    assertOriginatingSessionCurrent(sessionScope, requestContext);
+    const stored = {...(await loadServiceStoredDataForUser(accountHash))};
+    assertOriginatingSessionCurrent(sessionScope, requestContext);
+    if (!Object.prototype.hasOwnProperty.call(stored, service)) return;
+    delete stored[service];
+    await saveEncryptedServiceStoredDataForUser(stored, accountHash, {
+      ...requestContext,
+      sessionScope,
+    });
+    assertOriginatingSessionCurrent(sessionScope, requestContext);
+  });
+};
+
 export const resetServicesStoredEncryptionForUser = async (
   accountHash,
   oldPwd

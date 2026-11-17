@@ -1,3 +1,6 @@
+import {deleteBalanceRecord} from '../../utils/portfolioHistory/balanceRecord';
+import {deleteAssetDiscoveryCache} from '../../utils/assets/assetDiscoveryCache';
+import {deleteAssetChoices} from '../../utils/assets/assetChoicesStorage';
 import {
   setAccounts,
   signOut,
@@ -16,6 +19,7 @@ import {
   setUserDisabledServices,
   setUserTestnetOverrides,
   setUserHideSeedWarnings,
+  setUserWalletAvatar,
   updateUsers,
 } from '../../utils/asyncStore/asyncStore';
 import {deriveKeyPair} from '../../utils/keys';
@@ -41,6 +45,7 @@ import {
   SET_ACCOUNTS,
   UPDATE_ACCOUNT_DISABLED_SERVICES,
   UPDATE_ACCOUNT_TESTNET_OVERRIDES,
+  UPDATE_ACCOUNT_WALLET_AVATAR,
 } from '../../utils/constants/storeType';
 import {removeExistingCoin} from './coins/Coins';
 import {
@@ -53,6 +58,7 @@ import {
   clearActiveAccountLifecycles,
 } from './account/dispatchers/account';
 import {WYRE_SERVICE_ID} from '../../utils/constants/services';
+import {normalizeWalletAvatar} from '../../utils/walletAvatar';
 import store from '../../store';
 import {
   captureSessionScope,
@@ -91,6 +97,7 @@ export const addUser = async (
   keyDerivationVersion = KEY_DERIVATION_VERSION,
   disabledServices = SERVICES_DISABLED_DEFAULT,
   testnetOverrides = {},
+  walletAvatar = null,
 ) => {
   const sessionScope = captureSessionScope(store.getState());
   const res = await storeUser(
@@ -102,6 +109,7 @@ export const addUser = async (
       keyDerivationVersion,
       disabledServices,
       testnetOverrides,
+      walletAvatar,
     },
     users,
   )
@@ -191,6 +199,26 @@ export const setHideSeedWarnings = (accountHash, hideSeedWarnings) => {
       })
       .catch(err => reject(err));
   });
+};
+
+export const setWalletAvatar = async (accountHash, walletAvatar) => {
+  const sessionScope = captureSessionScope(store.getState(), accountHash);
+  const normalizedAvatar = normalizeWalletAvatar(walletAvatar);
+
+  if (normalizedAvatar == null) {
+    throw new Error('Invalid wallet appearance');
+  }
+
+  const accounts = await setUserWalletAvatar(accountHash, normalizedAvatar);
+
+  return scopeSessionAction({
+    type: UPDATE_ACCOUNT_WALLET_AVATAR,
+    payload: {
+      accountHash,
+      accounts,
+      walletAvatar: normalizedAvatar,
+    },
+  }, sessionScope);
 };
 
 // Requires user to logout and log back in
@@ -316,6 +344,21 @@ export const deleteProfile = async (account, dispatch) => {
 
     if (!teardownError) {
       const remainingAccounts = await deleteUser(account.accountHash);
+      try {
+        await deleteBalanceRecord(account.accountHash);
+      } catch (error) {
+        console.warn('Could not delete the local portfolio record.', error);
+      }
+      try {
+        await deleteAssetDiscoveryCache(account.accountHash);
+      } catch (error) {
+        console.warn('Could not delete the found-assets cache.', error);
+      }
+      try {
+        await deleteAssetChoices(account.accountHash);
+      } catch (error) {
+        console.warn('Could not delete the local asset choices.', error);
+      }
 
       try {
         dispatchForAccount(setAccounts(remainingAccounts));
@@ -374,7 +417,7 @@ export const fetchUsers = async () => {
           !value.testnetOverrides.hasOwnProperty('ETH'),
       )
     ) {
-      console.warn('Updating testnet profile to account for goerli ETH');
+      console.warn('Updating testnet profile to account for testnet ETH');
 
       nextUsers = nextUsers.map(user => {
         if (
@@ -433,11 +476,11 @@ export const authenticateAccount = async (
                       ? ELECTRUM
                       : channel;
 
-                  if (seeds[seedChannel] == null) throw new Error('No seed for channel ' + seedChannel);
+                  if (seeds[seedChannel] == null) throw new Error('No recovery secret for channel ' + seedChannel);
 
                   const decryptedSeed = decryptkey(password, seeds[seedChannel]);
 
-                  if (!decryptedSeed) throw new Error('Failed to decrypt seed for channel ' + seedChannel);
+                  if (!decryptedSeed) throw new Error('Failed to decrypt recovery secret for channel ' + seedChannel);
 
                   const keyObj = await deriveKeyPair(
                     decryptedSeed,
@@ -471,31 +514,36 @@ export const authenticateAccount = async (
           }
         }
 
+        const walletAvatar = normalizeWalletAvatar(account.walletAvatar);
         const activeAccount = {
-              id: account.id,
-              accountHash: account.accountHash
-                ? account.accountHash
-                : hashAccountId(account.id),
-              seeds,
-              keys: _keys,
-              paymentMethods: {},
-              biometry: account.biometry ? true : false,
-              hideSeedWarnings: !!(account.hideSeedWarnings),
-              keyDerivationVersion:
-                account.keyDerivationVersion == null
-                  ? 0
-                  : account.keyDerivationVersion,
-              disabledServices:
-                account.disabledServices == null
-                  ? account.encryptedKeys && account.encryptedKeys[WYRE_SERVICE]
-                    ? {}
-                    : {[WYRE_SERVICE_ID]: true}
-                  : account.disabledServices,
-              testnetOverrides:
-                account.testnetOverrides == null
-                  ? {}
-                  : account.testnetOverrides,
-            };
+          id: account.id,
+          accountHash: account.accountHash
+            ? account.accountHash
+            : hashAccountId(account.id),
+          seeds,
+          keys: _keys,
+          paymentMethods: {},
+          biometry: account.biometry ? true : false,
+          hideSeedWarnings: !!(account.hideSeedWarnings),
+          keyDerivationVersion:
+            account.keyDerivationVersion == null
+              ? 0
+              : account.keyDerivationVersion,
+          disabledServices:
+            account.disabledServices == null
+              ? account.encryptedKeys && account.encryptedKeys[WYRE_SERVICE]
+                ? {}
+                : {[WYRE_SERVICE_ID]: true}
+              : account.disabledServices,
+          testnetOverrides:
+            account.testnetOverrides == null
+              ? {}
+              : account.testnetOverrides,
+        };
+
+        if (walletAvatar != null) {
+          activeAccount.walletAvatar = walletAvatar;
+        }
 
         let sessionKey = null;
         let sessionCredentialMutationStarted = false;
@@ -528,9 +576,10 @@ export const validateLogin = (
   account,
   password,
   deferSessionInitialization = false,
+  alertOnFail = true,
 ) => {
   return new Promise((resolve, reject) => {
-    checkPinForUser(password, account.id, true, true)
+    checkPinForUser(password, account.id, alertOnFail, true)
       .then(() => {
         return authenticateAccount(
           account,
@@ -543,7 +592,9 @@ export const validateLogin = (
       })
       .catch(err => {
         reject(err);
-        console.warn(err);
+        if (alertOnFail || !err || err.message !== 'Incorrect password') {
+          console.warn(err);
+        }
       });
   });
 };
@@ -571,7 +622,7 @@ export const addKeypairs = async (
       ? accountSeeds[seedType]
       : accountSeeds[ELECTRUM];
 
-    if (!seed) throw new Error('No seed found for account');
+    if (!seed) throw new Error('No recovery secret found for account');
     
     if (
       (coinObj.compatible_channels.includes(seedType) &&

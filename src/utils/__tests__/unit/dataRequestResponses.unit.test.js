@@ -2,6 +2,7 @@ const mockRequestPrivKey = jest.fn();
 const mockInitEndpoint = jest.fn();
 const mockGetCurrentHeight = jest.fn();
 const mockSignHash = jest.fn();
+const mockGetIdentity = jest.fn();
 const mockEncryptData = jest.fn();
 
 jest.mock('../../auth/authBox', () => ({
@@ -14,6 +15,7 @@ jest.mock('../../vrpc/vrpcInterface', () => ({
     initEndpoint: mockInitEndpoint,
     getVerusIdInterface: () => ({
       getCurrentHeight: mockGetCurrentHeight,
+      interface: {getIdentity: mockGetIdentity},
       signHash: mockSignHash,
     }),
   },
@@ -62,6 +64,9 @@ describe('generic data request response builders', () => {
     jest.clearAllMocks();
     mockRequestPrivKey.mockResolvedValue('primary-wif');
     mockGetCurrentHeight.mockResolvedValue(SIGNATURE_HEIGHT);
+    mockGetIdentity.mockImplementation(identityaddress => Promise.resolve({
+      result: {status: 'active', identity: {identityaddress}},
+    }));
     mockSignHash.mockResolvedValue(Buffer.from('signature').toString('base64'));
     mockEncryptData.mockImplementation(async (_, plaintextHex) => ({
       encryptedData: Buffer.alloc(Buffer.from(plaintextHex, 'hex').length + 16, 0xab).toString('hex'),
@@ -181,7 +186,7 @@ describe('generic data request response builders', () => {
         IDENTITY_ID,
         signatureData.getIdentityHash({version: 2, hash_type: 5, height: SIGNATURE_HEIGHT}),
         'primary-wif',
-        undefined,
+        {status: 'active', identity: {identityaddress: IDENTITY_ID}},
         SIGNATURE_HEIGHT,
         SYSTEM_ID,
       );

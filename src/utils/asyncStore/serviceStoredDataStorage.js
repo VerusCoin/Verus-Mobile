@@ -1,6 +1,7 @@
 import { SERVICE_STORAGE_INTERNAL_KEY } from "../../../env/index";
 import {
   GIFT_CARD_SERVICE_ID,
+  ADDRESS_BOOK_SERVICE_ID,
   VERUSID_SERVICE_ID,
   WYRE_SERVICE_ID,
 } from "../constants/services";
@@ -69,6 +70,7 @@ export const loadServiceStoredDataForUser = async (accountHash) => {
       [WYRE_SERVICE_ID]: null,
       [VERUSID_SERVICE_ID]: null,
       [GIFT_CARD_SERVICE_ID]: null,
+      [ADDRESS_BOOK_SERVICE_ID]: null,
     };
   else return allStoredData[accountHash];
 };

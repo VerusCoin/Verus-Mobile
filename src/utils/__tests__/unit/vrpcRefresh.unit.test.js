@@ -87,6 +87,9 @@ describe('planned VRPC refresh reads', () => {
   it('starts one requestMany per system after planning every coin and address', async () => {
     const requestMany = jest.fn(async requests => requests.map(responseFor));
     mockGetEndpoint.mockReturnValue({requestMany});
+    // A listed mempool makes the balance read both answers again, uncached.
+    getAddressBalances.mockImplementation(async () => responseFor({cmd: 'getaddressbalance'}));
+    getAddressMempool.mockImplementation(async () => responseFor({cmd: 'getaddressmempool'}));
     const channels = [firstChannel, secondChannel, 'electrum'];
     const refresh = createVrpcRefresh([
       job(API_GET_BALANCES, channels),
@@ -113,7 +116,7 @@ describe('planned VRPC refresh reads', () => {
     expect(requestMany).toHaveBeenCalledTimes(1);
     const requests = requestMany.mock.calls[0][0];
     expect(requests.map(request => request.cmd)).toEqual([
-      'getaddressbalance', 'getaddressbalance',
+      'getaddressbalance', 'getaddressmempool', 'getaddressbalance', 'getaddressmempool',
       'getaddressdeltas', 'getinfo', 'getaddressmempool',
       'getaddressdeltas', 'getaddressmempool',
     ]);
@@ -122,7 +125,7 @@ describe('planned VRPC refresh reads', () => {
       [{addresses: ['first'], friendlynames: true, verbosity: 1}],
       [{addresses: ['second'], friendlynames: true, verbosity: 1}],
     ]);
-    expect((await balance).body.total).toBe('2');
+    expect((await balance).body.total).toBe('3');
     expect((await transactions).body.map(delta => [delta.txid, delta.amount])).toEqual([
       ['pending', '3'], ['confirmed', '7'],
     ]);
@@ -131,6 +134,9 @@ describe('planned VRPC refresh reads', () => {
   it('shares raw results across currencies without changing per-currency formatting', async () => {
     const requestMany = jest.fn(async requests => requests.map(responseFor));
     mockGetEndpoint.mockReturnValue({requestMany});
+    // A listed mempool makes the balance read both answers again, uncached.
+    getAddressBalances.mockImplementation(async () => responseFor({cmd: 'getaddressbalance'}));
+    getAddressMempool.mockImplementation(async () => responseFor({cmd: 'getaddressmempool'}));
     const refresh = createVrpcRefresh([
       job(API_GET_BALANCES), job(API_GET_TRANSACTIONS),
       job(API_GET_BALANCES, [firstChannel], tokenCoin),
@@ -145,9 +151,9 @@ describe('planned VRPC refresh reads', () => {
       updateVrpcTransactions(tokenCoin, firstChannel, {vrpcRefresh: refresh}),
     ]);
 
-    expect(requestMany.mock.calls[0][0]).toHaveLength(4);
-    expect(nativeBalance.body.total).toBe('2');
-    expect(tokenBalance.body.total).toBe('12.5');
+    expect(requestMany.mock.calls[0][0]).toHaveLength(5);
+    expect(nativeBalance.body.total).toBe('3');
+    expect(tokenBalance.body.total).toBe('15.5');
     expect(nativeTxs.body.map(delta => delta.amount)).toEqual(['1', '2']);
     expect(tokenTxs.body.map(delta => delta.amount)).toEqual(['3', '7']);
     expect(tokenTxs.body[0]).toMatchObject({mempool: true, height: 100});
@@ -261,7 +267,6 @@ describe('standalone VRPC transaction reads', () => {
     expect(body.map(({txid, amount, detail, mempool}) => ({txid, amount, detail, mempool})))
       .toEqual([
         {txid: 'change', amount: '-2', detail: 'last', mempool: true},
-        {txid: 'shared', amount: '2', detail: 'pending', mempool: true},
         {txid: 'shared', amount: '1', detail: 'confirmed', mempool: undefined},
       ]);
   });

@@ -19,11 +19,13 @@ export const getErc20Balance = async (address, contract) => {
 }
 
 export const getStandardErc20Balance = async (address, contractAddress, decimals = ETHERS, network = 'homestead') => {
-  return BigNumber(
-    ethers.formatUnits(
-      await getErc20Balance(
-        address,
-        getWeb3ProviderForNetwork(network).getContract(contractAddress, [
+  const web3 = getWeb3ProviderForNetwork(network)
+  let balance
+
+  try {
+    balance = await getErc20Balance(
+      address,
+      web3.getContract(contractAddress, [
           {
             "constant":true,
             "inputs":[{"name":"_owner","type":"address"}],
@@ -32,8 +34,12 @@ export const getStandardErc20Balance = async (address, contractAddress, decimals
             "type":"function"
           }
         ])
-      ),
-      decimals
     )
-  );
+  } catch (error) {
+    // See Web3Interface.renewDefaultProvider.
+    web3.renewDefaultProvider()
+    throw error
+  }
+
+  return BigNumber(ethers.formatUnits(balance, decimals));
 };

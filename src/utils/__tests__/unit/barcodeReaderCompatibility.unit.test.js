@@ -1,3 +1,4 @@
+jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 jest.mock('react-native-vision-camera', () => ({
   Camera: 'Camera',
   useCameraDevice: jest.fn(() => ({id: 'back-camera', position: 'back'})),
@@ -12,10 +13,7 @@ jest.mock('react-native-permissions', () => ({
   PERMISSIONS: {IOS: {CAMERA: 'ios.camera'}, ANDROID: {CAMERA: 'android.camera'}},
 }));
 jest.mock('react-native-paper', () => ({Text: 'Text', Button: 'Button'}));
-jest.mock('react-native-barcode-mask', () => 'BarcodeMask');
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
-jest.mock('../../../styles', () => ({}));
-jest.mock('../../../components/AnimatedActivityIndicator', () => 'ActivityIndicator');
 jest.mock('../../haptics/haptics', () => ({triggerHapticSuccess: jest.fn()}));
 
 const React = require('react');
@@ -23,6 +21,8 @@ const {act, create} = require('react-test-renderer');
 const {AppState, Platform} = require('react-native');
 const {check, request, openSettings, RESULTS, PERMISSIONS} = require('react-native-permissions');
 const {triggerHapticSuccess} = require('../../haptics/haptics');
+// The reader picks its permission once, when its module loads.
+Platform.OS = 'android';
 const BarcodeReader = require('../../../components/BarcodeReader/BarcodeReader').default;
 
 describe('QR camera on VisionCamera 4', () => {
@@ -76,11 +76,22 @@ describe('QR camera on VisionCamera 4', () => {
     });
     expect(onScan).toHaveBeenCalledWith(codes);
     expect(triggerHapticSuccess).toHaveBeenCalledTimes(1);
-    expect(renderer.root.findAllByType('Camera')).toHaveLength(0);
-    expect(renderer.root.findAllByType('ActivityIndicator')).toHaveLength(1);
+    // The camera stays in its window; a second code is ignored while the first is handled.
+    await act(async () => {
+      camera.props.codeScanner.onCodeScanned(codes, {width: 1280, height: 720});
+    });
+    expect(onScan).toHaveBeenCalledTimes(1);
+    expect(triggerHapticSuccess).toHaveBeenCalledTimes(1);
+    const text = () => renderer.root.findAllByType('Text').map(node => node.children.join('')).join(' ');
+    expect(text()).toContain('Reading code…');
 
     await act(async () => { finishScan(); });
+    expect(text()).not.toContain('Reading code…');
     expect(renderer.root.findByType('Camera').props.isActive).toBe(true);
+    await act(async () => {
+      renderer.root.findByType('Camera').props.codeScanner.onCodeScanned(codes, {width: 1280, height: 720});
+    });
+    expect(onScan).toHaveBeenCalledTimes(2);
   });
 
   it('deactivates the camera in the background and when the screen disables scanning', async () => {
@@ -90,10 +101,8 @@ describe('QR camera on VisionCamera 4', () => {
     act(() => changeAppState('active'));
     expect(renderer.root.findByType('Camera').props.isActive).toBe(true);
 
-    act(() => renderer.update(<BarcodeReader cameraDisabled />));
+    act(() => renderer.update(<BarcodeReader active={false} />));
     expect(renderer.root.findByType('Camera').props.isActive).toBe(false);
-    act(() => renderer.update(<BarcodeReader cameraOn={false} />));
-    expect(renderer.root.findAllByType('Camera')).toHaveLength(0);
 
     act(() => renderer.unmount());
     renderer = undefined;
@@ -106,7 +115,7 @@ describe('QR camera on VisionCamera 4', () => {
     expect(renderer.root.findAllByType('Camera')).toHaveLength(0);
     expect(request).not.toHaveBeenCalled();
     const settingsButton = renderer.root.findByType('Button');
-    expect(settingsButton.props.children).toBe('Configure in settings');
+    expect(settingsButton.props.children).toBe('Open Settings');
     act(() => settingsButton.props.onPress());
     expect(openSettings).toHaveBeenCalledTimes(1);
   });

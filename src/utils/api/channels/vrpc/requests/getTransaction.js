@@ -1,7 +1,12 @@
+import { GetRawTransactionRequest } from "verus-typescript-primitives";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 
-export const getTransaction = (systemId, txid, verbosity = 1) => {
-  return VrpcProvider.getEndpoint(systemId).getRawTransaction(txid, verbosity);
+export const getTransaction = (systemId, txid, verbosity = 1, fresh = false) => {
+  const endpoint = VrpcProvider.getEndpoint(systemId);
+
+  return fresh
+    ? endpoint.request(new GetRawTransactionRequest(systemId, txid, verbosity), {skipCache: true})
+    : endpoint.getRawTransaction(txid, verbosity);
 }
 
 export const waitForTransactionConfirm = (

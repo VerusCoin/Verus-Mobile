@@ -43,7 +43,7 @@ export const sendPrivateTransaction = async (coinObj, activeUser, address, amoun
     const preflight = await preflightPrivateTransaction(coinObj, activeUser, address, amount, params);
     const synchronizer = await getSynchronizerInstance(accountHash, coinId);
 
-    if (preflight.err) throw new Error(err.result)
+    if (preflight.err) throw new Error(preflight.result)
     else {
       const spendInfo: SpendInfo = {
         zatoshi: coinsToSats(BigNumber(preflight.result.value)).toString(),

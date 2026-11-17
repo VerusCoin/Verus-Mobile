@@ -6,6 +6,8 @@ import {setRequestedVerusId} from '../../../../../actions/actions/services/dispa
 import store from '../../../../../store';
 import {sessionScopeIsCurrent} from '../../../../../actions/actions/updates/sessionRequests';
 
+export const PROVISIONING_FAILED = 'PROVISIONING_FAILED';
+
 const getOriginatingContext = requestContext => {
   const sessionScope =
     requestContext?.sessionScope ||
@@ -77,7 +79,9 @@ export const handleProvisioningResponse = async (
   if (
     state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid
   ) {
-    throw new Error(error_desc);
+    // The signed answer from the provider says FAILED. Its text stays in the
+    // error for logs; the screen uses its own copy for this code.
+    throw Object.assign(new Error(error_desc), {code: PROVISIONING_FAILED});
   } else if (
     state ===
       primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGAPPROVAL

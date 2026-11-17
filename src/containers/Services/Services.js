@@ -5,7 +5,7 @@
 
 import { Component } from "react"
 import { connect } from 'react-redux'
-import { ServicesRender } from "./Services.render"
+import SignedInServicesHome from './SignedInServicesHome';
 
 class Services extends Component {
   constructor(props) {
@@ -14,7 +14,7 @@ class Services extends Component {
   }
 
   render() {
-    return ServicesRender.call(this);
+    return <SignedInServicesHome navigation={this.props.navigation} />;
   }
 }
 

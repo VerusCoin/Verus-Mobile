@@ -4,7 +4,14 @@ import BigNumber from "bignumber.js";
 
 // Gets the Ethereum balance of an address or name as a big number
 export const getEthBalance = async (address, network = 'homestead') => {
-  return await getWeb3ProviderForNetwork(network).DefaultProvider.getBalance(address)
+  const web3 = getWeb3ProviderForNetwork(network)
+
+  try {
+    return await web3.DefaultProvider.getBalance(address)
+  } catch (error) {
+    web3.renewDefaultProvider()
+    throw error
+  }
 }
 
 //TODO: Handle BigNumbers

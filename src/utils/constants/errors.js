@@ -1,3 +1,5 @@
 export const UNKNOWN_ERROR = 'UNKNOWN_ERROR'
 export const INACTIVE_COIN = 'INACTIVE_COIN'
 export const INCORRECT_PASSWORD_DELAY_ERROR_MS = 5000
+
+export const INCORRECT_PASSWORD_MESSAGE = 'Incorrect password.';

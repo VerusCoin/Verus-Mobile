@@ -122,6 +122,28 @@ export const createUpdateIdentityTx = async (
   );
 };
 
+/**
+ * Reads the fee of a funded identity update from the deltas that createUpdateIdentityTx returns.
+ * The update may only cost the fee currency. Other currencies can appear with a delta of 0, for
+ * example tokens held at the funding address that pass through to change, but a non-zero delta
+ * in another currency is an error.
+ * @param {Map<string, {isZero: () => boolean, abs: () => {toString: () => string}}>} deltas
+ * @param {string} feeCurrency The currency i-address that the fee must be paid in
+ * @returns {string} The fee in satoshis
+ */
+export const getUpdateIdentityFeeSats = (deltas, feeCurrency) => {
+  for (const [currency, delta] of deltas) {
+    if (currency !== feeCurrency && !delta.isZero()) {
+      throw new Error("Unexpected fee currency");
+    }
+  }
+
+  const feeDelta = deltas.get(feeCurrency);
+  if (feeDelta == null) throw new Error("Unknown fees");
+
+  return feeDelta.abs().toString();
+}
+
 // Gift/claim and management flows supply the funding candidates they reviewed.
 export const createUpdateIdentityTxWithUtxos = async ({
   systemId,

@@ -1,31 +1,28 @@
 import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import {useSelector} from 'react-redux';
-import {defaultHeaderOptions} from '../../../../../utils/navigation/header';
-import {IdentityRegistrationStart, IdentityRegistrationCreate, IdentityCommitmentReview, IdentityRegistrationReview, IdentityRegistrationProgress} from './RegistrationScreens';
+import {IdentityRegistrationCreate, IdentityCommitmentReview, IdentityRegistrationProgress} from './RegistrationScreens';
+import {RegistrationExitContext} from './registrationNavigation';
 
 const Stack = createStackNavigator();
 
 // A modal would reuse SendModal's short payment flow, but commit/reveal must
 // survive dismissal and block confirmation. A dedicated stack adds navigation
 // structure while making each approval and resumable entry explicit.
-// Routes contain public IDs only. Future deeplinks can open Start with coinId,
+// Routes contain public IDs only. Future deeplinks can open Create with coinId,
 // or Progress with jobId, and must still pass both separate payment approvals.
-export default function IdentityRegistrationNavigator() {
+export default function IdentityRegistrationNavigator({navigation, route}) {
   const sessionKey = useSelector(state => `${state.authentication.activeAccount?.accountHash}:${state.authentication.sessionEpoch || 0}`);
   return (
-    <Stack.Navigator key={sessionKey} screenOptions={props => ({
-      ...defaultHeaderOptions(props),
-      headerStyle: {backgroundColor: '#fff'},
-      headerTitleStyle: {fontSize: 17, fontWeight: '600', color: '#172033'},
-      headerTintColor: '#3165d4', headerShadowVisible: false, headerBackTitleVisible: false,
-      headerRight: () => null,
-    })}>
-      <Stack.Screen name="IdentityRegistrationStart" component={IdentityRegistrationStart} options={{title: 'VerusID'}} />
-      <Stack.Screen name="IdentityRegistrationCreate" component={IdentityRegistrationCreate} options={{title: 'New identity'}} />
-      <Stack.Screen name="IdentityCommitmentReview" component={IdentityCommitmentReview} getId={({params}) => params?.jobId} options={{title: 'Commit name'}} />
+    <RegistrationExitContext.Provider value={() => {
+      navigation.goBack();
+      if (route.params?.originTab && route.params.originTab !== 'IdentityTab') navigation.getParent()?.navigate(route.params.originTab);
+    }}>
+    <Stack.Navigator key={sessionKey} screenOptions={{headerShown: false, gestureEnabled: false}}>
+      <Stack.Screen name="IdentityRegistrationCreate" component={IdentityRegistrationCreate} options={{title: 'New VerusID'}} />
+      <Stack.Screen name="IdentityCommitmentReview" component={IdentityCommitmentReview} getId={({params}) => params?.jobId} options={{title: 'Check details'}} />
       <Stack.Screen name="IdentityRegistrationProgress" component={IdentityRegistrationProgress} getId={({params}) => params?.jobId} options={{title: 'Progress'}} />
-      <Stack.Screen name="IdentityRegistrationReview" component={IdentityRegistrationReview} getId={({params}) => params?.jobId} options={{title: 'Register identity'}} />
     </Stack.Navigator>
+    </RegistrationExitContext.Provider>
   );
 }

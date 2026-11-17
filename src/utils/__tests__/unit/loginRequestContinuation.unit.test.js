@@ -7,7 +7,7 @@ const mockAddCoin = jest.fn();
 const mockAddKeypairs = jest.fn();
 const mockCoin = {id: 'VRSC', testnet: false, compatible_channels: ['vrpc']};
 
-jest.mock('react-native', () => ({
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
   Dimensions: {get: () => ({height: 800})},
   SafeAreaView: 'SafeAreaView', ScrollView: 'ScrollView',
   TouchableOpacity: 'TouchableOpacity', View: 'View',
@@ -16,7 +16,7 @@ jest.mock('react-native-paper', () => ({
   Button: 'Button', Divider: 'Divider', Portal: 'Portal', Text: 'Text',
   List: {Item: 'ListItem', Icon: 'ListIcon'},
 }));
-jest.mock('react-redux', () => ({
+jest.mock('react-redux', () => require('../../../tests/helpers/mockReactRedux')({
   useSelector: selector => selector(mockState), useDispatch: () => mockDispatch,
 }));
 jest.mock('verusid-ts-client', () => ({
@@ -24,7 +24,6 @@ jest.mock('verusid-ts-client', () => ({
     constructor(data) { Object.assign(this, data); }
   }},
 }));
-jest.mock('../../../styles', () => ({}));
 jest.mock('../../../images/customIcons', () => ({VerusIdLogo: 'VerusIdLogo'}));
 jest.mock('../../../components/VerusIdDetailsModal/VerusIdDetailsModal', () => 'VerusIdDetailsModal');
 jest.mock('../../../components/AnimatedActivityIndicatorBox', () => 'ActivityIndicator');

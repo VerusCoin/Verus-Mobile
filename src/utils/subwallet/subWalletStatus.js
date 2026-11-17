@@ -10,7 +10,8 @@ const SUBWALLET_ACTIVITY_FUNCTIONS = {
     },
     placeholder: {
       icon: "room-service",
-      label: `To access this card, you'll need to create and verify a Wyre account under the "Services" tab`,
+      // Only a wallet that added a Wyre asset before Wyre was removed gets here.
+      label: 'Wyre is no longer available. Remove this asset in Manage assets.',
     },
   },
 };

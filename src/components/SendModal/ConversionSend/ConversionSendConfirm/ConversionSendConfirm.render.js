@@ -2,8 +2,7 @@
 
 import React from "react";
 import { ScrollView, View, TouchableOpacity } from "react-native";
-import { List, Divider, Text } from "react-native-paper";
-import Button from "../../../Button";
+import { Button, List, Divider, Text } from "react-native-paper";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 

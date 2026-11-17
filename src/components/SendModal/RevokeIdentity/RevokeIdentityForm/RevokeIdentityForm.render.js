@@ -1,46 +1,95 @@
-import React from "react";
-import { ScrollView, View, TouchableWithoutFeedback, Keyboard } from "react-native";
-import { TextInput, Paragraph } from "react-native-paper";
-import Button from "../../../Button";
-import Styles from "../../../../styles";
-import { SEND_MODAL_IDENTITY_TO_REVOKE_FIELD } from "../../../../utils/constants/sendModal";
-import Colors from "../../../../globals/colors";
+import React from 'react';
+import AppButton from '../../../AppButton';
+import RevokeRecoverFlowScaffold from '../../../../containers/RevokeRecover/RevokeRecoverFlowScaffold';
+import RevokeRecoverIdentityPickerSheet, {
+  RevokeRecoverIdentityField,
+} from '../../../../containers/RevokeRecover/RevokeRecoverIdentityPickerSheet';
+import {
+  RevokeRecoverLoadingState,
+  RevokeRecoverNotice,
+} from '../../../../containers/RevokeRecover/RevokeRecoverFlowParts';
 
-export const RevokeIdentityFormRender = ({submitData, updateSendFormData, formDataValue, networkName}) => {
+export const RevokeIdentityFormRender = ({
+  chooseCandidate,
+  chooseManualEntry,
+  formError,
+  formDataValue,
+  identityDiscovery,
+  identitySheetVisible,
+  loading,
+  manualEntry,
+  networkName,
+  onBack,
+  onCloseIdentitySheet,
+  onOpenIdentitySheet,
+  selectedCandidate,
+  submitData,
+  updateIdentity,
+}) => {
+  if (loading) {
+    return (
+      <RevokeRecoverFlowScaffold
+        backDisabled
+        contentContainerStyle={{flexGrow: 1}}
+        headerTitle="Checking VerusID"
+        showBack={false}
+        keyboardAvoiding={false}
+        onBack={onBack}
+        progress={0.68}>
+        <RevokeRecoverLoadingState
+          body="Verifying the identity, its revocation authority, and the imported signing key."
+        />
+      </RevokeRecoverFlowScaffold>
+    );
+  }
+
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <ScrollView
-        style={{
-          ...Styles.flexBackground,
-          ...Styles.fullWidth,
-        }}
-        contentContainerStyle={{
-          ...Styles.centerContainer,
-          justifyContent: "flex-start",
-        }}
-      >
-        <View style={Styles.wideBlock}>
-          <TextInput
-            returnKeyType="done"
-            label="i-Address or VerusID handle to revoke"
-            value={formDataValue}
-            mode="outlined"
-            onChangeText={(text) =>
-              updateSendFormData(SEND_MODAL_IDENTITY_TO_REVOKE_FIELD, text)
-            }
-            autoCapitalize={"none"}
-            autoCorrect={false}
-          />
-          <Paragraph style={{ color: Colors.quaternaryColor, paddingLeft: 16 }}>
-            {`${networkName} blockchain`}
-          </Paragraph>
-        </View>
-        <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
-          <Button mode="contained" onPress={submitData}>
-            Revoke
-          </Button>
-        </View>
-      </ScrollView>
-    </TouchableWithoutFeedback>
+    <RevokeRecoverFlowScaffold
+      actions={
+        <AppButton
+          disabled={!formDataValue?.trim()}
+          onPress={submitData}
+          testID="revokeRecover.identity.review">
+          Review revocation
+        </AppButton>
+      }
+      headerTitle="Revocation details"
+      onBack={onBack}
+      overlay={
+        <RevokeRecoverIdentityPickerSheet
+          candidates={identityDiscovery.candidates}
+          isRecovery={false}
+          onClose={onCloseIdentitySheet}
+          onManualEntry={chooseManualEntry}
+          onRetry={identityDiscovery.retry}
+          onSelect={chooseCandidate}
+          selectedIdentityAddress={selectedCandidate?.identityAddress}
+          status={identityDiscovery.status}
+          visible={identitySheetVisible}
+        />
+      }
+      overlayVisible={identitySheetVisible}
+      progress={0.68}>
+      <RevokeRecoverIdentityField
+        contextLabel={`Revoking on ${networkName}`}
+        candidateCount={identityDiscovery.candidates.length}
+        discoveryStatus={identityDiscovery.status}
+        errorText={formError}
+        isRecovery={false}
+        manualEntry={manualEntry}
+        networkName={networkName}
+        onChangeText={updateIdentity}
+        onChoose={onOpenIdentitySheet}
+        onRetry={identityDiscovery.retry}
+        onSubmitEditing={submitData}
+        selectedCandidate={selectedCandidate}
+        value={formDataValue || ''}
+      />
+
+      <RevokeRecoverNotice tone="danger">
+        Revocation disables the identity until its recovery authority restores
+        it. Review the exact identity and status change before submitting.
+      </RevokeRecoverNotice>
+    </RevokeRecoverFlowScaffold>
   );
 };

@@ -21,8 +21,6 @@ import {
   PROVISION_IDENTITY_SEND_MODAL,
   SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
   SEND_MODAL_USER_ALLOWLIST,
-  SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD,
-  ADD_PBAAS_CURRENCY_MODAL,
   CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
   SEND_MODAL_CONVERTTO_FIELD,
   SEND_MODAL_EXPORTTO_FIELD,
@@ -34,10 +32,7 @@ import {
   SEND_MODAL_SHOW_VIA_FIELD,
   SEND_MODAL_PRICE_ESTIMATE,
   SEND_MODAL_ADVANCED_FORM,
-  SEND_MODAL_CONTRACT_ADDRESS_FIELD,
-  ADD_ERC20_TOKEN_MODAL,
   SEND_MODAL_SHOW_MAPPING_FIELD,
-  SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH,
   SEND_MODAL_SHOW_IS_PRECONVERT,
   SEND_MODAL_DISABLED_INPUTS,
   SEND_MODAL_IDENTITY_TO_REVOKE_FIELD,
@@ -182,36 +177,6 @@ export const openRecoverIdentitySendModal = (data) => {
   );
 };
 
-export const openAddPbaasCurrencyModal = (coinObj, data) => {
-  openSendModal(
-    `Add Currency`,
-    coinObj,
-    null,
-    data == null
-      ? {
-          [SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD]: '',
-          [SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH]: false
-        }
-      : data,
-    ADD_PBAAS_CURRENCY_MODAL,
-    'To add a Public Blockchains as a Service (PBaaS) currency to your wallet, enter its name or i-Address here and press continue.',
-  );
-};
-
-export const openAddErc20TokenModal = (coinObj, data) => {
-  openSendModal(
-    `Add ERC20 Token`,
-    coinObj,
-    null,
-    data == null
-      ? {
-          [SEND_MODAL_CONTRACT_ADDRESS_FIELD]: '',
-        }
-      : data,
-    ADD_ERC20_TOKEN_MODAL,
-    'To add an ERC20 token to your wallet, enter its contract address here and press continue.',
-  );
-};
 
 export const openProvisionIdentityModal = (coinObj, reqOrData, fromService = null) => {
   const data =
@@ -244,7 +209,7 @@ export const openAuthenticateUserModal = (data, initialRouteName) => {
         }
       : data,
     AUTHENTICATE_USER_SEND_MODAL,
-    'To login, select a user profile, then enter your password.',
+    'To sign in, select a wallet, then enter its password.',
     initialRouteName
   );
 };

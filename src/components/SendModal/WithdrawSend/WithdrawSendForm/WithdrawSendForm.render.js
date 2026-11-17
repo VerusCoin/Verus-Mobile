@@ -7,8 +7,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { TextInput, Card, Title, List, Text } from "react-native-paper";
-import Button from "../../../Button";
+import { TextInput, Button, Card, Title, List, Text } from "react-native-paper";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { RenderSquareLogo } from "../../../../utils/CoinData/Graphics";

@@ -3,6 +3,8 @@ jest.mock('../../../components/Modal', () => () => null)
 jest.mock('../../../components/Alert', () => () => null)
 jest.mock('../../../components/SendModal/SendModal', () => () => null)
 jest.mock('../../../components/LoadingModal/LoadingModal', () => () => null)
+jest.mock('../../../components/StartupCover', () => () => null)
+jest.mock('../../../components/WalletUnlockCoordinator', () => () => null)
 jest.mock('../../../actions/actionCreators', () => ({
   fetchUsers: jest.fn(),
   loadServerVersions: jest.fn(),
@@ -64,11 +66,14 @@ describe('startup recovery', () => {
     const startupError = new Error('storage unavailable')
     const component = new VerusMobile({dispatch: jest.fn()})
     component.setLoading = jest.fn()
+    component.setState = jest.fn()
     jest.spyOn(Alert, 'alert').mockImplementation(() => {})
 
     await component.initializeStorage(Promise.reject(startupError))
 
-    expect(Alert.alert).toHaveBeenCalledWith('Error', startupError.message)
+    // The startup screen shows the error instead of an alert.
+    expect(component.setState).toHaveBeenCalledWith({startupError: startupError.message})
+    expect(Alert.alert).not.toHaveBeenCalled()
     expect(component.setLoading).toHaveBeenCalledWith(false)
   })
 })

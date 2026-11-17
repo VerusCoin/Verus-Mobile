@@ -1,89 +1,133 @@
-import React from 'react';
-import {View, Dimensions} from 'react-native';
-import {Text, Paragraph} from 'react-native-paper';
-import TallButton from '../../../components/LargerButton';
-import Colors from '../../../globals/colors';
+import React, {useEffect, useMemo, useState} from 'react';
+import {StatusBar, StyleSheet, useWindowDimensions, View} from 'react-native';
+import {Text} from 'react-native-paper';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import AppButton from '../../../components/AppButton';
+import SafeBottomActionStack from '../../../components/SafeBottomActionStack';
 import {VerusLogo} from '../../../images/customIcons';
-import styles from '../../../styles';
-import { SMALL_DEVICE_HEGHT } from '../../../utils/constants/constants';
-import { useState } from 'react';
-import { useEffect } from 'react';
+import WelcomeBackgroundVideo from '../../../components/WelcomeBackgroundVideo';
+import OnboardingStartSheet from './OnboardingStartSheet';
+import SignedOutNetworkSelector from '../../../components/SignedOutNetworkSelector';
 import {readDeeplinkFromNfc} from '../../../actions/actionDispatchers';
+import {
+  IMPORT_METHODS,
+  normalizeSetupSelection,
+  SETUP_PATHS,
+} from '../onboardingSetupFlow';
+import {useOnboardingTheme} from '../../../theme/onboarding';
+
+const LOGO_ASPECT_RATIO = 2084 / 7305;
+const LOGO_TOP_MARGIN = 22;
 
 export default function LandingScreen(props) {
-  const { height } = Dimensions.get('window');
+  const {width} = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const theme = useOnboardingTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const [startSheetVisible, setStartSheetVisible] = useState(false);
+  const logoWidth = width * 0.3;
+  const logoVariant = theme.isDark ? 'monochrome' : 'default';
 
-  const [normalDevice, setNormalDevice] = useState(height > SMALL_DEVICE_HEGHT ? true : false);
+  const resumePendingDeeplinkId =
+    props.route?.params?.resumePendingDeeplinkId || null;
+  const claimRequestIsTestnet =
+    props.route?.params?.claimRequestIsTestnet;
+  const openSetupSheet = props.route?.params?.openSetupSheet === true;
 
   useEffect(() => {
-    if (height > SMALL_DEVICE_HEGHT) {
-      setNormalDevice(true);
-    } else {
-      setNormalDevice(false);
+    if (!openSetupSheet) return;
+
+    if (typeof claimRequestIsTestnet === 'boolean') {
+      props.setTestProfile(claimRequestIsTestnet);
     }
-  })
+    setStartSheetVisible(true);
+  }, [claimRequestIsTestnet, openSetupSheet, props.setTestProfile]);
+
+  const handleSetupSelection = selection =>
+    props.navigation.navigate('CreateProfile', {
+      ...normalizeSetupSelection(selection),
+      resumePendingDeeplinkId,
+    });
+
+  // A wallet-backup card leads to the NFC restore instead.
+  const claimFromNfc = () =>
+    readDeeplinkFromNfc({
+      onWalletBackupDetected: () =>
+        handleSetupSelection({
+          setupPath: SETUP_PATHS.IMPORT,
+          importMethod: IMPORT_METHODS.NFC,
+        }),
+    });
 
   return (
-    <View
-      style={{
-        backgroundColor: Colors.secondaryColor,
-        ...styles.focalCenter,
-      }}>
-      <VerusLogo width={180} height={'15%'} style={{ top: 100, position: 'absolute' }}/>
-      <View style={{alignItems: 'center', position: "absolute", top: height / 2 - 40}}>
-        <Text
-          style={{
-            textAlign: 'center',
-            color: Colors.primaryColor,
-            fontSize: 28,
-            fontWeight: 'bold',
-          }}>
-          {'Welcome to Verus'}
-        </Text>
-        <Text
-          style={{
-            textAlign: 'center',
-            color: Colors.primaryColor,
-            fontSize: 20
-          }}>
-          {'Truth and Privacy for All'}
-        </Text>
-        {normalDevice ? <Paragraph
-          style={{
-            textAlign: 'center',
-            width: "60%",
-            marginTop: 24
-          }}>
-          {'The mobile wallet for Verus and its ecosystem.\nHere you can easily and securely send, receive and store VRSC, BTC, ETH and more.'}
-        </Paragraph> : null}
+    <View style={styles.container}>
+      <StatusBar
+        barStyle={theme.isDark ? 'light-content' : 'dark-content'}
+        backgroundColor="transparent"
+        translucent
+      />
+      <WelcomeBackgroundVideo />
+      <SignedOutNetworkSelector
+        testProfile={props.testProfile}
+        setTestProfile={props.setTestProfile}
+      />
+      <View
+        style={[
+          styles.logoContainer,
+          {
+            paddingTop: insets.top + LOGO_TOP_MARGIN,
+          },
+        ]}>
+        <VerusLogo
+          width={logoWidth}
+          height={logoWidth * LOGO_ASPECT_RATIO}
+          variant={logoVariant}
+        />
       </View>
-      <TallButton
-        onPress={() => props.navigation.navigate("WelcomeSlider")}
-        mode="contained"
-        labelStyle={{fontWeight: "bold"}}
-        style={{
-          position: "absolute",
-          bottom: 96,
-          width: 280
-        }}>
-        {"Get started"}
-      </TallButton>
-      <TallButton
-        onPress={() =>
-          readDeeplinkFromNfc({
-            onWalletBackupDetected: () =>
-              props.navigation.navigate("WelcomeSlider"),
-          })
-        }
-        mode="text"
-        labelStyle={{fontWeight: "bold"}}
-        style={{
-          position: "absolute",
-          bottom: 40,
-          width: 280
-        }}>
-        {"Initialize from NFC"}
-      </TallButton>
+      <View style={styles.content}>
+        <Text style={styles.headline}>
+          {'With Verus you own your identity, data, and money'}
+        </Text>
+      </View>
+      <SafeBottomActionStack>
+        <AppButton
+          onPress={() => setStartSheetVisible(true)}
+          testID="onboarding.landing.getStarted"
+          variant="primary"
+          height={56}>
+          {'Get started'}
+        </AppButton>
+      </SafeBottomActionStack>
+      <OnboardingStartSheet
+        visible={startSheetVisible}
+        onClose={() => setStartSheetVisible(false)}
+        onSelectSetup={handleSetupSelection}
+        // The sheet also opens to create a wallet for a claim in progress;
+        // reading another card is not offered then.
+        onClaimFromNfc={resumePendingDeeplinkId ? undefined : claimFromNfc}
+      />
     </View>
   );
 }
+
+const createStyles = theme => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.backgroundVideo,
+  },
+  logoContainer: {
+    paddingHorizontal: 32,
+    alignItems: 'flex-start',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingRight: 48,
+  },
+  headline: {
+    ...theme.typography.headlineMd,
+    textAlign: 'left',
+    color: theme.colors.textPrimary,
+  },
+});

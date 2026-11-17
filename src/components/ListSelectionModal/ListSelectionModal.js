@@ -5,19 +5,17 @@
 */
 
 import React, { Component } from "react";
+import AppSearchField from "../AppSearchField";
 import SemiModal from "../SemiModal";
-import { List } from "react-native-paper"
-import { TouchableOpacity, FlatList, View, TextInput as RNTextInput, KeyboardAvoidingView, Platform } from "react-native"
+import {List, withTheme} from "react-native-paper"
+import { TouchableOpacity, FlatList, View, KeyboardAvoidingView, Platform } from "react-native"
 import { listSelectionModalStyles as styles } from "../../styles";
-import Colors from "../../globals/colors";
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 class ListSelectionModal extends Component {
   constructor(props) {
     super(props);
     this.state = {
       searchQuery: '',
-      searchFocused: false,
     };
   }
 
@@ -25,9 +23,9 @@ class ListSelectionModal extends Component {
     if (
       prevProps.visible &&
       !this.props.visible &&
-      (this.state.searchQuery.length > 0 || this.state.searchFocused)
+      this.state.searchQuery.length > 0
     ) {
-      this.setState({ searchQuery: '', searchFocused: false });
+      this.setState({ searchQuery: '' });
     }
   }
 
@@ -67,9 +65,11 @@ class ListSelectionModal extends Component {
       showSearch = false,
       searchPlaceholder = "Search",
       keyExtractor,
+      themeMode,
     } = this.props;
-    const { searchQuery, searchFocused } = this.state;
+    const { searchQuery } = this.state;
     const filteredData = this.getFilteredData();
+    const {theme} = this.props;
 
     return (
       <SemiModal
@@ -96,28 +96,14 @@ class ListSelectionModal extends Component {
           <View style={styles.container}>
             {showSearch && (
               <View style={styles.searchContainer}>
-                <View
-                  style={[
-                    styles.searchInputContainer,
-                    searchFocused && styles.searchInputFocused,
-                  ]}
-                >
-                  <RNTextInput
-                    value={searchQuery}
-                    onChangeText={(text) => this.setState({ searchQuery: text })}
-                    onFocus={() => this.setState({ searchFocused: true })}
-                    onBlur={() => this.setState({ searchFocused: false })}
-                    placeholder={searchPlaceholder}
-                    placeholderTextColor="#999"
-                    autoCorrect={false}
-                    autoCapitalize="none"
-                    returnKeyType="search"
-                    style={styles.searchInput}
-                  />
-                  <View style={styles.searchIcon}>
-                    <MaterialCommunityIcons name="magnify" size={20} color="#999" />
-                  </View>
-                </View>
+                <AppSearchField
+                  accessibilityLabel={searchPlaceholder}
+                  onChangeText={(text) => this.setState({ searchQuery: text })}
+                  placeholder={searchPlaceholder}
+                  resultCount={filteredData.length}
+                  themeMode={themeMode}
+                  value={searchQuery}
+                />
               </View>
             )}
 
@@ -137,16 +123,16 @@ class ListSelectionModal extends Component {
                     <List.Item
                       title={item.title}
                       description={item.description}
-                      titleStyle={styles.itemTitle}
-                      descriptionStyle={styles.itemDescription}
+                      titleStyle={[styles.itemTitle, {color: theme.colors.text}]}
+                      descriptionStyle={[styles.itemDescription, {color: theme.colors.placeholder}]}
                       right={(props) => (
                         <List.Icon 
                           {...props} 
                           icon="check" 
-                          color={isSelected ? Colors.primaryColor : 'transparent'}
+                          color={isSelected ? theme.colors.primary : 'transparent'}
                         />
                       )}
-                      style={styles.listItem}
+                      style={[styles.listItem, {backgroundColor: theme.colors.surface}]}
                     />
                   </TouchableOpacity>
                 );
@@ -163,4 +149,4 @@ class ListSelectionModal extends Component {
   }
 }
 
-export default ListSelectionModal;
+export default withTheme(ListSelectionModal);

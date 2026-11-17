@@ -4,6 +4,7 @@ export const WYRE_SERVICE_ID = 'wyre_service'
 export const VERUSID_SERVICE_ID = 'verusid_service'
 export const PBAAS_PRECONVERT_SERVICE_ID = 'pbaas_preconvert'
 export const GIFT_CARD_SERVICE_ID = 'gift_card_service'
+export const ADDRESS_BOOK_SERVICE_ID = 'address_book_service'
 
 export const CONNECTED_SERVICE_DISPLAY_INFO = {
   [WYRE_SERVICE_ID]: {
@@ -23,6 +24,11 @@ export const CONNECTED_SERVICE_DISPLAY_INFO = {
   [GIFT_CARD_SERVICE_ID]: {
     title: "Gift Cards",
     description: "Create spendable key gift cards to share funds and VerusIDs with another wallet",
+    decentralized: true
+  },
+  [ADDRESS_BOOK_SERVICE_ID]: {
+    title: "Address Book",
+    description: "Save labeled wallet addresses for future transfers",
     decentralized: true
   }
 }

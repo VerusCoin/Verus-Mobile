@@ -52,9 +52,8 @@ class RecoverSeed extends Component {
   canShowSeed = () => {
     return AlertAsync(
       'Warning',
-      "The next screen will display your unencrypted wallet seed in plain text.\n\n" + 
-      "Be careful and take into consideration the fact that anyone with access to " + 
-      "this seed will have access to all the funds in its wallet.\n\nAre you sure you " +
+      "The next screen will display your unencrypted wallet recovery secrets and private keys in plain text.\n\n" +
+      "Anyone with access to this information can control the associated funds.\n\nAre you sure you " +
       "would like to proceed?",
       [
         {
@@ -139,12 +138,12 @@ class RecoverSeed extends Component {
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <StandardButton 
               buttonColor={Colors.warningButtonColor}
-              title="Cancel"
+              title="CANCEL" 
               onPress={this.cancel}
             />
             <StandardButton 
               color={Colors.linkButtonColor} 
-              title="Recover"
+              title="RECOVER" 
               onPress={this._handleSubmit}
             />
           </View>

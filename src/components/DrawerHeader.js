@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import Colors from '../globals/colors';
+import {fontStyle} from '../globals/fonts';
 import { CoinLogos, getCoinLogo } from '../utils/CoinData/CoinData';
 
 const VrscLogo = getCoinLogo("VRSC");
@@ -36,7 +37,7 @@ const DrawerHeader = ({ navigateToScreen }) => (
             color: "#FFF",
             paddingLeft: 22,
             fontSize: 16,
-            fontFamily: "Avenir-Black",
+            ...fontStyle('black'),
           }}
         >
           Verus Mobile

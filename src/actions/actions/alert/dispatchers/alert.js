@@ -3,7 +3,7 @@ import { triggerHaptic } from "../../../../utils/haptics/haptics"
 import getUid from '../../../../utils/uid'
 import { completeAlert, pushAlert, setActiveAlert, shiftAlerts } from "../creators/alert"
 
-export const createAlert = (title, message, buttons = [{text: "OK", onPress: () => resolveAlert(true)}], options, type) => {
+export const createAlert = (title, message, buttons = [{text: "Close", onPress: () => resolveAlert(true)}], options, type) => {
   return new Promise((resolve) => {
     const alertId = getUid()
     let opened = false

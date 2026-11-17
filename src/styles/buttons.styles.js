@@ -1,40 +1,36 @@
 import Colors from '../globals/colors';
+import {fontStyle} from '../globals/fonts';
 
 export const roundedButton = {borderRadius: 24};
 export const buttonLabel = {
-  fontSize: 16,
-  fontWeight: '700',
-  letterSpacing: 0,
-  textAlign: 'center',
-  flexShrink: 1,
+  fontSize: 16, fontWeight: '700', letterSpacing: 0,
+  textAlign: 'center', flexShrink: 1,
 };
 
-const buttons = {
-  roundedButton,
+export default buttons = {
   fullWidthButton: {
-    ...roundedButton,
     width: '100%',
     alignSelf: 'center',
     backgroundColor: Colors.linkButtonColor,
   },
   defaultButton: {
-    ...roundedButton,
     alignSelf: 'center',
     backgroundColor: Colors.linkButtonColor,
     minWidth: 104,
   },
   redButton: {
-    ...roundedButton,
     alignSelf: 'center',
     minWidth: 104,
   },
   greenButton: {
-    ...roundedButton,
     alignSelf: 'center',
     minWidth: 104,
     backgroundColor: Colors.verusGreenColor,
   },
-  fullWidthButtonTitle: buttonLabel,
+  fullWidthButtonTitle: {
+    fontSize: 16,
+    ...fontStyle('black'),
+  },
   inlineXButton: {
     marginRight: 16,
     color: Colors.warningButtonColor,
@@ -44,7 +40,7 @@ const buttons = {
     paddingVertical: 10,
     marginVertical: '2%',
     alignItems: 'center',
-    ...roundedButton,
+    borderRadius: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -60,7 +56,7 @@ const buttons = {
     backgroundColor:Colors.lightGrey,
     marginVertical: '2%',
     paddingVertical: 10,
-    ...roundedButton,
+    borderRadius: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -73,7 +69,7 @@ const buttons = {
   linkButtonWithMarginRight: {
     flexDirection: 'row',
     backgroundColor: Colors.linkButtonColor,
-    ...roundedButton,
+    borderRadius: 4,
     padding: 10,
     alignItems: 'center',
     shadowColor: '#000',
@@ -86,7 +82,7 @@ const buttons = {
   buttonWithSuccessColor: {
     backgroundColor: Colors.verusGreenColor,
     paddingHorizontal: '16%',
-    ...roundedButton,
+    borderRadius: 5,
     paddingVertical: 16,
   },
 
@@ -94,7 +90,7 @@ const buttons = {
     backgroundColor:Colors.linkButtonColor,
     marginVertical: '2%',
     paddingVertical: 10,
-    ...roundedButton,
+    borderRadius: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -114,5 +110,3 @@ const buttons = {
     opacity: 0.4,
   },
 };
-
-export default buttons;

@@ -1,0 +1,1 @@
+export default require('../../android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png');

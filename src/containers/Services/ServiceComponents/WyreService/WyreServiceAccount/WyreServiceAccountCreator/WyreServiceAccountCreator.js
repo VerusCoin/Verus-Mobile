@@ -8,15 +8,14 @@ import {
   TouchableWithoutFeedback,
   Keyboard
 } from "react-native";
-import { Text, TextInput, Portal } from 'react-native-paper'
-import Button from '../../../../../../components/Button'
+import { Text, TextInput, Portal, Button } from 'react-native-paper'
 import WyreProvider from "../../../../../../utils/services/WyreProvider";
 import Colors from "../../../../../../globals/colors";
 import { createAlert, resolveAlert } from "../../../../../../actions/actions/alert/dispatchers/alert";
 import { ISO_3166_COUNTRIES } from "../../../../../../utils/constants/iso3166";
 import ListSelectionModal from "../../../../../../components/ListSelectionModal/ListSelectionModal";
 import { expireServiceData, setServiceLoading, setWyreAccountId } from "../../../../../../actions/actionCreators";
-import {resetToScreen} from '../../../../../../utils/navigation/resetToScreen';
+import {resetToScreen} from "../../../../../../utils/navigation/resetToScreen";
 import { WYRE_INDIVIDUAL_EMAIL, WYRE_SERVICE_ID } from "../../../../../../utils/constants/services";
 import { API_GET_SERVICE_ACCOUNT } from "../../../../../../utils/constants/intervalConstants";
 import { conditionallyUpdateService, modifyPersonalDataForUser } from "../../../../../../actions/actionDispatchers";
@@ -297,7 +296,7 @@ class WyreServiceAccountCreator extends Component {
           <Text style={{ textAlign: "center", width: "75%", marginTop: 20, marginBottom: 20 }}>
             {`Your chosen country must be a residence country of yours. Countries not shown are currently not supported.`}
             <Text
-              style={{ color: Colors.primaryColor, fontWeight: "800" }}
+              style={{ color: Colors.primaryColor, fontWeight: "600" }}
               onPress={() => {
                 openUrl(this.WYRE_SUPPORTED_COUNTRIES_INFO);
               }}
@@ -309,7 +308,7 @@ class WyreServiceAccountCreator extends Component {
             disabled={this.state.email.length == 0 || this.state.country.key.length == 0}
             onPress={async () => this.tryCreateAccount()}
           >
-            {"Create account"}
+            {"Create Account"}
           </Button>
         </View>
       </TouchableWithoutFeedback>

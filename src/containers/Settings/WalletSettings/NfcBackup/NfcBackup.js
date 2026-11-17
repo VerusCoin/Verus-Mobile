@@ -1,13 +1,9 @@
 import React from 'react';
 import WalletBackupRequestInfo from '../../../DeepLink/WalletBackupRequestInfo/WalletBackupRequestInfo';
-import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 
 const NfcBackup = props => {
+  // The backup screen shows its own "Backup written" result before this runs.
   const finishBackup = async () => {
-    createAlert(
-      'Backup Complete',
-      'Your current profile seed has been written to the NFC card.',
-    );
     props.navigation.goBack();
   };
 
@@ -16,6 +12,7 @@ const NfcBackup = props => {
       cancel={() => props.navigation.goBack()}
       next={finishBackup}
       profileBackup
+      walletPasswordTypedScope={props.route?.params?.walletPasswordTypedScope}
     />
   );
 };

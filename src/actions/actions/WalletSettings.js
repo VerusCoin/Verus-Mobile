@@ -8,8 +8,16 @@ import {
   loadSettings,
   storeSettings
 } from '../../utils/asyncStore/asyncStore';
+import {
+  normalizeGeneralWalletSettings,
+  normalizeSettings,
+} from '../../utils/settings/settingsDefaults';
 import store from '../../store/index'
 //TODO: Maybe dispatch from here instead of VerusMobile main file
+
+let generalSettingsSaveQueue = Promise.resolve()
+let queuedGeneralSettingsChanges = null
+let queuedGeneralSettingsSaveCount = 0
 
 /**
  * Fetches the wallet settings state from Async Storage and returns a promise that 
@@ -19,7 +27,7 @@ export const initSettings = () => {
   return new Promise((resolve, reject) => {
     loadSettings()
     .then(res => {
-      resolve(setAllSettings(res))
+      resolve(setAllSettings(normalizeSettings(res)))
     })
     .catch(err => reject(err))
   })
@@ -31,11 +39,14 @@ export const initSettings = () => {
  * @param {Object} stateChanges State changes to be made to settings
  */
 export const saveAllSettings = (stateChanges) => {
-  const settings = {...store.getState().settings, ...stateChanges}
+  const settings = normalizeSettings({
+    ...store.getState().settings,
+    ...stateChanges,
+  })
   return new Promise((resolve, reject) => {
     storeSettings(settings)
     .then(res => {
-      resolve(setAllSettings(res))
+      resolve(setAllSettings(normalizeSettings(res)))
     })
     .catch(err => reject(err))
   })
@@ -87,14 +98,33 @@ export const saveBuySellSettings = (stateChanges, userID) => {
  * @param {Object} stateChanges Changes to be made to the general setting state,
  */
 export const saveGeneralSettings = (stateChanges) => {
-  const settingsState = store.getState().settings
-  const generalWalletSettings = {...settingsState.generalWalletSettings, ...stateChanges}
+  const pendingStateChanges = {...stateChanges}
+  queuedGeneralSettingsSaveCount += 1
 
-  return new Promise((resolve, reject) => {
-    storeSettings({...settingsState, generalWalletSettings})
-    .then(() => {
-      resolve(setGeneralWalletSettingsState(generalWalletSettings))
+  const saveOperation = generalSettingsSaveQueue.then(async () => {
+    const settingsState = store.getState().settings
+    const generalWalletSettings = normalizeGeneralWalletSettings({
+      ...settingsState.generalWalletSettings,
+      ...(queuedGeneralSettingsChanges || {}),
+      ...pendingStateChanges,
     })
-    .catch(err => reject(err))
+
+    await storeSettings({...settingsState, generalWalletSettings})
+    queuedGeneralSettingsChanges = {
+      ...(queuedGeneralSettingsChanges || {}),
+      ...pendingStateChanges,
+    }
+
+    return setGeneralWalletSettingsState(generalWalletSettings)
+  })
+
+  generalSettingsSaveQueue = saveOperation.catch(() => undefined)
+
+  return saveOperation.finally(() => {
+    queuedGeneralSettingsSaveCount -= 1
+
+    if (queuedGeneralSettingsSaveCount === 0) {
+      queuedGeneralSettingsChanges = null
+    }
   })
 }

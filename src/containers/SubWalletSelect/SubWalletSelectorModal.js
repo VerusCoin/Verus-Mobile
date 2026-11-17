@@ -96,7 +96,7 @@ const SubWalletSelectorModal = (props) => {
   };
 
   const setSubWallet = (subWallet) => {
-    dispatch(setCoinSubWallet(props.chainTicker, subWallet));
+    dispatch(setCoinSubWallet(props.chainTicker, subWallet, true));
   };
 
   const getNetworkName = (wallet) => {

@@ -193,7 +193,11 @@ export const getScopedCredentials = async ({
     throw new Error(contentRes.error.message);
   }
 
-  const contentMultiMap = contentRes.result?.identity?.contentmultimap || {};
+  if (contentRes.result?.identity == null) {
+    throw new Error('Unable to read identity credentials.');
+  }
+
+  const contentMultiMap = contentRes.result.identity.contentmultimap || {};
   const encryptedEntries = asArray(contentMultiMap[hashedKey]);
   const requestedKeys = new Set(credentialKeys || []);
   const credentials = [];
@@ -201,6 +205,9 @@ export const getScopedCredentials = async ({
   for (const entry of encryptedEntries) {
     try {
       const descriptor = getDescriptorFromStoredValue(entry);
+      if (!(descriptor instanceof DataDescriptor)) {
+        throw new Error('Invalid credential descriptor.');
+      }
       const decryptedCredentials = await decryptCredentialDescriptor(descriptor, keys.ivk);
 
       for (const credential of decryptedCredentials) {
@@ -212,8 +219,10 @@ export const getScopedCredentials = async ({
           credentials.push(credential);
         }
       }
-    } catch (e) {
-      console.warn("Unable to parse encrypted credential entry", e);
+    } catch (_) {
+      // A failed read/decryption is not evidence that a credential is absent.
+      // Do not return a silently truncated set for the user to approve.
+      throw new Error('Unable to read encrypted credentials.');
     }
   }
 

@@ -17,6 +17,7 @@ import {
   API_GET_PENDING_DEPOSITS,
   API_GET_LINKED_IDENTITIES,
   VRPC,
+  DLIGHT_PRIVATE,
 } from '../../../../utils/constants/intervalConstants'
 import {
   renewCoinData,
@@ -30,6 +31,7 @@ import { updateDepositSources } from './UpdateDepositSources'
 import { updatePendingDeposits } from './UpdatePendingDeposits'
 import { updateLinkedIdentities } from './UpdateLinkedIdentities'
 import Store from '../../../../store'
+import {retryDlightWalletInitialization} from '../../channels/dlight/dispatchers/LightWalletReduxManager';
 import {createVrpcRefresh} from '../../../../utils/vrpc/vrpcRefresh';
 import {
   captureSessionScope,
@@ -90,6 +92,9 @@ export const updateWalletData = async (
       // and timers must be stopped here before they can affect the new session.
       if (!sessionScopeIsCurrent(Store.getState(), sessionScope)) return false
 
+      // A partial read must not mark every other card fresh for this coin.
+      if (requestContext?.preserveFreshness) return true;
+
       if (state.updates.coinUpdateIntervals[chainTicker][updateId].expire_timeout !== ALWAYS_ACTIVATED) {        
         dispatch(
           scopeSessionAction(
@@ -128,10 +133,10 @@ export const updateWalletData = async (
 
 // Keep scheduling and screen refreshes subject to the same freshness, busy,
 // channel-open and screen-visibility rules before adding work to a batch.
-const eligibleChannels = (state, chainTicker, updateId) => {
+const eligibleChannels = (state, chainTicker, updateId, requestedChannels) => {
   const update = state.updates.coinUpdateTracker[chainTicker]?.[updateId];
 
-  if (!update?.needs_update) return [];
+  if (!update || (!requestedChannels && !update.needs_update)) return [];
 
   const {activeSection, activeCoin, coinMenuFocused} = state.coins;
 
@@ -147,7 +152,8 @@ const eligibleChannels = (state, chainTicker, updateId) => {
   return [...new Set(update.channels)].filter(channelId => {
     const parentChannel = channelId.split('.')[0];
 
-    return !update.busy?.[channelId] &&
+    return (!requestedChannels || requestedChannels.includes(channelId)) &&
+      !update.busy?.[channelId] &&
       state[`channelStore_${parentChannel}`]?.openCoinChannels[chainTicker];
   });
 };
@@ -164,6 +170,17 @@ export const conditionallyUpdateWallets = async (state, dispatch, updates) => {
 
   if (!isCurrent()) return updates.map(() => API_ABORTED);
 
+  for (const {chainTicker, updateId} of updates) {
+    if (updateId !== API_GET_INFO) continue;
+    const channels = state.updates.coinUpdateTracker[chainTicker]?.[updateId]?.channels;
+    const coin = state.coins.activeCoinsForUser.find(item => item.id === chainTicker);
+    if (coin && channels?.includes(DLIGHT_PRIVATE)) {
+      await retryDlightWalletInitialization(coin, sessionScope);
+      if (!isCurrent()) return updates.map(() => API_ABORTED);
+      state = Store.getState();
+    }
+  }
+
   const jobs = new Map();
   const keyFor = ({chainTicker, updateId}) => `${chainTicker}:${updateId}`;
 
@@ -171,10 +188,10 @@ export const conditionallyUpdateWallets = async (state, dispatch, updates) => {
     const key = keyFor(update);
     if (jobs.has(key)) continue;
 
-    const channels = eligibleChannels(state, update.chainTicker, update.updateId);
+    const channels = eligibleChannels(state, update.chainTicker, update.updateId, update.channels);
     if (!channels.length) continue;
 
-    jobs.set(key, {...update, channels});
+    jobs.set(key, {...update, channels, preserveFreshness: update.channels != null});
   }
 
   const vrpcJobs = [...jobs.values()]
@@ -193,7 +210,7 @@ export const conditionallyUpdateWallets = async (state, dispatch, updates) => {
       job.chainTicker,
       job.updateId,
       undefined,
-      {vrpcRefresh},
+      {vrpcRefresh, preserveFreshness: job.preserveFreshness},
     ).then(success => success ? API_SUCCESS : API_ERROR));
   }
 

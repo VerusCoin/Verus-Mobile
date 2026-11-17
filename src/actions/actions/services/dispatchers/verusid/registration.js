@@ -118,6 +118,9 @@ export const summarizeRegistrationJob = job => ({
   updatedAt: publicTimestamp(job.updatedAt),
   commitmentTxid: publicString(job.commitment?.txid),
   registrationTxid: publicString(job.registration?.txid),
+  registrationProblem: ['insufficient_funds', 'name_taken'].includes(job.registrationProblem) ? job.registrationProblem : undefined,
+  readyCelebrated: job.readyCelebrated === true,
+  readyDismissed: job.readyDismissed === true,
 });
 
 const publishCollection = (jobs, context) => {
@@ -344,6 +347,25 @@ export const updateRegistrationJob = (jobId, update, requestContext) =>
     typeof update === 'function' ? update(previous) : {...previous, ...update},
   requestContext, false);
 
+// Presentation metadata contains no approval or payment state. Keep it in the
+// encrypted job so Home and the tab survive reload without publishing errors.
+export const updateRegistrationUiState = (jobId, patch, requestContext, expectedRevision) =>
+  updateRegistrationJob(jobId, previous => {
+    // A passive funds read must not replace a newer stage or name-taken notice.
+    if (expectedRevision != null && previous.revision !== expectedRevision) {
+      const error = new Error('Identity registration changed. Please review its latest state.');
+      error.code = 'REGISTRATION_CHANGED';
+      throw error;
+    }
+    return {...previous,
+    ...(Object.prototype.hasOwnProperty.call(patch, 'registrationProblem') ? {
+      registrationProblem: ['insufficient_funds', 'name_taken'].includes(patch.registrationProblem) ? patch.registrationProblem : null,
+    } : {}),
+    ...(patch.readyCelebrated === true ? {readyCelebrated: true} : {}),
+    ...(patch.readyDismissed === true ? {readyDismissed: true} : {}),
+    };
+  }, requestContext);
+
 // Recovery for an unreadable collection must not decode its receipts. Remove
 // only registration data through the same queue used by all service writers.
 export const clearRegistrationJobs = async requestContext => {
@@ -449,12 +471,27 @@ export const refreshRegistrationJobs = async requestContext => {
       const checkKey = `${scopeKey}:${job.id}`;
 
       try {
-        const {reconcileRegistration} = require('../../../../../utils/identityRegistration/registration');
+        const {reconcileRegistration, getRegistrationEstimate} = require('../../../../../utils/identityRegistration/registration');
         const review = await reconcileRegistration(job.id, {
           ...context,
           registrationBackground: true,
         });
         assertRegistrationSession(context);
+        if (['commitment_confirmed', 'registration_prepared', 'registration_expired'].includes(review?.status)) {
+          const saved = await getRegistrationJob(job.id, context);
+          if (saved.status === review.status && saved.registrationProblem !== 'name_taken') {
+            const {checkRegistrationFunds} = require('../../../../../utils/identityRegistration/funding');
+            const estimate = await getRegistrationEstimate(job.id, context);
+            const funds = await checkRegistrationFunds(estimate, store.getState().coins.activeCoinsForUser || [], context);
+            assertRegistrationSession(context);
+            if (['short', 'enough'].includes(funds.status)) {
+              const registrationProblem = funds.status === 'short' ? 'insufficient_funds' : null;
+              if ((saved.registrationProblem || null) !== registrationProblem) {
+                await updateRegistrationUiState(job.id, {registrationProblem}, context, saved.revision);
+              }
+            }
+          }
+        }
         reconciliationChecks.set(checkKey, {
           nextCheck: Date.now() + (['complete', 'registered'].includes(review?.status) ? 60000 : 15000),
           failures: 0,

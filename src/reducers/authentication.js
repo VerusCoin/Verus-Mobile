@@ -8,7 +8,6 @@ import { AUTHENTICATE_USER_SEND_MODAL } from "../utils/constants/sendModal";
 import {
   SET_ACCOUNTS,
   UPDATE_ACCOUNT_KEYS,
-  DISABLE_SELECT_DEFAULT_ACCOUNT,
   BIOMETRIC_AUTH,
   AUTHENTICATE_USER,
   SIGN_IN_USER,
@@ -18,6 +17,7 @@ import {
   OPEN_SEND_COIN_MODAL,
   UPDATE_ACCOUNT_DISABLED_SERVICES,
   UPDATE_ACCOUNT_TESTNET_OVERRIDES_COMPLETE,
+  UPDATE_ACCOUNT_WALLET_AVATAR,
   UPDATE_SESSION_KEY,
   INIT_INSTANCE_KEY,
   HIDE_SEED_WARNINGS,
@@ -46,7 +46,6 @@ export const authentication = (
       testnetOverrides: {}
     },
     signedIn: false,
-    selectDefaultAccount: true,
     authModalUsed: false,
     showHideSeedCorruptionSetting: false
   },
@@ -66,15 +65,22 @@ export const authentication = (
             ? true
             : state.authModalUsed,
       };
-    case DISABLE_SELECT_DEFAULT_ACCOUNT:
-      return {
-        ...state,
-        selectDefaultAccount: false
-      };
     case SET_ACCOUNTS:
       return {
         ...state,
         accounts: action.payload.accounts
+      };
+    case UPDATE_ACCOUNT_WALLET_AVATAR:
+      return {
+        ...state,
+        accounts: action.payload.accounts,
+        activeAccount:
+          state.activeAccount?.accountHash === action.payload.accountHash
+            ? {
+                ...state.activeAccount,
+                walletAvatar: action.payload.walletAvatar,
+              }
+            : state.activeAccount,
       };
     case AUTHENTICATE_USER:
       return {
@@ -101,8 +107,7 @@ export const authentication = (
     case SIGN_IN_USER:
       return {
         ...state,
-        signedIn: true,
-        selectDefaultAccount: false
+        signedIn: true
       };
     case UPDATE_ACCOUNT_KEYS:
       return {

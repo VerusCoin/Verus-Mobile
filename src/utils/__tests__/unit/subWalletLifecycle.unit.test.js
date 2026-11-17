@@ -1,5 +1,6 @@
 import {coinMenus} from '../../../reducers/gui/coinMenus';
 import {extractDisplaySubWallets} from '../../subwallet/extractSubWallets';
+import {selectRates} from '../../../selectors/rates';
 import {SET_COIN_SUB_WALLET, SET_USER_COINS_COMPLETE, SIGN_OUT_COMPLETE} from '../../constants/storeType';
 
 const wallet = (id, name = id, channel = id) => ({id, name, api_channels: {get_balances: channel}});
@@ -7,30 +8,56 @@ const rebuild = (state, allSubWallets) => coinMenus(state, {
   type: SET_USER_COINS_COMPLETE,
   payload: {allSubWallets},
 });
-const select = (state, chainTicker, subWallet) => coinMenus(state, {
+const select = (state, chainTicker, subWallet, userSelected) => coinMenus(state, {
   type: SET_COIN_SUB_WALLET,
-  payload: {chainTicker, subWallet},
+  payload: {chainTicker, subWallet, userSelected},
+});
+// The coin page reads its fiat price channel from the active card.
+const ratesFor = (menus, chainTicker) => selectRates({
+  coinMenus: menus,
+  coins: {activeCoin: {id: chainTicker}},
+  errors: {},
+  ledger: {rates: {}},
 });
 
 describe('subwallet lifecycle after identity changes', () => {
-  it('replaces an unlinked identity selection with the current main wallet', () => {
+  // Owner decision: a selected card that disappears is not replaced by
+  // another card. The selection becomes null, so the card chooser shows and
+  // the user picks the card explicitly.
+  it('clears an unlinked identity selection so the card chooser shows instead of the main wallet', () => {
     const identity = wallet('SUBWALLET_vrpc.iTransferred.system', 'transferred@');
     const main = wallet('MAIN_WALLET', 'Public wallet');
     const retainedIdentity = wallet('SUBWALLET_vrpc.iRetained.system', 'retained@');
-    const previous = select(rebuild(undefined, {VRSC: [main, identity, retainedIdentity]}), 'VRSC', identity);
+    const previous = select(rebuild(undefined, {VRSC: [main, identity, retainedIdentity]}), 'VRSC', identity, true);
     const result = rebuild(previous, {VRSC: [retainedIdentity, main]});
 
-    expect(result.activeSubWallets.VRSC).toBe(main);
+    expect(result.activeSubWallets.VRSC).toBeNull();
+    expect(result.userSelectedSubWallets.VRSC).toBeNull();
     expect(result.allSubWallets.VRSC).not.toContain(identity);
     expect(previous.activeSubWallets.VRSC).toBe(identity);
+    // The page reads the empty selection without a price channel.
+    expect(ratesFor(result, 'VRSC')).toEqual({results: null, errors: null});
+
+    // The user picks a remaining card; the next rebuild keeps that choice.
+    const chosen = select(result, 'VRSC', retainedIdentity, true);
+    expect(chosen.activeSubWallets.VRSC).toBe(retainedIdentity);
+    expect(chosen.userSelectedSubWallets.VRSC).toBe(retainedIdentity);
+    const rebuilt = rebuild(chosen, {VRSC: [retainedIdentity, main]});
+    expect(rebuilt.activeSubWallets.VRSC).toBe(retainedIdentity);
+    expect(rebuilt.userSelectedSubWallets.VRSC).toBe(retainedIdentity);
   });
 
-  it('uses the remaining current wallet when this currency has no MAIN_WALLET', () => {
+  it('clears the selection when this currency has no MAIN_WALLET instead of using the remaining wallet', () => {
     const identity = wallet('SUBWALLET_vrpc.iTransferred.system');
     const publicWallet = wallet('SUBWALLET_vrpc.RWallet.system');
     const previous = select(undefined, 'VRSCTEST', identity);
     const result = rebuild(previous, {VRSCTEST: [publicWallet]});
-    expect(result.activeSubWallets.VRSCTEST).toBe(publicWallet);
+    expect(result.activeSubWallets.VRSCTEST).toBeNull();
+    expect(result.allSubWallets.VRSCTEST).toEqual([publicWallet]);
+    expect(ratesFor(result, 'VRSCTEST')).toEqual({results: null, errors: null});
+
+    const chosen = select(result, 'VRSCTEST', publicWallet, true);
+    expect(chosen.activeSubWallets.VRSCTEST).toBe(publicWallet);
   });
 
   it('preserves a valid selection using its rebuilt channels and display name', () => {
@@ -48,17 +75,19 @@ describe('subwallet lifecycle after identity changes', () => {
     expect(result.activeSubWallets.VRSC).toBeNull();
   });
 
-  it('drops selections for removed currencies or currencies with no remaining wallets', () => {
+  it('clears selections for removed currencies or currencies with no remaining wallets', () => {
     const previous = select(select(undefined, 'VRSC', wallet('old-vrsc')), 'BTC', wallet('old-btc'));
     const result = rebuild(previous, {VRSC: []});
-    expect(result.activeSubWallets).toEqual({});
+    expect(result.activeSubWallets).toEqual({VRSC: null, BTC: null});
+    expect(ratesFor(result, 'VRSC')).toEqual({results: null, errors: null});
+    expect(ratesFor(result, 'BTC')).toEqual({results: null, errors: null});
   });
 
   it.each(['same profile', 'different profile'])('does not retain identity selection after logout and login to %s', profile => {
     const identity = wallet('SUBWALLET_vrpc.iPrevious.system');
     const previous = {...select(rebuild(undefined, {VRSC: [identity]}), 'VRSC', identity), claimDisabled: true};
     const signedOut = coinMenus(previous, {type: SIGN_OUT_COMPLETE});
-    expect(signedOut).toEqual({activeSubWallets: {}, allSubWallets: {}, claimDisabled: false});
+    expect(signedOut).toEqual({activeSubWallets: {}, userSelectedSubWallets: {}, allSubWallets: {}, claimDisabled: false});
 
     const currentWallet = wallet('SUBWALLET_vrpc.RCurrent.system');
     const wallets = profile === 'same profile' ? [currentWallet, identity] : [currentWallet];

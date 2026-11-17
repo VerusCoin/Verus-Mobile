@@ -9,8 +9,7 @@ const HomeFAB = (props) => {
     handleVerusPay,
     handleEditCards,
     showConfigureHomeCards,
-    handleAddPbaasCurrency,
-    handleAddErc20Token,
+    handleAddAssetByIdentifier,
   } = props;
 
   const [state, setState] = React.useState({ open: false });
@@ -27,14 +26,9 @@ const HomeFAB = (props) => {
             onPress: handleAddCoin,
           },
           {
-            icon: 'rocket-launch',
-            label: 'Add ERC20 Token',
-            onPress: handleAddErc20Token,
-          },
-          {
-            icon: 'rocket-launch',
-            label: 'Add PBaaS Currency',
-            onPress: handleAddPbaasCurrency,
+            icon: 'link-variant',
+            label: 'Add by identifier',
+            onPress: handleAddAssetByIdentifier,
           }
         ]
       : [
@@ -49,14 +43,9 @@ const HomeFAB = (props) => {
             onPress: handleAddCoin,
           },
           {
-            icon: 'ethereum',
-            label: 'Add ERC20 Token',
-            onPress: handleAddErc20Token,
-          },
-          {
-            icon: 'rocket-launch',
-            label: 'Add PBaaS Currency',
-            onPress: handleAddPbaasCurrency,
+            icon: 'link-variant',
+            label: 'Add by identifier',
+            onPress: handleAddAssetByIdentifier,
           },
         ];
 
@@ -75,4 +64,4 @@ const HomeFAB = (props) => {
   );
 };
 
-export default HomeFAB; 
+export default HomeFAB;

@@ -8,6 +8,7 @@ import {hashAccountId} from '../crypto/hash';
 import {deriveKeyPair} from '../keys';
 import {arrayToObject} from '../objectManip';
 import {storeBiometricPassword} from '../keychain/biometrics';
+import {markNewAssetChoices} from '../assets/assetChoicesStorage';
 
 export const buildProfileSeeds = (seed, includeDlightSeed = false) => {
   const seeds = {[ELECTRUM]: seed};
@@ -18,6 +19,16 @@ export const buildProfileSeeds = (seed, includeDlightSeed = false) => {
 
   return seeds;
 };
+
+// The coins a new wallet starts with, in key order: VRSC, BTC and ETH, or
+// VRSCTEST and GETH for a testnet wallet (BTC has no testnet coin).
+export const getStartingCoinIds = (testProfile = false) =>
+  START_COINS.filter(
+    coinId => !testProfile || TEST_PROFILE_OVERRIDES[coinId] != null,
+  ).map(coinId => ({
+    startId: coinId,
+    coinId: testProfile ? TEST_PROFILE_OVERRIDES[coinId] : coinId,
+  }));
 
 const addStartingCoins = async ({
   accountId,
@@ -49,8 +60,22 @@ export const createProfileFromSeed = async ({
   testProfile = false,
   includeDlightSeed = false,
   useBiometrics = false,
+  walletAvatar = null,
+  // The caller can report this after its setup screen has closed.
+  onBiometrySetupFailed = () => {},
+  // Called after each finished step: {type: 'key', coinId} per start coin,
+  // then 'encrypted', 'assets', 'biometrics' (only with biometrics) and
+  // 'opened'. It may return a promise; setup waits for it, so the wallet
+  // setup screen can show each step before the next one blocks the thread.
+  onStep = () => {},
 }) => {
   const seeds = buildProfileSeeds(seed, includeDlightSeed);
+  const accountHash = hashAccountId(profileName);
+
+  // Checked before the slow key work, so a taken name fails at once.
+  if (accounts.find(x => x.accountHash === accountHash) != null) {
+    throw new Error('Cannot create duplicate account.');
+  }
 
   try {
     for (const startCoin of START_COINS) {
@@ -60,19 +85,14 @@ export const createProfileFromSeed = async ({
         ELECTRUM,
         KEY_DERIVATION_VERSION,
       );
+      await onStep({type: 'key', coinId: startCoin});
     }
   } catch (e) {
-    throw new Error(`Could not create keypair from seed: ${e.message}`);
+    throw new Error(`Could not create keypair from recovery secret: ${e.message}`);
   }
 
   if (seeds[ELECTRUM] == null) {
-    throw new Error('Please configure at least a primary seed.');
-  }
-
-  const accountHash = hashAccountId(profileName);
-
-  if (accounts.find(x => x.accountHash === accountHash) != null) {
-    throw new Error('Cannot create duplicate account.');
+    throw new Error('Please configure a primary recovery secret.');
   }
 
   const overrides = testProfile ? TEST_PROFILE_OVERRIDES : undefined;
@@ -85,15 +105,18 @@ export const createProfileFromSeed = async ({
     KEY_DERIVATION_VERSION,
     SERVICES_DISABLED_DEFAULT,
     overrides,
+    walletAvatar,
   );
 
   dispatch(action);
+  await onStep({type: 'encrypted'});
   await addStartingCoins({
     accountId: profileName,
     activeCoinList,
     dispatch,
     testnetOverrides: overrides,
   });
+  await onStep({type: 'assets'});
 
   let newAccount = action.payload.accounts.find(
     x => x.accountHash === accountHash,
@@ -113,13 +136,17 @@ export const createProfileFromSeed = async ({
       newAccount = biometricAction.payload.accounts.find(
         account => account.accountHash === accountHash,
       );
-    } catch (e) {
+    } catch {
       // Password login remains available when biometric setup cannot finish.
-      console.warn(e);
+      console.warn('Biometric setup did not finish.');
+      onBiometrySetupFailed();
     }
+    await onStep({type: 'biometrics'});
   }
 
+  markNewAssetChoices(accountHash);
   await initializeAccountData(newAccount, password);
+  await onStep({type: 'opened'});
 
   return newAccount;
 };

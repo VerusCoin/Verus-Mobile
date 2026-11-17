@@ -1,4 +1,8 @@
-import { SET_DEEPLINK_DATA, SET_DEEPLINK_URL } from "../../../../utils/constants/storeType"
+import {
+  SET_DEEPLINK_DATA,
+  SET_DEEPLINK_PASSTHROUGH_DATA,
+  SET_DEEPLINK_URL,
+} from "../../../../utils/constants/storeType"
 
 export const setDeeplinkUrl = (url, passthrough = null) => {
   return {
@@ -24,5 +28,13 @@ export const resetDeeplinkData = expectedRequestId => {
     type: SET_DEEPLINK_DATA,
     payload: {id: null, data: {}, fromService: null, passthrough: null,
       ...(expectedRequestId == null ? {} : {expectedRequestId})}
+  }
+}
+
+// Replaces the open request's passthrough without opening it again.
+export const setDeeplinkPassthroughData = passthrough => {
+  return {
+    type: SET_DEEPLINK_PASSTHROUGH_DATA,
+    payload: { passthrough }
   }
 }

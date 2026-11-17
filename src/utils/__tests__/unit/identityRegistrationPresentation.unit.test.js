@@ -152,12 +152,12 @@ describe('registration names and next actions', () => {
   it.each([
     ['commitment_prepared', 'Needs you', 'Review commitment', 0],
     ['commitment_broadcast', 'In progress', 'View progress', 0],
-    ['commitment_confirmed', 'Needs you', 'Continue registration', 1],
-    ['registration_prepared', 'Needs you', 'Review registration', 1],
+    ['commitment_confirmed', 'In progress', 'Continue', 1],
+    ['registration_prepared', 'In progress', 'Continue', 1],
     ['registration_broadcast', 'In progress', 'View progress', 1],
-    ['commitment_expired', 'Needs you', 'Review replacement', 0],
-    ['registration_expired', 'Needs you', 'Review registration', 1],
-    ['registered', 'Needs you', 'Link to wallet', 2],
+    ['commitment_expired', 'Needs attention', 'Slide to start', 0],
+    ['registration_expired', 'Needs attention', 'Slide to create', 1],
+    ['registered', 'Ready to link', 'Link VerusID', 2],
     ['complete', 'Completed', 'View details', 1],
   ])('%s has a distinct stage and next action', (status, group, action, step) => {
     expect(registrationState(status)).toMatchObject({group, action, step});
@@ -175,7 +175,7 @@ describe('registration names and next actions', () => {
 
   it('keeps both on-chain steps complete while asking to link a newly registered identity', () => {
     expect(registrationState('registered')).toMatchObject({
-      kind: 'ready', group: 'Needs you', action: 'Link to wallet', step: 2,
+      kind: 'ready', group: 'Ready to link', action: 'Link VerusID', step: 2,
       commitment: 'Confirmed', registration: 'Identity created', chainComplete: true,
     });
     expect(registrationState('registered').detail).toContain('isn’t linked');

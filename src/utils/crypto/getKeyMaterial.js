@@ -11,12 +11,13 @@ import { requestPrivKey } from "../auth/authBox";
 import { DLIGHT_PRIVATE } from "../constants/intervalConstants";
 import { spendingKeyHex } from "./spendingKeyHex";
 import store from "../../store";
+import {PROFILE_SECURITY_SETTINGS_LABEL} from "../settings/settingsLabels";
 
 export { spendingKeyHex } from "./spendingKeyHex";
 
 const MISSING_KEY_MESSAGE =
-  "No Z (shielded address) seed has been set up. " +
-  "Please go to Settings → Profile and set up a Z Seed before accepting encryption requests.";
+  `No Z recovery secret has been set up. ` +
+  `Set up a Z recovery secret in Settings > ${PROFILE_SECURITY_SETTINGS_LABEL}, then open the request again.`;
 
 /**
  * Gets an extended spending key for zGetEncryptionAddress.

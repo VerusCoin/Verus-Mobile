@@ -13,11 +13,12 @@ public class VerusKeepAwakePackage implements ReactPackage {
   public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
     List<NativeModule> modules = new ArrayList<>();
     modules.add(new VerusKeepAwakeModule(reactContext));
+    modules.add(new VerusScreenSecurityModule(reactContext));
     return modules;
   }
 
   @Override
   public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
-    return Collections.emptyList();
+    return Collections.singletonList(new PrivacyBlurredTextViewManager());
   }
 }

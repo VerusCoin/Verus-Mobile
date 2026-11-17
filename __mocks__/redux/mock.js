@@ -18,7 +18,8 @@ function mockRedux() {
         getState: () => store.getState(),
         dispatch: (action) => {
           store.dispatch(action)
-        }
+        },
+        subscribe: (listener) => store.subscribe(listener)
       }
     },
     compose: () => {}

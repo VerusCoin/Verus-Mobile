@@ -1,3 +1,4 @@
+import {preflightPlainSend} from '../../../../web3/preflightPlainSend';
 import { ethers } from "ethers"
 import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 import { ERC20, ETH } from "../../../../constants/intervalConstants"
@@ -62,6 +63,12 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
   try {
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network);
     const { minGasPriceGwei } = store.getState().settings.generalWalletSettings;
+    if (params?.networkFee) {
+      return await preflightPlainSend({
+        coinObj, activeUser, address, amount, params, web3: Web3Provider,
+        minGasPriceGwei, isToken: true,
+      });
+    }
     
     const fromAddress = activeUser.keys[coinObj.id][ERC20].addresses[0]
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.InfuraProvider)

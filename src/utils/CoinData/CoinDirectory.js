@@ -4,7 +4,8 @@ import { electrumServers } from './electrum/servers';
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 import { VerusdRpcInterface } from "verusd-rpc-ts-client";
 import { VERUS_APPS, coinsList } from "./CoinsList";
-import { DEFAULT_DECIMALS, VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT, VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT } from "../constants/web3Constants";
+import { DEFAULT_DECIMALS, ETH_SEPOLIA, VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT } from "../constants/web3Constants";
+import { getTestnetBridgeDelegator, getTestnetVrpcOverrides, setTestnetEnvironment, shouldDisableTestnetDlight } from "../testnetEnvironment";
 import { getStoredCurrencyDefinitions, storeCurrencyDefinitionForCurrencyId } from "../asyncStore/currencyDefinitionStorage";
 import { timeout } from "../promises";
 import { getStoredContractDefinitions, storeContractDefinitionForNetwork } from "../asyncStore/contractDefinitionStorage";
@@ -20,6 +21,9 @@ class _CoinDirectory {
   disabledNameList = [];
   enabledNameList = [];
 
+  // The private testnet environment's endpoints win over the user's, so the
+  // switch always uses them. The public environment leaves the user's alone.
+  userVrpcOverrides = {};
   vrpcOverrides = {};
 
   constructor(coins = {}) {
@@ -34,7 +38,21 @@ class _CoinDirectory {
     if (id === 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq') searchId = 'VRSCTEST'
     else if (id === 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV') searchId = 'VRSC'
 
-    if (this.coinExistsInDirectory(searchId)) return this.coins[searchId]
+    if (this.coinExistsInDirectory(searchId)) {
+      const coinObj = this.coins[searchId];
+
+      // Keep the base directory intact so public lookups retain their fields
+      // and references. The private chain has no lightwalletd server.
+      return searchId === 'VRSCTEST' && shouldDisableTestnetDlight()
+        ? {
+            ...coinObj,
+            compatible_channels: coinObj.compatible_channels.filter(
+              channel => channel !== DLIGHT_PRIVATE,
+            ),
+            dlight_endpoints: [],
+          }
+        : coinObj;
+    }
     else {
       throw new Error(searchId + " not found in coin list!")
     }
@@ -83,7 +101,7 @@ class _CoinDirectory {
       ? 'VRSC'
       : key;
 
-    let coinObj = this.coins[id]
+    let coinObj = this.coins[id] ? this.getBasicCoinObj(id) : null;
   
     if (coinObj) {
       coinObj.electrum_endpoints = coinObj.compatible_channels.includes(ELECTRUM) ? electrumServers[id.toLowerCase()].serverList : []
@@ -125,7 +143,20 @@ class _CoinDirectory {
   }
 
   setVrpcOverrides(overrides) {
-    this.vrpcOverrides = overrides ? overrides : {};
+    this.userVrpcOverrides = overrides ? overrides : {};
+    this.updateVrpcOverrides();
+  }
+
+  setTestnetEnvironment(environment) {
+    setTestnetEnvironment(environment);
+    this.updateVrpcOverrides();
+  }
+
+  updateVrpcOverrides() {
+    this.vrpcOverrides = {
+      ...this.userVrpcOverrides,
+      ...getTestnetVrpcOverrides(coinsList.VRSCTEST.system_id),
+    };
   }
 
   getVrpcEndpoints(coinId) {
@@ -200,7 +231,7 @@ class _CoinDirectory {
       currencyDefinition.nativecurrencyid != null;
     let mappedCurrencyId = null;
     const delegatorContractAddr = isTestnet
-      ? VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT
+      ? getTestnetBridgeDelegator()
       : VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT;
 
     try {
@@ -219,7 +250,7 @@ class _CoinDirectory {
             if (mappedCoin != null) {
               mappedCurrencyId = mappedCoin.id;
             } else {
-              const network = isTestnet ? 'goerli' : 'homestead'
+              const network = isTestnet ? ETH_SEPOLIA : 'homestead'
               const { name, symbol, decimals } = await getWeb3ProviderForNetwork(network).getContractInfo(contractAddress);
   
               this.addErc20Token({ address: contractAddress, symbol, name, decimals }, network, true);
@@ -317,7 +348,7 @@ class _CoinDirectory {
       display_name: currencyDefinition.fullyqualifiedname,
       alt_names: [],
       theme_color: '#232323',
-      compatible_channels: [VERUSID, VRPC],
+      compatible_channels: [VERUSID, VRPC, GENERAL],
       tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
       proto: 'vrsc',
       vrpc_endpoints: endpoints,

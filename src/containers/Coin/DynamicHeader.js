@@ -1,3 +1,4 @@
+import {prepareSubWalletCarousel} from '../../utils/subwallet/carousel';
 /*
   This component works as the active header for Coin Menu screens. Interacting
   with it by swiping or pressing will allow you to change your active sub-wallet.
@@ -15,8 +16,7 @@ import {
   ERC20,
 } from '../../utils/constants/intervalConstants';
 import Colors from '../../globals/colors';
-import { Card, Paragraph, Text, IconButton } from 'react-native-paper';
-import Button from '../../components/Button';
+import { Card, Paragraph, Text, IconButton, Button } from 'react-native-paper';
 import BigNumber from 'bignumber.js';
 import {
   extractErrorData,
@@ -27,9 +27,9 @@ import { truncateDecimal } from '../../utils/math';
 import { USD } from '../../utils/constants/currencies';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 import {
-  VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT,
   VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT,
 } from '../../utils/constants/web3Constants';
+import { getTestnetBridgeDelegator } from '../../utils/testnetEnvironment';
 import {
   createAlert,
   resolveAlert,
@@ -41,7 +41,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import Styles from '../../styles';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
 import { coinsList } from '../../utils/CoinData/CoinsList';
-import { prepareSubWalletCarousel } from '../../utils/subwallet/carousel';
 
 const DynamicHeader = ({ switchTab }) => {
   const dispatch = useDispatch();
@@ -75,7 +74,6 @@ const DynamicHeader = ({ switchTab }) => {
   const [loadingCarouselItems, setLoadingCarouselItems] = useState(true);
   const [mappedCoinObj, setMappedCoinObj] = useState(null);
   const fadeAnimation = useRef(new Animated.Value(0)).current;
-  const currentWallets = useRef({chainTicker, wallets: allSubWallets});
 
   const pendingBalance = useMemo(() => {
     return Object.values(balances).reduce((a, b) => {
@@ -117,6 +115,9 @@ const DynamicHeader = ({ switchTab }) => {
     }).start();
   }, [fadeAnimation]);
 
+  const prepareCarouselItems = prepareSubWalletCarousel;
+  const currentWallets = useRef({chainTicker, wallets: allSubWallets});
+
   useEffect(() => {
     fadeIn();
 
@@ -136,13 +137,18 @@ const DynamicHeader = ({ switchTab }) => {
   useEffect(() => {
     currentWallets.current = {chainTicker, wallets: allSubWallets};
     setLoadingCarouselItems(true);
-    const items = prepareSubWalletCarousel(allSubWallets, selectedSubWallet);
+    const items = prepareCarouselItems(allSubWallets, selectedSubWallet);
     setCarouselItems(items);
     setLoadingCarouselItems(false);
-  }, [chainTicker, allSubWallets, selectedSubWallet]);
+  }, [chainTicker, allSubWallets, selectedSubWallet, prepareCarouselItems]);
 
   const setSubWallet = (wallet) => {
     // Carousel gestures can finish after the wallet list has been rebuilt.
+    if (wallet == null) {
+      dispatch(setCoinSubWallet(chainTicker, null, true));
+      setCarouselItems(prepareCarouselItems(allSubWallets, null));
+      return;
+    }
     const current = currentWallets.current;
     if (current.chainTicker !== chainTicker) return;
 
@@ -152,9 +158,9 @@ const DynamicHeader = ({ switchTab }) => {
 
     if (currentWallet === undefined) return;
 
-    dispatch(setCoinSubWallet(chainTicker, currentWallet));
+    dispatch(setCoinSubWallet(chainTicker, currentWallet, true));
 
-    const items = prepareSubWalletCarousel(current.wallets, currentWallet);
+    const items = prepareCarouselItems(current.wallets, currentWallet);
     setCarouselItems(items);
   };
 
@@ -212,7 +218,7 @@ const DynamicHeader = ({ switchTab }) => {
 
   const openTokenAddressExplorer = (address, testnet) => {
     const baseUrl = testnet
-      ? 'https://goerli.etherscan.io/token/'
+      ? 'https://sepolia.etherscan.io/token/'
       : 'https://etherscan.io/token/';
 
     return createAlert(
@@ -463,7 +469,7 @@ const DynamicHeader = ({ switchTab }) => {
     activeCoin.mapped_to != null &&
     mappedCoinObj != null &&
     (mappedCoinObj.currency_id.toLowerCase() ===
-      VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT.toLowerCase() ||
+      getTestnetBridgeDelegator().toLowerCase() ||
       mappedCoinObj.currency_id.toLowerCase() ===
         VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT.toLowerCase());
 

@@ -1,56 +1,37 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { ActivityIndicator, Text, TextInput } from 'react-native-paper';
-import { useSelector } from 'react-redux';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useHeaderHeight } from '@react-navigation/elements';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Colors from '../../../../../globals/colors';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {FlatList, Keyboard, StyleSheet, View} from 'react-native';
+import {useSelector} from 'react-redux';
+import {useHeaderHeight} from '@react-navigation/elements';
+import {AtSign, CircleAlert} from 'lucide-react-native';
+import AppButton from '../../../../../components/AppButton';
+import AppSearchField, {APP_SEARCH_MIN_ITEMS} from '../../../../../components/AppSearchField';
+import InfoSheet from '../../../../../components/InfoSheet';
+import InfoSheetSection, {InfoSheetTopic} from '../../../../../components/InfoSheetSection';
+import EmptyState from '../../../../../components/EmptyState';
+import KeyboardAvoidingForm from '../../../../../components/KeyboardAvoidingForm';
+import SafeBottomActionStack from '../../../../../components/SafeBottomActionStack';
+import SignedOutActionRow from '../../../../../components/SignedOutActionRow';
+import SkeletonLoader, {SkeletonBlock} from '../../../../../components/SkeletonLoader';
+import {SelectionRow} from '../../../../../components/SelectionSheet';
+import {useOnboardingSmallDeviceLayout} from '../../../../../hooks/useOnboardingSmallDeviceLayout';
+import {useOnboardingTheme} from '../../../../../theme/onboarding';
+import {identityManagementStyles} from '../../../../../styles';
 import Store from '../../../../../store';
-import { openLinkIdentityModal } from '../../../../../actions/actions/sendModal/dispatchers/sendModal';
-import { sessionScopeIsCurrent } from '../../../../../actions/actions/updates/sessionRequests';
-import { CoinDirectory } from '../../../../../utils/CoinData/CoinDirectory';
-import { VRPC } from '../../../../../utils/constants/intervalConstants';
-import {
-  captureIdentityLinkContext,
-  discoverLinkableIdentities,
-  linkSelectedIdentities,
-  retryIdentityLinkRefresh,
-} from '../../../../../utils/identityLinking/identityLinking';
-import {
-  ActionButton,
-  Disclosure,
-  SelectionField,
-  registrationStyles as styles,
-} from '../IdentityRegistration/RegistrationComponents';
+import {sessionScopeIsCurrent} from '../../../../../actions/actions/updates/sessionRequests';
+import {VRPC} from '../../../../../utils/constants/intervalConstants';
+import {captureIdentityLinkContext, discoverLinkableIdentities, linkSelectedIdentities, retryIdentityLinkRefresh} from '../../../../../utils/identityLinking/identityLinking';
+import {ActionButton, Body, ManagementInfoButton, SelectionField, useManagementKeyboard, verusIdText} from '../IdentityManagement/ManagementComponents';
+import {ErrorMessage} from '../../../../SendWizard/components/WizardUI';
 
-const rowStatus = row => row.linked ? 'Already linked' : '';
-const refreshMessage =
-  'Your identities were saved, but the wallet could not refresh. Try refreshing the wallet again.';
-
+const refreshMessage = 'Your VerusIDs were saved, but the wallet could not refresh. Try refreshing the wallet again.';
 const layout = StyleSheet.create({
-  list: {
-    width: '100%',
-    maxWidth: 600,
-    alignSelf: 'center',
-    padding: 16,
-    paddingBottom: 24,
-  },
-  header: { gap: 20, paddingBottom: 16 },
-  item: {
-    minHeight: 64,
-    paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e3e7ed',
-  },
-  empty: { paddingVertical: 32, gap: 12, alignItems: 'center' },
+  screen: {flex: 1},
+  list: {flexGrow: 1, paddingHorizontal: 20, paddingTop: 24, paddingBottom: 28},
+  header: {gap: 12, paddingBottom: 12},
+  skeletonRow: {height: 56, padding: 16, borderRadius: 18, justifyContent: 'center', marginBottom: 4},
+  empty: {flex: 1, justifyContent: 'center'},
+  footer: {paddingTop: 16},
+  footerCompact: {paddingTop: 8},
 });
 
 export function LinkIdentitiesPage({ navigation, route }) {
@@ -80,6 +61,7 @@ export function LinkIdentitiesPage({ navigation, route }) {
   const [rows, setRows] = useState([]);
   const [selection, setSelection] = useState([]);
   const [query, setQuery] = useState('');
+  const [aboutVisible, setAboutVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -94,7 +76,9 @@ export function LinkIdentitiesPage({ navigation, route }) {
   const refreshPending = useRef(false);
   const list = useRef(null);
 
-  const insets = useSafeAreaInsets();
+  const theme = useOnboardingTheme();
+  const {smallDevice} = useOnboardingSmallDeviceLayout();
+  const keyboardOpen = useManagementKeyboard();
   const headerHeight = useHeaderHeight();
   const current = useCallback(
     () =>
@@ -121,7 +105,10 @@ export function LinkIdentitiesPage({ navigation, route }) {
   }), [navigation]);
 
   useEffect(() => {
-    navigation.setOptions({ gestureEnabled: !busy });
+    navigation.setOptions({gestureEnabled: !busy,
+      headerRight: () => <ManagementInfoButton label="About linking VerusIDs" disabled={busy}
+        onPress={() => {Keyboard.dismiss(); setAboutVisible(true);}} />,
+    });
   }, [navigation, busy]);
 
   const load = useCallback(async () => {
@@ -208,6 +195,7 @@ export function LinkIdentitiesPage({ navigation, route }) {
   );
 
   const submit = async () => {
+    let closeWhenFinished = false;
     if (linking.current || loading || !current() || !selectedRows.length) {
       return;
     }
@@ -256,6 +244,8 @@ export function LinkIdentitiesPage({ navigation, route }) {
         ));
       }
 
+      setQuery('');
+      closeWhenFinished = !result.failed.length && !refreshPending.current;
       list.current?.scrollToOffset({ offset: 0, animated: true });
     } catch (failure) {
       if (current() && failure.code !== 'SESSION_CHANGED') {
@@ -268,14 +258,18 @@ export function LinkIdentitiesPage({ navigation, route }) {
         setBusy(false);
       }
     }
+    if (closeWhenFinished && current()) navigation.goBack();
   };
 
   // Search changes visibility, not selection; hidden checked rows still submit.
+  const showSearch = !loading && rows.length >= APP_SEARCH_MIN_ITEMS;
+  useEffect(() => {if (!showSearch) setQuery('');}, [showSearch]);
+  const failedAddresses = new Set(failures.map(item => item.identity.identityAddress));
   const visible = rows.filter(row =>
     `${row.displayName} ${row.identityAddress}`
       .toLowerCase()
-      .includes(query.trim().toLowerCase()),
-  );
+      .includes(showSearch ? query.trim().toLowerCase() : ''),
+  ).sort((left, right) => Number(failedAddresses.has(right.identityAddress)) - Number(failedAddresses.has(left.identityAddress)));
   const pageError = contextState.error || error;
   const done = !!notice && !selectedRows.length && !failures.length;
 
@@ -291,239 +285,54 @@ export function LinkIdentitiesPage({ navigation, route }) {
     );
   };
 
-  const linkManually = () => {
-    if (linking.current || !current()) {
-      return;
-    }
-
-    try {
-      const coin = wallets.find(item => item.id === context.chain) ||
-        CoinDirectory.findCoinObj(context.chain);
-      openLinkIdentityModal(coin);
-    } catch (failure) {
-      setError(failure);
-    }
-  };
-
-  return (
-    <KeyboardAvoidingView
-      style={styles.page}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={headerHeight}
-    >
-      <FlatList
-        ref={list}
-        data={visible}
-        keyExtractor={row => row.identityAddress}
-        contentContainerStyle={layout.list}
-        keyboardShouldPersistTaps="handled"
-        contentInsetAdjustmentBehavior="automatic"
-        refreshing={loading}
-        onRefresh={busy ? undefined : load}
-        ListHeaderComponent={
-          <View style={layout.header}>
-            <View style={styles.section}>
-              <Text style={styles.title}>Link your identities</Text>
-              <Text style={styles.body}>
-                Choose from identities this wallet can spend from.
-              </Text>
-              <Text style={styles.muted}>
-                Linking adds an identity to your wallet. It does not change its
-                ownership or cost a network fee.
-              </Text>
-            </View>
-
-            <View style={styles.card}>
-              <SelectionField
-                label="Network"
-                disabled={busy || wallets.length < 2}
-                value={
-                  context
-                    ? `${context.networkName}${context.isTestnet ? ' · Testnet' : ''}`
-                    : chain || 'Your wallet network'
-                }
-                options={wallets.map(coin => ({
-                  value: coin.id,
-                  label: `${coin.display_ticker || coin.id}${coin.testnet ? ' · Testnet' : ''}`,
-                  selected: coin.id === context?.chain,
-                }))}
-                onSelect={setChain}
-              />
-
-              {!!context?.walletAddresses?.length && (
-                <Disclosure
-                  title={
-                    context.walletAddresses.length === 1
-                      ? 'Wallet address'
-                      : 'Wallet addresses'
-                  }
-                >
-                  {context.walletAddresses.map(address => (
-                    <Text key={address} selectable style={styles.muted}>
-                      {address}
-                    </Text>
-                  ))}
-                </Disclosure>
-              )}
-            </View>
-
-            <View style={styles.section}>
-              <ActionButton secondary disabled={busy || !context} onPress={linkManually}>
-                Link identity manually
-              </ActionButton>
-              <Text style={styles.muted}>
-                Link by name or i-Address, including identities this wallet only
-                partially controls.
-              </Text>
-            </View>
-
-            {!!notice && (
-              <View
-                style={styles.notice}
-                accessibilityRole="alert"
-                accessibilityLiveRegion="polite"
-              >
-                <Text style={styles.body}>{notice}</Text>
-              </View>
-            )}
-
-            {!!pageError && (
-              <View
-                style={[styles.notice, styles.error]}
-                accessibilityRole="alert"
-                accessibilityLiveRegion="assertive"
-              >
-                <Text style={styles.body}>{pageError.message}</Text>
-
-                {failures.map(({ identity, error: failure }) => (
-                  <Text key={identity.identityAddress} style={styles.muted}>
-                    {identity.displayName}: {failure.message}
-                  </Text>
-                ))}
-
-                {refreshPending.current && (
-                  <ActionButton secondary disabled={busy || loading} onPress={load}>
-                    Refresh wallet
-                  </ActionButton>
-                )}
-
-                {!refreshPending.current && !rows.length && !loading && !!context && (
-                  <ActionButton secondary onPress={load}>
-                    Try again
-                  </ActionButton>
-                )}
-              </View>
-            )}
-
-            {!!rows.length && (
-              <TextInput
-                mode="outlined"
-                label="Search identities"
-                accessibilityLabel="Search identities"
-                value={query}
-                onChangeText={setQuery}
-                disabled={busy}
-                autoCapitalize="none"
-                autoCorrect={false}
-                outlineColor="#b9c3d3"
-                activeOutlineColor={Colors.primaryColor}
-                style={{ backgroundColor: '#fff' }}
-              />
-            )}
-          </View>
-        }
-        ListEmptyComponent={
-          <View style={layout.empty}>
-            {loading ? (
-              <>
-                <ActivityIndicator color={Colors.primaryColor} />
-                <Text style={styles.muted}>Finding your identities…</Text>
-              </>
-            ) : !pageError && (
-              <>
-                <Icon
-                  name="account-search-outline"
-                  size={36}
-                  color={Colors.primaryColor}
-                  accessible={false}
-                />
-                <Text style={styles.subtitle}>
-                  {query.trim() ? 'No matching identities' : 'No identities found'}
-                </Text>
-                <Text style={[styles.muted, { textAlign: 'center' }]}>
-                  {query.trim()
-                    ? 'Try another name or identity address.'
-                    : 'No identities this wallet can spend from were found on this network. Pull down to check again.'}
-                </Text>
-              </>
-            )}
-          </View>
-        }
-        renderItem={({ item: row }) => (
-          <Pressable
-            accessibilityRole="checkbox"
-            accessibilityLabel={`${row.displayName}${rowStatus(row) ? `. ${rowStatus(row)}` : ''}`}
-            accessibilityState={{
-              checked: row.linked || selection.includes(row.identityAddress),
-              disabled: busy || row.linked,
-            }}
-            disabled={busy || row.linked}
-            onPress={() => toggle(row)}
-            style={({ pressed }) => [
-              styles.row,
-              layout.item,
-              { opacity: pressed ? 0.65 : 1 },
-            ]}
-          >
-            <Icon
-              name={
-                row.linked || selection.includes(row.identityAddress)
-                  ? 'checkbox-marked-circle'
-                  : 'checkbox-blank-circle-outline'
-              }
-              size={26}
-              color={row.linked ? '#596579' : Colors.primaryColor}
-              accessible={false}
-            />
-            <View style={styles.flexible}>
-              <Text style={styles.subtitle}>{row.displayName}</Text>
-              <Text style={styles.muted}>{row.identityAddress}</Text>
-
-              {!!rowStatus(row) && (
-                <Text style={[styles.muted, { fontWeight: '600' }]}>
-                  {rowStatus(row)}
-                </Text>
-              )}
-            </View>
-          </Pressable>
-        )}
-      />
-
-      <View style={styles.footer} testID="identity-link-footer">
-        <View style={[styles.footerContent, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-          <Text
-            style={[styles.muted, { textAlign: 'center' }]}
-            accessibilityLiveRegion="polite"
-          >
-            {busy
-              ? 'Linking your selected identities…'
-              : selectedRows.length
-                ? `${selectedRows.length} selected`
-                : done
-                  ? 'Your linked identities are ready to use.'
-                  : 'Select identities to link'}
-          </Text>
-          <ActionButton
-            busy={busy}
-            disabled={loading || (!done && !selectedRows.length)}
-            onPress={done ? () => navigation.goBack() : submit}
-          >
-            {done ? 'Done' : 'Link identities'}
-          </ActionButton>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
-  );
+  const manual = () => navigation.navigate('Identity', {manualLinkChain: context?.chain || chain});
+  return <KeyboardAvoidingForm style={[layout.screen, {backgroundColor: theme.colors.background}]} keyboardVerticalOffset={headerHeight}>
+    <FlatList ref={list} data={visible} keyExtractor={row => row.identityAddress}
+      contentContainerStyle={layout.list} keyboardShouldPersistTaps="handled"
+      contentInsetAdjustmentBehavior="never" refreshing={false} onRefresh={busy || loading ? undefined : load}
+      ListHeaderComponent={<View style={layout.header}>
+        {wallets.length > 1 && <SelectionField label="Network" disabled={busy}
+          value={context ? `${context.networkName}${context.isTestnet ? ' · Testnet' : ''}` : chain || 'Your wallet network'}
+          options={wallets.map(coin => ({value: coin.id, label: `${coin.display_ticker || coin.id}${coin.testnet ? ' · Testnet' : ''}`, selected: coin.id === context?.chain}))}
+          onSelect={setChain} />}
+        {!!notice && !done && <Body>{verusIdText(notice)}</Body>}
+        {!!pageError && !!rows.length && <ErrorMessage>{verusIdText(pageError.message)}</ErrorMessage>}
+        {showSearch && <AppSearchField accessibilityLabel="Search identities" placeholder="Search VerusIDs" value={query}
+          onChangeText={setQuery} disabled={busy} resultCount={visible.length} />}
+      </View>}
+      ListEmptyComponent={loading ? <SkeletonLoader accessibilityLabel="Finding your VerusIDs">
+        {['46%', '64%', '52%', '72%', '48%', '56%', '68%', '40%'].map((width, index) =>
+          <View key={index} style={[layout.skeletonRow, {backgroundColor: theme.colors.surfaceMuted}]}>
+            <SkeletonBlock width={width} height={14} />
+          </View>)}
+      </SkeletonLoader> : <View style={layout.empty}><EmptyState icon={pageError ? CircleAlert : AtSign}
+        title={pageError ? 'Unable to find VerusIDs' : query.trim() ? 'No matching VerusIDs' : 'No VerusIDs found'}
+        message={pageError ? verusIdText(pageError.message) : query.trim() ? 'Try another name or VerusID address.'
+          : 'No VerusIDs this wallet can spend from were found on this network. Locked, revoked, and VerusIDs that need other signers are left out. Pull down to check again.'}
+        actionLabel={pageError && context ? 'Try again' : undefined} onAction={load} /></View>}
+      renderItem={({item: row}) => <View>
+        <SelectionRow title={row.displayName} selected={row.linked || selection.includes(row.identityAddress)}
+          accessibilityRole="checkbox" accessibilityLabel={`${row.displayName}${row.linked ? '. Already linked' : ''}`}
+          readOnly={row.linked} value={row.linked ? 'Linked' : undefined} quietValue
+          showChevron={false} disabled={busy || row.linked} onPress={() => toggle(row)} />
+        {failedAddresses.has(row.identityAddress) && <ErrorMessage>{verusIdText(failures.find(item => item.identity.identityAddress === row.identityAddress)?.error.message)}</ErrorMessage>}
+      </View>} />
+    <SafeBottomActionStack horizontalSpacing={20} bottomSpacing={keyboardOpen ? 12 : smallDevice ? 30 : 48}
+      includeBottomInset={!keyboardOpen} gap={10} style={[layout.footer, smallDevice && layout.footerCompact]}>
+      {refreshPending.current && <ActionButton secondary disabled={busy || loading} onPress={load}>Refresh wallet</ActionButton>}
+      {!loading && !!pageError && !rows.length && <SignedOutActionRow label="Enter VerusID manually" onPress={manual} />}
+      {(loading || rows.length > 0) && <AppButton loading={busy} disabled={busy || loading || (!done && !selectedRows.length)}
+        onPress={done ? () => navigation.goBack() : submit}>
+        {done ? 'Done' : selectedRows.length ? `Link ${selectedRows.length} ${selectedRows.length === 1 ? 'VerusID' : 'VerusIDs'}` : 'Link VerusIDs'}
+      </AppButton>}
+    </SafeBottomActionStack>
+    <InfoSheet title="About linking VerusIDs" visible={aboutVisible} onClose={() => setAboutVisible(false)}>
+      <InfoSheetTopic title="Linking">Choose from VerusIDs this wallet can spend from. Linking adds a VerusID to your wallet. It does not change its ownership or cost a network fee.</InfoSheetTopic>
+      {!!context && <InfoSheetTopic title="Network">{`${context.networkName}${context.isTestnet ? ' · Testnet' : ''}`}</InfoSheetTopic>}
+      {!!context?.walletAddresses?.length && <InfoSheetSection title={context.walletAddresses.length === 1 ? 'Wallet address' : 'Wallet addresses'}
+        rows={context.walletAddresses.map((address, index) => ({label: `Address ${index + 1}`, value: address, copy: true, valueStyle: identityManagementStyles.identifier}))} />}
+    </InfoSheet>
+  </KeyboardAvoidingForm>;
 }
 
 export default function LinkIdentities(props) {

@@ -1,271 +1,184 @@
-/*
- * AppEncryptionRequestInfo
- * 
- * Displays AppEncryptionRequest details to the user for approval.
- * Once approved, derives encryption keys and returns response.
- */
-
-import { useState, useEffect, useMemo, useRef } from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Portal, Text } from 'react-native-paper';
-import Button from '../../../components/Button';
-import { useSelector } from 'react-redux';
-import { GenericResponse } from 'verus-typescript-primitives';
-import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import SemiModal from '../../../components/SemiModal';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
-import Colors from '../../../globals/colors';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
-import { SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
-import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { unixToDate } from '../../../utils/math';
-import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
-import { getIdentity } from '../../../utils/api/channels/verusid/callCreators';
+import {getAppEncryptionSessionKey} from '../../../utils/deeplink/appEncryptionSession';
 import VrpcProvider from '../../../utils/vrpc/vrpcInterface';
-import { useObjectSelector } from '../../../hooks/useObjectSelector';
-import { copyToClipboard } from '../../../utils/clipboard/clipboard';
-import { requestServiceStoredData } from '../../../utils/auth/authBox';
-import { VERUSID_SERVICE_ID } from '../../../utils/constants/services';
-import { VERUSID_NETWORK_DEFAULT } from '../../../../env/index';
-import { processAppEncryptionRequest } from '../../../utils/deeplink/handlers/appEncryptionRequestHandler';
-import { ensureGenericResponseSigner } from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
-import { getAppEncryptionSessionKey } from '../../../utils/deeplink/appEncryptionSession';
+import {appEncryptionIdentityMatchesConstraints, getAppEncryptionIdentityConstraints} from '../../../utils/deeplink/validator/appEncryptionIdentityConstraints';
+import {useRequestBackHandler} from '../useRequestNavigation';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {TouchableOpacity, View} from 'react-native';
+import {exitRequestToStack} from '../exitRequest';
+import {Text} from 'react-native-paper';
+import {useDispatch, useSelector} from 'react-redux';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import StatusBadge from '../../../components/StatusBadge';
+import {InfoSheetRow} from '../../../components/InfoSheetSection';
+import {Info} from 'lucide-react-native';
+import {GenericResponse} from 'verus-typescript-primitives';
+import AppButton from '../../../components/AppButton';
+import SlideToConfirm from '../../../components/SlideToConfirm';
+import SafeBottomActionStack from '../../../components/SafeBottomActionStack';
 import {
-  appEncryptionIdentityMatchesConstraints,
-  getAppEncryptionIdentityConstraints,
-} from '../../../utils/deeplink/validator/appEncryptionIdentityConstraints';
-import store from '../../../store';
-import styles from '../../../styles/appEncryption.styles';
-import { convertFqnToDisplayFormat } from '../../../utils/fullyqualifiedname';
+  requestWalletUnlock,
+  WALLET_UNLOCK_CANCELLED,
+} from '../../../actions/actionDispatchers';
+import {
+  resetDeeplinkData,
+  setConfigSection,
+  setUserCoins,
+} from '../../../actions/actionCreators';
+import {
+  updateVerusIdWallet,
+} from '../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager';
+import {
+  clearChainLifecycle,
+  refreshActiveChainLifecycles,
+} from '../../../actions/actions/intervals/dispatchers/lifecycleManager';
+import {
+  createAlert,
+} from '../../../actions/actions/alert/dispatchers/alert';
+import {
+  linkVerusId,
+} from '../../../actions/actions/services/dispatchers/verusid/verusid';
+import {getSystemNameFromSystemId} from '../../../utils/CoinData/CoinData';
+import {CoinDirectory} from '../../../utils/CoinData/CoinDirectory';
+import {
+  getFriendlyNameMap,
+  getIdentity,
+} from '../../../utils/api/channels/verusid/callCreators';
+import {useObjectSelector} from '../../../hooks/useObjectSelector';
+import {requestServiceStoredData} from '../../../utils/auth/authBox';
+import Store from '../../../store';
+import {
+  captureSessionScope,
+  sessionScopeIsCurrent,
+} from '../../../actions/actions/updates/sessionRequests';
+import {VERUSID_SERVICE_ID} from '../../../utils/constants/services';
+import {DLIGHT_PRIVATE} from '../../../utils/constants/intervalConstants';
+import {
+  VERUSID_NETWORK_DEFAULT,
+} from '../../../../env/index';
+import {PROFILE_SECURITY_SETTINGS_LABEL} from '../../../utils/settings/settingsLabels';
+import {processAppEncryptionRequest} from '../../../utils/deeplink/handlers/appEncryptionRequestHandler';
+import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
+import {
+  GENERIC_REQUEST_DELIVERY_TYPES,
+  getGenericRequestDeliveryInfo,
+} from '../../../utils/deeplink/genericRequestDelivery';
+import {accountIsTestnet} from '../../../utils/account/accountNetwork';
+import {convertFqnToDisplayFormat} from '../../../utils/fullyqualifiedname';
+import {
+  identityLinkCandidateMatchesAccount,
+  identityLinkOriginIsCurrent,
+} from '../../../utils/verusid/verusIdFlowGuards';
+import {
+  appEncryptionRequestInfoStyles as createAppEncryptionRequestInfoStyles,
+  requestCardStyles as createRequestCardStyles,
+} from '../../../styles';
+import {
+  OnboardingThemeProvider,
+  useOnboardingTheme,
+} from '../../../theme/onboarding';
+import IdentityPickerSheet, {
+  VERUSID_SHEET_MODES,
+} from '../components/VerusIdIdentityPickerSheet/IdentityPickerSheet';
+import {
+  DeepLinkReviewScrollView,
+  RequestCard,
+  getResponseHostLabel,
+} from '../components/RequestReview';
 
-// ── Helpers ──
-
-const truncateAddress = (addr) => {
-  if (!addr || addr.length <= 14) return addr;
-  return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+const ROOT_CHAIN_BY_NETWORK = {
+  mainnet: VERUSID_NETWORK_DEFAULT,
+  testnet: 'VRSCTEST',
 };
 
-const getDaemonChainArg = systemID => {
-  const coin = getIdentityCoin(systemID);
-  if (coin?.id === 'VRSC') return '';
-  if (coin?.id === 'VRSCTEST') return ' -chain=vrsctest';
+const SESSION_CHANGED = 'SESSION_CHANGED';
 
-  // PBaaS chain identifiers are case-sensitive and independent of display names.
-  return systemID ? ` -chain=${systemID}` : '';
-};
+const SHIELDED_SETUP_PROFILE_MESSAGE =
+  `Set up the Z recovery secret in Settings > ${PROFILE_SECURITY_SETTINGS_LABEL}, then restart Verus Mobile and try again.`;
 
-const buildDaemonDecryptCommand = ({
-  encryptedDescriptorJson,
-  signerSystemID,
-}) => {
-  const chainArg = getDaemonChainArg(signerSystemID);
-  const payload = JSON.stringify({ datadescriptor: encryptedDescriptorJson });
-  return `./verus${chainArg} decryptdata '${payload}'`;
-};
+const SHIELDED_SETUP_RESTART_MESSAGE =
+  'Restart Verus Mobile, unlock this wallet, and try again.';
 
-const isTestProfile = account => {
-  return Object.keys(account?.testnetOverrides || {}).length > 0;
-};
+const getOfflineSystemName = systemId => {
+  if (!systemId) return null;
 
-const EMPTY_IDENTITIES = {};
-
-const getIdentityCoin = chainId => {
   try {
-    return CoinDirectory.findCoinObj(chainId);
-  } catch (_) {
+    return getSystemNameFromSystemId(systemId);
+  } catch (e) {
     return null;
   }
 };
 
-// ── Identity Picker Sheet ──
+const getUriString = uri => {
+  if (!uri) return null;
+  if (typeof uri.getUriString === 'function') return uri.getUriString();
+  return String(uri);
+};
 
-const IdentityPickerSheet = ({
-  visible,
+const buildMatchingIdentities = (linkedIds, preferredChain) =>
+  [preferredChain, ...Object.keys(linkedIds || {}).filter(chain => chain !== preferredChain)]
+    .flatMap(chainId => Object.keys(linkedIds?.[chainId] || {})
+      .sort((a, b) => (linkedIds[chainId][a] || '').localeCompare(linkedIds[chainId][b] || ''))
+      .map(iAddress => ({chainId, iAddress, friendlyName: linkedIds[chainId][iAddress] || iAddress})));
+
+const buildPickerIdentityData = linkedIds => ({
   linkedIds,
-  sortedIds,
-  selectedIdentity,
-  onClose,
-  onSelect,
+  sortedIds: Object.fromEntries(Object.entries(linkedIds).map(([chain, ids]) => [chain, Object.keys(ids)])),
+});
+
+const findPreferredIdentity = ({
+  linkedIds,
+  preferredIAddress,
+  previousAddressSet,
+  requestIdentityChainId,
 }) => {
-  const insets = useSafeAreaInsets();
-  const paddingBottom = 16 + insets.bottom;
+  const identities = buildMatchingIdentities(linkedIds, requestIdentityChainId);
+  const preferredKey = preferredIAddress
+    ? preferredIAddress.toLowerCase()
+    : null;
 
-  if (!visible) return null;
+  if (preferredKey) {
+    const preferredIdentity = identities.find(
+      identity => identity.iAddress.toLowerCase() === preferredKey,
+    );
 
-  const hasIdentities = Object.keys(sortedIds).some(chainId =>
-    sortedIds[chainId] && sortedIds[chainId].length > 0
-  );
+    if (preferredIdentity) return preferredIdentity;
+  }
 
-  return (
-    <Portal>
-      <SemiModal
-        animationType="slide"
-        transparent={true}
-        visible={visible}
-        onRequestClose={onClose}
-        title="Select identity to respond with"
-        flexHeight={0.01}
-        contentContainerStyle={{
-          borderTopLeftRadius: 16,
-          borderTopRightRadius: 16,
-          flex: 0,
-          width: '100%',
-          alignSelf: 'flex-end',
-          paddingBottom,
-          maxHeight: '70%',
-        }}
-      >
-        <View>
-          <View style={styles.sheetDescription}>
-            <Text style={styles.sheetDescriptionText}>
-              Choose a VerusID to derive the encryption key from.
-            </Text>
-          </View>
+  if (previousAddressSet) {
+    const newIdentity = identities.find(
+      identity => !previousAddressSet.has(identity.iAddress.toLowerCase()),
+    );
 
-          <ScrollView style={{ maxHeight: 400 }}>
-            <View style={styles.listContainer}>
-              {!hasIdentities && (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    No linked identities match this request.
-                  </Text>
-                </View>
-              )}
+    if (newIdentity) return newIdentity;
+  }
 
-              {Object.keys(sortedIds).map(chainId => {
-                const identities = sortedIds[chainId];
-                if (!identities || identities.length === 0) return null;
-
-                return (
-                  <View key={chainId} style={styles.networkGroup}>
-                    <View style={styles.networkHeader}>
-                      <Text style={styles.networkHeaderText}>{chainId}</Text>
-                    </View>
-
-                    {identities.map(iAddr => {
-                      const friendlyName = linkedIds[chainId]?.[iAddr] || iAddr;
-                      const isSelected =
-                        selectedIdentity &&
-                        selectedIdentity.chainId === chainId &&
-                        selectedIdentity.iAddress === iAddr;
-
-                      return (
-                        <TouchableOpacity
-                          key={iAddr}
-                          style={[
-                            styles.identityCard,
-                            isSelected && styles.identityCardSelected,
-                          ]}
-                          onPress={() => onSelect(chainId, iAddr, friendlyName)}
-                          activeOpacity={0.7}
-                        >
-                          <View style={styles.identityIconContainer}>
-                            <MaterialCommunityIcons
-                              name="account"
-                              size={22}
-                              color={isSelected ? Colors.verusGreenColor : '#666'}
-                            />
-                          </View>
-                          <View style={styles.identityTextSection}>
-                            <Text
-                              style={[
-                                styles.identityName,
-                                isSelected && styles.identityNameSelected,
-                              ]}
-                              numberOfLines={1}
-                            >
-                              {friendlyName !== iAddr ? convertFqnToDisplayFormat(friendlyName) : iAddr}
-                            </Text>
-                            <Text
-                              style={styles.identityAddress}
-                              numberOfLines={1}
-                            >
-                              {truncateAddress(iAddr)}
-                            </Text>
-                          </View>
-
-                          {isSelected ? (
-                            <MaterialCommunityIcons
-                              name="check-circle"
-                              size={20}
-                              color={Colors.verusGreenColor}
-                              style={styles.chevronIcon}
-                            />
-                          ) : (
-                            <MaterialCommunityIcons
-                              name="chevron-right"
-                              size={20}
-                              color="#CCC"
-                              style={styles.chevronIcon}
-                            />
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                );
-              })}
-            </View>
-          </ScrollView>
-        </View>
-      </SemiModal>
-    </Portal>
-  );
+  return identities[0] || null;
 };
 
-// ── Detail Row Component ──
+const cloneGenericResponse = response => {
+  const baseResponse = new GenericResponse();
 
-const DetailRow = ({ title, subtitle, onPress, rightIcon, showBorder, isWarning }) => {
-  const Wrapper = onPress ? TouchableOpacity : View;
-  const wrapperProps = onPress ? { onPress, activeOpacity: 0.7 } : {};
-  return (
-    <Wrapper
-      style={[
-        styles.detailRow,
-        showBorder && styles.detailRowBorder,
-        onPress && styles.detailRowPressable,
-        isWarning && styles.detailRowWarning,
-      ]}
-      {...wrapperProps}
-    >
-      <View style={styles.detailLeft}>
-        <Text 
-          style={[styles.detailTitle, isWarning && styles.detailTitleWarning]} 
-          numberOfLines={undefined}
-        >
-          {title}
-        </Text>
-        {subtitle ? (
-          <Text style={[styles.detailSubtitle, isWarning && styles.detailSubtitleWarning]}>
-            {subtitle}
-          </Text>
-        ) : null}
-      </View>
-      {rightIcon ? (
-        <MaterialCommunityIcons 
-          name={rightIcon} 
-          size={18} 
-          color={isWarning ? "#E65100" : "#888"} 
-        />
-      ) : null}
-    </Wrapper>
-  );
+  if (response?.details && response.details.length > 0) {
+    baseResponse.fromBuffer(response.toBuffer(), 0);
+    return baseResponse;
+  }
+
+  if (response) {
+    Object.assign(baseResponse, response);
+  }
+
+  baseResponse.details = [];
+  return baseResponse;
 };
 
-// ══════════════════════════════════════════════════════════════════════════════
-// Main Component
-// ══════════════════════════════════════════════════════════════════════════════
-
-const AppEncryptionRequestSession = (props) => {
+const AppEncryptionRequestInfoContent = props => {
   const {
-    // From displayProps (handler output)
     signerFqn,
     signerSystemID,
     signerSystemName,
@@ -275,756 +188,851 @@ const AppEncryptionRequestSession = (props) => {
     secondaryDerivationNumber,
     appScopeID,
     appScopeFqn,
-    derivationIdFqn,
     derivationIdentityID,
+    derivationIdFqn,
     hasDerivationID,
     requestIdFqn,
     hasRequestID,
     encryptResponseToAddress,
     returnESK,
-    // Standard props from GenericRequestHome
     cancel,
     next,
     response,
     request,
     detailIndex,
+    navigation,
     sessionKey,
   } = props;
 
-  // ── Redux state ──
-  const signedIn = useSelector(state => state.authentication.signedIn);
-  const accounts = useObjectSelector(state => state.authentication.accounts);
-  const sendModalType = useSelector(state => state.sendModal.type);
-  const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
-  const encryptedIds = useObjectSelector(state => state.services.stored[VERUSID_SERVICE_ID]);
-  const requestIsTestnet = request != null ? request.isTestnet() : false;
-  const testnetOverrides = useObjectSelector(
-    state => state.authentication.activeAccount?.testnetOverrides || {},
+  const theme = useOnboardingTheme();
+  const styles = useMemo(
+    () => createAppEncryptionRequestInfoStyles(theme),
+    [theme],
   );
-  const identityNetwork = testnetOverrides[VERUSID_NETWORK_DEFAULT]
-    ? testnetOverrides[VERUSID_NETWORK_DEFAULT]
-    : VERUSID_NETWORK_DEFAULT;
-
-  // ── Local state ──
-  const [loading, setLoading] = useState(false);
-  const [waitingForSignin, setWaitingForSignin] = useState(false);
-  const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] = useState(null);
-  const [selectedIdentity, setSelectedIdentity] = useState(null);
-  const [linkedIdentityData, setLinkedIdentityData] = useState(null);
-  const [parentData, setParentData] = useState(null);
-  const [identitySheetVisible, setIdentitySheetVisible] = useState(false);
-
-  // ── Encrypted response preview state ──
-  const [encryptedResponseHex, setEncryptedResponseHex] = useState(null);
-  const [encryptedDescriptorJson, setEncryptedDescriptorJson] = useState(null);
-  const [pendingResponse, setPendingResponse] = useState(null);
-  const mounted = useRef(true);
-  const activeApproval = useRef(null);
-  const sending = useRef(false);
+  const reviewStyles = useMemo(() => createRequestCardStyles(theme), [theme]);
+  const dispatch = useDispatch();
+  const accounts = useObjectSelector(state => state.authentication.accounts);
+  const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
+  const activeAccount = useObjectSelector(
+    state => state.authentication.activeAccount,
+  );
+  // The account this screen rendered against. Link mutations must reject if the
+  // store account changed in the same frame as the action.
+  const renderedAccountHash = useObjectSelector(
+    state => state.authentication.activeAccount?.accountHash || null,
+  );
+  const encryptedIds = useObjectSelector(
+    state => state.services.stored[VERUSID_SERVICE_ID],
+  );
+  const signedIn = useSelector(state => state.authentication.signedIn);
+  const requestIsTestnet = request != null ? request.isTestnet() : false;
+  const activeAccountMatchesRequest =
+    signedIn &&
+    activeAccount != null &&
+    accountIsTestnet(activeAccount) === requestIsTestnet;
   const requestHex = request.toBuffer().toString('hex');
   const linkedIdsVersion = JSON.stringify(encryptedIds);
-  const linkedIdsLoaded = signedIn && linkedIdentityData != null &&
-    linkedIdentityData.source === encryptedIds;
-  const linkedIds = linkedIdsLoaded ? linkedIdentityData.ids : EMPTY_IDENTITIES;
+  const requestIdentityChainId = requestIsTestnet
+    ? ROOT_CHAIN_BY_NETWORK.testnet
+    : ROOT_CHAIN_BY_NETWORK.mainnet;
+  const requestCoinObj = useMemo(
+    () => CoinDirectory.findCoinObj(signerSystemID || requestIdentityChainId),
+    [signerSystemID, requestIdentityChainId],
+  );
+  const systemLabel =
+    signerSystemName || getOfflineSystemName(signerSystemID) || signerSystemID;
+  const responseUris = useMemo(
+    () => (request?.responseURIs && request.responseURIs.length > 0
+      ? request.responseURIs
+      : []),
+    [request],
+  );
+  const deliveryInfo = useMemo(
+    () => getGenericRequestDeliveryInfo(request),
+    [request],
+  );
+  const [linkedIdentityData, setLinkedIdentityData] = useState(null);
+  const [parentData, setParentData] = useState(null);
+  const linkedIdsLoaded = activeAccountMatchesRequest && linkedIdentityData?.source === encryptedIds;
+  const allLinkedIds = useMemo(() => linkedIdsLoaded ? linkedIdentityData.ids : {}, [linkedIdsLoaded, linkedIdentityData]);
   const constraints = useMemo(() => {
-    try {
-      return getAppEncryptionIdentityConstraints(request);
-    } catch (_) {
-      // Malformed signed constraints cannot authorize an identity selection.
-      return null;
-    }
+    try { return getAppEncryptionIdentityConstraints(request); }
+    catch (_) { return null; }
   }, [request, requestHex]);
-  const parentScope = useMemo(() => ({ linkedIds, constraints }), [linkedIds, constraints]);
-  const sortedIds = useMemo(() => {
-    const sorted = {};
-
-    if (!linkedIdsLoaded || !constraints) return sorted;
-    if (constraints.parentIDs.size > 0 && parentData?.scope !== parentScope) return sorted;
-
-    for (const chainId of Object.keys(linkedIds)) {
-      const coin = getIdentityCoin(chainId);
+  const parentScope = useMemo(() => ({allLinkedIds, constraints}), [allLinkedIds, constraints]);
+  const linkedIds = useMemo(() => {
+    const eligible = {};
+    if (!constraints || (constraints.parentIDs.size > 0 && parentData?.scope !== parentScope)) return eligible;
+    for (const [chain, ids] of Object.entries(allLinkedIds)) {
+      let coin;
+      try { coin = CoinDirectory.findCoinObj(chain); } catch (_) { continue; }
       if (!coin || !!coin.testnet !== requestIsTestnet) continue;
-
-      sorted[chainId] = Object.keys(linkedIds[chainId] || {})
-        .filter(identityID => appEncryptionIdentityMatchesConstraints(constraints, {
-          identityID,
-          systemID: coin.system_id,
-          parentID: parentData?.ids[`${chainId}:${identityID}`],
-        }))
-        .sort((a, b) => (linkedIds[chainId][a] || '').localeCompare(linkedIds[chainId][b] || ''));
+      eligible[chain] = Object.fromEntries(Object.entries(ids).filter(([identityID]) =>
+        appEncryptionIdentityMatchesConstraints(constraints, {
+          identityID, systemID: coin.system_id, parentID: parentData?.ids[`${chain}:${identityID}`],
+        })));
     }
+    return eligible;
+  }, [allLinkedIds, constraints, parentData, parentScope, requestIsTestnet]);
+  const [selectedIdentity, setSelectedIdentity] = useState(null);
+  const [identitySheetVisible, setIdentitySheetVisible] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  useRequestBackHandler(cancel, processing);
+  const [openIdentityAfterUnlock, setOpenIdentityAfterUnlock] =
+    useState(false);
+  const linkOperationRef = useRef(0);
+  const zSeedConfigured = activeAccount?.seeds?.[DLIGHT_PRIVATE] != null;
+  const shieldedKeyLoaded =
+    requestCoinObj?.id != null &&
+    activeAccount?.keys?.[requestCoinObj.id]?.[DLIGHT_PRIVATE] != null;
+  const shieldedSetupBlocksResponse =
+    activeAccountMatchesRequest &&
+    requestCoinObj?.id != null &&
+    !shieldedKeyLoaded;
+  const shieldedSetupNeedsProfile =
+    shieldedSetupBlocksResponse && !zSeedConfigured;
+  const shieldedSetupNeedsRestart =
+    shieldedSetupBlocksResponse && zSeedConfigured;
+  const waitingForLinkedIds =
+    activeAccountMatchesRequest &&
+    !shieldedSetupBlocksResponse &&
+    !linkedIdsLoaded;
+  const showSelectedIdentityCard =
+    selectedIdentity &&
+    activeAccountMatchesRequest &&
+    !shieldedSetupBlocksResponse;
 
-    return sorted;
-  }, [linkedIds, linkedIdsLoaded, constraints, parentData, parentScope, requestIsTestnet]);
-  const selectedIdentityAllowed = selectedIdentity != null &&
-    sortedIds[selectedIdentity.chainId]?.includes(selectedIdentity.iAddress);
-  const review = useMemo(() => ({ request, requestHex, detailIndex, selectedIdentity, sortedIds }),
-    [request, requestHex, detailIndex, selectedIdentity, sortedIds]);
-  const currentReview = useRef(review);
-  currentReview.current = review;
+  const matchingIdentities = useMemo(
+    () => buildMatchingIdentities(linkedIds, requestIdentityChainId),
+    [linkedIds, requestIdentityChainId],
+  );
+  const identityPickerData = useMemo(
+    () => buildPickerIdentityData(linkedIds, requestIdentityChainId),
+    [linkedIds, requestIdentityChainId],
+  );
+  const isIdentityAllowed = useCallback(
+    (chainId, identityID) => !!linkedIds[chainId]?.[identityID], [linkedIds],
+  );
+  const isAutoLinkCandidateAllowed = useCallback(candidate => {
+    let coin;
+    try { coin = CoinDirectory.findCoinObj(candidate?.chainId || requestIdentityChainId); }
+    catch (_) { return false; }
+    return !!coin && !!coin.testnet === requestIsTestnet && !!constraints &&
+      appEncryptionIdentityMatchesConstraints(constraints, {
+        identityID: candidate?.identityAddress, systemID: coin.system_id,
+        parentID: candidate?.identity?.parent,
+      });
+  }, [constraints, requestIdentityChainId, requestIsTestnet]);
 
-  useEffect(() => {
-    mounted.current = true;
-    return () => { mounted.current = false; };
-  }, []);
-
-  useEffect(() => {
-    activeApproval.current = null;
-    setLoading(false);
-    setEncryptedResponseHex(null);
-    setEncryptedDescriptorJson(null);
-    setPendingResponse(null);
-  }, [review]);
-
-  // ── Derived values ──
-  const requesterLabel = signerFqn || 'An application';
-  const requesterAddress = signerFqn ? signerIdentityID : null;
-  const sigDateString = sigtime ? unixToDate(sigtime) : null;
-  const chainId = signerSystemName || signerSystemID;
-  const matchingAccounts = useMemo(() => {
-    return (accounts || []).filter(account => isTestProfile(account) === requestIsTestnet);
-  }, [accounts, requestIsTestnet]);
-
-  // ── isWrongRequestType check (testnet/mainnet mismatch) ──
-  const isWrongRequestType = useMemo(() => {
-    if (!signedIn || !activeAccount) return false;
-    const isTestAccount = isTestProfile(activeAccount);
-    return requestIsTestnet !== isTestAccount;
-  }, [activeAccount, requestIsTestnet, signedIn]);
-
-  // ── Load linked identities (decrypt stored data) ──
-  useEffect(() => {
-    let active = true;
-    const loadLinkedIds = async () => {
-      try {
-        const verusIdServiceData = await requestServiceStoredData(
-          VERUSID_SERVICE_ID,
-        );
-        if (active && getAppEncryptionSessionKey(store.getState()) === sessionKey) {
-          setLinkedIdentityData({ source: encryptedIds, ids: verusIdServiceData.linked_ids || {} });
-        }
-      } catch (e) {
-        if (active) setLinkedIdentityData({ source: encryptedIds, ids: {} });
-      }
-    };
-
-    if (signedIn) loadLinkedIds();
-
-    return () => { active = false; };
-  }, [encryptedIds, signedIn]);
-
-  // Parent constraints use the current identity record, not a stored display name.
   useEffect(() => {
     let active = true;
-
-    const loadParents = async () => {
+    const load = async () => {
       const ids = {};
-      await Promise.all(Object.keys(linkedIds).map(async chainId => {
-        const coin = getIdentityCoin(chainId);
+      await Promise.all(Object.keys(allLinkedIds).map(async chain => {
+        let coin;
+        try { coin = CoinDirectory.findCoinObj(chain); } catch (_) { return; }
         if (!coin?.vrpc_endpoints?.[0] || !!coin.testnet !== requestIsTestnet) return;
-
-        try {
-          VrpcProvider.initEndpoint(coin.system_id, coin.vrpc_endpoints[0]);
-        } catch (_) {
-          return;
-        }
-
-        await Promise.all(Object.keys(linkedIds[chainId] || {}).map(async identityID => {
+        try { VrpcProvider.initEndpoint(coin.system_id, coin.vrpc_endpoints[0]); }
+        catch (_) { return; }
+        await Promise.all(Object.keys(allLinkedIds[chain]).map(async id => {
           try {
-            const result = await getIdentity(coin.system_id, identityID);
-            if (!result.error) ids[`${chainId}:${identityID}`] = result.result?.identity?.parent;
-          } catch (_) {
-            // Unverified parents remain ineligible until the identities reload.
-          }
+            const result = await getIdentity(coin.system_id, id);
+            if (!result.error) ids[`${chain}:${id}`] = result.result?.identity?.parent;
+          } catch (_) { /* Unverified parents stay ineligible. */ }
         }));
       }));
-
-      if (active && getAppEncryptionSessionKey(store.getState()) === sessionKey) {
-        setParentData({ scope: parentScope, ids });
-      }
+      if (active && getAppEncryptionSessionKey(Store.getState()) === sessionKey) setParentData({scope: parentScope, ids});
     };
+    if (linkedIdsLoaded && constraints?.parentIDs.size > 0) load();
+    return () => {active = false;};
+  }, [parentScope, linkedIdsLoaded, requestIsTestnet, sessionKey]);
 
-    if (linkedIdsLoaded && constraints?.parentIDs.size > 0) loadParents();
+  const loadLinkedIds = useCallback(async isCurrent => {
+    const shouldApply = () =>
+      getAppEncryptionSessionKey(Store.getState()) === sessionKey &&
+      (typeof isCurrent === 'function' ? isCurrent() : true);
 
-    return () => { active = false; };
-  }, [parentScope, linkedIdsLoaded, requestIsTestnet]);
+    try {
+      const verusIdServiceData = await requestServiceStoredData(
+        VERUSID_SERVICE_ID,
+      );
+      // Preserve legacy root-chain key casing. PBaaS identifiers stay exact.
+      const nextLinkedIds = Object.fromEntries(Object.entries(verusIdServiceData.linked_ids || {}).map(([chain, ids]) => [
+        Object.values(ROOT_CHAIN_BY_NETWORK).find(root => root.toLowerCase() === chain.toLowerCase()) || chain, ids,
+      ]));
 
-  // ── Handle sign-in flow ──
-  useEffect(() => {
-    if (waitingForSignin && signedIn && sendModalType == null) {
-      setWaitingForSignin(false);
+      if (shouldApply()) setLinkedIdentityData({source: encryptedIds, ids: nextLinkedIds});
+      return nextLinkedIds;
+    } catch (e) {
+      if (shouldApply()) setLinkedIdentityData({source: encryptedIds, ids: {}});
+      return {};
     }
-  }, [signedIn, sendModalType, waitingForSignin]);
+  }, [encryptedIds, sessionKey]);
 
-  // ── Auto-select first matching identity ──
+  const loadLinkedIdsAndSelect = useCallback(
+    async ({
+      preferredIAddress,
+      previousAddressSet,
+      reopenIdentitySheet,
+      isCurrent,
+    }) => {
+      const shouldApply = () =>
+        getAppEncryptionSessionKey(Store.getState()) === sessionKey &&
+      (typeof isCurrent === 'function' ? isCurrent() : true);
+
+      if (shouldApply()) setLinkedIdentityData(null);
+
+      const nextLinkedIds = await loadLinkedIds(isCurrent);
+      const nextIdentity = findPreferredIdentity({
+        linkedIds: nextLinkedIds,
+        preferredIAddress,
+        previousAddressSet,
+        requestIdentityChainId,
+      });
+
+      if (nextIdentity) {
+        if (shouldApply()) {
+          setSelectedIdentity(nextIdentity);
+          setIdentitySheetVisible(false);
+        }
+        return nextIdentity;
+      }
+
+      if (reopenIdentitySheet && shouldApply()) {
+        setIdentitySheetVisible(true);
+      }
+
+      return nextIdentity;
+    },
+    [loadLinkedIds, requestIdentityChainId],
+  );
+
   useEffect(() => {
-    if (selectedIdentity && !selectedIdentityAllowed) {
+    let active = true;
+    if (signedIn) {
+      loadLinkedIds(() => active);
+    } else {
+      setLinkedIdentityData(null);
       setSelectedIdentity(null);
-    } else if (!selectedIdentity && linkedIdsLoaded) {
-      const preferredChain = requestIsTestnet ? 'VRSCTEST' : identityNetwork;
-      const identityChain = [preferredChain, ...Object.keys(sortedIds)]
-        .find(chainId => sortedIds[chainId]?.length > 0);
+    }
+    return () => {active = false;};
+  }, [encryptedIds, loadLinkedIds, signedIn]);
 
-      if (identityChain) {
-        const firstIAddress = Object.keys(linkedIds[identityChain])
-          .find(identityID => sortedIds[identityChain].includes(identityID));
-        setSelectedIdentity({
-          chainId: identityChain,
-          iAddress: firstIAddress,
-          friendlyName: linkedIds[identityChain][firstIAddress] || firstIAddress,
-        });
+  useEffect(() => {
+    if (!activeAccountMatchesRequest) return;
+    if (!linkedIdsLoaded) return;
+    if (selectedIdentity && isIdentityAllowed(selectedIdentity.chainId, selectedIdentity.iAddress)) return;
+    if (matchingIdentities.length === 0) return;
+
+    setSelectedIdentity(matchingIdentities[0]);
+  }, [
+    activeAccountMatchesRequest,
+    linkedIdsLoaded,
+    matchingIdentities,
+    selectedIdentity,
+    isIdentityAllowed,
+  ]);
+
+  useEffect(() => {
+    if (!selectedIdentity) return;
+    if (isIdentityAllowed(selectedIdentity.chainId, selectedIdentity.iAddress)) return;
+
+    setSelectedIdentity(null);
+  }, [isIdentityAllowed, selectedIdentity]);
+
+  useEffect(() => {
+    if (!openIdentityAfterUnlock) return;
+    if (!activeAccountMatchesRequest) return;
+    if (!linkedIdsLoaded) return;
+
+    setOpenIdentityAfterUnlock(false);
+    setIdentitySheetVisible(true);
+  }, [activeAccountMatchesRequest, linkedIdsLoaded, openIdentityAfterUnlock]);
+
+  const canOpenSignerDetails = signerSystemID && signerIdentityID;
+
+  const loadSignerVerusId = useCallback(async () => {
+    if (!canOpenSignerDetails) {
+      throw new Error('Signer identity is not available');
+    }
+
+    const coinObj = CoinDirectory.getBasicCoinObj(signerSystemID);
+    if (!coinObj) throw new Error('Signer network is not available');
+
+    const res = await getIdentity(coinObj.system_id, signerIdentityID);
+    if (res.error) throw new Error(res.error.message);
+
+    return res.result;
+  }, [canOpenSignerDetails, signerIdentityID, signerSystemID]);
+  const loadSignerFriendlyNames = useCallback(
+    async identityObj => {
+      try {
+        const coinObj = CoinDirectory.getBasicCoinObj(signerSystemID);
+        if (!coinObj) throw new Error('Signer network is not available');
+
+        return getFriendlyNameMap(coinObj.system_id, identityObj);
+      } catch (e) {
+        return {
+          ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
+          ['iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq']: 'VRSCTEST',
+        };
+      }
+    },
+    [signerSystemID],
+  );
+
+  const handleWalletUnlock = async () => {
+    const allowList = (accounts || []).filter(
+      account => accountIsTestnet(account) === requestIsTestnet,
+    );
+
+    // The action is disabled with its reason on screen.
+    if (allowList.length === 0) return;
+
+    try {
+      await requestWalletUnlock({
+        reason: 'app-encryption-request',
+        title: signedIn
+          ? 'Switch wallet to continue'
+          : 'Unlock wallet to continue',
+        requestLabel: 'Encryption request',
+        accountHashes: allowList.map(account => account.accountHash),
+        networkLabel: requestIsTestnet ? 'Testnet' : 'Mainnet',
+      });
+      setOpenIdentityAfterUnlock(true);
+    } catch (e) {
+      if (e?.code !== WALLET_UNLOCK_CANCELLED) {
+        createAlert(
+          'Cannot continue',
+          e?.message || 'Unable to unlock wallet.',
+        );
       }
     }
-  }, [linkedIds, linkedIdsLoaded, sortedIds, selectedIdentity, selectedIdentityAllowed, requestIsTestnet, identityNetwork]);
-
-  // ── Identity picker handlers ──
-  const handleOpenIdentitySheet = () => {
-    setIdentitySheetVisible(true);
   };
 
-  const handleSelectIdentity = (chainId, iAddress, friendlyName) => {
-    if (!currentReview.current.sortedIds[chainId]?.includes(iAddress)) return;
+  const linkIdentityCandidate = useCallback(
+    async (candidate, {showError = true, isCurrent: callerIsCurrent} = {}) => {
+      const shouldApply = () =>
+        typeof callerIsCurrent === 'function' ? callerIsCurrent() : true;
+      const requestContext = {
+        sessionScope: captureSessionScope(
+          Store.getState(),
+          renderedAccountHash,
+        ),
+      };
+      const operationToken = linkOperationRef.current + 1;
+      linkOperationRef.current = operationToken;
+      const isOperationCurrent = () =>
+        linkOperationRef.current === operationToken &&
+        shouldApply() &&
+        sessionScopeIsCurrent(Store.getState(), requestContext.sessionScope);
+      const assertSessionCurrent = () => {
+        if (!isOperationCurrent()) {
+          const error = new Error(
+            'Account changed while the VerusID was being linked.',
+          );
+          error.code = SESSION_CHANGED;
+          throw error;
+        }
+      };
 
+      // The candidate belongs to the account this screen rendered. If the store
+      // account already moved on, the link must not run against the new one.
+      assertSessionCurrent();
+
+      try {
+        const candidateChainId = candidate?.chainId || requestIdentityChainId;
+        const identityAddress = candidate?.identityAddress;
+        const fullyQualifiedName = candidate?.fullyQualifiedName;
+        const primaryAddresses =
+          candidate?.identity?.primaryaddresses ||
+          candidate?.identity?.primaryAddresses ||
+          [];
+        const displayName =
+          candidate?.displayName ||
+          (fullyQualifiedName
+            ? convertFqnToDisplayFormat(fullyQualifiedName)
+            : null);
+
+        if (!activeAccount?.id) {
+          throw new Error('You must be signed in to link VerusIDs.');
+        }
+
+        if (
+          !candidate ||
+          !identityAddress ||
+          !fullyQualifiedName ||
+          !displayName
+        ) {
+          throw new Error('Unable to link this VerusID.');
+        }
+
+        if (candidate.status !== 'active') {
+          throw new Error('Only active VerusIDs can be linked.');
+        }
+
+        if (
+          !candidate.primaryAddress ||
+          !primaryAddresses.includes(candidate.primaryAddress)
+        ) {
+          throw new Error(
+            'Ensure that your wallet address for this account matches a primary address of the VerusID you are trying to add.',
+          );
+        }
+
+        if (!isAutoLinkCandidateAllowed(candidate)) {
+          throw new Error(
+            'This VerusID does not match the request network.',
+          );
+        }
+
+        // The candidate's chosen primary R-address must belong to the account
+        // that is scoped right now, not only to the identity's own primary
+        // address list, and its origin session must still be live.
+        const liveState = Store.getState();
+
+        if (
+          candidate?.origin &&
+          !identityLinkOriginIsCurrent(liveState, candidate.origin)
+        ) {
+          const sessionError = new Error(
+            'Account changed while the VerusID was being linked.',
+          );
+          sessionError.code = SESSION_CHANGED;
+          throw sessionError;
+        }
+
+        if (!identityLinkCandidateMatchesAccount(liveState, candidate)) {
+          throw new Error(
+            'Ensure that your wallet address for this account matches a primary address of the VerusID you are trying to add.',
+          );
+        }
+
+        const coinObj = CoinDirectory.findCoinObj(candidateChainId);
+
+        if (!coinObj) {
+          throw new Error('Unable to find the request network.');
+        }
+
+        await linkVerusId(
+          identityAddress,
+          displayName,
+          coinObj.id,
+          requestContext,
+        );
+        assertSessionCurrent();
+        await updateVerusIdWallet(requestContext);
+        assertSessionCurrent();
+        clearChainLifecycle(coinObj.id);
+
+        const setUserCoinsAction = setUserCoins(
+          activeCoinList,
+          activeAccount.id,
+        );
+        assertSessionCurrent();
+        dispatch(setUserCoinsAction);
+        refreshActiveChainLifecycles(
+          setUserCoinsAction.payload.activeCoinsForUser,
+        );
+
+        assertSessionCurrent();
+        const selectedLinkedIdentity = await loadLinkedIdsAndSelect({
+          preferredIAddress: identityAddress,
+          isCurrent: isOperationCurrent,
+        });
+
+        if (!isOperationCurrent()) return;
+
+        if (!selectedLinkedIdentity) {
+          setSelectedIdentity({
+            chainId: coinObj.id,
+            iAddress: identityAddress,
+            friendlyName: displayName,
+          });
+          setIdentitySheetVisible(false);
+        }
+      } catch (e) {
+        if (showError && isOperationCurrent()) {
+          createAlert('Error', e?.message || 'Unable to link VerusID.');
+        }
+        throw e;
+      }
+    },
+    [
+      activeAccount,
+      activeCoinList,
+      dispatch,
+      isAutoLinkCandidateAllowed,
+      loadLinkedIdsAndSelect,
+      renderedAccountHash,
+      requestIdentityChainId,
+    ],
+  );
+
+  const linkAutoFoundIdentity = useCallback(
+    candidate => linkIdentityCandidate(candidate, {showError: false}),
+    [linkIdentityCandidate],
+  );
+
+  const mounted = useRef(true);
+  const activeApproval = useRef(null);
+  const review = useMemo(() => ({request, requestHex, detailIndex, selectedIdentity, linkedIds}),
+    [request, requestHex, detailIndex, selectedIdentity, linkedIds]);
+  const currentReview = useRef(review);
+  currentReview.current = review;
+  useEffect(() => {
+    mounted.current = true;
+    return () => {mounted.current = false;};
+  }, []);
+  useEffect(() => {activeApproval.current = null; setProcessing(false);}, [review]);
+
+  const handleSelectIdentity = (chainId, iAddress, friendlyName) => {
+    if (!isIdentityAllowed(chainId, iAddress)) return;
     activeApproval.current = null;
-    setSelectedIdentity({ chainId, iAddress, friendlyName });
+    setSelectedIdentity({chainId, iAddress, friendlyName});
     setIdentitySheetVisible(false);
   };
 
-  // ── Open signer modal ──
-  const openSignerModal = () => {
-    if (signerSystemID && signerIdentityID) {
-      const coinObj = getIdentityCoin(signerSystemID);
-      if (coinObj) {
-        setVerusIdDetailsModalProps({
-          loadVerusId: async () => {
-            const res = await getIdentity(coinObj.system_id, signerIdentityID);
-            if (res.error) throw new Error(res.error.message);
-            return res.result;
-          },
-          visible: true,
-          animationType: 'slide',
-          cancel: () => setVerusIdDetailsModalProps(null),
-          loadFriendlyNames: async () => ({}),
-          coinObj,
-        });
-      }
-    }
-  };
-
-  const handleSignin = () => {
-    if (matchingAccounts.length === 0) {
-      createAlert(
-        'No profile found',
-        `No ${requestIsTestnet ? 'testnet' : 'mainnet'} profile is available for this request.`,
-      );
-      return;
-    }
-
-    openAuthenticateUserModal({
-      [SEND_MODAL_USER_ALLOWLIST]: matchingAccounts,
-    });
-    setWaitingForSignin(true);
-  };
-
-  // ── Handle approval ──
-  const handleApprove = async () => {
+  const buildResponseAndContinue = async () => {
     if (!mounted.current || currentReview.current !== review || activeApproval.current) return;
-
-    // Check if signed in
-    if (!signedIn) {
-      handleSignin();
+    if (!selectedIdentity || !isIdentityAllowed(selectedIdentity.chainId, selectedIdentity.iAddress)) {
+      setIdentitySheetVisible(true);
       return;
     }
-
-    if (isWrongRequestType || getAppEncryptionSessionKey(store.getState()) !== sessionKey) return;
-
-    if (!selectedIdentityAllowed) {
-      createAlert('Error', 'Please select an identity to respond with.');
-      return;
-    }
-
-    // This guard also protects callbacks retained after the user changes their selection.
     const approval = {
       isActive: () => {
         try {
-          return mounted.current && currentReview.current === review &&
-            activeApproval.current === approval &&
-            getAppEncryptionSessionKey(store.getState()) === sessionKey &&
-            JSON.stringify(store.getState().services.stored[VERUSID_SERVICE_ID]) === linkedIdsVersion &&
+          return mounted.current && currentReview.current === review && activeApproval.current === approval &&
+            getAppEncryptionSessionKey(Store.getState()) === sessionKey &&
+            JSON.stringify(Store.getState().services.stored[VERUSID_SERVICE_ID]) === linkedIdsVersion &&
             request.toBuffer().toString('hex') === requestHex;
-        } catch (e) {
-          return false;
-        }
+        } catch (_) { return false; }
       },
       assertActive: () => {
-        if (!approval.isActive()) {
-          throw Object.assign(new Error('Encryption approval is no longer current.'), { code: 'SESSION_CHANGED' });
-        }
+        if (!approval.isActive()) throw Object.assign(new Error('Encryption approval is no longer current.'), {code: SESSION_CHANGED});
       },
     };
     activeApproval.current = approval;
-    setLoading(true);
-
+    setProcessing(true);
+    let responseCommitted = false;
     try {
       approval.assertActive();
-      // Keep a pending response private until this approval is sent.
-      const updatedResponse = new GenericResponse({
-        ...response,
-        details: [...(response?.details || [])],
-      });
+      const updatedResponse = cloneGenericResponse(response);
       const coinObj = CoinDirectory.findCoinObj(selectedIdentity.chainId);
-
-      if (!coinObj) {
-        throw new Error('Unsupported signing chain.');
-      }
-
-      ensureGenericResponseSigner({
-        response: updatedResponse,
-        systemID: coinObj.system_id,
-        identityID: selectedIdentity.iAddress,
-      });
-
-      // Process the encryption request
-      const { responseDetail, encryptedDescriptorJson: descriptorJson } = await processAppEncryptionRequest({
-        request,
-        detailIndex,
-        responseSignerID: selectedIdentity.iAddress,
-        responseSignerSystemID: coinObj.system_id,
-        assertActive: approval.assertActive,
+      if (!coinObj) throw new Error('Unsupported signing chain.');
+      ensureGenericResponseSigner({response: updatedResponse, systemID: coinObj.system_id, identityID: selectedIdentity.iAddress});
+      const {responseDetail} = await processAppEncryptionRequest({
+        request, detailIndex, responseSignerID: selectedIdentity.iAddress,
+        responseSignerSystemID: coinObj.system_id, assertActive: approval.assertActive,
       });
       approval.assertActive();
-
-      // Build updated response
-      updatedResponse.details = updatedResponse.details || [];
-      updatedResponse.details.push(responseDetail);
-
+      updatedResponse.details = [...(updatedResponse.details || []), responseDetail];
       updatedResponse.setFlags();
-
-      // Serialize to hex so the user can preview/copy the encrypted response
-      const responseHex = updatedResponse.toBuffer().toString('hex');
-      setEncryptedResponseHex(responseHex);
-      setEncryptedDescriptorJson(descriptorJson);
-      setPendingResponse({ updatedResponse, handledIndices: [detailIndex], approval, review });
+      await next(updatedResponse, [detailIndex], {
+        autoDeliverOnComplete: true, responseIdentityName: selectedIdentity.friendlyName,
+      });
+      responseCommitted = true;
     } catch (e) {
-      if (!approval.isActive() || e.code === 'SESSION_CHANGED') return;
-
+      if (!approval.isActive() || e?.code === SESSION_CHANGED) return;
       activeApproval.current = null;
-      const isZSeedMissing = e.message && e.message.includes('No Z (shielded address) seed');
-      createAlert(
-        isZSeedMissing ? 'Z Seed Required' : 'Error',
-        e.message || 'Failed to process encryption request.'
-      );
-      if (isZSeedMissing) {
-        cancel();
+      const isZSeedMissing = e?.message?.includes('No Z recovery secret');
+      createAlert(isZSeedMissing ? 'Z recovery secret required' : 'Cannot share encryption address',
+        isZSeedMissing ? `Set up the Z recovery secret in Settings > ${PROFILE_SECURITY_SETTINGS_LABEL}, then open the request again.`
+          : 'The wallet could not create the encryption address. Try again.');
+      if (isZSeedMissing) cancel();
+    } finally {
+      // Delivery owns the result and Retry after next. Keep the review locked
+      // with its chosen identity until Done closes it.
+      if (!responseCommitted && mounted.current && currentReview.current === review) {
+        setProcessing(false);
       }
-    } finally {
-      if (mounted.current && currentReview.current === review) setLoading(false);
     }
   };
 
-  // ── Handle denial ──
-  const handleDeny = () => {
-    createAlert(
-      'Deny Request',
-      'Are you sure you want to deny this encryption request?',
-      [
-        { text: 'Cancel', style: 'cancel', onPress: () => resolveAlert() },
-        { text: 'Deny', style: 'destructive', onPress: () => { resolveAlert(); cancel(); } },
-      ]
+  const openProfileSettings = useCallback(() => {
+    dispatch(setConfigSection('settings-profile'));
+    dispatch(resetDeeplinkData());
+
+    const settingsRoute = {
+      screen: 'Home',
+      params: {
+        screen: 'SettingsHome',
+        params: {screen: 'ProfileSettings'},
+      },
+    };
+
+    exitRequestToStack(navigation, 'SignedInStack', settingsRoute);
+  }, [dispatch, navigation]);
+
+  // No wallet on this device can answer the request. The wallet action is
+  // disabled and the footer says why.
+  const noRequestNetworkWallet =
+    !activeAccountMatchesRequest &&
+    !(accounts || []).some(
+      account => accountIsTestnet(account) === requestIsTestnet,
     );
-  };
+  const requestNetworkName = requestIsTestnet ? 'testnet' : 'mainnet';
+  const primaryActionLabel = processing
+    ? 'Preparing response'
+    : !activeAccountMatchesRequest
+    ? signedIn
+      ? 'Switch wallet'
+      : 'Unlock wallet'
+    : shieldedSetupNeedsProfile
+    ? `Open ${PROFILE_SECURITY_SETTINGS_LABEL}`
+    : shieldedSetupNeedsRestart
+    ? 'Restart required'
+    : !linkedIdsLoaded
+    ? 'Loading VerusIDs'
+    : selectedIdentity
+    ? returnESK
+      ? 'Slide to approve'
+      : 'Share encryption address'
+    : 'Choose VerusID';
+  const primaryActionDisabled =
+    processing ||
+    noRequestNetworkWallet ||
+    waitingForLinkedIds ||
+    shieldedSetupNeedsRestart;
+  const activeAccountInstruction = !activeAccountMatchesRequest
+    ? noRequestNetworkWallet
+      ? `This request needs a ${requestNetworkName} wallet. Add one, then open the request again.`
+      : signedIn
+      ? 'Switch wallet first, then select identity.'
+      : 'Unlock wallet first, then select identity.'
+    : null;
+  const requestDetailsSections = useMemo(() => {
+    const responseRows = responseUris
+      .map((uri, index) => {
+        const uriString = getUriString(uri);
+        if (!uriString) return null;
 
-  // ── Copy z-address to clipboard ──
-  const copyZAddress = (address) => {
-    copyToClipboard(address);
-    createAlert('Copied', 'Address copied to clipboard.');
-  };
+        return {
+          label:
+            responseUris.length > 1
+              ? `Response URI ${index + 1}`
+              : 'Response URI',
+          value: uriString,
+        };
+      })
+      .filter(Boolean);
+    const encryptionRows = [
+      {label: 'App scope', value: appScopeFqn || appScopeID, copy: true, valueStyle: !appScopeFqn || appScopeFqn === appScopeID ? reviewStyles.identifier : undefined},
+      appScopeFqn && appScopeFqn !== appScopeID ? {label: 'App scope ID', value: appScopeID, copy: true, valueStyle: reviewStyles.identifier} : null,
+      {label: 'Primary key number', value: `#${derivationNumber}`},
+      hasDerivationID ? {label: 'Nested identity', value: derivationIdFqn || derivationIdentityID, copy: true, valueStyle: !derivationIdFqn || derivationIdFqn === derivationIdentityID ? reviewStyles.identifier : undefined} : null,
+      hasDerivationID && derivationIdFqn && derivationIdFqn !== derivationIdentityID
+        ? {label: 'Nested identity ID', value: derivationIdentityID, copy: true, valueStyle: reviewStyles.identifier} : null,
+      hasDerivationID ? {label: 'Secondary key number', value: `#${secondaryDerivationNumber}`} : null,
+      hasRequestID ? {label: 'Request ID', value: requestIdFqn, copy: true} : null,
+      {label: 'Response encryption recipient', value: encryptResponseToAddress, copy: true, valueStyle: reviewStyles.identifier},
+      {label: 'Spending key', value: returnESK ? 'Requested' : 'Not requested'},
+    ].filter(Boolean);
+    const walletRows = [
+      {
+        label: 'Wallet state',
+        value: activeAccountMatchesRequest
+          ? shieldedSetupNeedsProfile
+            ? 'Private address setup required'
+            : shieldedSetupNeedsRestart
+            ? 'Restart required'
+            : 'Ready for this request'
+          : noRequestNetworkWallet
+          ? `No ${requestNetworkName} wallet`
+          : signedIn
+          ? 'Switch wallet required'
+          : 'Unlock wallet required',
+      },
+      selectedIdentity
+        ? {label: 'Selected identity', value: selectedIdentity.friendlyName}
+        : {label: 'Selected identity', value: 'Not selected'},
+    ];
 
-  // ── Send the pending response (after reviewing debug info) ──
-  const handleSendResponse = async () => {
-    if (!pendingResponse?.approval.isActive() || sending.current) return;
-    sending.current = true;
-    setLoading(true);
-    try {
-      pendingResponse.approval.assertActive();
-      await next(pendingResponse.updatedResponse, pendingResponse.handledIndices);
-    } catch (e) {
-      if (!pendingResponse.approval.isActive() || e.code === 'SESSION_CHANGED') return;
-      createAlert('Error', e.message || 'Failed to send response.');
-    } finally {
-      sending.current = false;
-      if (pendingResponse.approval.isActive()) setLoading(false);
+    return [
+      {title: 'Response', rows: responseRows},
+      {title: 'Encryption', rows: encryptionRows},
+      {title: 'Wallet', rows: walletRows},
+    ].filter(section => section.rows.length > 0);
+  }, [
+    activeAccountMatchesRequest,
+    reviewStyles,
+    appScopeFqn,
+    appScopeID,
+    derivationIdentityID,
+    derivationIdFqn,
+    derivationNumber,
+    secondaryDerivationNumber,
+    encryptResponseToAddress,
+    hasDerivationID,
+    hasRequestID,
+    noRequestNetworkWallet,
+    requestIdFqn,
+    requestNetworkName,
+    responseUris,
+    returnESK,
+    selectedIdentity,
+    shieldedSetupNeedsProfile,
+    shieldedSetupNeedsRestart,
+    signedIn,
+  ]);
+
+  const handlePrimaryAction = () => {
+    if (!activeAccountMatchesRequest) {
+      handleWalletUnlock();
+      return;
     }
+
+    if (shieldedSetupNeedsProfile) {
+      openProfileSettings();
+      return;
+    }
+
+    if (shieldedSetupNeedsRestart) {
+      return;
+    }
+
+    if (!selectedIdentity) {
+      setIdentitySheetVisible(true);
+      return;
+    }
+
+    return buildResponseAndContinue();
   };
-
-  // ── Debug dropdown state ──
-  const [debugExpanded, setDebugExpanded] = useState(false);
-  const approveDisabled =
-    waitingForSignin || isWrongRequestType || (signedIn && !selectedIdentityAllowed);
-  const daemonDecryptCommand = useMemo(() => {
-    if (!encryptedDescriptorJson) return null;
-
-    return buildDaemonDecryptCommand({
-      encryptedDescriptorJson,
-      signerSystemID,
-    });
-  }, [encryptedDescriptorJson, signerSystemID]);
-
-  // ── Render response preview screen ──
-  if (encryptedResponseHex && pendingResponse?.review === review) {
-    return (
-      <SafeAreaView style={styles.root}>
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          <View style={styles.readyHeader}>
-            <View style={styles.readyIconCircle}>
-              <MaterialCommunityIcons
-                name="lock-check"
-                size={48}
-                color={Colors.verusGreenColor}
-              />
-            </View>
-            <Text style={styles.readyTitle}>
-              Your encrypted response is ready to send
-            </Text>
-            <Text style={styles.readySubtitle}>
-              The encryption was successful. Press continue to send it back to the requesting app.
-            </Text>
-          </View>
-
-          {/* Debug dropdown */}
-          {encryptedDescriptorJson && (
-            <View style={styles.debugSection}>
-              <TouchableOpacity
-                style={styles.debugToggle}
-                onPress={() => setDebugExpanded(!debugExpanded)}
-                activeOpacity={0.7}
-              >
-                <MaterialCommunityIcons
-                  name={debugExpanded ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color="#888"
-                />
-                <Text style={styles.debugToggleText}>View debug information</Text>
-              </TouchableOpacity>
-
-              {debugExpanded && (
-                <View style={styles.debugContent}>
-                  {/* Encrypted Descriptor JSON */}
-                  <View style={styles.debugCard}>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionTitle}>Encrypted Descriptor (JSON)</Text>
-                    </View>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        const jsonStr = JSON.stringify(encryptedDescriptorJson, null, 2);
-                        copyToClipboard(jsonStr);
-                        createAlert('Copied', 'Encrypted descriptor JSON copied to clipboard.');
-                      }}
-                      style={styles.responseHexContainer}
-                    >
-                      <Text selectable style={styles.responseHexText}>
-                        {JSON.stringify(encryptedDescriptorJson, null, 2)}
-                      </Text>
-                      <View style={styles.responseHexCopyHint}>
-                        <MaterialCommunityIcons name="content-copy" size={16} color={Colors.primaryColor} />
-                        <Text style={styles.responseHexCopyHintText}>Tap to copy</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Daemon decryptdata command */}
-                  <View style={styles.debugCard}>
-                    <View style={styles.sectionHeader}>
-                      <Text style={styles.sectionTitle}>Daemon Command</Text>
-                    </View>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        copyToClipboard(daemonDecryptCommand);
-                        createAlert('Copied', 'Daemon command copied to clipboard.');
-                      }}
-                      style={styles.responseHexContainer}
-                    >
-                      <Text selectable style={styles.responseHexText}>
-                        {daemonDecryptCommand}
-                      </Text>
-                      <View style={styles.responseHexCopyHint}>
-                        <MaterialCommunityIcons name="content-copy" size={16} color={Colors.primaryColor} />
-                        <Text style={styles.responseHexCopyHintText}>Tap to copy command</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </View>
-          )}
-        </ScrollView>
-
-        {/* Footer: single Continue button */}
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.continueCta}
-            onPress={handleSendResponse}
-            activeOpacity={0.8}
-            disabled={loading}
-          >
-            <Text style={styles.continueCtaText}>Continue</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // ── Render ──
-  if (loading) {
-    return <AnimatedActivityIndicatorBox />;
-  }
 
   return (
-    <SafeAreaView style={styles.root}>
-      {verusIdDetailsModalProps && (
-        <VerusIdDetailsModal {...verusIdDetailsModalProps} />
-      )}
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
+      <IdentityPickerSheet
+        visible={identitySheetVisible}
+        coinObj={requestCoinObj}
+        isCandidateAllowed={isAutoLinkCandidateAllowed}
+        linkedIds={identityPickerData.linkedIds}
+        sortedIds={identityPickerData.sortedIds}
+        isIdentityAllowed={isIdentityAllowed}
+        selectedIdentity={selectedIdentity}
+        provisioningEnabled={false}
+        initialMode={VERUSID_SHEET_MODES.CHOOSE}
+        onClose={() => setIdentitySheetVisible(false)}
+        onLinkCandidate={linkAutoFoundIdentity}
+        onSelect={handleSelectIdentity}
+      />
+      <DeepLinkReviewScrollView showScrollCue requestCard>
+        <RequestCard
+          action="wants you to share an encryption address"
+          requester={{request, signerFqn, signerIdentityID, signerSystemID, signerSystemName: systemLabel, sigtime,
+            loadVerusId: loadSignerVerusId, loadFriendlyNames: loadSignerFriendlyNames}}
+          sections={requestDetailsSections}
+          showResponder={showSelectedIdentityCard || (activeAccountMatchesRequest && !selectedIdentity)}
+          responderName={showSelectedIdentityCard ? selectedIdentity?.friendlyName : null}
+          onPressResponder={activeAccountMatchesRequest && linkedIdsLoaded &&
+            !shieldedSetupBlocksResponse && !processing
+            ? () => setIdentitySheetVisible(true)
+            : undefined}
+          caption={deliveryInfo.type === GENERIC_REQUEST_DELIVERY_TYPES.NONE
+            ? 'No response will be sent to the requester.'
+            : `The wallet sends this app-specific address and its viewing keys to ${getResponseHostLabel(deliveryInfo.destinationHost)}.`}
+        />
 
-      <ScrollView 
-        style={styles.scrollView} 
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <MaterialCommunityIcons 
-            name="key-variant" 
-            size={48} 
-            color={Colors.primaryColor} 
-          />
-          <Text style={styles.headerTitle}>Encryption Key Request</Text>
-          <Text style={styles.headerSubtitle}>
-            {requesterLabel} is requesting a private encryption address from your identity.
-          </Text>
-        </View>
-
-        {!signedIn && (
-          <View style={styles.infoCard}>
-            <MaterialCommunityIcons
-              name="information-outline"
-              size={20}
-              color={Colors.primaryColor}
+        {hasDerivationID && (
+          <View>
+            <InfoSheetRow
+              label="Nested VerusID"
+              value={derivationIdFqn || derivationIdentityID}
+              valueStyle={!derivationIdFqn || derivationIdFqn === derivationIdentityID
+                ? reviewStyles.identifier : undefined}
             />
-            <Text style={styles.infoText}>
-              Sign in to a {requestIsTestnet ? 'testnet' : 'mainnet'} profile to approve this request.
-            </Text>
+            <InfoSheetRow
+              label="Secondary key number"
+              value={`#${secondaryDerivationNumber}`}
+            />
           </View>
         )}
 
-        {/* Wrong Network Warning */}
-        {isWrongRequestType && (
-          <View style={styles.errorCard}>
-            <MaterialCommunityIcons
-              name="alert-circle"
-              size={20}
-              color="#C62828"
-            />
-            <Text style={styles.errorText}>
-              This request is for {requestIsTestnet ? 'testnet' : 'mainnet'},
-              but you are signed into a {requestIsTestnet ? 'mainnet' : 'testnet'} profile.
-            </Text>
-          </View>
-        )}
-
-        {/* ESK Warning */}
         {returnESK && (
           <View style={styles.warningCard}>
             <View style={styles.warningHeader}>
-              <MaterialCommunityIcons
-                name="alert"
-                size={24}
-                color="#E65100"
-              />
-              <Text style={styles.warningTitle}>Extended Spending Key Requested</Text>
+              <Text style={styles.warningTitle}>
+                Extended spending key
+              </Text>
+              <StatusBadge label="High risk" tone="warning" />
             </View>
             <Text style={styles.warningText}>
               {hasDerivationID
-                ? 'This app is requesting the Extended Spending Key for the final nested channel. It can decrypt data, spend funds, and derive further keys from this channel. The app-scope key stays private.'
-                : 'This app is requesting the Extended Spending Key for the app-scope channel. It can decrypt data, spend funds, and derive every nested channel for your selected identity, app scope, and primary key number.'}
+                ? 'The app can decrypt data, spend funds, and derive more keys. The app-scope key stays private.'
+                : 'This key is for the app-scope channel. The app can decrypt data and spend funds. It can derive every nested channel for your selected identity, app scope, and primary key number.'}
             </Text>
             <Text style={styles.warningEmphasis}>
-              Only approve if you fully trust this application.
+              Approve only if you fully trust this app.
             </Text>
           </View>
         )}
 
-        {/* Identity Selection Card */}
-        {signedIn && (
-          <TouchableOpacity
-            style={[
-              styles.identitySelectCard,
-              selectedIdentity && styles.identitySelectCardSelected,
-            ]}
-            onPress={handleOpenIdentitySheet}
-            activeOpacity={0.7}
-          >
-            <View style={styles.identitySelectIconContainer}>
-              <MaterialCommunityIcons
-                name="account-check"
-                size={28}
-                color={selectedIdentity ? Colors.verusGreenColor : '#666'}
+        <View style={{height: 24}} />
+      </DeepLinkReviewScrollView>
+
+      <SafeBottomActionStack
+        gap={10}
+        horizontalSpacing={24}
+        style={styles.footer}>
+        {activeAccountInstruction && (
+          <View style={styles.footerInfoRow}>
+            <View style={styles.footerInfoIcon}>
+              <Info
+                size={16}
+                strokeWidth={2.1}
+                color={theme.colors.textSubtle}
               />
             </View>
-            <View style={styles.identitySelectTextContainer}>
-              <Text style={styles.identitySelectLabel}>
-                {selectedIdentity ? 'Your selected identity' : 'Select identity to respond'}
-              </Text>
-              <Text style={[
-                styles.identitySelectName,
-                selectedIdentity && styles.identitySelectNameSelected,
-              ]}>
-                {selectedIdentity
-                  ? selectedIdentity.friendlyName && selectedIdentity.friendlyName !== selectedIdentity.iAddress
-                    ? convertFqnToDisplayFormat(selectedIdentity.friendlyName)
-                    : selectedIdentity.iAddress
-                  : 'Tap to choose'}
-              </Text>
-              {selectedIdentity && (
-                <Text style={styles.identitySelectAddress}>
-                  {selectedIdentity.iAddress}
-                </Text>
-              )}
-            </View>
-            <MaterialCommunityIcons
-              name={selectedIdentity ? 'check-circle' : 'chevron-right'}
-              size={24}
-              color={selectedIdentity ? Colors.verusGreenColor : '#CCC'}
-            />
-          </TouchableOpacity>
-        )}
-
-        {/* Request Details Card */}
-        <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Request Details</Text>
+            <Text style={styles.footerInfoText}>
+              {activeAccountInstruction}
+            </Text>
           </View>
-
-          {/* Requesting App */}
-          <DetailRow
-            title={requesterLabel}
-            subtitle={`Requesting App${requesterAddress ? ` • ${truncateAddress(requesterAddress)}` : ''}`}
-            onPress={signerSystemID && signerIdentityID ? openSignerModal : undefined}
-            rightIcon={signerSystemID && signerIdentityID ? 'chevron-right' : undefined}
-            showBorder={false}
-          />
-
-          {/* Chain */}
-          {chainId && (
-            <DetailRow
-              title={chainId}
-              subtitle="Network"
-              showBorder={true}
-            />
-          )}
-
-          {/* Signature Date */}
-          {sigDateString && (
-            <DetailRow
-              title={sigDateString}
-              subtitle="Request Signed"
-              showBorder={true}
-            />
-          )}
-
-          {/* App scope is always the first derivation target, even when nested. */}
-          <DetailRow
-            title={appScopeFqn || appScopeID}
-            subtitle={`App Scope${appScopeFqn && appScopeFqn !== appScopeID ? ` • ${appScopeID}` : ''}`}
-            showBorder={true}
-          />
-
-          <DetailRow
-            title={`#${derivationNumber}`}
-            subtitle="Primary Key Number • Within the app scope"
-            showBorder={true}
-          />
-
-          {hasDerivationID && (
-            <>
-              <DetailRow
-                title={derivationIdFqn || derivationIdentityID}
-                subtitle={`Nested Identity${derivationIdFqn && derivationIdFqn !== derivationIdentityID ? ` • ${derivationIdentityID}` : ''}`}
-                showBorder={true}
-              />
-              <DetailRow
-                title={`#${secondaryDerivationNumber}`}
-                subtitle="Secondary Key Number • Within the nested identity"
-                showBorder={true}
-              />
-            </>
-          )}
-
-          {/* Request ID */}
-          {hasRequestID && (
-            <DetailRow
-              title={requestIdFqn}
-              subtitle="Request ID"
-              showBorder={true}
-            />
-          )}
-
-          {/* Every app encryption response requires this recipient. */}
-          <DetailRow
-            title={encryptResponseToAddress}
-            subtitle="Response Encryption Recipient"
-            onPress={() => copyZAddress(encryptResponseToAddress)}
-            rightIcon="content-copy"
-            showBorder={true}
-          />
-        </View>
-
-        {/* Identity Picker Sheet */}
-        <IdentityPickerSheet
-          visible={identitySheetVisible}
-          linkedIds={linkedIds}
-          sortedIds={sortedIds}
-          selectedIdentity={selectedIdentity}
-          onClose={() => setIdentitySheetVisible(false)}
-          onSelect={handleSelectIdentity}
-        />
-
-      </ScrollView>
-
-      {/* Footer Buttons */}
-      <View style={styles.footer}>
-        <View style={styles.ctaCol}>
-          <Button
-            mode="outlined"
-            onPress={handleDeny}
-            style={styles.secondaryCta}
-            contentStyle={styles.secondaryCtaContent}
-            labelStyle={styles.secondaryCtaLabel}
-          >
-            Deny
-          </Button>
-        </View>
-        <View style={styles.ctaCol}>
-          <TouchableOpacity
-            style={[
-              styles.continueCta,
-              approveDisabled && styles.continueCtaDisabled,
-            ]}
-            onPress={handleApprove}
-            activeOpacity={0.8}
-            disabled={approveDisabled}
-          >
-            <Text style={styles.continueCtaText}>{signedIn ? 'Approve' : 'Sign In'}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+        )}
+        {shieldedSetupBlocksResponse && (
+          <View style={styles.footerWarningCard}>
+            <Text style={styles.footerWarningTitle}>
+              {shieldedSetupNeedsProfile
+                ? 'Private address setup required'
+                : 'Restart Verus Mobile'}
+            </Text>
+            <Text style={styles.footerWarningText}>
+              {shieldedSetupNeedsProfile
+                ? SHIELDED_SETUP_PROFILE_MESSAGE
+                : SHIELDED_SETUP_RESTART_MESSAGE}
+            </Text>
+          </View>
+        )}
+        {returnESK && activeAccountMatchesRequest && selectedIdentity && linkedIdsLoaded &&
+        !shieldedSetupNeedsProfile && !shieldedSetupNeedsRestart ? (
+          <SlideToConfirm disabled={primaryActionDisabled} loading={processing}
+            loadingText="Preparing response" label="Slide to approve" onPress={handlePrimaryAction} />
+        ) : (
+          <AppButton
+            disabled={primaryActionDisabled}
+            height={56}
+            onPress={handlePrimaryAction}
+            themeMode={theme.mode}
+            variant="primary">
+            {primaryActionLabel}
+          </AppButton>
+        )}
+        <AppButton
+          disabled={processing}
+          height={56}
+          onPress={cancel}
+          themeMode={theme.mode}
+          variant="secondary">
+          Cancel
+        </AppButton>
+      </SafeBottomActionStack>
     </SafeAreaView>
   );
 };
 
 const AppEncryptionRequestInfo = props => {
   const sessionKey = useSelector(getAppEncryptionSessionKey);
-  return <AppEncryptionRequestSession key={sessionKey} {...props} sessionKey={sessionKey} />;
+  return <OnboardingThemeProvider>
+    <AppEncryptionRequestInfoContent key={sessionKey} {...props} sessionKey={sessionKey} />
+  </OnboardingThemeProvider>;
 };
 
 export default AppEncryptionRequestInfo;

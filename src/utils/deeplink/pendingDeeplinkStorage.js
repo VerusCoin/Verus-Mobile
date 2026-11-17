@@ -117,6 +117,13 @@ export const loadPendingDeeplinkRequests = async () => {
     .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 };
 
+export const loadPendingDeeplinkRequest = async id => {
+  if (!id) return null;
+
+  const requests = await loadPendingDeeplinkRequests();
+  return requests.find(request => request.id === id) || null;
+};
+
 export const getPendingDeeplinkRequestCount = async () => {
   const requests = await loadPendingDeeplinkRequests();
 
@@ -129,6 +136,29 @@ export const getPendingDeeplinkPassthrough = request => {
   return {
     pendingDeeplinkId: request.id,
     pendingRequestKind: request.requestKind || null,
+  };
+};
+
+export const getPendingDeeplinkReplay = async (id, {resumeWalletBackup = false} = {}) => {
+  const request = await loadPendingDeeplinkRequest(id);
+
+  if (!request || request.completed) return null;
+
+  let uri = request.uri;
+
+  if (!uri) {
+    const genericRequest = new GenericRequest();
+    genericRequest.fromBuffer(Buffer.from(request.requestBufferString, 'hex'), 0);
+    uri = genericRequest.toWalletDeeplinkUri();
+  }
+
+  return {
+    url: uri,
+    passthrough: {
+      ...(getPendingDeeplinkPassthrough(request) || {}),
+      replayedPendingDeeplink: true,
+      skipWalletBackupRequests: !resumeWalletBackup,
+    },
   };
 };
 

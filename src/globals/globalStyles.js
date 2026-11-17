@@ -1,8 +1,12 @@
+import Fonts from './fonts';
+
 const GlobalStyles = {
-  Avenir: 'Avenir',
-  AvenirBook: 'Avenir-Book',
-  AvenirBlack: 'Avenir-Black',
-  AvenirMedium: 'Avenir-Medium',
+  Fonts,
+  InterRegular: Fonts.regular,
+  InterMedium: Fonts.medium,
+  InterSemiBold: Fonts.semiBold,
+  InterBold: Fonts.bold,
+  InterBlack: Fonts.black,
 };
 
 export default GlobalStyles;

@@ -9,6 +9,8 @@ import { withAppEncryptionSigningKeys } from "../../../../deeplink/validator/app
 
 export const signGenericResponse = async (coinObj, response, context = {}) => {
   const genericResponse = new primitives.GenericResponse(response);
+  context.assertCurrent?.();
+  context.assertActive?.();
   const client = VrpcProvider.getVerusIdInterface(coinObj.system_id);
 
   if (context.request?.details.some(detail => detail instanceof AppEncryptionRequestOrdinalVDXFObject)) {
@@ -49,8 +51,32 @@ export const signGenericResponse = async (coinObj, response, context = {}) => {
     return genericResponse;
   }
 
+  const [height, identityResult] = await Promise.all([
+    client.getCurrentHeight(),
+    client.interface.getIdentity(
+      genericResponse.signature.identityID.toIAddress(),
+    ),
+  ]);
+  context.assertCurrent?.();
+  if (
+    identityResult?.error ||
+    !identityResult?.result ||
+    !Number.isSafeInteger(height) ||
+    height < 0
+  ) {
+    throw new Error('Unable to load the signing identity and block height.');
+  }
+  context.assertActive?.();
+  const privateKey = await requestPrivKey(coinObj.id, VRPC, context);
+  // Supplying identity and height avoids the client's internal RPC awaits.
+  // After this guard its path to the cryptographic signature is synchronous.
+  context.assertCurrent?.();
+
+  context.assertActive?.();
   return client.signGenericResponse(
     genericResponse,
-    await requestPrivKey(coinObj.id, VRPC)
+    privateKey,
+    identityResult.result,
+    height,
   );
 };

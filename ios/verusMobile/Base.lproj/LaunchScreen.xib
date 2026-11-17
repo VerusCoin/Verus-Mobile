@@ -13,11 +13,20 @@
             <rect key="frame" x="0.0" y="0.0" width="480" height="480"/>
             <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
             <subviews>
-                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="Verus-Splash" translatesAutoresizingMaskIntoConstraints="NO" id="9Wl-EB-unC">
-                    <rect key="frame" x="120" y="176" width="240" height="128"/>
+                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Verus-Startup-Background" translatesAutoresizingMaskIntoConstraints="NO" id="YgA-Fh-f4P">
+                    <rect key="frame" x="0.0" y="0.0" width="480" height="480"/>
+                </imageView>
+                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="Verus-Startup-Logo" translatesAutoresizingMaskIntoConstraints="NO" id="9Wl-EB-unC">
+                    <rect key="frame" x="110" y="210" width="260" height="74"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
                 </imageView>
             </subviews>
+            <constraints>
+                <constraint firstItem="YgA-Fh-f4P" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="0cz-OM-WDI"/>
+                <constraint firstItem="YgA-Fh-f4P" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="6gW-nE-uo1"/>
+                <constraint firstAttribute="bottom" secondItem="YgA-Fh-f4P" secondAttribute="bottom" id="Axb-Y1-KYH"/>
+                <constraint firstAttribute="trailing" secondItem="YgA-Fh-f4P" secondAttribute="trailing" id="y5o-v1-1AC"/>
+            </constraints>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
             <nil key="simulatedStatusBarMetrics"/>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
@@ -25,6 +34,7 @@
         </view>
     </objects>
     <resources>
-        <image name="Verus-Splash" width="518" height="555"/>
+        <image name="Verus-Startup-Background" width="720" height="1560"/>
+        <image name="Verus-Startup-Logo" width="730" height="208"/>
     </resources>
 </document>

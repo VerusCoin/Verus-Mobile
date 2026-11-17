@@ -7,24 +7,25 @@
   any way.
 */
 
+import {INCORRECT_PASSWORD_MESSAGE} from '../../../../utils/constants/errors';
 import React, { Component } from "react";
-import { 
-  View, 
-  ScrollView, 
-  Keyboard,
-  TextInput as NativeTextInput
-} from "react-native";
-import { TextInput, Checkbox } from 'react-native-paper'
-import Button from '../../../../components/Button'
+import {Keyboard, View} from "react-native";
+import {Checkbox} from 'react-native-paper'
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
 import { deleteProfile, setBiometry } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
-import Colors from '../../../../globals/colors';
-import Styles from '../../../../styles/index'
 import { createAlert, resolveAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { removeBiometricPassword } from "../../../../utils/keychain/biometrics";
+import AppTextInput from '../../../../components/AppTextInput';
+import {
+  SettingsActionFooter,
+  SettingsNotice,
+  SettingsRow,
+  SettingsScreen,
+  SettingsSection,
+} from '../../components/SettingsScaffold';
 
 class DeleteProfile extends Component {
   constructor() {
@@ -55,19 +56,16 @@ class DeleteProfile extends Component {
 
   canDelete = () => {
     return createAlert(
-      'Confirm Deletion',
-      "Are you sure you would like to delete this profile?",
+      'Delete this wallet?',
+      "The wallet is removed from this device. Only its recovery secrets can restore it.",
       [
         {
-          text: 'No, take me back',
+          text: 'Not now',
           onPress: () => resolveAlert(false),
           style: 'cancel',
         },
-        {text: 'Yes', onPress: () => resolveAlert(true)},
+        {text: 'Delete wallet', style: 'destructive', onPress: () => resolveAlert(true)},
       ],
-      {
-        cancelable: false,
-      },
     )
   }
 
@@ -88,15 +86,26 @@ class DeleteProfile extends Component {
           _errors = true
         } 
   
-        if (!this.state.confirmSwitch && !_errors) {
-          createAlert("Please confirm", "Please confirm you are aware of what deleting your profile entails.")
+        // Delete stays disabled until the backup box is checked.
+        if (!_confirmSwitch) {
           _errors = true
         }
   
         if (!_errors) {
-          checkPinForUser(_pwd, userID)
+          this.setState({loading: true})
+          checkPinForUser(_pwd, userID, false)
           .then(() => {
+            this.setState({loading: false})
             return this.canDelete()
+          }, (error) => {
+            this.setState({loading: false})
+            this.handleError(
+              error?.message === "Incorrect password"
+                ? INCORRECT_PASSWORD_MESSAGE
+                : "Unable to access this wallet. Try again.",
+              "pwd"
+            )
+            throw error
           })
           .then((res) => {
             if (res) {
@@ -106,8 +115,7 @@ class DeleteProfile extends Component {
                     _account,
                     _biometry
                   ),
-                message:
-                  "Deleting profile, please do not close Verus Mobile",
+                message: "Deleting wallet data",
                 input: [this.props.activeAccount, biometry],
               };
               this.resetToScreen("SecureLoading", data)
@@ -140,32 +148,30 @@ class DeleteProfile extends Component {
       }
 
       await deleteProfile(account, this.props.dispatch)
-      createAlert("Profile Deleted!", `"${account.id}" profile successfully deleted.`)
     } catch (error) {
       console.warn(error)
-      createAlert("Error.", `Failed to delete "${account.id}" profile.`)
+      createAlert(
+        "Wallet not deleted",
+        `The wallet could not delete "${account.id}" from this device. Sign in and try again.`
+      )
       throw error
     }
   }
 
   authenticatePwd = () => {
     return (
-      <TextInput
-        dense
+      <AppTextInput
+        autoComplete="off"
+        errorText={this.state.errors.pwd}
+        importantForAutofill="no"
+        label="Wallet password"
+        onChangeText={pwd =>
+          this.setState(({errors}) => ({pwd, errors: {...errors, pwd: null}}))
+        }
         returnKeyType="done"
-        onChangeText={(text) => this.setState({ pwd: text })}
-        label="Profile Password"
-        underlineColor={Colors.primaryColor}
-        selectionColor={Colors.primaryColor}
-        render={(props) => (
-          <NativeTextInput
-            autoCapitalize={"none"}
-            autoCorrect={false}
-            secureTextEntry={true}
-            {...props}
-          />
-        )}
-        error={this.state.errors.pwd}
+        secureTextEntry
+        textContentType="none"
+        value={this.state.pwd || ''}
       />
     );
   }
@@ -178,45 +184,61 @@ class DeleteProfile extends Component {
       ],
     })
 
-    this.props.navigation.closeDrawer();
+    if (this.props.navigation.closeDrawer) this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction)
   }
 
   render() {
     return (
-      <View style={Styles.defaultRoot}>
-        <ScrollView style={Styles.fullWidth}
-          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
-          <View style={Styles.wideBlock}>
+      <SettingsScreen
+        avoidKeyboard
+        footer={
+          <SettingsActionFooter
+            busy={this.state.loading}
+            busyLabel="Preparing wallet deletion…"
+            primaryDisabled={!this.state.confirmSwitch}
+            primaryLabel="Delete wallet"
+            primaryOnPress={this._handleSubmit}
+            primaryTestID="settings.deleteProfile.submit"
+            primaryVariant="destructive"
+            secondaryDisabled={this.state.loading}
+            secondaryLabel="Cancel"
+            secondaryOnPress={this.cancel}
+          />
+        }
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+        testID="settings.deleteProfile">
+        <SettingsNotice
+          body="This removes the wallet and its saved biometric credential from this device. Make sure you have its recovery secrets before continuing."
+          danger
+          icon="alert-octagon-outline"
+          title="Irreversible action"
+        />
+        <SettingsSection title="Authorization">
+          <View style={{marginTop: 22}}>
             {this.authenticatePwd()}
           </View>
-            <View style={Styles.wideBlock}>
-              <Checkbox.Item
-                color={Colors.primaryColor}
-                label={"I confirm that I would like to delete my profile, and acknowledge that this action cannot be reversed."}
-                status={
-                  this.state.confirmSwitch
-                    ? "checked"
-                    : "unchecked"
-                }
-                onPress={() => this.setState({confirmSwitch: !this.state.confirmSwitch})}
-                mode="android"
-              />
-            </View>
-        </ScrollView>
-        <View style={Styles.highFooterContainer}>
-          <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <Button
-              textColor={Colors.warningButtonColor}
-              onPress={this.cancel}
-            >{"Cancel"}</Button>
-            <Button 
-              mode="contained"
-              onPress={this._handleSubmit}
-            >{"Delete"}</Button>
-          </View>
-        </View>
-      </View>
+          <SettingsRow
+            accessibilityRole="checkbox"
+            accessibilityState={{checked: this.state.confirmSwitch}}
+            description="I have backed up the recovery secrets needed to restore this wallet."
+            descriptionNumberOfLines={3}
+            icon="delete-alert-outline"
+            last
+            onPress={() => this.setState({confirmSwitch: !this.state.confirmSwitch})}
+            showChevron={false}
+            title="Confirm recovery backup"
+            trailing={
+              <View pointerEvents="none">
+                <Checkbox
+                  status={this.state.confirmSwitch ? 'checked' : 'unchecked'}
+                />
+              </View>
+            }
+          />
+        </SettingsSection>
+      </SettingsScreen>
     );
   }
 }

@@ -1,5 +1,5 @@
-import {Alert} from 'react-native';
 import BigNumber from 'bignumber.js';
+import {createAlert, resolveAlert} from '../../actions/actions/alert/dispatchers/alert';
 import {verifyPendingIdentityFunding} from './durableBroadcast';
 
 // Display only fees already verified against the transaction being claimed.
@@ -56,15 +56,15 @@ export const confirmVerifiedClaimFees = (
     fees.map(fee => `${fee.coins} ${currencyName(fee.currency)}`).join('\n') ||
     '0';
 
-  return new Promise(resolve =>
-    Alert.alert(
-      'Confirm claim fees',
-      `Network fees will be deducted from the claim:\n\n${description}\n\nContinue with this claim?`,
-      [
-        {text: 'Cancel', style: 'cancel', onPress: () => resolve(false)},
-        {text: 'Claim', onPress: () => resolve(true)},
-      ],
-      {cancelable: true, onDismiss: () => resolve(false)},
-    ),
-  );
+  // Redesign alert sheet instead of the system alert. A dismissal runs the
+  // cancel action, and any other close leaves the claim unapproved.
+  return createAlert(
+    'Confirm claim fees',
+    `Network fees will be deducted from the claim:\n\n${description}\n\nContinue with this claim?`,
+    [
+      {text: 'Cancel', style: 'cancel', onPress: () => resolveAlert(false)},
+      {text: 'Claim', onPress: () => resolveAlert(true)},
+    ],
+    {cancelable: true},
+  ).then(result => result === true);
 };

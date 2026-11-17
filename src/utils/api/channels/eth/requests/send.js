@@ -1,3 +1,4 @@
+import {confirmedPlainSendFee} from '../../../../web3/plainSendFees';
 import { ethers } from "ethers"
 import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 import { ETH } from "../../../../constants/intervalConstants"
@@ -15,6 +16,8 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
 
     /** @type {BigInt} */
     const gasLimit = passthrough.params.gasLimit;
+    const confirmedFee = passthrough.params.networkFeeChoice
+      ? confirmedPlainSendFee(passthrough.params) : null;
 
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network)
 
@@ -26,12 +29,21 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
       Web3Provider.InfuraProvider
     );
 
+    if (confirmedFee) {
+      const estimate = BigInt(await Web3Provider.InfuraProvider.estimateGas({
+        from: fromAddress, to: address,
+        value: ethers.parseUnits(scientificToDecimal(amount.toString())),
+      }));
+      if (estimate > confirmedFee.gasLimit) throw new Error('Gas estimate exceeds the confirmed gas limit. Review this transaction again.');
+    }
+
     let transaction = await voidSigner.populateTransaction({
       to: address,
       value: ethers.parseUnits(scientificToDecimal(amount.toString())),
       chainId: ETH_NETWORK_IDS[coinObj.network ? coinObj.network : ETH_HOMESTEAD],
       gasLimit: gasLimit,
-      maxFeePerGas
+      maxFeePerGas,
+      ...(confirmedFee ? {maxPriorityFeePerGas: confirmedFee.maxPriorityFeePerGas} : {}),
     })
 
     const response = await sendWithBalanceCheck(

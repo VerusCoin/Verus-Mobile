@@ -93,15 +93,21 @@ export const classifyChanges = displayUpdates => {
           key: itemKey,
           groupKey,
           data: entry.data,
+          rawData: entry.rawData,
+          ackRows: entry.ackRows,
+          clearedKeys: entry.clearedKeys,
           title: label.title,
           warning: label.warning,
           highRiskType: entry.highRiskType,
+          beforeAddress: entry.beforeAddress,
+          afterAddress: entry.afterAddress,
         });
       } else {
         contentChanges.push({
           key: itemKey,
           groupKey,
           data: entry.data,
+          rawData: entry.rawData,
         });
       }
     }

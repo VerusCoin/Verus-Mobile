@@ -1,7 +1,6 @@
 import React, { Component } from "react"
 import { connect } from 'react-redux'
 import { setServiceLoading } from "../../../../actions/actionCreators";
-import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { requestServiceStoredData } from "../../../../utils/auth/authBox";
 import { VERUSID_SERVICE_ID } from "../../../../utils/constants/services";
 import { VerusIdServiceRender } from "./VerusIdService.render";
@@ -11,6 +10,7 @@ class VerusIdService extends Component {
     super(props);
     this.state = {
       linkedIds: null,
+      loadError: null,
     };
 
     this.props.navigation.setOptions({title: 'VerusID'});
@@ -18,6 +18,7 @@ class VerusIdService extends Component {
 
   async getLinkedIds() {
     this.props.dispatch(setServiceLoading(true, VERUSID_SERVICE_ID));
+    this.setState({loadError: null});
 
     try {
       const verusIdServiceData = await requestServiceStoredData(
@@ -34,7 +35,7 @@ class VerusIdService extends Component {
         });
       }
     } catch (e) {
-      createAlert('Error Loading Linked VerusIDs', e.message);
+      this.setState({linkedIds: {}, loadError: e.message || 'Failed to load VerusIDs'});
     }
 
     this.props.dispatch(setServiceLoading(false, VERUSID_SERVICE_ID));
@@ -58,7 +59,8 @@ class VerusIdService extends Component {
 const mapStateToProps = state => {
   return {
     loading: state.services.loading[VERUSID_SERVICE_ID],
-    encryptedIds: state.services.stored[VERUSID_SERVICE_ID]
+    encryptedIds: state.services.stored[VERUSID_SERVICE_ID],
+    activeAccount: state.authentication.activeAccount,
   };
 };
 

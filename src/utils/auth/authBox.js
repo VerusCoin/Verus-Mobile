@@ -84,7 +84,7 @@ export const requestSeeds = async () => {
   if (
     state.authentication.activeAccount == null
   ) {
-    throw new Error("You must be signed in to retrieve seeds");
+    throw new Error("You must be signed in to retrieve recovery secrets");
   } else {
     const password = await requestPassword()
     let seeds = arrayToObject(
@@ -94,7 +94,7 @@ export const requestSeeds = async () => {
           const seed = decryptkey(password, state.authentication.activeAccount.seeds[key]);
 
           if (!seed) {
-            throw new Error("Unable to decrypt seed");
+            throw new Error("Unable to decrypt recovery secret");
           } else return seed;
         } else return null;
       },

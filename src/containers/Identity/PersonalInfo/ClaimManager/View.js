@@ -86,12 +86,12 @@ const ClaimManager = (props) => {
     <View style={Styles.root}>
       <View style={[disabled ? Styles.opacityBlur : Styles.opacity]}>
         <TouchableWithoutFeedback style={Styles.linkButton} onPress={moveSelectedCategories}>
-          <Text style={Styles.textButton}>Move into category</Text>
+          <Text style={Styles.textButton}>MOVE INTO CATEGORY</Text>
         </TouchableWithoutFeedback>
       </View>
       <View style={[disabled ? Styles.opacityBlur : Styles.opacity]}>
         <TouchableWithoutFeedback style={Styles.linkButton} onPress={hideClaims}>
-          <Text style={Styles.textButton}>Hide selected</Text>
+          <Text style={Styles.textButton}>HIDE SELECTED</Text>
         </TouchableWithoutFeedback>
       </View>
       <SearchBar

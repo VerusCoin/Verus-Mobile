@@ -1,17 +1,17 @@
 import Web3Interface from './web3Interface'
 import {
   ETH_HOMESTEAD,
-  ETH_GOERLI,
   ETHERSCAN_API_KEY,
   INFURA_PROJECT_ID,
 } from "../../../env/index";
+import { ETH_SEPOLIA } from '../constants/web3Constants'
 
 const Web3Providers = {
   [ETH_HOMESTEAD]: new Web3Interface(ETH_HOMESTEAD, {
     etherscan: ETHERSCAN_API_KEY,
     infura: INFURA_PROJECT_ID
   }),
-  [ETH_GOERLI]: new Web3Interface(ETH_GOERLI, {
+  [ETH_SEPOLIA]: new Web3Interface(ETH_SEPOLIA, {
     etherscan: ETHERSCAN_API_KEY,
     infura: INFURA_PROJECT_ID
   }),

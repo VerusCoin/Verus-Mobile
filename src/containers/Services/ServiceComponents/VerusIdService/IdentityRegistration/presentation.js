@@ -41,15 +41,15 @@ export const identityLabel = (address, names = {}, fallback = 'Unresolved identi
 const states = {
   commitment_prepared: {title: 'Ready to commit', action: 'Review commitment', kind: 'ready', group: 'Needs you', step: 0,
     detail: 'Review the first payment to commit your name.', commitment: 'Ready for your approval', registration: 'After the commitment confirms'},
-  commitment_confirmed: {title: 'Ready to register', action: 'Continue registration', kind: 'ready', group: 'Needs you', step: 1,
+  commitment_confirmed: {title: 'Ready for the second payment', action: 'Continue', kind: 'ready', group: 'In progress', step: 1,
     detail: 'Your commitment is confirmed. One payment remains to create your identity.', commitment: 'Confirmed', registration: 'Ready for your approval'},
-  registration_prepared: {title: 'Ready to register', action: 'Review registration', kind: 'ready', group: 'Needs you', step: 1,
+  registration_prepared: {title: 'Ready for the second payment', action: 'Continue', kind: 'ready', group: 'In progress', step: 1,
     detail: 'Review the final payment to create your identity.', commitment: 'Confirmed', registration: 'Ready for your approval'},
-  commitment_expired: {title: 'Commitment expired', action: 'Review replacement', kind: 'attention', group: 'Needs you', step: 0,
+  commitment_expired: {title: 'First payment not confirmed', action: 'Slide to start', kind: 'attention', group: 'Needs attention', step: 0,
     detail: 'The commitment did not confirm. Review a replacement to continue.', commitment: 'Expired before confirmation', registration: 'Not started'},
-  registration_expired: {title: 'Registration expired', action: 'Review registration', kind: 'attention', group: 'Needs you', step: 1,
+  registration_expired: {title: 'Second payment not confirmed', action: 'Slide to create', kind: 'attention', group: 'Needs attention', step: 1,
     detail: 'Your commitment is saved. Review a new registration transaction to continue.', commitment: 'Confirmed', registration: 'Expired before confirmation'},
-  registered: {title: 'Ready to link', action: 'Link to wallet', kind: 'ready', group: 'Needs you', step: 2, chainComplete: true,
+  registered: {title: 'Ready to link', action: 'Link VerusID', kind: 'ready', group: 'Ready to link', step: 2, chainComplete: true,
     detail: 'Your identity is registered but isn’t linked to this wallet yet.', commitment: 'Confirmed', registration: 'Identity created'},
 };
 

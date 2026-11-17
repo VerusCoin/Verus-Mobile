@@ -1,31 +1,58 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
-  Alert,
-  SafeAreaView,
-  ScrollView,
+  AccessibilityInfo,
+  BackHandler,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
-import {
-  ActivityIndicator,
-  Card,
-  Dialog,
-  Divider,
-  IconButton,
-  Portal,
-  Text,
-} from 'react-native-paper';
-import Button from '../../../../../components/Button';
+import {ActivityIndicator} from 'react-native-paper';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {useFocusEffect} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {
-  GENERIC_REQUEST_DEEPLINK_VDXF_KEY,
-} from 'verus-typescript-primitives';
-import QRModal from '../../../../../components/QRModal';
-import {copyToClipboard} from '../../../../../utils/clipboard/clipboard';
+  ArrowDownToLine,
+  CircleAlert,
+  CirclePlus,
+  Gift,
+  Nfc,
+  QrCode,
+  RotateCcw,
+  Share as ShareIcon,
+  Trash2,
+} from 'lucide-react-native';
+import {GENERIC_REQUEST_DEEPLINK_VDXF_KEY} from 'verus-typescript-primitives';
+import {
+  createAlert,
+  resolveAlert,
+} from '../../../../../actions/actions/alert/dispatchers/alert';
+import AcknowledgeSheet from '../../../../../components/AcknowledgeSheet';
+import AppButton from '../../../../../components/AppButton';
+import CopyAction from '../../../../../components/CopyAction';
+import EmptyState from '../../../../../components/EmptyState';
+import FadedScrollView from '../../../../../components/FadedScrollView';
+import SafeBottomActionStack from '../../../../../components/SafeBottomActionStack';
+import ServiceManagerHeader from '../../../../../components/ServiceManagerHeader';
+import SkeletonLoader, {
+  SkeletonBlock,
+  SkeletonText,
+} from '../../../../../components/SkeletonLoader';
+import StatusBadge from '../../../../../components/StatusBadge';
+import {fontStyle} from '../../../../../globals/fonts';
+import {useAppTheme} from '../../../../../theme/app';
+import {SET_DEEPLINK_DATA} from '../../../../../utils/constants/storeType';
 import {GIFT_CARD_SERVICE_ID} from '../../../../../utils/constants/services';
 import {
-  buildGiftCardNfcDeeplinkUri,
+  beginGiftCardShare,
   canDeleteGiftCard,
+  cancelGiftCardShare,
+  completeGiftCardShare,
+  GIFT_CARD_REDEEMED_SHARE_MESSAGE,
+  GIFT_CARD_SHARE_IN_PROGRESS_MESSAGE,
+  getGiftCardCapabilities,
   canStartGiftCardFunding,
   getGiftCardClaimInfo,
   getGiftCardIdentityLookupErrors,
@@ -33,95 +60,135 @@ import {
   getRetryableGiftCardFunding,
   hasGiftCardBeenShared,
   hasGiftCardClaims,
+  hasGiftCardShareInProgress,
+  hasGiftCardShareReservation,
   hasGiftCardMempoolTransactions,
   hasPendingGiftCardFunding,
-  markGiftCardShared,
   normalizeGiftCardServiceData,
   refreshGiftCardStatus,
   removeGiftCardIfUnchangedAndDeletable,
   upsertGiftCard,
   upsertGiftCardIfUnchanged,
 } from '../../../../../utils/giftCard/giftCard';
-import {writeDeeplinkUriToNfc} from '../../../../../utils/walletBackup/walletBackupNfc';
-import {SET_DEEPLINK_DATA} from '../../../../../utils/constants/storeType';
-import Colors from '../../../../../globals/colors';
-import Styles from '../../../../../styles';
-import {convertFqnToDisplayFormat} from '../../../../../utils/fullyqualifiedname';
+import {
+  GIFT_CARD_DISPLAY_STATUS_NOT_FUNDED,
+  GIFT_CARD_DISPLAY_STATUS_PENDING,
+  GIFT_CARD_DISPLAY_STATUS_READY,
+  GIFT_CARD_DISPLAY_STATUS_REDEEMED,
+  GIFT_CARD_DISPLAY_STATUS_SHARED,
+  getGiftCardContentText,
+  getGiftCardDisplayStatus,
+  getGiftCardPresentation,
+} from '../../../../../utils/giftCard/giftCardPresentation';
+import GiftCardFixedCard from '../GiftCardFixedCard';
+import {
+  GiftCardNfcProgressModal,
+  useGiftCardSharing,
+} from '../GiftCardShareController';
+import GiftCardOptionsSheet, {
+  GIFT_CARD_CANCEL_STATUS,
+} from '../GiftCardOptionsSheet';
 
-const fieldWidth = 320;
 const GIFT_CARD_REFRESH_INTERVAL_MS = 30000;
+const STATUS_ALL = 'all';
+const STATUS_READY = GIFT_CARD_DISPLAY_STATUS_READY;
+const STATUS_PENDING = GIFT_CARD_DISPLAY_STATUS_PENDING;
+const STATUS_NOT_FUNDED = GIFT_CARD_DISPLAY_STATUS_NOT_FUNDED;
+const STATUS_SHARED = GIFT_CARD_DISPLAY_STATUS_SHARED;
+const STATUS_REDEEMED = GIFT_CARD_DISPLAY_STATUS_REDEEMED;
+const SHARE_METHOD = {
+  NATIVE: 'native',
+  QR: 'qr',
+  NFC: 'nfc',
+};
+const MONOSPACE_FONT = Platform.OS === 'ios' ? 'Menlo' : 'monospace';
+const INITIAL_CANCEL_PREPARATION = {
+  status: GIFT_CARD_CANCEL_STATUS.IDLE,
+  card: null,
+};
 
-const formatCardDate = timestamp => {
-  if (!timestamp) return '';
+const getContentsSummary = presentation => {
+  const {primaryContent, otherContents} = presentation;
 
-  try {
-    return new Date(timestamp).toLocaleDateString();
-  } catch (_) {
-    return '';
+  if (
+    primaryContent.type !== 'currency' &&
+    primaryContent.type !== 'identity'
+  ) {
+    return primaryContent.value;
   }
-};
 
-const formatCardDateTime = timestamp => {
-  if (!timestamp) return '';
-
-  try {
-    return new Date(timestamp).toLocaleString();
-  } catch (_) {
-    return '';
-  }
-};
-
-const truncateAddress = address => {
-  if (!address || address.length <= 22) return address || '';
-  return `${address.slice(0, 10)}...${address.slice(-8)}`;
-};
-
-const getPrimaryAddress = card => {
-  const addresses = Object.values(card.addressesBySystem || {});
-
-  return addresses[0] || '';
-};
-
-const getStatusLabel = card => {
-  if (card.status?.state === 'redeemed') return 'Redeemed';
-  if (hasPendingGiftCardFunding(card)) return 'Pending funding';
-  if (card.status?.state === 'funded') return 'Funded';
-  return 'Created';
-};
-
-const getSystemRows = card => {
-  return (card.status?.systems || []).filter(system => {
-    return (
-      (system.currencies || []).length > 0 ||
-      (system.identities || []).length > 0
-    );
-  });
-};
-
-const needsUnfundedShareWarning = card => {
-  return (
-    card != null &&
-    !hasGiftCardClaims(card) &&
-    card.status?.state !== 'redeemed' &&
-    !card.status?.redeemed
+  const contents = [primaryContent, ...otherContents].map(
+    getGiftCardContentText,
   );
+
+  if (contents.length <= 2) return contents.join(' · ');
+  return `${contents.slice(0, 2).join(' · ')} +${contents.length - 2}`;
 };
 
-const getClaimedByLabel = claimInfo => {
-  const addresses = claimInfo?.claimedByAddresses || [];
+const toValidDate = timestamp => {
+  if (!timestamp) return null;
 
-  if (addresses.length === 0) return 'recipient unavailable';
-  if (addresses.length === 1) return truncateAddress(addresses[0]);
+  const date = new Date(timestamp);
 
-  return `${truncateAddress(addresses[0])} +${addresses.length - 1} more`;
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatFactDateTime = timestamp => {
+  const date = toValidDate(timestamp);
+
+  if (date == null) return '';
+
+  const options = {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  };
+
+  if (date.getFullYear() !== new Date().getFullYear()) {
+    options.year = 'numeric';
+  }
+
+  try {
+    return date.toLocaleString(undefined, options);
+  } catch (_) {
+    return date.toLocaleString();
+  }
+};
+
+const formatFactDate = timestamp => {
+  const date = toValidDate(timestamp);
+
+  if (date == null) return '';
+
+  try {
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  } catch (_) {
+    return date.toLocaleDateString();
+  }
+};
+
+const shortenAddress = address => {
+  if (!address || address.length <= 16) return address || '';
+  return `${address.slice(0, 6)}…${address.slice(-6)}`;
+};
+
+const getClaimedByText = addresses => {
+  if (addresses.length === 1) return shortenAddress(addresses[0]);
+
+  return `${shortenAddress(addresses[0])} +${addresses.length - 1}`;
 };
 
 const getRefreshComparableCard = card => {
   const status = card.status
     ? {
-      ...card.status,
-      lastCheckedAt: null,
-    }
+        ...card.status,
+        lastCheckedAt: null,
+      }
     : null;
 
   return JSON.stringify({
@@ -130,94 +197,82 @@ const getRefreshComparableCard = card => {
   });
 };
 
-const ShareGiftCardDialog = ({card, onCancel, onCopy, onNfc, onQr}) => {
-  const unfunded = needsUnfundedShareWarning(card);
+const REFRESH_FAILED_NOTICE =
+  'Unable to refresh this gift card. Check your connection and try again.';
+// Matches the pending-funding error that the share checks below throw.
+const SHARE_PENDING_FUNDING_ERROR =
+  'Wait for funding transactions to confirm before sharing this gift card.';
 
-  return (
-    <Portal>
-      <Dialog visible={card != null} onDismiss={onCancel}>
-        <Dialog.Title>Share Gift Card</Dialog.Title>
-        <Dialog.Content>
-          <ScrollView>
-            <Text
-              style={{
-                color: Colors.verusDarkGray,
-                marginBottom: 12,
-              }}>
-              Sharing exposes the spendable gift-card key. Anyone with this key
-              can spend the card.
-            </Text>
-            {unfunded && (
-              <View
-                style={{
-                  backgroundColor: '#FFF4E8',
-                  borderColor: Colors.infoButtonColor,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  marginBottom: 12,
-                  padding: 10,
-                }}>
-                <View style={{alignItems: 'center', flexDirection: 'row'}}>
-                  <MaterialCommunityIcons
-                    name="alert-outline"
-                    color={Colors.infoButtonColor}
-                    size={20}
-                    style={{marginRight: 6}}
-                  />
-                  <Text style={{fontWeight: 'bold'}}>Unfunded gift card</Text>
-                </View>
-                <Text
-                  style={{
-                    color: Colors.verusDarkGray,
-                    fontSize: 12,
-                    marginTop: 6,
-                  }}>
-                  Anyone who gets the key can spend funds as soon as they arrive.
-                  Treat this card as single-use and fund it only once.
-                </Text>
-              </View>
-            )}
-            <Button
-              mode="contained"
-              icon="qrcode"
-              onPress={() => onQr(card)}
-              style={{marginBottom: 8}}>
-              QR code
-            </Button>
-            <Button
-              mode="contained"
-              icon="content-copy"
-              onPress={() => onCopy(card)}
-              style={{marginBottom: 8}}>
-              Copy link
-            </Button>
-            <Button
-              mode="contained"
-              icon="credit-card-wireless"
-              onPress={() => onNfc(card)}>
-              Write NFC
-            </Button>
-          </ScrollView>
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={onCancel}>Cancel</Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
-  );
+// A share failure shows fixed copy. The raw error goes to the log only.
+const getShareFailureAlert = (error, shareLeftWallet) => {
+  if (shareLeftWallet) {
+    return {
+      title: 'Share not recorded',
+      message:
+        'The gift card was shared, but the wallet could not record it. Treat it as shared.',
+    };
+  }
+
+  const messages = {
+    [GIFT_CARD_REDEEMED_SHARE_MESSAGE]: 'The gift card is already claimed.',
+    [GIFT_CARD_SHARE_IN_PROGRESS_MESSAGE]:
+      'A share of this gift card is in progress. Wait for it to finish.',
+    [SHARE_PENDING_FUNDING_ERROR]:
+      'Sharing unlocks after the funding transaction confirms.',
+  };
+
+  return {
+    title: 'Gift card not shared',
+    message:
+      messages[error?.message] ||
+      'The wallet could not check the gift card. Check your connection and try again.',
+  };
+};
+
+// Says why "Remove from this device" is unavailable (see canDeleteGiftCard).
+const getRemoveBlockedReason = card => {
+  if (hasPendingGiftCardFunding(card)) {
+    return 'Pending funding must confirm first.';
+  }
+
+  if (hasGiftCardClaims(card)) {
+    return hasGiftCardBeenShared(card)
+      ? 'It still has contents. Wait for the claim or cancel it.'
+      : 'It still has contents. Cancel it first.';
+  }
+
+  return 'Refresh the gift card first.';
 };
 
 const GiftCardServiceOverview = ({
   navigation,
+  onSecretWarningSeen,
+  secretWarningSeen,
   serviceData,
   saveServiceData,
 }) => {
   const dispatch = useDispatch();
-  const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
-  const [qrCard, setQrCard] = useState(null);
-  const [shareCardTarget, setShareCardTarget] = useState(null);
+  const theme = useAppTheme();
+  const activeCoinsForUser = useSelector(
+    state => state.coins.activeCoinsForUser,
+  );
   const [busyCardId, setBusyCardId] = useState(null);
-  const [nfcStatus, setNfcStatus] = useState(null);
+  const [filter, setFilter] = useState(STATUS_ALL);
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [actionsVisible, setActionsVisible] = useState(false);
+  // The content stays while the sheet closes; visibility is separate.
+  const [shareConfirmation, setShareConfirmation] = useState(null);
+  const [shareConfirmationVisible, setShareConfirmationVisible] =
+    useState(false);
+  const [cancelPreparation, setCancelPreparation] = useState(
+    INITIAL_CANCEL_PREPARATION,
+  );
+  const [showListHeaderDivider, setShowListHeaderDivider] = useState(false);
+  const [secretWarningVisible, setSecretWarningVisible] = useState(false);
+  // One short line under the card when a refresh or removal did not happen.
+  const [detailNotice, setDetailNotice] = useState(null);
+  const cancelRequestGenerationRef = useRef(0);
+  const qrNavigationPendingRef = useRef(false);
   const refreshAllRunningRef = useRef(false);
   const refreshGenerationRef = useRef(0);
   const normalizedData = normalizeGiftCardServiceData(serviceData);
@@ -228,6 +283,70 @@ const GiftCardServiceOverview = ({
       ),
     [normalizedData.cards],
   );
+  const selectedCard = cards.find(card => card.id === selectedCardId) || null;
+  const {nfcTap, shareNative, shareNfc} = useGiftCardSharing(selectedCard);
+  useFocusEffect(
+    useCallback(() => {
+      qrNavigationPendingRef.current = false;
+    }, []),
+  );
+  const detailShown = selectedCard != null;
+  // The detail is local state, so Android Back must close it like the arrow.
+  useFocusEffect(
+    useCallback(() => {
+      if (!detailShown) return undefined;
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        () => {
+          setSelectedCardId(null);
+          return true;
+        },
+      );
+
+      return () => subscription.remove();
+    }, [detailShown]),
+  );
+  const navigateToQr = useCallback(cardToShare => {
+    if (!cardToShare?.id || qrNavigationPendingRef.current) return;
+
+    qrNavigationPendingRef.current = true;
+    navigation.navigate('GiftCardQr', {cardId: cardToShare.id});
+  }, [navigation]);
+  const visibleCards = useMemo(
+    () =>
+      filter === STATUS_ALL
+        ? cards
+        : cards.filter(card => getGiftCardDisplayStatus(card) === filter),
+    [cards, filter],
+  );
+  // Claimed cards follow the others under one "Claimed" title, as one quiet
+  // line without a badge (owner chose option C on 2026-10-26).
+  const openCards = visibleCards.filter(
+    card => getGiftCardDisplayStatus(card) !== STATUS_REDEEMED,
+  );
+  const claimedCards = visibleCards.filter(
+    card => getGiftCardDisplayStatus(card) === STATUS_REDEEMED,
+  );
+
+  useEffect(() => {
+    if (selectedCardId && !selectedCard) {
+      setSelectedCardId(null);
+    }
+  }, [selectedCard, selectedCardId]);
+
+  useEffect(() => {
+    cancelRequestGenerationRef.current += 1;
+    setCancelPreparation(INITIAL_CANCEL_PREPARATION);
+    setActionsVisible(false);
+    setShareConfirmationVisible(false);
+    setDetailNotice(null);
+  }, [selectedCardId]);
+
+  const showDetailNotice = useCallback((cardId, text) => {
+    setDetailNotice({cardId, text});
+    AccessibilityInfo.announceForAccessibility(text);
+  }, []);
 
   const saveCard = useCallback(
     async (card, expectedCard = null) => {
@@ -278,8 +397,8 @@ const GiftCardServiceOverview = ({
         refreshes.length > 0 &&
         refreshGeneration === refreshGenerationRef.current
       ) {
-        await saveServiceData(currentData => {
-          return refreshes.reduce(
+        await saveServiceData(currentData =>
+          refreshes.reduce(
             (nextData, refresh) =>
               upsertGiftCardIfUnchanged(
                 nextData,
@@ -287,8 +406,8 @@ const GiftCardServiceOverview = ({
                 refresh.refreshedCard,
               ),
             currentData,
-          );
-        });
+          ),
+        );
       }
     } finally {
       refreshAllRunningRef.current = false;
@@ -316,8 +435,18 @@ const GiftCardServiceOverview = ({
       );
     };
 
-    const unsubscribeFocus = navigation.addListener('focus', startRefreshInterval);
-    const unsubscribeBlur = navigation.addListener('blur', stopRefreshInterval);
+    const unsubscribeFocus = navigation.addListener(
+      'focus',
+      startRefreshInterval,
+    );
+    const handleBlur = () => {
+      stopRefreshInterval();
+      cancelRequestGenerationRef.current += 1;
+      setCancelPreparation(INITIAL_CANCEL_PREPARATION);
+      setActionsVisible(false);
+      setShareConfirmationVisible(false);
+    };
+    const unsubscribeBlur = navigation.addListener('blur', handleBlur);
 
     if (navigation.isFocused == null || navigation.isFocused()) {
       startRefreshInterval();
@@ -333,6 +462,7 @@ const GiftCardServiceOverview = ({
   const refreshCard = useCallback(
     async card => {
       setBusyCardId(card.id);
+      setDetailNotice(null);
 
       try {
         const refreshed = await refreshGiftCardStatus({
@@ -343,17 +473,204 @@ const GiftCardServiceOverview = ({
         const savedCard = await saveCard(refreshed, card);
         return savedCard || refreshed;
       } catch (e) {
-        console.error(e);
-        Alert.alert('Network Error', e.message || 'Unable to refresh gift card.');
+        console.warn(e);
+        showDetailNotice(card.id, REFRESH_FAILED_NOTICE);
         throw e;
       } finally {
         setBusyCardId(null);
       }
     },
+    [activeCoinsForUser, saveCard, showDetailNotice],
+  );
+
+  const prepareCardForSharing = useCallback(
+    async card => {
+      if (getGiftCardCapabilities(card).isRedeemed) {
+        throw new Error(GIFT_CARD_REDEEMED_SHARE_MESSAGE);
+      }
+
+      if (hasGiftCardShareInProgress(card)) {
+        throw new Error(GIFT_CARD_SHARE_IN_PROGRESS_MESSAGE);
+      }
+
+      const refreshed = await refreshGiftCardStatus({
+        card,
+        activeCoinsForUser,
+      });
+      const savedCard = await saveCard(refreshed, card);
+      const latestCard = savedCard || refreshed;
+      const latestCapabilities = getGiftCardCapabilities(latestCard);
+
+      if (latestCapabilities.isRedeemed) {
+        throw new Error(GIFT_CARD_REDEEMED_SHARE_MESSAGE);
+      }
+
+      if (hasGiftCardShareInProgress(latestCard)) {
+        throw new Error(GIFT_CARD_SHARE_IN_PROGRESS_MESSAGE);
+      }
+
+      if (hasGiftCardBeenShared(latestCard)) return latestCard;
+
+      if (hasPendingGiftCardFunding(latestCard)) {
+        throw new Error(
+          'Wait for funding transactions to confirm before sharing this gift card.',
+        );
+      }
+
+      return latestCard;
+    },
     [activeCoinsForUser, saveCard],
   );
 
-  const fundCard = async card => {
+  const runShareAction = useCallback(
+    async (card, action) => {
+      if (!card) return false;
+
+      let actionCompleted = false;
+      let shareAttemptId = null;
+      const rollbackShareAttempt = async () => {
+        if (!shareAttemptId) return;
+
+        try {
+          await saveServiceData(currentData => {
+            const normalized = normalizeGiftCardServiceData(currentData);
+            const currentCard = normalized.cards?.[card.id];
+
+            return currentCard
+              ? upsertGiftCard(
+                  normalized,
+                  cancelGiftCardShare(currentCard, shareAttemptId),
+                )
+              : normalized;
+          });
+        } catch (rollbackError) {
+          console.warn(
+            'Unable to clear gift card share attempt',
+            rollbackError,
+          );
+        }
+      };
+      setBusyCardId(card.id);
+
+      try {
+        const preparedCard = await prepareCardForSharing(card);
+        const startedData = await saveServiceData(currentData => {
+          const normalized = normalizeGiftCardServiceData(currentData);
+          const currentCard = normalized.cards?.[preparedCard.id];
+
+          if (!currentCard) {
+            throw new Error('Gift card is no longer available.');
+          }
+
+          if (getGiftCardCapabilities(currentCard).isRedeemed) {
+            throw new Error(GIFT_CARD_REDEEMED_SHARE_MESSAGE);
+          }
+
+          if (hasGiftCardBeenShared(currentCard)) {
+            return normalized;
+          }
+
+          if (hasPendingGiftCardFunding(currentCard)) {
+            throw new Error(
+              'Wait for funding transactions to confirm before sharing this gift card.',
+            );
+          }
+
+          const startedCard = beginGiftCardShare(currentCard);
+          shareAttemptId = startedCard.shareAttempt?.id || null;
+          return upsertGiftCard(normalized, startedCard);
+        });
+        const actionCard = startedData.cards?.[preparedCard.id];
+
+        if (!actionCard) {
+          throw new Error('Gift card is no longer available.');
+        }
+
+        const actionResult = await action(actionCard);
+
+        if (actionResult === false) {
+          await rollbackShareAttempt();
+          return false;
+        }
+
+        actionCompleted = true;
+
+        if (shareAttemptId) {
+          const completedData = await saveServiceData(currentData => {
+            const normalized = normalizeGiftCardServiceData(currentData);
+            const currentCard = normalized.cards?.[preparedCard.id];
+
+            if (!currentCard) {
+              throw new Error('Gift card is no longer available.');
+            }
+
+            return upsertGiftCard(
+              normalized,
+              completeGiftCardShare(currentCard, shareAttemptId),
+            );
+          });
+
+          if (!hasGiftCardBeenShared(completedData.cards?.[preparedCard.id])) {
+            throw new Error(
+              'Gift card state changed before sharing could be recorded.',
+            );
+          }
+        }
+
+        return true;
+      } catch (e) {
+        if (!actionCompleted) await rollbackShareAttempt();
+
+        console.warn(e);
+        const failure = getShareFailureAlert(e, actionCompleted);
+        createAlert(failure.title, failure.message);
+        return false;
+      } finally {
+        setBusyCardId(null);
+      }
+    },
+    [prepareCardForSharing, saveServiceData],
+  );
+
+  const shareActions = {
+    [SHARE_METHOD.NATIVE]: shareNative,
+    [SHARE_METHOD.QR]: navigateToQr,
+    [SHARE_METHOD.NFC]: shareNfc,
+  };
+
+  // The first share exposes the key, so an unshared card asks first.
+  const requestShare = (card, method) => {
+    if (hasGiftCardBeenShared(card)) {
+      runShareAction(card, shareActions[method]);
+      return;
+    }
+
+    setShareConfirmation({
+      cardId: card.id,
+      funded: hasGiftCardClaims(card),
+      method,
+    });
+    setShareConfirmationVisible(true);
+  };
+
+  const startConfirmedShare = () => {
+    if (
+      shareConfirmation == null ||
+      selectedCard?.id !== shareConfirmation.cardId
+    ) {
+      return;
+    }
+
+    runShareAction(selectedCard, shareActions[shareConfirmation.method]);
+  };
+
+  // The funding actions are hidden or disabled in the states below, and a
+  // refresh that finds a change re-renders the detail. So each check only
+  // stops; the detail already shows why.
+  const openFunding = async (card, routeParams = {}) => {
+
+    if (hasGiftCardShareReservation(card)) return;
+
     if (hasPendingGiftCardFunding(card)) {
       const retryableFunding = getRetryableGiftCardFunding(card);
 
@@ -362,30 +679,19 @@ const GiftCardServiceOverview = ({
           cardId: card.id,
           pendingFundingId: retryableFunding.id,
         });
-      } else {
-        Alert.alert(
-          'Pending Funding',
-          'Wait for pending funding transactions to confirm before adding more funds.',
-        );
       }
       return;
     }
 
-    if (card.status?.state === 'redeemed' || card.status?.redeemed) {
-      Alert.alert('Redeemed', 'Redeemed gift cards cannot be funded.');
-      return;
-    }
+    if (card.status?.state === 'redeemed' || card.status?.redeemed) return;
 
-    if (hasGiftCardBeenShared(card) && !canStartGiftCardFunding(card)) {
-      Alert.alert(
-        'Single-use Gift Card',
-        'This shared gift card already has funds or a recorded funding attempt. Create a new gift card instead of funding it again.',
-      );
-      return;
-    }
+    if (hasGiftCardBeenShared(card) && !canStartGiftCardFunding(card)) return;
 
     try {
       const refreshed = await refreshCard(card);
+
+
+      if (hasGiftCardShareReservation(refreshed)) return;
 
       if (hasPendingGiftCardFunding(refreshed)) {
         const retryableFunding = getRetryableGiftCardFunding(refreshed);
@@ -395,96 +701,108 @@ const GiftCardServiceOverview = ({
             cardId: refreshed.id,
             pendingFundingId: retryableFunding.id,
           });
-        } else {
-          Alert.alert(
-            'Pending Funding',
-            'Wait for pending funding transactions to confirm before adding more funds.',
-          );
         }
         return;
       }
 
-      if (refreshed.status?.state === 'redeemed' || refreshed.status?.redeemed) {
-        Alert.alert('Redeemed', 'Redeemed gift cards cannot be funded.');
-        return;
-      }
-
       if (
-        hasGiftCardBeenShared(refreshed) &&
-        !canStartGiftCardFunding(refreshed)
+        refreshed.status?.state === 'redeemed' ||
+        refreshed.status?.redeemed
       ) {
-        Alert.alert(
-          'Single-use Gift Card',
-          'This shared gift card already has funds or a recorded funding attempt. Create a new gift card instead of funding it again.',
-        );
         return;
       }
 
-      navigation.navigate('GiftCardFund', {cardId: card.id});
+      if (!canStartGiftCardFunding(refreshed)) return;
+      navigation.navigate('GiftCardFund', {
+        cardId: card.id,
+        ...routeParams,
+      });
     } catch (_) {}
   };
 
-  const openCancelFlow = card => {
-    Alert.alert(
-      'Cancel Gift Card',
-      'Redeem this gift card to your own wallet to cancel it and make the shared link unspendable.',
-      [
-        {text: 'Back', style: 'cancel'},
-        {
-          text: 'Redeem',
-          onPress: () => {
-            dispatch({
-              type: SET_DEEPLINK_DATA,
-              payload: {
-                id: GENERIC_REQUEST_DEEPLINK_VDXF_KEY.vdxfid,
-                data: card.requestBufferString,
-                fromService: GIFT_CARD_SERVICE_ID,
-                passthrough: {
-                  skipWalletBackupRequests: true,
-                },
-              },
-            });
-            navigation.navigate('DeepLink', {screen: 'VerifyDeepLink'});
-          },
-        },
-      ],
-    );
+  const prepareCancellation = async card => {
+    const requestGeneration = cancelRequestGenerationRef.current + 1;
+    cancelRequestGenerationRef.current = requestGeneration;
+    setCancelPreparation({
+      status: GIFT_CARD_CANCEL_STATUS.CHECKING,
+      card: null,
+    });
+
+    try {
+      const refreshed = await refreshGiftCardStatus({
+        card,
+        activeCoinsForUser,
+      });
+
+      const savedCard = await saveCard(refreshed, card);
+      const latestCard = savedCard || refreshed;
+
+      if (requestGeneration !== cancelRequestGenerationRef.current) return;
+
+      if (hasPendingGiftCardFunding(latestCard)) {
+        setCancelPreparation({
+          status: GIFT_CARD_CANCEL_STATUS.PENDING,
+          card: null,
+        });
+        return;
+      }
+
+      if (!hasGiftCardClaims(latestCard)) {
+        setCancelPreparation({
+          status: GIFT_CARD_CANCEL_STATUS.EMPTY,
+          card: null,
+        });
+        return;
+      }
+
+      setCancelPreparation({
+        status: GIFT_CARD_CANCEL_STATUS.READY,
+        card: latestCard,
+      });
+    } catch (e) {
+      console.error(e);
+
+      if (requestGeneration === cancelRequestGenerationRef.current) {
+        setCancelPreparation({
+          status: GIFT_CARD_CANCEL_STATUS.ERROR,
+          card: null,
+        });
+      }
+    }
   };
 
-  const cancelCard = async card => {
-    if (hasPendingGiftCardFunding(card)) {
-      Alert.alert(
-        'Pending Funding',
-        'Wait for pending funding transactions to confirm before canceling this gift card.',
-      );
+  const resetCancellation = () => {
+    cancelRequestGenerationRef.current += 1;
+    setCancelPreparation(INITIAL_CANCEL_PREPARATION);
+  };
+
+  const continueCancellation = () => {
+    if (
+      cancelPreparation.status !== GIFT_CARD_CANCEL_STATUS.READY ||
+      cancelPreparation.card == null
+    ) {
       return;
     }
 
-    try {
-      const refreshed = await refreshCard(card);
-
-      if (hasPendingGiftCardFunding(refreshed)) {
-        Alert.alert(
-          'Pending Funding',
-          'Wait for pending funding transactions to confirm before canceling this gift card.',
-        );
-        return;
-      }
-
-      if (!hasGiftCardClaims(refreshed)) {
-        Alert.alert(
-          'Empty Gift Card',
-          'This gift card has no funds or VerusIDs to redeem.',
-        );
-        return;
-      }
-
-      openCancelFlow(refreshed);
-    } catch (_) {}
+    const card = cancelPreparation.card;
+    resetCancellation();
+    dispatch({
+      type: SET_DEEPLINK_DATA,
+      payload: {
+        id: GENERIC_REQUEST_DEEPLINK_VDXF_KEY.vdxfid,
+        data: card.requestBufferString,
+        fromService: GIFT_CARD_SERVICE_ID,
+        passthrough: {
+          skipWalletBackupRequests: true,
+        },
+      },
+    });
+    navigation.navigate('DeepLink', {screen: 'VerifyDeepLink'});
   };
 
   const deleteCard = async card => {
     setBusyCardId(card.id);
+    setDetailNotice(null);
 
     try {
       const refreshed = await refreshGiftCardStatus({
@@ -494,18 +812,18 @@ const GiftCardServiceOverview = ({
 
       if (!canDeleteGiftCard(refreshed)) {
         await saveCard(refreshed, card);
-        Alert.alert(
-          'Cannot Delete',
-          'This gift card still has funds, VerusIDs, pending funding, or could not be fully checked.',
+        showDetailNotice(
+          card.id,
+          `Not removed. ${getRemoveBlockedReason(refreshed)}`,
         );
         return;
       }
 
       if (await hasGiftCardMempoolTransactions(refreshed)) {
         await saveCard(refreshed, card);
-        Alert.alert(
-          'Cannot Delete',
-          'This gift card has a pending transaction in the mempool. Wait for it to confirm, then refresh the card before deleting it.',
+        showDetailNotice(
+          card.id,
+          'Not removed. A pending transaction must confirm first.',
         );
         return;
       }
@@ -513,486 +831,951 @@ const GiftCardServiceOverview = ({
       const savedData = await saveServiceData(currentData =>
         removeGiftCardIfUnchangedAndDeletable(currentData, card),
       );
+      if (savedData.cards?.[card.id] == null) setSelectedCardId(null);
 
       if (savedData.cards?.[card.id] != null) {
-        Alert.alert(
-          'Cannot Delete',
-          'This gift card changed while deletion checks were running. Refresh it and try again.',
+        showDetailNotice(
+          card.id,
+          'Not removed. The gift card changed during the check. Try again.',
         );
       }
     } catch (e) {
-      console.error(e);
-      Alert.alert(
-        'Unable to Delete',
-        e.message || 'Unable to verify that this gift card can be deleted.',
+      console.warn(e);
+      createAlert(
+        'Gift card not removed',
+        'The wallet could not check the gift card. Check your connection and try again.',
       );
     } finally {
       setBusyCardId(null);
     }
   };
 
-  const confirmDeleteCard = card => {
+  const confirmDeleteCard = async card => {
     if (!canDeleteGiftCard(card)) return;
 
     const hasBeenClaimed =
       card.status?.state === 'redeemed' || card.status?.redeemed;
-    const message = hasBeenClaimed
-      ? 'Are you sure you want to delete this gift card from this device?'
-      : 'Are you sure you want to delete this gift card from this device? If there are any pending funds coming to the card, they will be permanently lost if the card is deleted.';
-
-    Alert.alert(
-      'Delete Gift Card',
-      message,
+    const confirmed = await createAlert(
+      'Remove this gift card?',
+      hasBeenClaimed
+        ? 'The card is removed from this device only.'
+        : 'Funds sent to the card later will be lost.',
       [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteCard(card),
-        },
+        {text: 'Remove', style: 'destructive', onPress: () => resolveAlert(true)},
+        {text: 'Not now', style: 'cancel', onPress: () => resolveAlert(false)},
       ],
     );
+
+    if (confirmed === true) deleteCard(card);
   };
 
-  const explainDeleteUnavailable = card => {
-    if (hasPendingGiftCardFunding(card)) {
-      Alert.alert(
-        'Cannot Delete',
-        'This gift card has pending funding transactions. Refresh after they confirm before deleting it.',
-      );
-      return;
-    }
+  // The first create asks the user to acknowledge that a gift card is a
+  // spendable secret. Later creates open the form directly.
+  const openCreate = () => {
+    if (secretWarningSeen) navigation.navigate('GiftCardCreate');
+    else setSecretWarningVisible(true);
+  };
 
-    if (hasGiftCardClaims(card)) {
-      Alert.alert(
-        'Cannot Delete',
-        'This gift card still has funds or VerusIDs. Redeem or empty it, then refresh before deleting it.',
-      );
-      return;
+  const acceptSecretWarning = async () => {
+    try {
+      await onSecretWarningSeen();
+    } catch (e) {
+      console.warn(e.message);
     }
+    navigation.navigate('GiftCardCreate');
+  };
 
-    Alert.alert(
-      'Cannot Delete',
-      'Refresh the gift card status before deleting it.',
+  // The gift icon without a tile. A claimed row is one line with the open gift
+  // and no badge; a Not funded row shows only the name, because its badge
+  // already says that the card is empty.
+  const renderCardRow = (card, {claimed, last}) => {
+    const busy = busyCardId === card.id;
+    const presentation = getGiftCardPresentation(card, {
+      activeCoinsForUser,
+    });
+    const contentsSummary =
+      claimed || presentation.status === STATUS_NOT_FUNDED
+        ? null
+        : getContentsSummary(presentation);
+    const accessibilityLabel = contentsSummary
+      ? `${card.label}. ${contentsSummary}. ${presentation.statusLabel}.`
+      : `${card.label}. ${presentation.statusLabel}.`;
+
+    return (
+      <View key={card.id} style={styles.rowContainer}>
+        <TouchableOpacity
+          accessibilityLabel={accessibilityLabel}
+          accessibilityRole="button"
+          activeOpacity={0.78}
+          onPress={() => setSelectedCardId(card.id)}
+          style={[styles.cardRow, claimed && styles.claimedRow]}>
+          <View style={styles.iconLane}>
+            {busy ? (
+              <ActivityIndicator
+                animating
+                color={theme.colors.primary}
+                size="small"
+              />
+            ) : (
+              <MaterialCommunityIcons
+                accessible={false}
+                color={
+                  claimed ? theme.colors.textSubtle : theme.colors.textSecondary
+                }
+                name={claimed ? 'gift-open-outline' : 'gift-outline'}
+                size={24}
+              />
+            )}
+          </View>
+          <View style={styles.rowCopy}>
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.rowTitle,
+                {
+                  color: claimed
+                    ? theme.colors.textSecondary
+                    : theme.colors.textPrimary,
+                },
+              ]}>
+              {card.label}
+            </Text>
+            {contentsSummary ? (
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.rowDescription,
+                  {color: theme.colors.textSecondary},
+                ]}>
+                {contentsSummary}
+              </Text>
+            ) : null}
+          </View>
+          {claimed ? null : (
+            <StatusBadge
+              label={presentation.statusLabel}
+              style={styles.statusBadge}
+              tone={presentation.statusTone}
+            />
+          )}
+          <MaterialCommunityIcons
+            accessible={false}
+            color={theme.colors.textSubtle}
+            name="chevron-right"
+            size={21}
+          />
+        </TouchableOpacity>
+        {last ? null : (
+          <View
+            pointerEvents="none"
+            style={[styles.divider, {backgroundColor: theme.colors.border}]}
+          />
+        )}
+      </View>
     );
   };
 
-  const shareNfc = async card => {
-    if (!card) return;
+  const renderList = () => (
+    <SafeAreaView
+      edges={['top', 'left', 'right']}
+      style={[styles.screen, {backgroundColor: theme.colors.background}]}>
+      <ServiceManagerHeader
+        addAccessibilityLabel="Create gift card"
+        onAdd={openCreate}
+        onBack={() => navigation.goBack()}
+        showDivider={showListHeaderDivider}
+        title="Gift cards">
+        {cards.length > 0 ? (
+          <FadedScrollView
+            contentContainerStyle={styles.filters}
+            fadeBackgroundColor={theme.colors.background}
+            fadeLength={28}
+            horizontal
+            showsHorizontalScrollIndicator={false}>
+            {[
+              [STATUS_ALL, 'All'],
+              [STATUS_READY, 'Ready'],
+              [STATUS_PENDING, 'Pending'],
+              [STATUS_NOT_FUNDED, 'Not funded'],
+              [STATUS_SHARED, 'Shared'],
+              [STATUS_REDEEMED, 'Claimed'],
+            ].map(([value, label]) => {
+              const selected = filter === value;
 
-    setNfcStatus('Preparing NFC writer...');
+              return (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityState={{selected}}
+                  key={value}
+                  onPress={() => setFilter(value)}
+                  style={[
+                    styles.filter,
+                    {
+                      backgroundColor: selected
+                        ? theme.colors.primary
+                        : theme.colors.surfaceMuted,
+                    },
+                  ]}>
+                  <Text
+                    style={[
+                      styles.filterText,
+                      {
+                        color: selected
+                          ? theme.colors.onPrimary
+                          : theme.colors.textSecondary,
+                      },
+                    ]}>
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </FadedScrollView>
+        ) : null}
+      </ServiceManagerHeader>
 
-    try {
-      await writeDeeplinkUriToNfc(buildGiftCardNfcDeeplinkUri(card), {
-        onStatus: setNfcStatus,
-      });
-      Alert.alert('Success', 'Gift card written to NFC card.');
-    } catch (e) {
-      console.error(e);
-      Alert.alert('NFC Error', e.message);
-    } finally {
-      setNfcStatus(null);
-    }
-  };
-
-  const shareCard = card => {
-    setShareCardTarget(card);
-  };
-
-  const markCardSharedForAction = async card => {
-    if (hasGiftCardBeenShared(card)) return card;
-
-    const savedData = await saveServiceData(currentData => {
-      const normalized = normalizeGiftCardServiceData(currentData);
-      const currentCard = normalized.cards?.[card.id];
-
-      if (currentCard == null) {
-        throw new Error('Gift card is no longer available.');
-      }
-
-      return upsertGiftCard(
-        normalized,
-        markGiftCardShared(currentCard),
-      );
-    });
-    const sharedCard = savedData.cards?.[card.id];
-
-    if (!hasGiftCardBeenShared(sharedCard)) {
-      throw new Error(
-        'Gift card state changed before it could be marked as shared.',
-      );
-    }
-
-    return sharedCard;
-  };
-
-  const runShareAction = async (card, action) => {
-    setShareCardTarget(null);
-    setBusyCardId(card.id);
-
-    try {
-      const sharedCard = await markCardSharedForAction(card);
-      await action(sharedCard);
-    } catch (e) {
-      console.error(e);
-      Alert.alert('Unable to Share', e.message || 'Unable to share gift card.');
-    } finally {
-      setBusyCardId(null);
-    }
-  };
-
-  const shareQr = card => {
-    runShareAction(card, sharedCard => {
-      setQrCard(sharedCard);
-    });
-  };
-
-  const shareCopy = card => {
-    runShareAction(card, sharedCard => {
-      copyToClipboard(sharedCard.requestUri, {
-        title: 'Copied',
-        message: 'Gift card link copied to clipboard.',
-      });
-    });
-  };
-
-  const shareNfcFromDialog = card => {
-    runShareAction(card, shareNfc);
-  };
-
-  const renderCard = card => {
-    const systemRows = getSystemRows(card);
-    const primaryAddress = getPrimaryAddress(card);
-    const busy = busyCardId === card.id;
-    const pendingFundings = getGiftCardPendingFundings(card);
-    const pending = pendingFundings.length > 0;
-    const retryableFunding = getRetryableGiftCardFunding(card);
-    const hasClaims = hasGiftCardClaims(card);
-    const deleteEnabled = canDeleteGiftCard(card);
-    const claimInfo = getGiftCardClaimInfo(card);
-    const claimedAt = formatCardDateTime(claimInfo?.claimedAt);
-    const identityLookupErrors = getGiftCardIdentityLookupErrors(card);
-    const unfundedShareWarning = needsUnfundedShareWarning(card);
-
-    return (
-      <Card key={card.id} style={{marginBottom: 12, borderRadius: 8}}>
-        <Card.Title
-          title={card.label}
-          subtitle={`${getStatusLabel(card)}${card.encrypted ? ' • encrypted' : ''}${hasGiftCardBeenShared(card) ? ' • shared' : ''}${formatCardDate(card.createdAt) ? ` • ${formatCardDate(card.createdAt)}` : ''}`}
-          left={props => (
-            <MaterialCommunityIcons
-              {...props}
-              name="gift-outline"
-              color={Colors.primaryColor}
-              size={32}
-            />
-          )}
-          right={props =>
-            busy ? (
-              <ActivityIndicator
-                {...props}
-                animating
-                color={Colors.primaryColor}
-                style={{marginRight: 16}}
-              />
-            ) : (
-              <IconButton
-                {...props}
-                icon="refresh"
-                onPress={() => refreshCard(card)}
-              />
-            )
-          }
-        />
-        <Card.Content>
+      <FadedScrollView
+        containerStyle={styles.listViewport}
+        contentContainerStyle={styles.listContent}
+        fadeBackgroundColor={theme.colors.background}
+        fadeLength={42}
+        onScroll={event =>
+          setShowListHeaderDivider(event.nativeEvent.contentOffset.y > 1)
+        }
+        showsVerticalScrollIndicator={false}>
+        {openCards.map((card, index) =>
+          renderCardRow(card, {
+            claimed: false,
+            last: index === openCards.length - 1,
+          }),
+        )}
+        {claimedCards.length > 0 && filter !== STATUS_REDEEMED ? (
           <Text
-            style={{
-              color: Colors.verusDarkGray,
-              fontSize: 12,
-              marginBottom: 8,
-            }}>
-            {truncateAddress(primaryAddress)}
+            accessibilityRole="header"
+            style={[
+              theme.typography.labelSm,
+              styles.groupTitle,
+              openCards.length > 0 && styles.groupTitleAfterRows,
+              {color: theme.colors.textSecondary},
+            ]}>
+            Claimed
           </Text>
-          {claimInfo != null && (
-            <View
-              style={{
-                backgroundColor: '#F3FAF7',
-                borderColor: Colors.verusGreenColor,
-                borderRadius: 8,
-                borderWidth: 1,
-                marginBottom: 10,
-                padding: 10,
-              }}>
-              <View style={{alignItems: 'center', flexDirection: 'row'}}>
-                <MaterialCommunityIcons
-                  name="account-check-outline"
-                  color={Colors.verusGreenColor}
-                  size={18}
-                  style={{marginRight: 6}}
-                />
-                <Text style={{color: Colors.verusDarkGray, fontSize: 12}}>
-                  {`Claimed by ${getClaimedByLabel(claimInfo)}`}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  color: Colors.verusDarkGray,
-                  fontSize: 12,
-                  marginTop: 4,
-                }}>
-                {claimedAt
-                  ? `Claimed at ${claimedAt}`
-                  : claimInfo.height
-                  ? `Claimed at block ${claimInfo.height}`
-                  : 'Claim time unavailable'}
-              </Text>
-            </View>
-          )}
-          {systemRows.length === 0 && claimInfo == null ? (
-            <Text style={{color: Colors.verusDarkGray}}>
-              {identityLookupErrors.length > 0
-                ? 'VerusID lookup unavailable on this endpoint. ID-only cards funded outside this wallet require an endpoint started with -idindex=1.'
-                : 'No funds or VerusIDs found.'}
-            </Text>
-          ) : systemRows.length > 0 ? (
-            systemRows.map(system => (
-              <View key={system.systemId} style={{marginBottom: 8}}>
-                <Text style={{fontWeight: 'bold'}}>
-                  {system.coinObj?.display_ticker || system.coinObj?.id || system.systemId}
-                </Text>
-                {(system.currencies || []).map(currency => (
-                  <Text key={currency.currencyId}>
-                    {currency.amount} {currency.display?.name || currency.currencyId}
-                  </Text>
-                ))}
-                {(system.identities || []).map(identity => (
-                  <Text key={identity.identityAddress}>
-                    {identity.fullyQualifiedName ? convertFqnToDisplayFormat(identity.fullyQualifiedName) : identity.identityAddress}
-                  </Text>
-                ))}
-              </View>
-            ))
-          ) : null}
-          {pendingFundings.length > 0 && (
-            <View
-              style={{
-                backgroundColor: '#FFF4E8',
-                borderColor: Colors.infoButtonColor,
-                borderRadius: 8,
-                borderWidth: 1,
-                marginTop: 12,
-                padding: 10,
-              }}>
-              <Text style={{fontWeight: 'bold', marginBottom: 6}}>
-                Pending funding
-              </Text>
-              {pendingFundings.map((entry, entryIndex) =>
-                <View key={entryIndex}>
-                  {(entry.identities || []).map(identity => (
-                    <Text
-                      key={`${entryIndex}:${identity.identityAddress}`}
-                      style={{
-                        color: Colors.verusDarkGray,
-                        fontSize: 12,
-                        marginTop: 2,
-                      }}>
-                      Waiting for {identity.fullyQualifiedName ? convertFqnToDisplayFormat(identity.fullyQualifiedName) : identity.identityAddress}
-                    </Text>
-                  ))}
-                  {(entry.txids || []).map(txid => (
-                    <View
-                      key={`${entryIndex}:${txid}`}
-                      style={{
-                        alignItems: 'center',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        marginTop: 4,
-                      }}>
-                      <Text
-                        selectable
-                        style={{
-                          color: Colors.verusDarkGray,
-                          flex: 1,
-                          fontSize: 12,
-                          marginRight: 8,
-                        }}>
-                        {txid}
-                      </Text>
-                      <IconButton
-                        icon="content-copy"
-                        size={18}
-                        onPress={() =>
-                          copyToClipboard(txid, {
-                            title: 'Copied',
-                            message: 'Transaction ID copied to clipboard.',
-                          })
-                        }
-                      />
-                    </View>
-                  ))}
-                </View>,
-              )}
-            </View>
-          )}
-        </Card.Content>
-        <Divider style={{marginTop: 8}} />
-        <Card.Actions style={{justifyContent: 'space-between'}}>
-          <Button
-            compact
-            icon="cash-plus"
-            disabled={
-              card.status?.state === 'redeemed' ||
-              (pending && retryableFunding == null) ||
-              busy
+        ) : null}
+        {claimedCards.map((card, index) =>
+          renderCardRow(card, {
+            claimed: true,
+            last: index === claimedCards.length - 1,
+          }),
+        )}
+
+        {visibleCards.length === 0 ? (
+          <EmptyState
+            actionLabel={
+              cards.length === 0 ? 'Create gift card' : 'Show all gift cards'
             }
-            onPress={() => fundCard(card)}>
-            {retryableFunding == null ? 'Fund' : 'Retry'}
-          </Button>
-          <Button
-            compact
-            icon="close-circle-outline"
-            disabled={busy || pending || !hasClaims}
-            onPress={() => cancelCard(card)}>
-            Cancel
-          </Button>
-          <Button
-            compact
-            icon="share-variant"
-            disabled={busy}
-            onPress={() => shareCard(card)}>
-            Share
-          </Button>
-          <IconButton
-            icon="delete-outline"
-            disabled={busy}
-            iconColor={deleteEnabled ? Colors.warningButtonColor : Colors.verusDarkGray}
-            style={!deleteEnabled ? {opacity: 0.45} : null}
-            onPress={() =>
-              deleteEnabled
-                ? confirmDeleteCard(card)
-                : explainDeleteUnavailable(card)
+            icon={Gift}
+            message={
+              cards.length === 0
+                ? 'Share funds or a VerusID as a link, QR code, or NFC card.'
+                : null
+            }
+            onAction={() =>
+              cards.length === 0 ? openCreate() : setFilter(STATUS_ALL)
+            }
+            style={styles.emptyState}
+            title={
+              cards.length === 0 ? 'No gift cards yet' : 'No gift cards here'
             }
           />
-        </Card.Actions>
-      </Card>
+        ) : null}
+      </FadedScrollView>
+
+      <AcknowledgeSheet
+        dismissLabel="Not now"
+        message="Anyone with access to a gift card can claim its funds now, and any funds added later."
+        onAcknowledged={acceptSecretWarning}
+        onClose={() => setSecretWarningVisible(false)}
+        testID="giftCard.secretWarning"
+        title="Treat gift cards as secrets"
+        visible={secretWarningVisible}
+      />
+    </SafeAreaView>
+  );
+
+  const renderDetail = card => {
+    const busy = busyCardId === card.id;
+    const capabilities = getGiftCardCapabilities(card);
+    const presentation = getGiftCardPresentation(card, {activeCoinsForUser});
+    const status = presentation.status;
+    const retryableFunding = getRetryableGiftCardFunding(card);
+    const deleteEnabled = canDeleteGiftCard(card);
+    const claimInfo = getGiftCardClaimInfo(card);
+    const shared = hasGiftCardBeenShared(card);
+    const hasClaims = hasGiftCardClaims(card);
+    const pendingFunding = hasPendingGiftCardFunding(card);
+    const pendingTxids = capabilities.isRedeemed
+      ? []
+      : [
+          ...new Set(
+            getGiftCardPendingFundings(card).flatMap(entry => entry.txids || []),
+          ),
+        ];
+    // Tiles stay in place during a share attempt, but are disabled.
+    const showShareTiles =
+      !capabilities.isRedeemed && (shared || (hasClaims && !pendingFunding));
+    const shareDisabled = busy || !capabilities.canShare;
+    // Like the tiles, the footer stays during a share attempt, but is
+    // disabled while the share is reserved, as in the options sheet.
+    const showFundingFooter =
+      !hasClaims && !pendingFunding && canStartGiftCardFunding(card);
+    const fundingFooterDisabled = busy || !capabilities.canFund;
+    const notice =
+      detailNotice?.cardId === card.id ? detailNotice.text : null;
+    const showLookupNote =
+      claimInfo == null &&
+      !hasClaims &&
+      getGiftCardIdentityLookupErrors(card).length > 0;
+    const claimedByAddresses = claimInfo?.claimedByAddresses || [];
+    const claimedText =
+      formatFactDateTime(claimInfo?.claimedAt) ||
+      (claimInfo?.height ? `Block ${claimInfo.height}` : '');
+    const facts = [
+      shared && {
+        key: 'shared',
+        label: 'Shared',
+        value: formatFactDateTime(card.sharedAt),
+      },
+      claimedByAddresses.length > 0 && {
+        key: 'claimed-by',
+        label: 'Claimed by',
+        value: getClaimedByText(claimedByAddresses),
+        copyLabel: 'Copy claiming address',
+        copyValue: claimedByAddresses.join('\n'),
+        monospace: true,
+      },
+      capabilities.isRedeemed && {
+        key: 'claimed',
+        label: 'Claimed',
+        value: claimedText,
+      },
+      !capabilities.isRedeemed && {
+        key: 'protection',
+        label: 'Claim protection',
+        value: card.encrypted ? 'Password' : 'None',
+      },
+      {key: 'created', label: 'Created', value: formatFactDate(card.createdAt)},
+    ].filter(fact => fact && fact.value);
+    const shareTiles = [
+      {
+        accessibilityLabel: 'Share gift card link',
+        IconComponent: ShareIcon,
+        label: 'Share',
+        method: SHARE_METHOD.NATIVE,
+      },
+      {
+        accessibilityLabel: 'Show gift card QR code',
+        IconComponent: QrCode,
+        label: 'QR code',
+        method: SHARE_METHOD.QR,
+      },
+      {
+        accessibilityLabel: 'Write gift card to an NFC card',
+        IconComponent: Nfc,
+        label: 'NFC',
+        method: SHARE_METHOD.NFC,
+      },
+    ];
+    const tileIconColor = theme.isDark
+      ? theme.colors.textPrimary
+      : theme.colors.primary;
+    const optionActions = [];
+
+    if (status === STATUS_NOT_FUNDED && capabilities.canShare) {
+      optionActions.push({
+        key: 'share-before-funding',
+        disabled: busy,
+        IconComponent: ShareIcon,
+        label: 'Share before funding',
+        onPress: () => requestShare(card, SHARE_METHOD.NATIVE),
+      });
+    }
+
+    if (capabilities.canFund || retryableFunding != null) {
+      optionActions.push({
+        key: 'add-contents',
+        disabled: busy,
+        IconComponent: CirclePlus,
+        label:
+          retryableFunding != null
+            ? 'Retry pending funding'
+            : hasClaims
+            ? 'Add more contents'
+            : 'Add contents',
+        onPress: () => openFunding(card),
+      });
+
+      if (capabilities.canFund) {
+        optionActions.push({
+          key: 'external-funding',
+          disabled: busy,
+          IconComponent: ArrowDownToLine,
+          label: 'Fund from another wallet',
+          onPress: () => openFunding(card, {startExternal: true}),
+        });
+      }
+    }
+
+    if (!capabilities.isRedeemed) {
+      optionActions.push({
+        key: 'cancel',
+        danger: true,
+        disabled: busy || !capabilities.canCancel,
+        IconComponent: RotateCcw,
+        label: 'Cancel gift card',
+        nextMode: 'cancel',
+      });
+    }
+
+    optionActions.push({
+      key: 'remove',
+      detail: deleteEnabled ? null : getRemoveBlockedReason(card),
+      disabled: busy || !deleteEnabled,
+      IconComponent: Trash2,
+      label: 'Remove from this device',
+      onPress: () => confirmDeleteCard(card),
+    });
+
+    return (
+      <SafeAreaView
+        edges={['top', 'left', 'right']}
+        style={[styles.screen, {backgroundColor: theme.colors.background}]}>
+        <View style={styles.detailHeader}>
+          <TouchableOpacity
+            accessibilityLabel="Back to gift cards"
+            accessibilityRole="button"
+            onPress={() => setSelectedCardId(null)}
+            style={styles.detailHeaderAction}>
+            <MaterialCommunityIcons
+              color={theme.colors.textPrimary}
+              name="arrow-left"
+              size={24}
+            />
+          </TouchableOpacity>
+          <View style={styles.detailHeaderSpacer} />
+          <TouchableOpacity
+            accessibilityLabel="Refresh gift card"
+            accessibilityRole="button"
+            disabled={busy}
+            onPress={() => refreshCard(card).catch(() => {})}
+            style={styles.detailHeaderAction}>
+            {busy ? (
+              <ActivityIndicator
+                animating
+                color={theme.colors.primary}
+                size="small"
+              />
+            ) : (
+              <MaterialCommunityIcons
+                color={theme.colors.textPrimary}
+                name="refresh"
+                size={23}
+              />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityLabel="Gift card options"
+            accessibilityRole="button"
+            accessibilityState={{disabled: busy}}
+            disabled={busy}
+            onPress={() => setActionsVisible(true)}
+            style={[styles.detailHeaderAction, busy && styles.disabled]}>
+            <MaterialCommunityIcons
+              color={theme.colors.textPrimary}
+              name="dots-horizontal"
+              size={24}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <FadedScrollView
+          containerStyle={styles.detailViewport}
+          contentContainerStyle={styles.detailContent}
+          fadeBackgroundColor={theme.colors.background}
+          fadeLength={42}
+          showsVerticalScrollIndicator={false}>
+          <GiftCardFixedCard presentation={presentation} />
+
+          {notice ? (
+            <Text
+              style={[
+                theme.typography.caption,
+                styles.detailNotice,
+                {color: theme.colors.danger},
+              ]}>
+              {notice}
+            </Text>
+          ) : null}
+
+          {showLookupNote ? (
+            <Text
+              style={[
+                theme.typography.caption,
+                styles.lookupNote,
+                {color: theme.colors.textSecondary},
+              ]}>
+              This server cannot look up VerusIDs. VerusIDs sent from another
+              wallet may not show here.
+            </Text>
+          ) : null}
+
+          {showShareTiles ? (
+            <View style={styles.shareTiles}>
+              {shareTiles.map(tile => (
+                <TouchableOpacity
+                  accessibilityLabel={tile.accessibilityLabel}
+                  accessibilityRole="button"
+                  accessibilityState={{disabled: shareDisabled}}
+                  activeOpacity={0.74}
+                  disabled={shareDisabled}
+                  key={tile.method}
+                  onPress={() => requestShare(card, tile.method)}
+                  style={[
+                    styles.shareTile,
+                    {backgroundColor: theme.colors.surfaceMuted},
+                    shareDisabled && styles.disabled,
+                  ]}>
+                  <tile.IconComponent color={tileIconColor} size={22} />
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.shareTileLabel,
+                      {color: theme.colors.textPrimary},
+                    ]}>
+                    {tile.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+
+          {pendingTxids.length > 0 ? (
+            <View style={styles.pendingSection}>
+              <Text
+                accessibilityRole="header"
+                style={[
+                  theme.typography.titleRow,
+                  {color: theme.colors.textPrimary},
+                ]}>
+                {pendingTxids.length === 1
+                  ? 'Funding transaction'
+                  : 'Funding transactions'}
+              </Text>
+              {pendingTxids.map(txid => (
+                <View key={txid} style={styles.transactionRow}>
+                  {/* Not selectable: Android does not ellipsize selectable
+                      text. CopyAction copies the full ID. */}
+                  <Text
+                    ellipsizeMode="middle"
+                    numberOfLines={1}
+                    style={[
+                      styles.monospaceValue,
+                      styles.transactionValue,
+                      {color: theme.colors.textSecondary},
+                    ]}>
+                    {txid}
+                  </Text>
+                  <CopyAction
+                    accessibilityLabel="Copy funding transaction ID"
+                    style={styles.trailingCopy}
+                    value={txid}
+                  />
+                </View>
+              ))}
+              {!shared ? (
+                <Text
+                  style={[
+                    theme.typography.caption,
+                    {color: theme.colors.textSecondary},
+                  ]}>
+                  {pendingTxids.length === 1
+                    ? 'Sharing unlocks after it confirms.'
+                    : 'Sharing unlocks after they confirm.'}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          <View style={styles.facts}>
+            {facts.map((fact, index) => (
+              <View
+                key={fact.key}
+                style={[
+                  styles.factRow,
+                  index > 0 && {
+                    borderTopColor: theme.colors.border,
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                  },
+                ]}>
+                <Text
+                  style={[
+                    theme.typography.bodySm,
+                    styles.factLabel,
+                    {color: theme.colors.textSecondary},
+                  ]}>
+                  {fact.label}
+                </Text>
+                <View style={styles.factValue}>
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      fact.monospace
+                        ? styles.monospaceValue
+                        : theme.typography.labelMd,
+                      styles.factValueText,
+                      {color: theme.colors.textPrimary},
+                    ]}>
+                    {fact.value}
+                  </Text>
+                  {fact.copyValue ? (
+                    <CopyAction
+                      accessibilityLabel={fact.copyLabel}
+                      style={styles.trailingCopy}
+                      value={fact.copyValue}
+                    />
+                  ) : null}
+                </View>
+              </View>
+            ))}
+          </View>
+        </FadedScrollView>
+
+        {showFundingFooter ? (
+          <SafeBottomActionStack
+            gap={10}
+            horizontalSpacing={20}
+            safeAreaSpacing={0}>
+            <AppButton
+              disabled={fundingFooterDisabled}
+              onPress={() => openFunding(card)}
+              variant="primary">
+              Add contents
+            </AppButton>
+            <AppButton
+              disabled={fundingFooterDisabled}
+              onPress={() => openFunding(card, {startExternal: true})}
+              variant="secondary">
+              Fund from another wallet
+            </AppButton>
+          </SafeBottomActionStack>
+        ) : null}
+
+        <GiftCardOptionsSheet
+          actions={optionActions}
+          cancelStep={{
+            onContinue: continueCancellation,
+            onEnter: () => prepareCancellation(card),
+            onReset: resetCancellation,
+            onRetry: () => prepareCancellation(card),
+            status: cancelPreparation.status,
+          }}
+          onClose={() => setActionsVisible(false)}
+          visible={actionsVisible}
+        />
+
+        <AcknowledgeSheet
+          confirmLabel="Share"
+          dismissLabel="Not now"
+          message={
+            shareConfirmation?.funded
+              ? 'Anyone with the link, QR code, or NFC card can claim it. You cannot add contents after you share.'
+              : 'The card is empty. Anyone with the key can take funds sent to it later. Fund it only once.'
+          }
+          onAcknowledged={startConfirmedShare}
+          onClose={() => setShareConfirmationVisible(false)}
+          testID="giftCard.shareConfirmation"
+          title="Share this gift card?"
+          visible={shareConfirmationVisible}
+        />
+      </SafeAreaView>
     );
   };
 
   return (
-    <SafeAreaView style={Styles.defaultRoot}>
-      <View style={{...Styles.fullWidth, flex: 1}}>
-        <ShareGiftCardDialog
-          card={shareCardTarget}
-          onCancel={() => setShareCardTarget(null)}
-          onCopy={shareCopy}
-          onNfc={shareNfcFromDialog}
-          onQr={shareQr}
-        />
-        <QRModal
-          animationType="slide"
-          visible={qrCard != null}
-          qrString={qrCard?.requestUri || ''}
-          title="Gift Card QR"
-          description={qrCard?.label || 'Gift Card'}
-          fileName={qrCard ? `GiftCard-${qrCard.id}` : 'GiftCard'}
-          showVerusIconInQr
-          cancel={() => setQrCard(null)}
-        />
-        {nfcStatus != null && (
+    <>
+      {selectedCard ? renderDetail(selectedCard) : renderList()}
+      <GiftCardNfcProgressModal nfcTap={nfcTap} />
+    </>
+  );
+};
+
+export const GiftCardServiceOverviewSkeleton = ({navigation}) => {
+  const theme = useAppTheme();
+
+  return (
+    <SafeAreaView
+      edges={['top', 'left', 'right']}
+      style={[styles.screen, {backgroundColor: theme.colors.background}]}>
+      <ServiceManagerHeader
+        onBack={() => navigation.goBack()}
+        title="Gift cards"
+      />
+      <SkeletonLoader
+        accessibilityLabel="Loading gift cards"
+        style={styles.skeletonLoader}>
+        {[0, 1, 2].map(index => (
           <View
-            style={{
-              alignItems: 'center',
-              backgroundColor: Colors.secondaryColor,
-              bottom: 0,
-              justifyContent: 'center',
-              left: 0,
-              paddingHorizontal: 32,
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              zIndex: 99,
-            }}>
-            <MaterialCommunityIcons
-              name="credit-card-wireless"
-              size={64}
-              color={Colors.primaryColor}
-              style={{marginBottom: 24}}
-            />
-            <ActivityIndicator animating color={Colors.primaryColor} size="large" />
-            <Text
-              style={{
-                color: Colors.verusDarkGray,
-                fontSize: 22,
-                fontWeight: 'bold',
-                marginTop: 24,
-                textAlign: 'center',
-              }}>
-              {nfcStatus}
-            </Text>
-          </View>
-        )}
-        <ScrollView
-          style={{
-            ...Styles.fullWidth,
-            ...Styles.backgroundColorWhite,
-            flex: 1,
-          }}
-          contentContainerStyle={{
-            padding: 16,
-            paddingBottom: 120,
-          }}>
-          <View
-            style={{
-              alignItems: 'center',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              marginBottom: 12,
-            }}>
-            <Text
-              style={{
-                color: Colors.primaryColor,
-                fontSize: 22,
-                fontWeight: 'bold',
-              }}>
-              Gift Cards
-            </Text>
-            <Button
-              mode="contained"
-              icon="plus"
-              onPress={() => navigation.navigate('GiftCardCreate')}>
-              Create
-            </Button>
-          </View>
-          {cards.length === 0 ? (
-            <View
-              style={{
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingHorizontal: 24,
-                paddingVertical: 64,
-              }}>
-              <MaterialCommunityIcons
-                name="gift-outline"
-                size={56}
-                color={Colors.primaryColor}
-                style={{marginBottom: 16}}
+            key={index}
+            style={[
+              styles.skeletonRow,
+              {borderBottomColor: theme.colors.border},
+            ]}>
+            <SkeletonBlock height={24} radius={6} width={24} />
+            <View style={styles.skeletonText}>
+              <SkeletonText height={16} width="42%" />
+              <SkeletonText
+                height={13}
+                style={styles.skeletonDescription}
+                width="68%"
               />
-              <Text
-                style={{
-                  color: Colors.verusDarkGray,
-                  maxWidth: fieldWidth,
-                  textAlign: 'center',
-                }}>
-                No gift cards have been created for this profile.
-              </Text>
             </View>
-          ) : (
-            cards.map(renderCard)
-          )}
-        </ScrollView>
-      </View>
+            <SkeletonBlock height={22} radius={11} width={58} />
+          </View>
+        ))}
+      </SkeletonLoader>
     </SafeAreaView>
   );
 };
+
+// The first load failed. Same layout as the empty list, with a retry.
+export const GiftCardServiceOverviewLoadError = ({navigation, onRetry}) => {
+  const theme = useAppTheme();
+
+  return (
+    <SafeAreaView
+      edges={['top', 'left', 'right']}
+      style={[styles.screen, {backgroundColor: theme.colors.background}]}>
+      <ServiceManagerHeader
+        onBack={() => navigation.goBack()}
+        title="Gift cards"
+      />
+      <EmptyState
+        actionLabel="Try again"
+        icon={CircleAlert}
+        onAction={onRetry}
+        title="Unable to load gift cards"
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  filters: {
+    gap: 8,
+    paddingTop: 18,
+    paddingBottom: 2,
+  },
+  filter: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 15,
+    borderRadius: 999,
+  },
+  filterText: {
+    fontSize: 13,
+    lineHeight: 18,
+    ...fontStyle('semiBold'),
+  },
+  skeletonLoader: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  skeletonRow: {
+    minHeight: 68,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  skeletonText: {
+    minWidth: 0,
+    flex: 1,
+    marginLeft: 14,
+    paddingRight: 12,
+  },
+  skeletonDescription: {
+    marginTop: 6,
+  },
+  listViewport: {
+    flex: 1,
+  },
+  listContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 24,
+  },
+  rowContainer: {
+    position: 'relative',
+    width: '100%',
+  },
+  cardRow: {
+    minHeight: 68,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  claimedRow: {
+    minHeight: 52,
+    paddingVertical: 14,
+  },
+  iconLane: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowCopy: {
+    minWidth: 0,
+    flex: 1,
+    marginLeft: 14,
+    paddingRight: 8,
+  },
+  rowTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    ...fontStyle('semiBold'),
+  },
+  rowDescription: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 18,
+    ...fontStyle('regular'),
+  },
+  divider: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    left: 38,
+    height: StyleSheet.hairlineWidth,
+  },
+  groupTitle: {
+    marginTop: 4,
+    paddingBottom: 2,
+  },
+  groupTitleAfterRows: {
+    marginTop: 22,
+  },
+  statusBadge: {
+    marginRight: 4,
+  },
+  emptyState: {
+    minHeight: 300,
+  },
+  detailHeader: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 10,
+    paddingRight: 8,
+  },
+  detailHeaderAction: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+  },
+  detailHeaderSpacer: {
+    flex: 1,
+  },
+  detailViewport: {
+    flex: 1,
+  },
+  // The top inset leaves room for the card shadow inside the scroll view.
+  detailContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 28,
+  },
+  lookupNote: {
+    marginTop: 16,
+  },
+  detailNotice: {
+    marginTop: 16,
+  },
+  shareTiles: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 22,
+  },
+  shareTile: {
+    minWidth: 0,
+    flex: 1,
+    height: 76,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 6,
+    borderRadius: 18,
+  },
+  shareTileLabel: {
+    fontSize: 13,
+    lineHeight: 18,
+    ...fontStyle('semiBold'),
+  },
+  pendingSection: {
+    marginTop: 26,
+  },
+  transactionRow: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  transactionValue: {
+    minWidth: 0,
+    flex: 1,
+  },
+  monospaceValue: {
+    fontFamily: MONOSPACE_FONT,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  trailingCopy: {
+    marginRight: -12,
+  },
+  facts: {
+    marginTop: 22,
+  },
+  factRow: {
+    minHeight: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+  factLabel: {
+    flexShrink: 0,
+  },
+  factValue: {
+    minWidth: 0,
+    flexShrink: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  factValueText: {
+    minWidth: 0,
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  disabled: {
+    opacity: 0.45,
+  },
+});
 
 export default GiftCardServiceOverview;

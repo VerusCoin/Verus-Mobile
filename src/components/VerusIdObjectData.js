@@ -13,21 +13,29 @@
     with truncated previews for cleaner scanning.
   - 2026-03-06: Clarified current-content removal wording  so pre-confirmation cards use
     future tense and content-clear actions get dedicated copy.
+  - 2026-09-12: Added the 'signedInDetails' presentation for the signed-in VerusID
+    details screen. It puts status/network first, omits the redundant name row,
+    expands control information while leaving technical sections collapsed, and
+    swaps row-wide copy alerts for an inline CopyAction. Default behavior for the
+    Identity Update/revoke/recover consumers is unchanged.
+  - 2026-09-12: The 'signedInDetails' rows opt out of the merged List.Item
+    accessibility element so the nested CopyAction stays reachable, and copied
+    feedback now names the field it copied.
 */
 import React, { useEffect, useState } from 'react';
-import { Clipboard, FlatList, TouchableOpacity, Alert, View, Image, ScrollView } from 'react-native';
+import { Clipboard, Alert, View, Image, ScrollView } from 'react-native';
 import { Text, List, Divider, Paragraph } from 'react-native-paper';
 import Colors from '../globals/colors';
 import Styles, { verusIdObjectDataStyles as LocalStyles } from '../styles';
 import { Revoke, Recover, Coins } from '../images/customIcons';
 import { openUrl } from "../utils/linking";
 import AnimatedSuccessCheckmark from "./AnimatedSuccessCheckmark";
+import CopyAction from './CopyAction';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getVerusIdStatus } from '../utils/verusid/getVerusIdStatus';
 import { 
   VERUSID_AUTH_INFO, 
   VERUSID_BASE_INFO, 
-  VERUSID_CMM_DATA, 
   VERUSID_CMM_INFO, 
   VERUSID_IADDRESS, 
   VERUSID_NAME, 
@@ -43,13 +51,28 @@ import {
   VERUSID_WARNING_SPEND_AND_SIGN, 
   VERUSID_WARNINGS 
 } from '../utils/constants/verusidObjectData';
-import { getCmmDataLabel } from '../utils/vdxf/cmmDataLabel';
-import { getVDXFKeyLabel } from '../utils/vdxf/vdxfTypeLabels';
-import { capitalizeString } from '../utils/stringUtils';
+import VerusIdContentChangeCard, {
+  buildVerusIdContentChangeItems,
+  getCmmDataKeyLabel,
+  normalizeCmmDisplayUpdates,
+} from './VerusIdContentChangeCard';
 
 const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5, marginBottom: 1, alignSelf: 'flex-end', }} />);
 
 const triangle = <MaterialCommunityIcons name={'information'} size={20} color={Colors.warningButtonColor} style={{ width: 20, marginRight: 9, alignSelf: 'flex-end', }} />;
+
+export const VERUSID_OBJECT_DATA_PRESENTATIONS = {
+  DEFAULT: 'default',
+  SIGNED_IN_DETAILS: 'signedInDetails',
+};
+
+// Control information answers "who else can act on this VerusID?" and stays open.
+// Identity content and the private address are technical detail and start collapsed.
+const SIGNED_IN_DETAILS_EXPANDED_GROUPS = [
+  VERUSID_WARNINGS.key,
+  VERUSID_BASE_INFO.key,
+  VERUSID_AUTH_INFO.key,
+];
 
 export default function VerusIdObjectData(props) {
   const { 
@@ -68,243 +91,43 @@ export default function VerusIdObjectData(props) {
     coinObj,
     cmmDataKeys,
     extraListItems,
-    showChangeBadges
+    showChangeBadges,
+    semanticTheme,
+    presentation = VERUSID_OBJECT_DATA_PRESENTATIONS.DEFAULT,
   } = props;
+
+  const signedInDetailsPresentation =
+    presentation === VERUSID_OBJECT_DATA_PRESENTATIONS.SIGNED_IN_DETAILS;
   
   const [listData, setListData] = useState([]);
   const [expandedAccordions, setExpandedAccordions] = useState({});
+  const isIdentityContentGroup = (group) =>
+    showChangeBadges && group.key === VERUSID_CMM_INFO.key;
 
-  const getCmmDataPreview = (data, maxItems = 3, maxLen = 80) => {
-    const trim = (value) => {
-      if (value == null) return 'null';
-      const str = String(value);
-      return str.length > maxLen ? `${str.slice(0, maxLen)}...` : str;
-    };
+  const getAccordionTitle = (group) =>
+    isIdentityContentGroup(group) ? 'Identity content' : group.title;
 
-    const formatValue = (value) => {
-      if (Array.isArray(value)) {
-        const items = value.map((entry) => formatValue(entry));
-        const shown = items.slice(0, maxItems).join(' | ');
-        return items.length > maxItems ? `${shown} +${items.length - maxItems} more` : shown;
-      }
+  const getAccordionStyle = (group) =>
+    isIdentityContentGroup(group)
+      ? LocalStyles.contentAccordion
+      : {
+          backgroundColor:
+            semanticTheme?.colors.surfaceMuted || Colors.secondaryBackground,
+        };
 
-      if (typeof value === 'object' && value != null) {
-        const keys = Object.keys(value);
-        if (keys.length === 1) {
-          const key = keys[0];
-          const label = getVDXFKeyLabel(key, true) || key;
-          return `${label}: ${formatValue(value[key])}`;
-        }
+  const getAccordionTitleStyle = (group) =>
+    isIdentityContentGroup(group)
+      ? LocalStyles.contentAccordionTitle
+      : {
+          color: semanticTheme?.colors.textPrimary || Colors.quinaryColor,
+        };
 
-        return `${keys.length} fields`;
-      }
-
-      return trim(value);
-    };
-
-    return formatValue(data);
-  };
-
-  const getCmmChangeType = (hasExisting, updateEntry) => {
-    if (!updateEntry) return null;
-    if (updateEntry.removeMeta) return 'removed';
-    if (!hasExisting) return 'added';
-    return 'appended';
-  };
-
-  const getChangeBadgeConfig = (changeType) => {
-    switch (changeType) {
-      case 'added':
-        return { icon: 'plus-circle-outline', label: 'New key', color: Colors.verusGreenColor };
-      case 'appended':
-        return { icon: 'plus-circle-outline', label: 'Add value', color: Colors.verusGreenColor };
-      case 'removed':
-        return { icon: 'minus-circle-outline', label: 'Will remove', color: Colors.warningButtonColor };
-      default:
-        return null;
-    }
-  };
-
-  const getBadgeList = (item) => {
-    const badges = [];
-    const baseBadge = getChangeBadgeConfig(item.changeType);
-    if (baseBadge) {
-      if (item.changeType === 'removed') {
-        badges.push({
-          ...baseBadge,
-          label: item.removeMeta?.action === 4 ? 'Will clear' : 'Will remove',
-        });
-      } else {
-        badges.push(baseBadge);
-      }
-    }
-    if (item.isEncryptedKey) {
-      badges.push({ icon: 'shield-lock-outline', label: 'Will encrypt', color: Colors.primaryColor });
-    }
-    return badges;
-  };
-
-  const renderChangeBadges = (item) => {
-    const badges = getBadgeList(item);
-    if (badges.length === 0) return null;
-
-    return (
-      <View style={LocalStyles.badgeRow}>
-        {badges.map((badge, idx) => (
-          <View
-            key={`${badge.label}-${idx}`}
-            style={[LocalStyles.badge, { borderColor: badge.color }]}
-          >
-            <MaterialCommunityIcons
-              name={badge.icon}
-              size={12}
-              color={badge.color}
-              style={LocalStyles.badgeIcon}
-            />
-            <Text style={[LocalStyles.badgeText, { color: badge.color }]}>{badge.label}</Text>
-          </View>
-        ))}
-      </View>
-    );
-  };
-
-  const truncatePreview = (text, maxLen = 60) => {
-    if (text == null) return '';
-    const str = String(text);
-    return str.length > maxLen ? `${str.slice(0, maxLen)}...` : str;
-  };
-
-  const renderCmmDescBlock = (label, value, borderColor, muted = false) => (
-    <View style={[LocalStyles.cmmCardDescBlock, { borderLeftColor: borderColor }]}>
-      <Text style={[LocalStyles.cmmCardDescLabel, { color: borderColor }]}>{label}</Text>
-      <Text
-        style={[
-          LocalStyles.cmmCardDescValue,
-          muted && { textDecorationLine: 'line-through', color: '#999' }
-        ]}
-        numberOfLines={2}
-      >
-        {truncatePreview(value, 80) || 'Unknown'}
-      </Text>
-    </View>
-  );
-
-  const getRemoveActionDescription = (removeMeta) => {
-    if (!removeMeta) return null;
-
-    const { action, entryLabel, valueHash } = removeMeta;
-    const valueHashText = typeof valueHash === 'string' && valueHash.length > 0
-      ? ` (hash ${valueHash.substring(0, 10)}...)`
-      : '';
-
-    if (action === 4) return 'All current content keys and values';
-    if (action === 3) return `All current values under ${entryLabel || 'selected key'}`;
-    if (action === 2) return `All current matching values under ${entryLabel || 'selected key'}${valueHashText}`;
-    if (action === 1) return `One current matching value under ${entryLabel || 'selected key'}${valueHashText}`;
-
-    return 'Selected content';
-  };
-
-  const renderCmmChangeDescription = (item, updateEntry) => {
-    const updatedPreview = item.isEncrypted
-      ? 'Encrypted upload (tap to view)'
-      : (item.updatedData ?? updateEntry?.data ?? item.data);
-
-    if (item.changeType === 'added') {
-      return renderCmmDescBlock('New key', updatedPreview || 'New value', Colors.verusGreenColor);
-    }
-
-    if (item.changeType === 'removed') {
-      const actionLabel = item.removeMeta?.action === 4 ? 'Will clear' : 'Will remove';
-
-      if (item.removeMeta) {
-        const removeActionDescription = getRemoveActionDescription(item.removeMeta);
-
-        return (
-          <>
-            {item.data != null && !item.hideOldData && renderCmmDescBlock('Current', item.data, '#CCC', item.removeMeta.action === 3)}
-            {renderCmmDescBlock(actionLabel, removeActionDescription || 'Selected content', Colors.warningButtonColor)}
-          </>
-        );
-      }
-
-      // keep removal cards clearly pre-confirmation by avoiding past tense labels.
-      return renderCmmDescBlock(actionLabel, item.data || 'Unknown value', Colors.warningButtonColor, true);
-    }
-
-    if (item.changeType === 'appended') {
-      return (
-        <>
-          {item.data != null && renderCmmDescBlock('Existing', item.data, '#CCC')}
-          {renderCmmDescBlock('Add value', updatedPreview || 'New value', Colors.verusGreenColor)}
-        </>
-      );
-    }
-
-    return (
-      <Text style={{ color: Colors.verusDarkGray }}>
-        {item.dataInDescription ? item.data : item.title}
-      </Text>
-    );
-  };
-
-  const renderCmmCard = (item, updateEntry) => {
-    const badges = getBadgeList(item);
-    const onPress = (updateEntry && updateEntry.onPress) ? updateEntry.onPress : item.onPress;
-
-    return (
-      <TouchableOpacity
-        key={item.key}
-        style={LocalStyles.cmmCard}
-        onPress={onPress}
-        activeOpacity={onPress ? 0.7 : 1}
-        disabled={!onPress}
-      >
-        {/* Title row */}
-        <Text style={LocalStyles.cmmCardTitle}>{item.title}</Text>
-
-        {/* Badge row */}
-        {badges.length > 0 && (
-          <View style={LocalStyles.cmmCardBadgeRow}>
-            {badges.map((badge, idx) => (
-              <View
-                key={`${badge.label}-${idx}`}
-                style={[LocalStyles.badge, { borderColor: badge.color }]}
-              >
-                <MaterialCommunityIcons
-                  name={badge.icon}
-                  size={12}
-                  color={badge.color}
-                  style={LocalStyles.badgeIcon}
-                />
-                <Text style={[LocalStyles.badgeText, { color: badge.color }]}>{badge.label}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Description blocks */}
-        {renderCmmChangeDescription(item, updateEntry)}
-
-        {/* Encrypted key info */}
-        {item.isEncryptedKey && (
-          <View style={LocalStyles.encryptedKeyInfo}>
-            <MaterialCommunityIcons
-              name="shield-lock-outline"
-              size={14}
-              color={Colors.primaryColor}
-              style={{ marginRight: 6, marginTop: 1 }}
-            />
-            <Text style={LocalStyles.encryptedKeyInfoText}>
-              This credential data will be encrypted before it is stored on-chain.
-              Neither the credential type nor its contents will be publicly visible.
-              The identity's z-address must match the z-address linked to your account's shielded (Z) seed.
-            </Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
+  const itemTextColor =
+    semanticTheme?.colors.textPrimary || Colors.quinaryColor;
+  const itemDescriptionColor =
+    semanticTheme?.colors.textSecondary || Colors.verusDarkGray;
+  const itemBackgroundColor = semanticTheme?.colors.surface;
+  const dividerColor = semanticTheme?.colors.border;
 
   const getDisplayUpdates = () => {
     const updateFrame = {
@@ -321,18 +144,9 @@ export default function VerusIdObjectData(props) {
       }
     }
 
-    const cmmUpdates = updateFrame[VERUSID_CMM_INFO.key];
-    if (cmmUpdates) {
-      for (const key in cmmUpdates) {
-        const entry = cmmUpdates[key];
-        if (entry && entry.rawData != null) {
-          cmmUpdates[key] = {
-            ...entry,
-            data: getCmmDataPreview(entry.rawData)
-          };
-        }
-      }
-    }
+    updateFrame[VERUSID_CMM_INFO.key] = normalizeCmmDisplayUpdates(
+      updateFrame[VERUSID_CMM_INFO.key],
+    );
 
     return updateFrame
   };
@@ -348,13 +162,7 @@ export default function VerusIdObjectData(props) {
   };
 
   const getCmmDataKey = iAddr => {
-    const keyLabel = getVDXFKeyLabel(iAddr, true);
-
-    if (keyLabel == null) {
-      if (cmmDataKeys && cmmDataKeys[iAddr]) {
-        return cmmDataKeys[iAddr].label;
-      } else return iAddr.substring(0, 4) + '...' + iAddr.substring(iAddr.length - 4);
-    } else return capitalizeString(keyLabel);
+    return getCmmDataKeyLabel(iAddr, cmmDataKeys);
   }
 
   copyDataToClipboard = (data, name) => {
@@ -427,15 +235,10 @@ export default function VerusIdObjectData(props) {
       
       const baseInfo = [
         {
-          key: VERUSID_NAME.key,
-          title: VERUSID_NAME.label,
-          data: verusId.identity.name,
-          onPress: () => copyDataToClipboard(verusId.identity.name, VERUSID_NAME.label),
-        },
-        {
           key: VERUSID_IADDRESS.key,
           title: VERUSID_IADDRESS.label,
           data: verusId.identity.identityaddress,
+          copyValue: verusId.identity.identityaddress,
           onPress: () => copyDataToClipboard(verusId.identity.identityaddress, VERUSID_IADDRESS.label),
         },
         {
@@ -448,21 +251,38 @@ export default function VerusIdObjectData(props) {
           key: VERUSID_SYSTEM.key,
           title: VERUSID_SYSTEM.label,
           data: tryDisplayFriendlyName(verusId.identity.systemid).replace(/@/g, ''),
+          copyValue: verusId.identity.systemid,
           onPress: () => copyDataToClipboard(verusId.identity.systemid, VERUSID_SYSTEM.label),
         },
       ];
+
+      const nameRow = {
+        key: VERUSID_NAME.key,
+        title: VERUSID_NAME.label,
+        data: verusId.identity.name,
+        copyValue: verusId.identity.name,
+        onPress: () => copyDataToClipboard(verusId.identity.name, VERUSID_NAME.label),
+      };
+
+      // The signed-in details screen shows the name as its title and leads with
+      // status and network instead of repeating the name as a row.
+      const orderedBaseInfo = signedInDetailsPresentation
+        ? [baseInfo[1], baseInfo[2], baseInfo[0]]
+        : [nameRow, ...baseInfo];
   
       const authorityInfo = [
         {
           key: VERUSID_REVOCATION_AUTH.key,
           title: VERUSID_REVOCATION_AUTH.label,
           data: tryDisplayFriendlyName(verusId.identity.revocationauthority),
+          copyValue: verusId.identity.revocationauthority,
           onPress: () => copyDataToClipboard(verusId.identity.revocationauthority, VERUSID_REVOCATION_AUTH.label),
         },
         {
           key: VERUSID_RECOVERY_AUTH.key,
           title: VERUSID_RECOVERY_AUTH.label,
           data: tryDisplayFriendlyName(verusId.identity.recoveryauthority),
+          copyValue: verusId.identity.recoveryauthority,
           onPress: () => copyDataToClipboard(verusId.identity.recoveryauthority, VERUSID_RECOVERY_AUTH.label),
         },
       ];
@@ -473,6 +293,7 @@ export default function VerusIdObjectData(props) {
           key: VERUSID_PRIVATE_ADDRESS.key,
           title: VERUSID_PRIVATE_ADDRESS.label,
           data: verusId.identity.privateaddress || null,
+          copyValue: verusId.identity.privateaddress || null,
           onPress: verusId.identity.privateaddress
             ? () => copyDataToClipboard(verusId.identity.privateaddress, VERUSID_PRIVATE_ADDRESS.key)
             : undefined,
@@ -496,6 +317,7 @@ export default function VerusIdObjectData(props) {
           key: `${VERUSID_PRIMARY_ADDRESS.key}:${i}`,
           title: `${VERUSID_PRIMARY_ADDRESS.label} ${i + 1}`,
           data: primaryAddrs[i] ? primaryAddrs[i] : 'None',
+          copyValue: primaryAddrs[i] || null,
           onPress: primaryAddrs[i]
             ? () => copyDataToClipboard(primaryAddrs[i], 'Primary Address')
             : undefined,
@@ -504,67 +326,35 @@ export default function VerusIdObjectData(props) {
 
       primaryAddresses.sort((a, b) => b.key.localeCompare(a.key));
 
-      const contentMultiMapInfo = {};
-
-      if (verusId.identity.contentmultimap) {
-        for (const iAddrKey in verusId.identity.contentmultimap) {
-          const shortIAddr = getCmmDataKey(iAddrKey);
-          const updateKey = `${VERUSID_CMM_DATA.key}:${iAddrKey}`;
-          const updateEntry = displayUpdates[VERUSID_CMM_INFO.key][updateKey];
-          const changeType = getCmmChangeType(true, updateEntry);
-
-          contentMultiMapInfo[updateKey] = {
-            key: updateKey,
-            title: shortIAddr,
-            data: getCmmDataLabel(verusId.identity.contentmultimap[iAddrKey]),
-            dataInDescription: true,
-            changeType,
-            isEncrypted: Boolean(updateEntry && updateEntry.isEncrypted),
-            isEncryptedKey: Boolean(updateEntry && updateEntry.isEncryptedKey),
-            updatedData: updateEntry ? updateEntry.data : null,
-            removeMeta: updateEntry ? updateEntry.removeMeta : null
-          };
-        }
-      }
-
-      for (const key in displayUpdates[VERUSID_CMM_INFO.key]) {
-        if (!contentMultiMapInfo[key]) {
-          const iAddr = key.split(':')[1];
-          const updateEntry = displayUpdates[VERUSID_CMM_INFO.key][key];
-          const shortIAddr = updateEntry && updateEntry.displayTitle ? updateEntry.displayTitle : getCmmDataKey(iAddr);
-          const removedKey = updateEntry?.removeMeta?.action !== 4
-            ? updateEntry?.removeMeta?.entryKey
-            : null;
-          const currentValues = removedKey ? verusId.identity.contentmultimap?.[removedKey] : null;
-          const hasCurrentValues = currentValues != null && (!Array.isArray(currentValues) || currentValues.length > 0);
-          const changeType = getCmmChangeType(hasCurrentValues, updateEntry);
-          
-          contentMultiMapInfo[key] = {
-            key,
-            title: shortIAddr,
-            data: hasCurrentValues ? getCmmDataLabel(currentValues) : updateEntry ? updateEntry.data : null,
-            hideOldData: !hasCurrentValues,
-            dataInDescription: true,
-            changeType,
-            isEncrypted: Boolean(updateEntry && updateEntry.isEncrypted),
-            isEncryptedKey: Boolean(updateEntry && updateEntry.isEncryptedKey),
-            updatedData: updateEntry ? updateEntry.data : null,
-            removeMeta: updateEntry ? updateEntry.removeMeta : null
-          };
-        }
-      }
+      const contentMultiMapInfo = buildVerusIdContentChangeItems({
+        verusId,
+        cmmUpdates: displayUpdates[VERUSID_CMM_INFO.key],
+        getCmmDataKey,
+      });
   
       // Build grouped data
       const groupedData = [
         { key: VERUSID_WARNINGS.key, title: VERUSID_WARNINGS.label, items: warningData },
-        { key: VERUSID_BASE_INFO.key, title: VERUSID_BASE_INFO.label, items: baseInfo },
-        { key: VERUSID_CMM_INFO.key, title: VERUSID_CMM_INFO.label, items: Object.values(contentMultiMapInfo) },
+        { key: VERUSID_BASE_INFO.key, title: VERUSID_BASE_INFO.label, items: orderedBaseInfo },
+        { key: VERUSID_CMM_INFO.key, title: VERUSID_CMM_INFO.label, items: contentMultiMapInfo },
         { key: VERUSID_AUTH_INFO.key, title: VERUSID_AUTH_INFO.label, items: authorityInfo.concat(primaryAddresses) },
         { key: VERUSID_PRIVATE_INFO.key, title: VERUSID_PRIVATE_INFO.label, items: privacyData },
       ];
+
+      // Authorities precede identity content on the signed-in details screen so
+      // the control model reads before raw content data.
+      const orderedGroups = signedInDetailsPresentation
+        ? [
+            groupedData[1],
+            groupedData[0],
+            groupedData[3],
+            groupedData[2],
+            groupedData[4],
+          ]
+        : groupedData;
   
       // Filter out unchanged if hideUnchanged is true
-      const finalGroups = groupedData.map(group => {
+      const finalGroups = orderedGroups.map(group => {
         const filtered = group.items.filter(item => {
           if (!hideUnchanged) return true;
           else return item.key && displayUpdates[group.key][item.key];
@@ -581,12 +371,14 @@ export default function VerusIdObjectData(props) {
       if (!hideDataOnLoad) {
         const initialExpandedState = {};
         finalGroups.forEach((group, idx) => {
-          initialExpandedState[idx] = true;
+          initialExpandedState[idx] =
+            !signedInDetailsPresentation ||
+            SIGNED_IN_DETAILS_EXPANDED_GROUPS.includes(group.key);
         });
         setExpandedAccordions(initialExpandedState);
       }
     }
-  }, [verusId, friendlyNames, displayUpdates, cmmDataKeys, chainInfo, coinObj, hideUnchanged, hideDataOnLoad]);
+  }, [verusId, friendlyNames, displayUpdates, cmmDataKeys, chainInfo, coinObj, hideUnchanged, hideDataOnLoad, signedInDetailsPresentation, ownedAddress, ownedByUser]);
 
   copyDataToClipboard = (data, name) => {
     Clipboard.setString(data);
@@ -603,18 +395,21 @@ export default function VerusIdObjectData(props) {
           {listData.map((group, idx) => group.items.length > 0 && (
             <List.Accordion
               key={idx}
-              title={group.title}
+              title={getAccordionTitle(group)}
               expanded={expandedAccordions[idx]}
               onPress={() => setExpandedAccordions({ ...expandedAccordions, [idx]: !expandedAccordions[idx] })}
-              style={{ backgroundColor: Colors.secondaryBackground }}
-              titleStyle={{ color: Colors.quinaryColor }}
+              style={getAccordionStyle(group)}
+              titleStyle={getAccordionTitleStyle(group)}
             >
               {group.items.map((item, index) => {
                 const isCmmWithBadge = showChangeBadges && group.key === VERUSID_CMM_INFO.key && item.changeType;
                 if (isCmmWithBadge) {
                   return (
                     <React.Fragment key={index}>
-                      {renderCmmCard(item, displayUpdates[group.key][item.key])}
+                      <VerusIdContentChangeCard
+                        item={item}
+                        updateEntry={displayUpdates[group.key][item.key]}
+                      />
                     </React.Fragment>
                   );
                 }
@@ -629,9 +424,22 @@ export default function VerusIdObjectData(props) {
                       titleStyle={
                         displayUpdates[group.key][item.key]
                           ? { color: 'green' }
-                          : {}
+                          : {color: itemTextColor}
                       }
+                      style={itemBackgroundColor ? {backgroundColor: itemBackgroundColor} : undefined}
                       titleNumberOfLines={100}
+                      accessible={signedInDetailsPresentation ? false : undefined}
+                      right={
+                        signedInDetailsPresentation && item.copyValue
+                          ? () => (
+                              <CopyAction
+                                accessibilityLabel={`Copy ${item.title}`}
+                                copiedAccessibilityLabel={`${item.title} copied`}
+                                value={item.copyValue}
+                              />
+                            )
+                          : undefined
+                      }
                       description={() =>
                         displayUpdates[group.key][item.key] ? (
                           <>
@@ -639,21 +447,22 @@ export default function VerusIdObjectData(props) {
                               item.data != null && !item.hideOldData && 
                               (<Text style={{ color: Colors.warningButtonColor }}>{item.dataInDescription ? item.title : item.data}</Text>)
                             }
-                            <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? displayUpdates[group.key][item.key].data : item.title}</Text>
+                            <Text style={{color: itemDescriptionColor}}>{item.dataInDescription ? displayUpdates[group.key][item.key].data : item.title}</Text>
                           </>
                         ) : (
-                          <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? item.data : item.title}</Text>
+                          <Text style={{color: itemDescriptionColor}}>{item.dataInDescription ? item.data : item.title}</Text>
                         )
                       }
                       onPress={
-                        displayUpdates[group.key][item.key] && 
-                        displayUpdates[group.key][item.key].onPress ? 
-                          displayUpdates[group.key][item.key].onPress 
-                          : 
-                          item.onPress
+                        signedInDetailsPresentation
+                          ? undefined
+                          : displayUpdates[group.key][item.key] &&
+                            displayUpdates[group.key][item.key].onPress
+                          ? displayUpdates[group.key][item.key].onPress
+                          : item.onPress
                       }
                     />
-                    <Divider />
+                    <Divider style={dividerColor ? {backgroundColor: dividerColor} : undefined} />
                   </React.Fragment>
                 )
               })}
@@ -668,18 +477,21 @@ export default function VerusIdObjectData(props) {
             {listData.map((group, idx) => group.items.length > 0 && (
               <List.Accordion
                 key={idx}
-                title={group.title}
+                title={getAccordionTitle(group)}
                 expanded={expandedAccordions[idx]}
                 onPress={() => setExpandedAccordions({ ...expandedAccordions, [idx]: !expandedAccordions[idx] })}
-                style={{ backgroundColor: Colors.secondaryBackground }}
-                titleStyle={{ color: Colors.quinaryColor }}
+                style={getAccordionStyle(group)}
+                titleStyle={getAccordionTitleStyle(group)}
               >
                 {group.items.map((item, index) => {
                   const isCmmWithBadge = showChangeBadges && group.key === VERUSID_CMM_INFO.key && item.changeType;
                   if (isCmmWithBadge) {
                     return (
                       <React.Fragment key={index}>
-                        {renderCmmCard(item, displayUpdates[group.key][item.key])}
+                        <VerusIdContentChangeCard
+                          item={item}
+                          updateEntry={displayUpdates[group.key][item.key]}
+                        />
                       </React.Fragment>
                     );
                   }
@@ -694,9 +506,22 @@ export default function VerusIdObjectData(props) {
                         titleStyle={
                           displayUpdates[group.key][item.key]
                             ? { color: 'green' }
-                            : {}
+                            : {color: itemTextColor}
                         }
+                        style={itemBackgroundColor ? {backgroundColor: itemBackgroundColor} : undefined}
                         titleNumberOfLines={100}
+                        accessible={signedInDetailsPresentation ? false : undefined}
+                        right={
+                          signedInDetailsPresentation && item.copyValue
+                            ? () => (
+                                <CopyAction
+                                  accessibilityLabel={`Copy ${item.title}`}
+                                  copiedAccessibilityLabel={`${item.title} copied`}
+                                  value={item.copyValue}
+                                />
+                              )
+                            : undefined
+                        }
                         description={() =>
                           displayUpdates[group.key][item.key] ? (
                             <>
@@ -704,21 +529,22 @@ export default function VerusIdObjectData(props) {
                                 item.data != null && !item.hideOldData && 
                                 (<Text style={{ color: Colors.warningButtonColor }}>{item.dataInDescription ? item.title : item.data}</Text>)
                               }
-                              <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? item.data : item.title}</Text>
+                              <Text style={{color: itemDescriptionColor}}>{item.dataInDescription ? item.data : item.title}</Text>
                             </>
                           ) : (
-                            <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? item.data : item.title}</Text>
+                            <Text style={{color: itemDescriptionColor}}>{item.dataInDescription ? item.data : item.title}</Text>
                           )
                         }
                         onPress={
-                          displayUpdates[group.key][item.key] && 
-                          displayUpdates[group.key][item.key].onPress ? 
-                            displayUpdates[group.key][item.key].onPress 
-                            : 
-                            item.onPress
+                          signedInDetailsPresentation
+                            ? undefined
+                            : displayUpdates[group.key][item.key] &&
+                              displayUpdates[group.key][item.key].onPress
+                            ? displayUpdates[group.key][item.key].onPress
+                            : item.onPress
                         }
                       />
-                      <Divider />
+                      <Divider style={dividerColor ? {backgroundColor: dividerColor} : undefined} />
                     </React.Fragment>
                   );
                 })}

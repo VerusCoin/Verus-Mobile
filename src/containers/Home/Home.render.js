@@ -38,8 +38,7 @@ export const HomeRender = ({
   setEditingCards,
   _addCoin,
   _verusPay,
-  _addPbaasCurrency,
-  _addErc20Token,
+  _addAssetByIdentifier,
   forceUpdate,
   loading,
   HomeRenderCoinsList,
@@ -70,8 +69,7 @@ export const HomeRender = ({
         handleAddCoin={_addCoin}
         handleVerusPay={_verusPay}
         handleEditCards={() => setEditingCards(!editingCards)}
-        handleAddPbaasCurrency={_addPbaasCurrency}
-        handleAddErc20Token={_addErc20Token}
+        handleAddAssetByIdentifier={_addAssetByIdentifier}
         showConfigureHomeCards={!dragDetection}
       />
       <Banner

@@ -27,18 +27,24 @@ const looksLikeJsonString = value => {
   }
 };
 
-export const getCmmDataLabel = (cmmData, recurse = true, stringLenLimit = 20) => {
+export const getCmmDataLabel = (
+  cmmData,
+  recurse = true,
+  stringLenLimit = 20,
+  maxItems = 3,
+) => {
   if (Array.isArray(cmmData)) {
     if (cmmData.length > 0 && recurse) {
       let ret = `${cmmData.length} ${cmmData.length === 1 ? 'item' : 'items'} (`;
 
       let i = 0
-      for (; i < cmmData.length; i++) {
+      const shownItems = Math.min(cmmData.length, maxItems);
+      for (; i < shownItems; i++) {
         ret += getCmmDataLabel(cmmData[i], false, 8);
-        if (i < cmmData.length - 1) ret += ", ";
+        if (i < shownItems - 1) ret += ", ";
       }
 
-      if (i < cmmData.length) ret += `+ ${cmmData.length - i} more`;
+      if (i < cmmData.length) ret += `, + ${cmmData.length - i} more`;
 
       return ret + ")";
     } else if (cmmData.length === 0) return "empty array";

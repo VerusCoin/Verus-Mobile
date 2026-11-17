@@ -15,9 +15,21 @@ export const initVrpcWallet = async (coinObj, requestContext) => {
   const {activeAccount} = state.authentication;
   const sessionScope = getContextActionScope(state, requestContext);
 
-  const addresses = activeAccount.keys[coinObj.id]
-    ? activeAccount.keys[coinObj.id][VRPC].addresses
-    : [];
+  const channelKeys =
+    activeAccount &&
+    activeAccount.keys &&
+    activeAccount.keys[coinObj.id] &&
+    activeAccount.keys[coinObj.id][VRPC];
+  const addresses =
+    channelKeys && Array.isArray(channelKeys.addresses)
+      ? channelKeys.addresses.filter(Boolean)
+      : [];
+
+  if (addresses.length === 0) {
+    throw new Error(
+      `No VRPC address found for ${coinObj.display_ticker || coinObj.id}.`,
+    );
+  }
   
   const addressMap = {}
 

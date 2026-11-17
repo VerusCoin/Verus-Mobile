@@ -5,12 +5,13 @@
 import React, { Component } from "react";
 import NumberPad, { Input, Display } from '../NumberPad/index';
 import SemiModal from "../SemiModal";
-import { IconButton } from "react-native-paper"
+import {IconButton, withTheme} from "react-native-paper"
 import { triggerLightHaptic } from "../../utils/haptics/haptics";
 
 class NumberPadModal extends Component {
   constructor(props) {
     super(props);
+    this.currentValue = props.value;
   }
 
   render() {
@@ -18,7 +19,8 @@ class NumberPadModal extends Component {
       visible,
       cancel,
       value,
-      onChange,
+      onChange = () => {},
+      submit,
       decimals
     } = this.props;
 
@@ -29,7 +31,10 @@ class NumberPadModal extends Component {
         visible={visible}
         onRequestClose={() => cancel(this.props.value)}
         flexHeight={3}
-        contentContainerStyle={{ maxHeight: 384, backgroundColor: "#F8F8F8" }}
+        contentContainerStyle={{
+          maxHeight: 384,
+          backgroundColor: this.props.theme.colors.surface,
+        }}
       >
         <NumberPad>
           <Display
@@ -39,6 +44,7 @@ class NumberPadModal extends Component {
             decimals={decimals}
             autofocus
             onChange={(number) => {
+              this.currentValue = number
               triggerLightHaptic()
               onChange(number)
             }}
@@ -51,7 +57,8 @@ class NumberPadModal extends Component {
               <IconButton icon="check" {...Input.iconStyle} />
             }
             height={300}
-            onWillHide={cancel}
+            onSubmit={submit ? () => submit(this.currentValue) : undefined}
+            onWillHide={submit ? undefined : cancel}
           />
         </NumberPad>
       </SemiModal>
@@ -59,4 +66,4 @@ class NumberPadModal extends Component {
   }
 }
 
-export default NumberPadModal;
+export default withTheme(NumberPadModal);

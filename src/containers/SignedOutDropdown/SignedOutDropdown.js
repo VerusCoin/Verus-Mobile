@@ -37,7 +37,7 @@ const SignedOutDropdown = (props) => {
     ...(hasAccount
       ? [
           {
-            label: 'Recover account seeds',
+            label: 'View account recovery secrets',
             onPress: handleRecoverSeed,
           },
           {

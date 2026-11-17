@@ -1,7 +1,11 @@
-export const CACHED_VRPC_REQUESTS = [
+export const VRPC_ADDRESS_CACHE_REQUESTS = [
   'getaddressbalance',
   'getaddressdeltas',
   'getaddressmempool',
+];
+
+export const CACHED_VRPC_REQUESTS = [
+  ...VRPC_ADDRESS_CACHE_REQUESTS,
   'getcurrency',
   'listcurrencies',
   'getinfo',

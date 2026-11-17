@@ -5,6 +5,7 @@ import { blocksToTime } from "../../math";
 import { GenericRequest, VerusPayInvoiceDetails } from "verus-typescript-primitives/dist/vdxf/classes";
 import { getCurrency } from "../../api/channels/verusid/callCreators";
 import { validateVerusPayBurnChangePrice } from "../verusPayBurnChangePrice";
+import { createGenericRequestRejectionError, GENERIC_REQUEST_REJECTION_CODES } from "../genericRequestRejection";
 
 /**
  * @param {GenericRequest} request
@@ -67,7 +68,10 @@ export const validateVerusPayInvoiceDetails = async (details) => {
   if (details.expires() && details.expiryheight.toNumber() - chainInfo.result.longestchain < 0) {
     const age = (details.expiryheight.toNumber() - chainInfo.result.longestchain) * -1
     
-    throw new Error(`This invoice is expired (expired for approx. ${blocksToTime(age)}).`,)
+    throw createGenericRequestRejectionError(
+      GENERIC_REQUEST_REJECTION_CODES.EXPIRED,
+      `This invoice is expired (expired for approx. ${blocksToTime(age)}).`,
+    )
   }
 
   if (details.destinationIsSaplingPaymentAddress()) {

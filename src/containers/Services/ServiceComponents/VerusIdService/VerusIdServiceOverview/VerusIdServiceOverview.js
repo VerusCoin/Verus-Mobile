@@ -1,5 +1,4 @@
 import React, { Component } from "react"
-import { Platform } from 'react-native';
 import { connect } from 'react-redux'
 import { setServiceLoading, setUserCoins } from "../../../../../actions/actionCreators";
 import { createAlert, resolveAlert } from "../../../../../actions/actions/alert/dispatchers/alert";
@@ -11,7 +10,6 @@ import { VERUSID_SERVICE_ID } from "../../../../../utils/constants/services";
 import { VerusIdServiceOverviewRender } from "./VerusIdServiceOverview.render";
 import { CoinDirectory } from "../../../../../utils/CoinData/CoinDirectory";
 import Store from "../../../../../store";
-import {identityLabel} from '../IdentityRegistration/presentation';
 import {
   captureSessionScope,
   sessionScopeIsCurrent,
@@ -43,105 +41,8 @@ export class VerusIdServiceOverview extends Component {
 
     this.state = {
       verusIdDetailsModalProps: null,
-      identityActions: null,
-      identityActionsVisible: false,
     };
-
-    this.pendingIdentityAction = null;
-    this.identityActionClosing = false;
   }
-
-  componentDidUpdate(previousProps) {
-    if (
-      previousProps.activeAccount?.accountHash !== this.props.activeAccount?.accountHash ||
-      previousProps.sessionEpoch !== this.props.sessionEpoch
-    ) {
-      // A selection and its pending action belong to the original session.
-      this.pendingIdentityAction = null;
-      this.identityActionClosing = false;
-
-      this.setState({
-        identityActions: null,
-        identityActionsVisible: false,
-        verusIdDetailsModalProps: null,
-      });
-    }
-  }
-
-  componentWillUnmount() {
-    this.unmounted = true;
-    this.pendingIdentityAction = null;
-  }
-
-  openIdentityActionsModal = (chain, iAddress, displayName) => {
-    if (this.identityActionClosing) return;
-
-    this.pendingIdentityAction = null;
-    this.setState({
-      identityActions: {
-        chain,
-        iAddress,
-        displayName: identityLabel(iAddress, {[iAddress]: displayName}),
-        requestContext: captureRequestContext(),
-      },
-      identityActionsVisible: true,
-    });
-  };
-
-  closeIdentityActionsModal = (selection, action = null) => {
-    if (
-      this.unmounted ||
-      this.identityActionClosing ||
-      this.state.identityActions !== selection
-    ) return;
-
-    if (action != null && !['transfer', 'modify', 'details', 'unlink'].includes(action))
-      return;
-
-    this.identityActionClosing = true;
-    this.pendingIdentityAction = sessionScopeIsCurrent(Store.getState(), selection.requestContext.sessionScope)
-      ? action
-      : null;
-
-    this.setState({identityActionsVisible: false}, () => {
-      // iOS must dismiss the native sheet before presenting details or an alert.
-      // Android's Modal does not call onDismiss, so its hidden state is enough.
-      if (Platform.OS !== 'ios') this.finishIdentityAction(selection);
-    });
-  };
-
-  finishIdentityAction = selection => {
-    if (
-      this.unmounted ||
-      !this.identityActionClosing ||
-      this.state.identityActions !== selection
-    ) return;
-
-    // Consume the queued action only after its sheet has finished closing.
-    const action = this.pendingIdentityAction;
-    this.pendingIdentityAction = null;
-    this.identityActionClosing = false;
-
-    this.setState({identityActions: null, identityActionsVisible: false}, () => {
-      if (
-        this.unmounted ||
-        !sessionScopeIsCurrent(Store.getState(), selection.requestContext.sessionScope)
-      ) return;
-
-      const {chain, iAddress, displayName, requestContext} = selection;
-
-      if (action === 'transfer' || action === 'modify') {
-        this.props.navigation.navigate('IdentityManagement', {
-          screen: action === 'transfer' ? 'IdentityTransfer' : 'IdentityModify',
-          params: {chain, identityAddress: iAddress, displayName},
-        });
-      } else if (action === 'details') {
-        this.openVerusIdDetailsModal(chain, iAddress, requestContext);
-      } else if (action === 'unlink') {
-        this.tryUnlinkIdentity(iAddress, chain, requestContext);
-      }
-    });
-  };
 
   async loadFriendlyNameMap(chain, iAddress) {
     try {
@@ -157,7 +58,7 @@ export class VerusIdServiceOverview extends Component {
   }
 
   openLinkIdentitiesFromChain(chain) {
-    return this.props.navigation.navigate('LinkIdentities', {chain});
+    return this.props.navigation.navigate('IdentityTab', {screen: 'LinkIdentities', params: {chain}});
   }
 
   async getVerusId(chain, iAddrOrName) {
@@ -167,21 +68,8 @@ export class VerusIdServiceOverview extends Component {
     else return identity.result;
   }
 
-  openVerusIdDetailsModal(chain, iAddress, requestContext = captureRequestContext()) {
-    if (!sessionScopeIsCurrent(Store.getState(), requestContext.sessionScope)) return;
-
-    this.setState({
-      verusIdDetailsModalProps: {
-        loadVerusId: () => this.getVerusId(chain, iAddress),
-        visible: true,
-        animationType: 'slide',
-        cancel: () => this.closeVerusIdDetailsModal(),
-        loadFriendlyNames: () => this.loadFriendlyNameMap(chain, iAddress),
-        iAddress,
-        chain,
-        requestContext,
-      },
-    });
+  openVerusIdDetailsModal(chain, iAddress) {
+    this.props.navigation.navigate('VerusIdDetails', {chain, iAddress});
   }
 
   closeVerusIdDetailsModal() {
@@ -190,10 +78,9 @@ export class VerusIdServiceOverview extends Component {
     });
   }
 
-  tryUnlinkIdentity = async (iAddress, chain, requestContext = captureRequestContext()) => {
+  tryUnlinkIdentity = async (iAddress, chain) => {
+    const requestContext = captureRequestContext();
     this.closeVerusIdDetailsModal()
-
-    if (!sessionScopeIsCurrent(Store.getState(), requestContext.sessionScope)) return;
     
     if (await this.canUnlinkIdentity()) {
       return this.unlinkIdentity(iAddress, chain, requestContext)
@@ -262,7 +149,6 @@ const mapStateToProps = (state) => {
     loading: state.services.loading[VERUSID_SERVICE_ID],
     activeAccount: state.authentication.activeAccount,
     activeCoinList: state.coins.activeCoinList,
-    sessionEpoch: state.authentication.sessionEpoch || 0,
   };
 };
 

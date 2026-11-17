@@ -48,7 +48,7 @@ class WyreServiceAccount extends Component {
   async checkAccountCreationStatus() {
     if (!this.props.wyreAuthenticated) {
       const seed = (await requestSeeds())[WYRE_SERVICE];
-      if (seed == null) throw new Error("No Wyre seed present");
+      if (seed == null) throw new Error("No Wyre recovery secret present");
       await WyreProvider.authenticate(seed);
     }
   }

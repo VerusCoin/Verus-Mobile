@@ -9,6 +9,7 @@ jest.mock('../../../store', () => ({
 
 const {
   linkClaimedIdentitiesForSession,
+  unlinkGiftedIdentitiesForSession,
 } = require('../../spendableKey/claimMetadataSession');
 const {reconcileSpendableKeyClaimResults} = require('../../spendableKey/claimResultReconciliation');
 
@@ -172,5 +173,75 @@ describe('spendable-key claim metadata session isolation', () => {
     expect(createSetUserCoinsAction).not.toHaveBeenCalled();
     expect(dispatch).not.toHaveBeenCalled();
     expect(refreshLifecycles).not.toHaveBeenCalled();
+  });
+
+  it('refreshes affected coin lifecycles after unlinking gifted identities', async () => {
+    const requestContext = {
+      sessionScope: {
+        sessionScoped: true,
+        accountHash: 'account-a',
+        sessionEpoch: 1,
+      },
+    };
+    const activeCoinList = [{id: 'VRSC', users: ['account-a-id']}];
+    const unlinkIdentity = jest.fn().mockResolvedValue();
+    const updateIdentityWallet = jest.fn().mockResolvedValue();
+    const clearLifecycle = jest.fn();
+    const dispatch = jest.fn();
+    const refreshLifecycles = jest.fn();
+    const setUserCoinsAction = {
+      type: 'SET_USER_COINS',
+      payload: {activeCoinsForUser: [{id: 'VRSC'}]},
+    };
+    const createSetUserCoinsAction = jest.fn(() => setUserCoinsAction);
+
+    await unlinkGiftedIdentitiesForSession({
+      identities: [
+        {identityAddress: 'identity-a', chain: 'VRSC'},
+        {identityAddress: 'identity-b', chain: 'VRSC'},
+      ],
+      requestContext,
+      activeAccount: {id: 'account-a-id', accountHash: 'account-a'},
+      activeCoinList,
+      dispatch,
+      unlinkIdentity,
+      updateIdentityWallet,
+      clearLifecycle,
+      createSetUserCoinsAction,
+      refreshLifecycles,
+    });
+
+    expect(unlinkIdentity).toHaveBeenNthCalledWith(
+      1,
+      'identity-a',
+      'VRSC',
+      requestContext,
+    );
+    expect(unlinkIdentity).toHaveBeenNthCalledWith(
+      2,
+      'identity-b',
+      'VRSC',
+      requestContext,
+    );
+    expect(updateIdentityWallet).toHaveBeenCalledWith(requestContext);
+    expect(clearLifecycle).toHaveBeenCalledTimes(1);
+    expect(clearLifecycle).toHaveBeenCalledWith('VRSC');
+    expect(createSetUserCoinsAction).toHaveBeenCalledWith(
+      activeCoinList,
+      'account-a-id',
+    );
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: setUserCoinsAction.type,
+        meta: expect.objectContaining({
+          accountHash: 'account-a',
+          sessionEpoch: 1,
+          sessionScoped: true,
+        }),
+      }),
+    );
+    expect(refreshLifecycles).toHaveBeenCalledWith(
+      setUserCoinsAction.payload.activeCoinsForUser,
+    );
   });
 });

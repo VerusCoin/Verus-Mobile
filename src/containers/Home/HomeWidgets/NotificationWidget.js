@@ -1,207 +1,258 @@
-import React, {useState} from 'react';
-import {View, TouchableOpacity, Alert, Text, StyleSheet} from 'react-native';
-import {Card, IconButton} from 'react-native-paper';
-import {useSelector} from 'react-redux';
-import Colors from '../../../globals/colors';
+import {registrationNotifications} from '../../../utils/identityRegistration/notifications';
+import {verusIdCopy} from '../../../utils/verusid/verusIdCopy';
+import React, {useMemo, useState} from 'react';
+import {CircleAlert} from 'lucide-react-native';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
+import AppButton from '../../../components/AppButton';
 import {
+  NOTIFICATION_ICON_ERROR,
+  NOTIFICATION_ICON_VERUSID,
   NOTIFICATION_TYPE_BASIC,
   NOTIFICATION_TYPE_LOADING,
-  NOTIFICATION_ICON_TX,
-  NOTIFICATION_ICON_VERUSID,
-  NOTIFICATION_ICON_ERROR,
   NOTIFICATION_TYPE_VERUS_ID_PROVISIONING,
 } from '../../../utils/constants/notifications';
-import {VerusIdAtIcon, ReceivedIcon, VerusIdErrorIcon} from '../../../images/customIcons';
-import {BasicNotification, LoadingNotification, VerusIdProvisioningNotification} from '../../../utils/notification';
-import {openLinkIdentityModal} from '../../../actions/actions/sendModal/dispatchers/sendModal';
-import {CoinDirectory} from '../../../utils/CoinData/CoinDirectory';
-import {SEND_MODAL_IDENTITY_TO_LINK_FIELD} from '../../../utils/constants/sendModal';
-import {dispatchRemoveNotification, dispatchClearAccountNotifications} from '../../../actions/actions/notifications/dispatchers/notifications';
+import {
+  dispatchAddNotification,
+  dispatchRemoveNotification,
+} from '../../../actions/actions/notifications/dispatchers/notifications';
 import {useObjectSelector} from '../../../hooks/useObjectSelector';
-import {registrationNotifications} from '../../../utils/identityRegistration/notifications';
+import {useOnboardingTheme} from '../../../theme/onboarding';
+import {fontStyle} from '../../../globals/fonts';
+import {BasicNotification, LoadingNotification, VerusIdProvisioningNotification} from '../../../utils/notification';
+import VerusIdReadyCard from './VerusIdReadyCard';
+import LinkVerusIdSheet from '../../Services/ServiceComponents/VerusIdService/LinkVerusIdSheet';
+import {createRegistrationContext} from '../../../utils/identityRegistration';
+import {updateRegistrationUiState} from '../../../actions/actions/services/dispatchers/verusid/registration';
 
-const getIcon = (type, index) => {
-  const props = {index, width: 22, height: 22};
-  switch (type) {
-    case NOTIFICATION_ICON_VERUSID:
-      return <VerusIdAtIcon {...props} />;
-    case NOTIFICATION_ICON_ERROR:
-      return <VerusIdErrorIcon {...props} />;
-    case NOTIFICATION_ICON_TX:
-    default:
-      return <ReceivedIcon {...props} />;
+// Preserve the existing failed-provisioning wording for old saved notices.
+const getNotificationCopy = notification => {
+  const segments = Array.isArray(notification.title)
+    ? notification.title
+    : [notification.title];
+  const highlight = segments[0]?.trim() ?? '';
+
+  if (notification.iconType === NOTIFICATION_ICON_ERROR && notification.type === NOTIFICATION_TYPE_VERUS_ID_PROVISIONING) {
+    return {highlight, remainder: 'could not be created', label: 'Try again'};
   }
+
+  return {
+    highlight,
+    remainder: segments.slice(1).join(' ').replace(/\s+/g, ' ').trim(),
+    label: formatCtaLabel(notification.body),
+  };
 };
 
-const getNotifications = (notifications, accountHash) =>
-  Object.entries(notifications.directory || {}).flatMap(([uid, notification]) => {
-    if (notification.acchash !== accountHash) return [];
-    let item;
-    if (notification.type === NOTIFICATION_TYPE_VERUS_ID_PROVISIONING) {
-      item = VerusIdProvisioningNotification.fromJson(notification, (_props, identityAddress, chain) =>
-        openLinkIdentityModal(CoinDirectory.getBasicCoinObj(chain), {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: identityAddress}));
-    } else if (notification.type === NOTIFICATION_TYPE_BASIC) {
-      item = BasicNotification.fromJson(notification);
-    } else if (notification.type === NOTIFICATION_TYPE_LOADING) {
-      item = LoadingNotification.fromJson(notification);
-    }
-    if (!item) return [];
-    item.icon = getIcon(notification.icon, uid);
-    return [item];
-  });
+const formatCtaLabel = body => {
+  if (typeof body !== 'string' || body.trim().length === 0) return 'Continue';
+  const trimmed = body.trim();
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+};
 
-const NotificationTitle = ({title}) => (
-  <Text style={styles.ordinaryTitle}>
-    {Array.isArray(title) ? title.map((part, index) => (
-      <Text key={index} style={index % 2 === 0 ? styles.highlight : undefined}>{part}</Text>
-    )) : title}
-  </Text>
-);
-
-const RegistrationNotice = ({notification, onPress}) => (
-  <TouchableOpacity
-    style={styles.registration}
-    onPress={onPress}
-    activeOpacity={0.65}
-    accessibilityRole="button"
-    accessibilityLabel={`${notification.identityName}. ${notification.statusText}. ${notification.body}`}
-    accessibilityHint="Opens this identity registration"
-    testID={`registration-notice-${notification.jobId}`}>
-    <View style={styles.registrationIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      {notification.icon}
-    </View>
-    <View style={styles.registrationContent}>
-      <Text style={styles.registrationName} numberOfLines={2}>{notification.identityName}</Text>
-      <Text style={styles.status}>{notification.statusText}</Text>
-      <Text style={styles.registrationAction}>{notification.body} ›</Text>
-    </View>
-  </TouchableOpacity>
-);
-
-const OrdinaryNotice = ({notification, onAction}) => (
-  <View style={styles.ordinary}>
-    <View style={styles.ordinaryHeading}>
-      <View style={styles.ordinaryIcon} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        {notification.icon}
-      </View>
-      <NotificationTitle title={notification.title} />
-      {!notification.persistent && (
-        <IconButton
-          icon="close"
-          iconColor="#69717D"
-          size={20}
-          style={styles.iconButton}
-          accessibilityLabel="Dismiss notification"
-          onPress={() => Alert.alert('Clear Notification', 'Are you sure you want to clear the notification?', [
-            {text: 'Cancel', style: 'cancel'},
-            {text: 'Clear', onPress: () => dispatchRemoveNotification(notification.uid)},
-          ])}
-        />
-      )}
-    </View>
-    {!!notification.body && (notification.isActionable() ? (
-      <TouchableOpacity style={styles.ordinaryAction} onPress={onAction} accessibilityRole="button">
-        <Text style={styles.actionText}>{notification.body}</Text>
-      </TouchableOpacity>
-    ) : <Text style={styles.ordinaryBody}>{notification.body}</Text>)}
-  </View>
-);
-
-const NotificationWidget = props => {
-  const [collapsed, setCollapsed] = useState(false);
+const NotificationWidget = ({followsHomeNotice = false}) => {
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const theme = useOnboardingTheme();
+  const isFocused = useIsFocused();
   const notifications = useObjectSelector(state => state.notifications);
-  const registrationJobs = useObjectSelector(state => state.channelStore_verusid.registrationJobs || {});
-  const accountHash = useSelector(state => state.authentication.activeAccount?.accountHash);
-  const ordinaryNotifications = getNotifications(notifications, accountHash);
-  const trayNotifications = [
-    ...registrationNotifications(registrationJobs, accountHash).map(notification => ({
-      ...notification,
-      icon: getIcon(NOTIFICATION_ICON_VERUSID, notification.uid),
-    })),
-    ...ordinaryNotifications,
-  ];
+  const activeAccount = useSelector(state => state.authentication.activeAccount);
+  const accountHash = activeAccount?.accountHash ?? null;
+  const jobs = useObjectSelector(state => state.channelStore_verusid.registrationJobs || {});
+  const registrationNotices = registrationNotifications(jobs, accountHash);
+  const [linkTarget, setLinkTarget] = useState(null);
+  // The link sheet stays mounted until its close animation ends, also when its
+  // card was the last one.
+  const [linkSheetOpen, setLinkSheetOpen] = useState(false);
+  const openLinkSheet = target => {
+    setLinkSheetOpen(true);
+    setLinkTarget(target);
+  };
 
-  if (trayNotifications.length === 0) return <View />;
+  const actionableNotifications = useMemo(() => {
+    if (!notifications?.directory || !accountHash) return [];
+    return Object.entries(notifications.directory)
+      .filter(
+        ([, value]) =>
+          value.acchash === accountHash &&
+          [NOTIFICATION_TYPE_VERUS_ID_PROVISIONING, NOTIFICATION_TYPE_BASIC, NOTIFICATION_TYPE_LOADING].includes(value.type),
+      )
+      .map(([uid, value]) => {
+        const notification = value.type === NOTIFICATION_TYPE_BASIC
+          ? BasicNotification.fromJson(value)
+          : value.type === NOTIFICATION_TYPE_LOADING
+          ? LoadingNotification.fromJson(value)
+          : VerusIdProvisioningNotification.fromJson(
+              value,
+              (_props, identityAddress, chain) => openLinkSheet({identityAddress, chain,
+                name: getNotificationCopy(value).highlight, notificationUid: uid}),
+            );
+        notification.uid = uid;
+        notification.iconType = value.icon ?? NOTIFICATION_ICON_VERUSID;
+        notification.celebrated = value.celebrated === true;
+        return notification;
+      });
+  }, [accountHash, notifications]);
+
+  // The celebration plays once: the stored notification remembers it.
+  const markCelebrated = uid => {
+    const entry = notifications?.directory?.[uid];
+
+    if (entry && entry.celebrated !== true) {
+      dispatchAddNotification({...entry, uid, celebrated: true});
+    }
+  };
+
+  const updateReady = (jobId, patch) => updateRegistrationUiState(jobId, patch, createRegistrationContext()).catch(() => {
+    // Keep the card recoverable when this optional presentation write fails.
+  });
+  if (actionableNotifications.length === 0 && registrationNotices.length === 0 && !linkTarget && !linkSheetOpen) return null;
 
   return (
-    <View style={styles.container}>
-      <Card style={styles.card} mode="outlined">
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.headerToggle}
-            onPress={() => setCollapsed(!collapsed)}
-            accessibilityRole="button"
-            accessibilityLabel={`${collapsed ? 'Show' : 'Hide'} activity, ${trayNotifications.length} notifications`}
-            accessibilityState={{expanded: !collapsed}}>
-            <Text style={styles.headerTitle}>Activity</Text>
-            <View style={styles.count}>
-              <Text style={styles.countText}>{trayNotifications.length}</Text>
-            </View>
-            <IconButton
-              icon={collapsed ? 'chevron-down' : 'chevron-up'}
-              iconColor="#69717D"
-              size={22}
-              style={styles.chevron}
-              accessible={false}
-              pointerEvents="none"
-            />
-          </TouchableOpacity>
-          {!collapsed && ordinaryNotifications.length > 0 && (
-            <TouchableOpacity
-              style={styles.clearButton}
-              accessibilityRole="button"
-              onPress={() => Alert.alert('Clear Notifications', 'Clear all dismissible notifications for this profile?', [
-                {text: 'Cancel', style: 'cancel'},
-                {text: 'Clear', onPress: () => dispatchClearAccountNotifications(accountHash)},
-              ])}>
-              <Text style={styles.clearLabel}>Clear all</Text>
-            </TouchableOpacity>
-          )}
+    <View style={[styles.container, followsHomeNotice && styles.followingContainer]}>
+      <LinkVerusIdSheet target={linkTarget} onClose={() => setLinkTarget(null)} onClosed={() => setLinkSheetOpen(false)} />
+      {registrationNotices.map((notice, index) => notice.ready ? <View key={notice.uid} style={styles.cardSpacing}>
+        <VerusIdReadyCard active={isFocused} celebrate={!notice.celebrated} highlight={notice.identityName} remainder="is ready"
+          label="Link VerusID" theme={theme} onAction={() => openLinkSheet({jobId: notice.jobId, name: notice.identityName})}
+          onCelebrated={() => updateReady(notice.jobId, {readyCelebrated: true})}
+          onDismiss={() => updateReady(notice.jobId, {readyDismissed: true})} />
+      </View> : (
+        <View key={notice.uid} style={[styles.card, styles.cardWithoutDismiss,
+          (index < registrationNotices.length - 1 || actionableNotifications.length > 0) && styles.cardSpacing,
+          {backgroundColor: theme.colors.surfaceMuted}]}>
+          {/* No flex here: these lines sit in a column, where flex 1 gave them zero height.
+              The status is its own sentence, so it gets its own line under the name. */}
+          <Text style={[theme.typography.bodySm, styles.title, styles.columnTitle, styles.highlight, {color: theme.colors.textPrimary}]}>
+            {notice.identityName}
+          </Text>
+          <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+          {!!notice.tone && <CircleAlert size={14} color={theme.colors[`${notice.tone}Text`]} />}
+          <Text style={[theme.typography.caption, styles.noticeStatus, {flexShrink: 1, color: notice.tone ? theme.colors[`${notice.tone}Text`] : theme.colors.textSecondary}]}>
+            {verusIdCopy(notice.statusText)}
+          </Text>
+          </View>
+          <AppButton compact height={32} preserveHeightOnSmallWindow variant="secondary" themeMode={theme.mode}
+            buttonColor={theme.colors.surface} labelStyle={[theme.typography.labelSm, styles.actionLabel]} style={styles.action}
+            onPress={() => notice.onAction({navigation, dispatch})}>
+            {notice.body}
+          </AppButton>
         </View>
-        {!collapsed && trayNotifications.map(notification => notification.kind === 'identity-registration' ? (
-          <RegistrationNotice
+      ))}
+      {actionableNotifications.map((notification, index) => {
+        const {highlight, label, remainder} = getNotificationCopy(notification);
+
+        if (notification.iconType !== NOTIFICATION_ICON_ERROR && notification.isActionable()) {
+          return (
+            <View
+              key={notification.uid}
+              style={
+                index < actionableNotifications.length - 1 && styles.cardSpacing
+              }>
+              <VerusIdReadyCard
+                active={isFocused}
+                celebrate={!notification.celebrated}
+                highlight={highlight}
+                label={label}
+                onAction={() => notification.onAction({navigation, dispatch})}
+                onCelebrated={() => markCelebrated(notification.uid)}
+                onDismiss={() => dispatchRemoveNotification(notification.uid)}
+                remainder={remainder}
+                theme={theme}
+              />
+            </View>
+          );
+        }
+
+        return (
+          <View
             key={notification.uid}
-            notification={notification}
-            onPress={() => notification.onAction(props)}
-          />
-        ) : (
-          <OrdinaryNotice
-            key={notification.uid}
-            notification={notification}
-            onAction={() => notification.onAction(props)}
-          />
-        ))}
-      </Card>
+            style={[
+              styles.card,
+              {backgroundColor: theme.colors.surfaceMuted},
+              index < actionableNotifications.length - 1 && styles.cardSpacing,
+            ]}>
+            <View style={styles.topRow}>
+              <Text style={[theme.typography.bodySm, styles.title, {color: theme.colors.textPrimary}]}>
+                <Text style={styles.highlight}>{highlight}</Text>
+                {remainder.length > 0 ? ` ${remainder}` : ''}
+              </Text>
+              <TouchableOpacity
+                accessibilityLabel="Dismiss notification"
+                accessibilityRole="button"
+                onPress={() => dispatchRemoveNotification(notification.uid)}
+                style={styles.dismissButton}>
+                <MaterialCommunityIcons
+                  color={theme.colors.textSubtle}
+                  name="close"
+                  size={18}
+                />
+              </TouchableOpacity>
+            </View>
+            {!notification.isActionable() && !!notification.body && (
+              <Text style={[theme.typography.caption, styles.body, {color: theme.colors.textSecondary}]}>
+                {notification.body}
+              </Text>
+            )}
+            {/* The page color, not the light-blue tint: the tint disappears
+                on the gray card (owner-approved card A, 2026-10-22). */}
+            {notification.isActionable() && <AppButton
+              buttonColor={theme.colors.surface}
+              compact
+              height={32}
+              preserveHeightOnSmallWindow
+              labelStyle={[theme.typography.labelSm, styles.actionLabel]}
+              onPress={() => notification.onAction({navigation, dispatch})}
+              style={styles.action}
+              themeMode={theme.mode}
+              variant="secondary">
+              {label}
+            </AppButton>}
+          </View>
+        );
+      })}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {paddingHorizontal: 10, paddingVertical: 10},
-  card: {width: '100%', borderRadius: 16, backgroundColor: '#FFFFFF', borderColor: '#E3E7ED', overflow: 'hidden'},
-  header: {flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', paddingHorizontal: 14},
-  headerToggle: {flexDirection: 'row', flex: 1, minWidth: 150, minHeight: 44, alignItems: 'center'},
-  headerTitle: {fontSize: 15, lineHeight: 21, fontWeight: '600', color: '#454F5E', flexShrink: 1},
-  count: {marginLeft: 8, minWidth: 22, borderRadius: 11, paddingHorizontal: 6, paddingVertical: 2, backgroundColor: '#EDF2FC'},
-  countText: {fontSize: 12, lineHeight: 16, fontWeight: '600', color: Colors.primaryColor, textAlign: 'center'},
-  chevron: {margin: 0, marginLeft: 2, width: 32, height: 40},
-  clearButton: {minHeight: 44, justifyContent: 'center', paddingHorizontal: 8, flexShrink: 1},
-  clearLabel: {fontSize: 14, lineHeight: 20, color: Colors.primaryColor},
-  registration: {flexDirection: 'row', alignItems: 'flex-start', padding: 14, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E3E7ED', minHeight: 96},
-  registrationIcon: {width: 36, height: 36, borderRadius: 10, backgroundColor: '#EDF2FC', alignItems: 'center', justifyContent: 'center', marginRight: 12},
-  registrationContent: {flex: 1, minWidth: 0},
-  registrationName: {fontSize: 16, lineHeight: 22, fontWeight: '600', color: '#202B3C', flexShrink: 1},
-  status: {fontSize: 14, lineHeight: 20, color: '#596577', marginTop: 3, flexShrink: 1},
-  registrationAction: {fontSize: 15, lineHeight: 21, fontWeight: '600', color: Colors.primaryColor, marginTop: 10, flexShrink: 1},
-  ordinary: {padding: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E3E7ED'},
-  ordinaryHeading: {flexDirection: 'row', alignItems: 'center'},
-  ordinaryIcon: {width: 30, alignItems: 'center', marginRight: 8},
-  ordinaryTitle: {flex: 1, minWidth: 0, fontSize: 14, lineHeight: 20, color: '#202B3C'},
-  highlight: {color: Colors.primaryColor, fontWeight: '600'},
-  iconButton: {margin: 0, marginLeft: 4, width: 44, height: 44},
-  ordinaryAction: {minHeight: 44, justifyContent: 'center', marginLeft: 38, alignSelf: 'stretch'},
-  actionText: {fontSize: 14, lineHeight: 20, color: Colors.primaryColor, fontWeight: '600', flexShrink: 1},
-  ordinaryBody: {fontSize: 14, lineHeight: 20, color: '#596577', marginTop: 4, marginLeft: 38},
+  container: {paddingTop: 4, paddingBottom: 6},
+  followingContainer: {paddingTop: 2},
+  card: {
+    width: '100%',
+    borderRadius: 16,
+    paddingTop: 12,
+    paddingRight: 0,
+    paddingBottom: 12,
+    paddingLeft: 14,
+  },
+  cardWithoutDismiss: {paddingRight: 14},
+  cardSpacing: {marginBottom: 8},
+  topRow: {flexDirection: 'row', alignItems: 'flex-start'},
+  title: {
+    flex: 1,
+  },
+  columnTitle: {flex: 0},
+  noticeStatus: {marginTop: 2},
+  body: {paddingRight: 14},
+  highlight: {...fontStyle('semiBold')},
+  // A 44-point target around the 18-point icon, centered on the first 20-point line.
+  dismissButton: {
+    width: 44,
+    height: 44,
+    marginTop: -12,
+    marginBottom: -12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  action: {alignSelf: 'flex-start', marginTop: 10, borderRadius: 10},
+  actionLabel: {
+    marginVertical: 0,
+    marginHorizontal: 12,
+  },
 });
+
+// The connection notice on Home uses the same gray card.
+export {styles as noticeCardStyles};
 
 export default NotificationWidget;

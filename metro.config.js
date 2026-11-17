@@ -16,8 +16,9 @@ module.exports = (async () => {
       },
     },
     resolver: {
+      blockList: /[\\/]\.worktrees[\\/].*/,
       assetExts: assetExts.filter(ext => ext !== 'svg'),
-      sourceExts: [...sourceExts, 'svg', 'cjs'],
+      sourceExts: [...sourceExts, 'svg', 'cjs', 'mjs'],
       extraNodeModules: {
         crypto: require.resolve('react-native-crypto'),
         path: require.resolve('path-browserify'),

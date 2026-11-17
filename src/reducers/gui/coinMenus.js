@@ -15,8 +15,31 @@ import {
   SIGN_OUT_COMPLETE
 } from '../../utils/constants/storeType'
 
+const reconcileActiveSubWallets = (activeSubWallets, allSubWallets) => {
+  const nextActiveSubWallets = {};
+  const subWalletsByChain = allSubWallets || {};
+
+  for (const chainTicker of Object.keys(activeSubWallets)) {
+    const selectedSubWallet = activeSubWallets[chainTicker];
+
+    if (selectedSubWallet == null) {
+      nextActiveSubWallets[chainTicker] = selectedSubWallet;
+      continue;
+    }
+
+    const matchingSubWallet = (subWalletsByChain[chainTicker] || []).find(
+      subWallet => subWallet.id === selectedSubWallet.id,
+    );
+
+    nextActiveSubWallets[chainTicker] = matchingSubWallet || null;
+  }
+
+  return nextActiveSubWallets;
+};
+
 export const coinMenus = (state = {
   activeSubWallets: {},
+  userSelectedSubWallets: {},
   allSubWallets: {},
   claimDisabled: false
 }, action) => {
@@ -25,29 +48,24 @@ export const coinMenus = (state = {
       return {
         ...state,
         activeSubWallets: {...state.activeSubWallets, [action.payload.chainTicker]: action.payload.subWallet},
+        // Automatic opening/default choices must not become user preferences.
+        userSelectedSubWallets: action.payload.userSelected
+          ? {...state.userSelectedSubWallets, [action.payload.chainTicker]: action.payload.subWallet}
+          : state.userSelectedSubWallets,
       };
-    case SET_USER_COINS_COMPLETE: {
-      const allSubWallets = action.payload.allSubWallets;
-      const activeSubWallets = {};
-
-      // A rebuild can remove an unlinked identity or refresh a wallet's
-      // channels. Never keep using the old object as a payment source.
-      for (const chainTicker of Object.keys(state.activeSubWallets)) {
-        const wallets = allSubWallets[chainTicker];
-        if (!wallets?.length) continue;
-        const selected = state.activeSubWallets[chainTicker];
-        activeSubWallets[chainTicker] = selected == null
-          ? selected
-          : wallets.find(wallet => wallet.id === selected.id) ||
-            wallets.find(wallet => wallet.id === 'MAIN_WALLET') || wallets[0];
-      }
-
+    case SET_USER_COINS_COMPLETE:
       return {
         ...state,
-        activeSubWallets,
-        allSubWallets,
+        allSubWallets: action.payload.allSubWallets || {},
+        userSelectedSubWallets: reconcileActiveSubWallets(
+          state.userSelectedSubWallets || {},
+          action.payload.allSubWallets,
+        ),
+        activeSubWallets: reconcileActiveSubWallets(
+          state.activeSubWallets,
+          action.payload.allSubWallets,
+        ),
       };
-    }
     case DISABLE_CLAIM_BUTTON:
       return {
         ...state,
@@ -58,6 +76,7 @@ export const coinMenus = (state = {
         ...state,
         activeSubWallets: {},
         allSubWallets: {},
+        userSelectedSubWallets: {},
         claimDisabled: false
       };
     default:

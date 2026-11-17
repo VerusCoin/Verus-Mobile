@@ -215,9 +215,10 @@ describe('identity update content history for review', () => {
     expect(displayProps.identityUpdates.contentmultimap).toEqual(removal);
   });
 
+  // The SDK refuses uploads without createmmr=true, and so does the request guard.
   it('fetches current content for sign-data additions even without ordinary CMM values', async () => {
     prepareDelta(newContent);
-    const request = makeRequest({[KEY]: {data: {message: 'new signed value'}}});
+    const request = makeRequest({[KEY]: {data: {message: 'new signed value', createmmr: true}}});
     expect(request.getDetails().data.containsSignData()).toBe(true);
     const {displayProps} = await handleRequest(request);
 
@@ -244,7 +245,7 @@ describe('identity update content history for review', () => {
 it('authenticates a local upload preview and disposes its keys without exporting a reusable template', async () => {
   const crypto = {decryptData: jest.fn(), dispose: jest.fn()};
   createLocalIdentityUploadCrypto.mockResolvedValueOnce(crypto);
-  const {displayProps} = await handleRequest(makeRequest({[KEY]: {data: {message: 'private payload'}}}));
+  const {displayProps} = await handleRequest(makeRequest({[KEY]: {data: {message: 'private payload', createmmr: true}}}));
   expect(createUpdateIdentityTx.mock.calls[0].slice(7)).toEqual([crypto, 100]);
   expect(crypto.dispose).toHaveBeenCalledTimes(1);
   expect(displayProps.identityPreviewPrepared).toBe(true);
@@ -255,10 +256,10 @@ it('disposes preview keys after failure and never falls back when local crypto i
   const crypto = {decryptData: jest.fn(), dispose: jest.fn()};
   createLocalIdentityUploadCrypto.mockResolvedValueOnce(crypto);
   createUpdateIdentityTx.mockRejectedValueOnce(new Error('Upload authentication failed'));
-  await expect(handleRequest(makeRequest({[KEY]: {data: {message: 'payload'}}}))).rejects.toThrow('authentication');
+  await expect(handleRequest(makeRequest({[KEY]: {data: {message: 'payload', createmmr: true}}}))).rejects.toThrow('authentication');
   expect(crypto.dispose).toHaveBeenCalledTimes(1);
   createUpdateIdentityTx.mockClear();
   createLocalIdentityUploadCrypto.mockRejectedValueOnce(new Error('Local crypto unavailable'));
-  await expect(handleRequest(makeRequest({[KEY]: {data: {message: 'payload'}}}))).rejects.toThrow('crypto unavailable');
+  await expect(handleRequest(makeRequest({[KEY]: {data: {message: 'payload', createmmr: true}}}))).rejects.toThrow('crypto unavailable');
   expect(createUpdateIdentityTx).not.toHaveBeenCalled();
 });

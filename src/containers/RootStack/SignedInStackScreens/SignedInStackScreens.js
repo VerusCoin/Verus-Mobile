@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import SideMenu from '../../SideMenu/SideMenu';
 import MainStackScreens from '../MainStackScreens/MainStackScreens';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { setDeeplinkUrl } from '../../../actions/actionCreators';
-
-const MainDrawer = createDrawerNavigator()
 
 const SignedInStackScreens = props => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
@@ -26,16 +22,7 @@ const SignedInStackScreens = props => {
   }, [deeplinkId, deeplinkUrl, parsingUrl, requestId, store]);
 
   return (
-    <MainDrawer.Navigator
-      drawerWidth={250}
-      drawerContent={props => <SideMenu {...props} />}
-      screenOptions={{
-        swipeEnabled: false,
-        headerShown: false,
-        drawerPosition: "right"
-      }}>
-      <MainDrawer.Screen name="MainStack" component={MainStackScreens} />
-    </MainDrawer.Navigator>
+    <MainStackScreens />
   );
 };
 

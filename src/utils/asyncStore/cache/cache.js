@@ -2,6 +2,7 @@ export * from './electrumVersions'
 export * from './blockHeaders'
 export * from './ethTxReceipts'
 export * from './vrpcResponseCache'
+import { clearPortfolioPriceCache } from '../../portfolioHistory/priceCache';
 
 import { 
   clearCachedVersions,
@@ -36,7 +37,8 @@ export const clearCache = () => {
     clearCachedVersions(),
     clearCachedHeaders(),
     clearCachedEthTxReceipts(),
-    clearCachedVrpcResponses()
+    clearCachedVrpcResponses(),
+    clearPortfolioPriceCache()
   ]).catch((e) => {
     throw e;
   });

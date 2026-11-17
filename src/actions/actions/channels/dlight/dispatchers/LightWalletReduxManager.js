@@ -7,8 +7,7 @@ import {
   getAddresses
 } from '../../../../../utils/api/channels/dlight/callCreators'
 import { isDlightSpendingKey } from '../../../../../utils/keys'
-import { resolveSequentially } from '../../../../../utils/promises'
-import { canRetryDlightInitialization, blockchainQuitError } from './AlertManager'
+import { blockchainQuitError } from './AlertManager'
 import {
   ERROR_DLIGHT_INIT,
   STOP_DLIGHT_SYNC,
@@ -18,7 +17,7 @@ import {
   CLOSE_DLIGHT_CHANNEL,
 } from "../../../../../utils/constants/storeType";
 import { requestSeeds } from '../../../../../utils/auth/authBox'
-import { DLIGHT_PRIVATE } from '../../../../../utils/constants/intervalConstants'
+import { DLIGHT_PRIVATE, INIT_DLIGHT_PRIVATE_ERRORS } from '../../../../../utils/constants/intervalConstants'
 import {
   getContextActionScope,
   getContextSessionScope,
@@ -31,6 +30,11 @@ import {
 } from '../../../../../utils/dlightTeardownSeed';
 
 export const DLIGHT_TEARDOWN_TIMEOUT_MS = 30000;
+// Native start opens a local database; it does not wait for chain sync. Allow
+// slower devices 30 seconds. Keychain reads and address derivation get 10 each.
+export const DLIGHT_START_TIMEOUT_MS = 30000;
+export const DLIGHT_SEED_TIMEOUT_MS = 10000;
+export const DLIGHT_ADDRESS_TIMEOUT_MS = 10000;
 
 // Native wallets survive React Native Fast Refresh. Keep their lifecycle
 // coordinator outside this module instance so refreshed JS cannot forget an
@@ -195,9 +199,10 @@ export const initDlightWallet = async (coinObj, requestContext = null) => {
   const { dispatch, getState } = Store
   const State = getState()
 
-  const { settings, authentication, channelStore_dlight_private } = State
+  const { authentication, channelStore_dlight_private } = State
   const { dlightSockets, dlightSyncing } = channelStore_dlight_private
   const { activeAccount } = authentication
+  if (activeAccount == null) return;
   const { accountHash } = activeAccount
   const { dlight_endpoints, id, proto } = coinObj
   const sessionScope = getContextSessionScope(
@@ -333,202 +338,156 @@ export const initDlightWallet = async (coinObj, requestContext = null) => {
   }
 
   try {
-    if (
-      activeAccount.keys[coinObj.id] == null ||
-      activeAccount.keys[coinObj.id].dlight_private == null
-    )
-      return Promise.resolve();
+    if (activeAccount.keys[id]?.[DLIGHT_PRIVATE] == null) return;
+    if (!initializationMayContinue()) return;
 
-  // Depends on settings already being added to redux store and initialized
-  let initializationPromises = []
-
-  try {
-    if (dlightSyncing[id])
-      throw new Error(
-        "Something went wrong while initializing " +
-          id +
-          ". It is marked as already syncing, before it has been added!?"
-      );
-
-    if (dlightSockets[id] == null) {
-      if (dlight_endpoints == null || !Array.isArray(dlight_endpoints) || dlight_endpoints.length === 0)
-        throw new Error(id + " has been requested as a lightwallet client, but it has no servers!")
-
-      const lightWalletEndpointArr = dlight_endpoints[0].split(':')
-
-      if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1])) 
-        throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
-
-      const seed = (await requestSeeds())[DLIGHT_PRIVATE];
-      if (!initializationMayContinue()) return
-
-      let mnemonicSeed = "";
-      let extsk = "";
-
-      if (isDlightSpendingKey(seed)) {
-        extsk = seed;
-      } else {
-        mnemonicSeed = seed;
-      }
-
-      capturedWalletMayBeOpen = true
-      nativeInitializationRecord = trackNativeInitialization(
-        walletKey,
-        withTimeout(Promise.resolve().then(() =>
-          initializeWallet(
-            id,
-            proto,
-            accountHash,
-            lightWalletEndpointArr[0],
-            Number(lightWalletEndpointArr[1]),
-            mnemonicSeed,
-            extsk,
-          ),
-        ), DLIGHT_TEARDOWN_TIMEOUT_MS, makeDlightInitError(coinObj.id, new Error("Timed out while initializing dlight wallet"))),
-      );
-      const initializedWallet =
-        await nativeInitializationRecord.nativePromise;
-      if (!initializationMayContinue()) {
-        await closeCapturedWalletIfSafe()
-        return
-      }
-
-      initializationPromises = [
-        initializedWallet,
-        getAddresses(extsk, mnemonicSeed, id),
-      ];
-
-    } else if (dlightSockets[id] === false) {
-      const lightWalletEndpointArr = dlight_endpoints[0].split(':')
-
-      if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1]))
-        throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
-
-      const seed = (await requestSeeds())[DLIGHT_PRIVATE];
-      if (!initializationMayContinue()) return
-
-      let mnemonicSeed = "";
-      let extsk = "";
-
-      if (isDlightSpendingKey(seed)) {
-        extsk = seed;
-      } else {
-        mnemonicSeed = seed;
-      }
-
-      capturedWalletMayBeOpen = true
-      nativeInitializationRecord = trackNativeInitialization(
-        walletKey,
-        Promise.resolve().then(() =>
-          openWallet(
-            id,
-            proto,
-            accountHash,
-            lightWalletEndpointArr[0],
-            Number(lightWalletEndpointArr[1]),
-            mnemonicSeed,
-            extsk,
-          ),
-        ),
-      );
-      const openedWallet = await nativeInitializationRecord.nativePromise;
-      if (!initializationMayContinue()) {
-        await closeCapturedWalletIfSafe()
-        return
-      }
-
-      initializationPromises = [
-        openedWallet,
-        getAddresses(extsk, mnemonicSeed, id),
-      ]
-    } else {
-      throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
+    if (dlightSyncing[id]) {
+      throw new Error('Light wallet is already syncing.');
     }
-  } catch (e) {
-    const initError = makeDlightInitError(id, e);
-    console.warn(initError)
+    if (dlightSockets[id] != null && dlightSockets[id] !== false) {
+      throw new Error('Light wallet is already connected.');
+    }
 
+    const endpointParts = dlight_endpoints?.[0]?.split(':') || [];
+    if (!endpointParts[0] || !endpointParts[1] || isNaN(endpointParts[1])) {
+      throw new Error('Light wallet endpoint is unavailable.');
+    }
+
+    const makeTimeoutError = () => {
+      const error = makeDlightInitError(id);
+      error.code = 'DLIGHT_INITIALIZATION_TIMEOUT';
+      return error;
+    };
+    const seed = (await withTimeout(
+      requestSeeds(),
+      DLIGHT_SEED_TIMEOUT_MS,
+      makeTimeoutError,
+    ))[DLIGHT_PRIVATE];
+    if (!initializationMayContinue()) return;
+
+    const extsk = isDlightSpendingKey(seed) ? seed : '';
+    const mnemonicSeed = extsk ? '' : seed;
+    const startWallet = dlightSockets[id] === false ? openWallet : initializeWallet;
+
+    // Track the real native promise, never the timed wait. A late start still
+    // owns this alias until cleanup (or an explicit teardown) has finished.
+    nativeInitializationRecord = trackNativeInitialization(
+      walletKey,
+      Promise.resolve().then(() => {
+        if (!initializationMayContinue()) return;
+        capturedWalletMayBeOpen = true;
+        return startWallet(
+          id,
+          proto,
+          accountHash,
+          endpointParts[0],
+          Number(endpointParts[1]),
+          mnemonicSeed,
+          extsk,
+        );
+      }),
+    );
+    await withTimeout(
+      nativeInitializationRecord.nativePromise,
+      DLIGHT_START_TIMEOUT_MS,
+      makeTimeoutError,
+    );
     if (!initializationMayContinue()) {
-      await closeCapturedWalletIfSafe()
-      return
+      await closeCapturedWalletIfSafe();
+      return;
+    }
+
+    const addresses = await withTimeout(
+      getAddresses(extsk, mnemonicSeed, id),
+      DLIGHT_ADDRESS_TIMEOUT_MS,
+      makeTimeoutError,
+    );
+    if (!initializationMayContinue()) {
+      await closeCapturedWalletIfSafe();
+      return;
     }
 
     dispatchScoped({
+      type: SET_ADDRESSES,
+      payload: {chainTicker: id, channel: DLIGHT_PRIVATE, addresses: [addresses.result]},
+    });
+    dispatchScoped({
       type: ERROR_DLIGHT_INIT,
-      payload: { chainTicker: id, error: initError }
-    })
-  }
-
-  return await new Promise((resolve) => {
-    resolveSequentially(initializationPromises)
-    .then(res => {
-      if (!initializationMayContinue()) {
-        closeCapturedWalletIfSafe().then(resolve)
-        return
-      }
-
+      payload: {chainTicker: id, error: null},
+    });
+    dispatchScoped({
+      type: INIT_DLIGHT_CHANNEL_START,
+      payload: {chainTicker: id},
+    });
+  } catch (cause) {
+    const error = makeDlightInitError(id, cause);
+    console.warn(error);
+    if (initializationMayContinue()) {
       dispatchScoped({
-        type: INIT_DLIGHT_CHANNEL_START,
-        payload: { chainTicker: id }
-      })
-
-      dispatchScoped({
-        type: SET_ADDRESSES,
-        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: [ res.pop().result ]  }
+        type: ERROR_DLIGHT_INIT,
+        payload: {chainTicker: id, error},
       });
+    }
 
-      resolve()
-    })
-    .catch(err => {
-      const initError = makeDlightInitError(id, err);
-      console.warn(initError)
-
-      if (!initializationMayContinue()) {
-        closeCapturedWalletIfSafe().then(resolve)
-        return
-      }
-
-      canRetryDlightInitialization(id)
-      .then(async canRetry => {
-        if (!initializationMayContinue()) {
-          closeCapturedWalletIfSafe().then(resolve)
-          return
-        }
-
-        if (canRetry) {
+    // Do not hold unlock on a retry prompt or cleanup. The existing init error
+    // hides the unavailable card. The normal info refresh retries after the
+    // captured native attempt and its final close have both settled.
+    const record = nativeInitializationRecord;
+    if (record != null) {
+      nativeInitializationRecord = null;
+      const cleanup = async () => {
+        try {
+          await Promise.allSettled([record.nativePromise]);
           await closeCapturedWalletIfSafe();
-          completeNativeInitialization();
-          return initDlightWallet(coinObj, requestContext).then(resolve)
-        } else {
-          await closeCapturedWalletIfSafe();
-          dispatchScoped({
-            type: ERROR_DLIGHT_INIT,
-            payload: { chainTicker: id, error: initError }
-          })
-
-          resolve()
+        } finally {
+          record.complete();
         }
-      })
-      .catch(e => {
-        if (!initializationMayContinue()) {
-          closeCapturedWalletIfSafe().then(resolve)
-          return
-        }
-
-        const initError = makeDlightInitError(id, e);
-        dispatchScoped({
-          type: ERROR_DLIGHT_INIT,
-          payload: { chainTicker: id, error: initError }
-        })
-
-        resolve()
-      })
-    })
-  })
+      };
+      cleanup().catch(() => console.warn(makeDlightInitError(id)));
+    }
   } finally {
     completeNativeInitialization();
   }
-}
+};
+
+// Use the existing info interval, including when an init error keeps the
+// private channel closed. Keep just one recovery attempt per native alias.
+const pendingWalletRecoveries = new Map();
+export const retryDlightWalletInitialization = async (coinObj, sessionScope) => {
+  const state = Store.getState();
+  if (!sessionScopeIsCurrent(state, sessionScope)) return;
+  if (state.errors[INIT_DLIGHT_PRIVATE_ERRORS]?.[coinObj.id] == null) return;
+  const walletKey = walletOperationKey(sessionScope.accountHash, coinObj.id);
+  if (
+    pendingWalletRecoveries.has(walletKey) ||
+    pendingNativeTeardowns.has(walletKey) ||
+    getPendingNativeInitializations(walletKey).length > 0
+  ) return;
+
+  const recovery = (async () => {
+    // A failed cleanup keeps the alias uncertain. Retry its captured-owner
+    // close before starting it again; never open over an uncertain wallet.
+    if (uncertainWalletTeardowns.has(walletKey)) {
+      await closeDlightWallet(coinObj, false, {
+        sessionScope,
+        ownerAccountHash: sessionScope.accountHash,
+        allowRetryPrompt: false,
+      });
+    }
+    if (!sessionScopeIsCurrent(Store.getState(), sessionScope)) return;
+    await initDlightWallet(coinObj, {sessionScope});
+  })();
+  pendingWalletRecoveries.set(walletKey, recovery);
+  try {
+    await recovery;
+  } catch (cause) {
+    console.warn(makeDlightInitError(coinObj.id, cause));
+  } finally {
+    if (pendingWalletRecoveries.get(walletKey) === recovery) {
+      pendingWalletRecoveries.delete(walletKey);
+    }
+  }
+};
 
 // Closes and optionally deletes a dlightWallet
 export const closeDlightWallet = async (

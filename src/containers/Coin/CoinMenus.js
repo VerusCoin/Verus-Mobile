@@ -1,55 +1,30 @@
 /*
-  This component's purpose is to display a tab bar of 
-  all the different apps a specific coin has in the coinData file. 
+  This component's purpose is to display the detail screen
+  of the active coin.
 */
 
 import React, { Component } from "react";
-import {
-  View,
-} from "react-native";
 import { connect } from 'react-redux';
-import Overview from './Overview/Overview'
-import SendCoin from './SendCoin/SendCoin'
-import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
-import ConvertCoin from "./ConvertCoin/ConvertCoin";
-import ManageCoin from "./ManageCoin/ManageCoin";
-import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
-import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
-import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
-import DynamicHeader from "./DynamicHeader";
-import { Portal, BottomNavigation } from "react-native-paper";
-import { subWalletActivity } from "../../utils/subwallet/subWalletStatus";
-import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
-import { WALLET_APP_CONVERT, WALLET_APP_MANAGE, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from "../../utils/constants/apps";
-import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
+import { setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
+import { withNavigationFocus } from '@react-navigation/compat';
+import { WALLET_APP_CONVERT, WALLET_APP_SEND } from "../../utils/constants/apps";
+import SignedInCoinDetail from './SignedInCoinDetail';
 
-export class CoinMenus extends Component {
+const SIGNED_IN_TRANSFER = "signed-in-transfer";
+const TRANSFER_SECTION_KEYS = [WALLET_APP_SEND, WALLET_APP_CONVERT];
+
+class CoinMenus extends Component {
   constructor(props) {
     super(props);
-    let stateObj = this.generateTabs();
-    const subWallets = props.allSubWallets || [];
-
-    //CoinMenus can be passed data, which will be passed to
-    //the app section components as props
-    this.passthrough = this.props.route.params ? this.props.route.params.data : null;
+    this.generateTabs();
+    const subWallets = Array.isArray(props.allSubWallets) ? props.allSubWallets : [];
 
     this.state = {
-      tabs: stateObj.tabs,
-      activeTab: stateObj.activeTab,
-      activeTabIndex: stateObj.activeTabIndex,
-      filterForTab: null,
+      filteredTabKey: null,
     };
 
     if (props.activeAccount != null && subWallets.length == 1)
       props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]));
-
-    this.Routes = {
-      [WALLET_APP_OVERVIEW]: Overview,
-      [WALLET_APP_SEND]: SendCoin,
-      [WALLET_APP_RECEIVE]: ReceiveCoin,
-      [WALLET_APP_CONVERT]: ConvertCoin,
-      [WALLET_APP_MANAGE]: ManageCoin
-    };
   }
 
   componentDidMount() {
@@ -62,35 +37,82 @@ export class CoinMenus extends Component {
     }
 
     if (
+      lastProps.allSubWallets !== this.props.allSubWallets ||
+      lastProps.selectedSubWallet !== this.props.selectedSubWallet
+    ) {
+      this.selectOnlySubWallet();
+    }
+
+    if (
       lastProps.selectedSubWallet != this.props.selectedSubWallet &&
-      this.state.filterForTab != null &&
+      this.state.filteredTabKey != null &&
       this.props.selectedSubWallet != null
     ) {
       this.setState({
-        filterForTab: null,
+        filteredTabKey: null,
       });
     }
   }
+
+  getSubWallets = () => {
+    return Array.isArray(this.props.allSubWallets) ? this.props.allSubWallets : [];
+  };
+
+  selectOnlySubWallet = () => {
+    const subWallets = this.getSubWallets();
+
+    if (
+      this.props.activeAccount != null &&
+      this.props.selectedSubWallet == null &&
+      subWallets.length == 1
+    ) {
+      this.props.dispatch(setCoinSubWallet(this.props.activeCoin.id, subWallets[0]));
+    }
+  };
 
   generateTabs = () => {
     let tabArray = [];
     let activeTab;
     let activeTabIndex;
     let options = this.props.activeCoin.apps[this.props.activeApp].data;
+    const transferSections = options.filter(option => TRANSFER_SECTION_KEYS.includes(option.key));
+    let transferTabAdded = false;
 
     for (let i = 0; i < options.length; i++) {
-      let _tab = {
-        key: options[i].key,
-        focusedIcon: options[i].icon,
-        unfocusedIcon: options[i].icon,
-        title: options[i].name,
-        //color: options[i].color, // Disregarded for now
-        activeSection: options[i],
-      };
+      const option = options[i];
+      const isTransferSection = transferSections.includes(option);
 
-      if (options[i].key === this.props.activeSection.key) {
+      if (isTransferSection && transferTabAdded) {
+        continue;
+      }
+
+      const _tab = isTransferSection
+        ? {
+            key: SIGNED_IN_TRANSFER,
+            focusedIcon: option.icon,
+            unfocusedIcon: option.icon,
+            title: "Transfer",
+            activeSection: option,
+          }
+        : {
+            key: option.key,
+            focusedIcon: option.icon,
+            unfocusedIcon: option.icon,
+            title: option.name,
+            activeSection: option,
+          };
+
+      if (isTransferSection) {
+        transferTabAdded = true;
+      }
+
+      if (
+        option.key === this.props.activeSection.key ||
+        (isTransferSection &&
+          TRANSFER_SECTION_KEYS.includes(this.props.activeSection.key))
+      ) {
         activeTab = _tab;
-        activeTabIndex = i;
+        activeTabIndex = tabArray.length;
       }
 
       tabArray.push(_tab);
@@ -100,128 +122,27 @@ export class CoinMenus extends Component {
       throw new Error("Tab not found for active section " + this.props.activeSection.key);
     }
 
-    this.props.navigation.setOptions({ title: activeTab.title });
+    this.props.navigation.setOptions({
+      title: '',
+    });
 
     return {
       tabs: tabArray,
       activeTab: activeTab,
       activeTabIndex,
+      transferSections,
+      transferMode: TRANSFER_SECTION_KEYS.includes(this.props.activeSection.key)
+        ? this.props.activeSection.key
+        : transferSections[0]?.key,
     };
   };
 
-  goToServices() {
-    this.props.navigation.navigate("Home", {
-      screen: "ServicesHome",
-      initial: false,
-    });
-  }
-
-  renderScene = ({ route, jumpTo }) => {
-    if (this.Routes[route.key] == null) return null;
-    else {
-      const Route = this.Routes[route.key];
-      const { placeholder, active } = subWalletActivity(this.props.selectedSubWallet.id);
-
-      return this.props.selectedSubWallet.compatible_apps.includes(route.key) ? (
-        active(this.props.services) ? (
-          <Route navigation={this.props.navigation} data={this.passthrough} jumpTo={jumpTo} />
-        ) : (
-          <MissingInfoRedirect
-            icon={placeholder.icon}
-            label={placeholder.label}
-            buttonLabel="configure services"
-            onPress={() => this.goToServices()}
-          />
-        )
-      ) : (
-        <MissingInfoRedirect
-          icon={"power-plug-off"}
-          label={`This tab isn't accesible from the ${
-            this.props.selectedSubWallet.name
-          } card.`}
-          buttonLabel="Switch cards"
-          onPress={() => this.findCompatibleSubwallet(route.key)}
-        />
-      );
-    }
-  };
-
-  findCompatibleSubwallet = (tabKey) => {
-    const subwalletsForTab = (this.props.allSubWallets || []).filter((wallet) =>
-      wallet.compatible_apps.includes(tabKey)
-    );
-
-    if (subwalletsForTab.length > 0) {
-      this.setState(
-        {
-          filterForTab: tabKey,
-        },
-        () => this.props.dispatch(setCoinSubWallet(this.props.activeCoin.id, null))
-      );
-    } else {
-      createAlert("Error", "No compatible cards found.");
-    }
-  };
-
-  switchTab = (index) => {
-    const newTab = this.state.tabs[index];
-
-    this.props.navigation.setOptions({ title: newTab.title });
-    this.props.dispatch(setActiveSection(newTab.activeSection));
-    this.setState({ activeTab: newTab, activeTabIndex: index });
-  };
-
-  goBack = () => {
-    this.props.navigation.dispatch(NavigationActions.back());
-  };
-
-  //The rendering of overview, send and receive is temporary, we want to use
-  //this.state.activeTab.screen, but the
-  //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
-  //bug comes up and it seems like a bug in rn
   render() {
-    const { selectedSubWallet, activeCoin, activeAccount, isFocused } = this.props;
-    const { filterForTab } = this.state;
-    // Wallet definitions change after linking, unlinking, and profile changes.
-    // A saved list would offer identities that are no longer in this wallet.
-    const subWallets = this.props.allSubWallets || [];
-    const matchingWallets = filterForTab == null ? subWallets : subWallets.filter(
-      wallet => wallet.compatible_apps.includes(filterForTab),
-    );
-    // The last compatible identity may have been unlinked while the chooser
-    // was open. Keep a way to select another current card instead of trapping
-    // touches in an empty native modal.
-    const selectableWallets = matchingWallets.length > 0 ? matchingWallets : subWallets;
-    const showWalletSelector = isFocused && activeAccount != null &&
-      selectedSubWallet == null && selectableWallets.length > 0;
-
     return (
-      <Portal.Host>
-        <View style={{ flex: 1, display: "flex" }}>
-          {showWalletSelector && (
-            <SubWalletSelectorModal
-              visible={showWalletSelector}
-              cancel={this.goBack}
-              animationType="slide"
-              subWallets={selectableWallets}
-              chainTicker={activeCoin.id}
-              displayTicker={activeCoin.display_ticker}
-            />
-          )}
-          {selectedSubWallet != null && <DynamicHeader switchTab={this.switchTab} />}
-          {selectedSubWallet != null && (
-            <BottomNavigation
-              shifting={false}
-              navigationState={{
-                index: this.state.activeTabIndex,
-                routes: this.state.tabs,
-              }}
-              onIndexChange={this.switchTab}
-              renderScene={this.renderScene}
-            />
-          )}
-        </View>
-      </Portal.Host>
+      <SignedInCoinDetail
+        navigation={this.props.navigation}
+        route={this.props.route}
+      />
     );
   }
 }
@@ -235,10 +156,9 @@ const mapStateToProps = (state) => {
     coinMenuFocused: state.coins.coinMenuFocused,
     selectedSubWallet:
       state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
-    allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
+    allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id] || [],
     services: state.services
   };
 };
 
 export default connect(mapStateToProps)(withNavigationFocus(CoinMenus));
-

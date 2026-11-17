@@ -135,7 +135,7 @@ export const scientificToDecimal = function(number) {
 };
 
 export const checkForPlural = (term, time) => {
-  if (time > 1 && time < 2){
+  if (time >= 1 && time < 2){
     return (translate('TX_INFO.' + term));
   }
   else {
@@ -143,63 +143,42 @@ export const checkForPlural = (term, time) => {
   }
 }
 
+const SECONDS_PER_DAY = 24 * 60 * 60;
+const SECONDS_PER_YEAR = 365.25 * SECONDS_PER_DAY;
+
+// Months are an average twelfth of a year (30.4375 days).
+const TIME_UNITS = [
+  ['YEAR', SECONDS_PER_YEAR],
+  ['MONTH', SECONDS_PER_YEAR / 12],
+  ['DAY', SECONDS_PER_DAY],
+  ['HOUR', 60 * 60],
+  ['MINUTE', 60],
+];
+
 /**
  * Returns a string to display the time in years, months, days, hours, and minutes for a given
- * number of blocks and blocktime.
+ * number of blocks and blocktime. Units with a value of zero are left out.
  * @param {number} blocks Number of blocks
  * @param {number} blocktime Blocktime in seconds
- * @returns {string} A human-readable string representing the time duration (e.g., "2 YEARS 3 MONTHS 5 DAYS 4 HOURS 20 MINUTES").
+ * @returns {string} A human-readable string representing the time duration (e.g., "2 years 3 months 4 hours").
  */
 export const blocksToTime = (blocks, blocktime = 60) => {
   if (typeof blocktime !== "number" || blocktime <= 0) {
     return translate('TX_INFO.INVALID_BLOCKTIME');
   }
-  
-  const years = (((blocks/(60/blocktime))/60)/24)/365.25;
-  const months = (years % 1) * 12;
-  const days = (months % 1) * 30.4375;
-  const hours = (days % 1) * 24;
-  const minutes = (hours % 1) * 60;
 
-  if (years < 1){
-    if (months < 1){
-    if (days < 1){
-      if (hours < 1){
-      if (minutes < 1){
-        return('0 ' + translate('TX_INFO.MINUTES'));
-      }
-      else {
-        return(Math.floor(minutes) + ' ' + checkForPlural('MINUTE', minutes));
-      }
-      }
-      else {
-        return(Math.floor(hours) + ' ' + checkForPlural('HOUR', hours) + ' ' + 
-        Math.floor(minutes) + ' ' + checkForPlural('MINUTE', minutes));
-      }
-    }
-    else {
-      return(
-        Math.floor(days) + ' ' + checkForPlural('DAY', days) + ' ' +
-        Math.floor(hours) + ' ' + checkForPlural('HOUR', hours) + ' ' + 
-        Math.floor(minutes) + ' ' + checkForPlural('MINUTE', minutes));
-    }
-    }
-    else {
-      return(
-      Math.floor(months) + ' ' + checkForPlural('MONTH', months) + ' ' +
-      Math.floor(days) + ' ' + checkForPlural('DAY', days) + ' ' +
-      Math.floor(hours) + ' ' + checkForPlural('HOUR', hours) + ' ' + 
-      Math.floor(minutes) + ' ' + checkForPlural('MINUTE', minutes));
-    }
+  // Whole seconds avoid the rounding drift of chained fractions.
+  let remaining = Math.max(0, Math.floor(blocks * blocktime));
+  const parts = [];
+
+  for (const [unit, seconds] of TIME_UNITS) {
+    const count = Math.floor(remaining / seconds);
+
+    remaining -= count * seconds;
+    if (count > 0) parts.push(count + ' ' + checkForPlural(unit, count));
   }
-  else {
-    return(
-      Math.floor(years) + ' ' + checkForPlural('YEAR', years) + ' ' + 
-      Math.floor(months) + ' ' + checkForPlural('MONTH', months) + ' ' +
-      Math.floor(days) + ' ' + checkForPlural('DAY', days) + ' ' +
-      Math.floor(hours) + ' ' + checkForPlural('HOUR', hours) + ' ' + 
-      Math.floor(minutes) + ' ' + checkForPlural('MINUTE', minutes));
-  }
+
+  return parts.length > 0 ? parts.join(' ') : '0 ' + translate('TX_INFO.MINUTES');
 };
 
 /*

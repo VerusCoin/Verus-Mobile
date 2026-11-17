@@ -1,5 +1,8 @@
-import {Alert} from 'react-native';
 import {openUrl} from '../linking';
+import {
+  createAlert,
+  resolveAlert,
+} from '../../actions/actions/alert/dispatchers/alert';
 
 export const FUND_RAW_TRANSACTION_UTXO_LIMIT = 500;
 export const FUND_RAW_TRANSACTION_MANY_UTXOS_ERROR =
@@ -53,14 +56,17 @@ export const isManyUtxoFundRawTransactionError = error => {
 export const showFundRawTransactionErrorAlert = error => {
   if (!isManyUtxoFundRawTransactionError(error)) return false;
 
-  Alert.alert(
-    'Many incoming transactions',
-    FUND_RAW_TRANSACTION_MANY_UTXOS_MESSAGE,
+  createAlert(
+    'Send from Verus Desktop instead?',
+    'This address has too many incoming transactions for the wallet to send from. Import its key into Verus Desktop and send from there.',
     [
-      {text: 'OK', style: 'cancel'},
+      {text: 'Not now', style: 'cancel', onPress: () => resolveAlert(false)},
       {
         text: 'Open guide',
-        onPress: () => openUrl(FUND_RAW_TRANSACTION_GUIDE_URL),
+        onPress: () => {
+          resolveAlert(true);
+          openUrl(FUND_RAW_TRANSACTION_GUIDE_URL);
+        },
       },
     ],
   );

@@ -1,8 +1,7 @@
 import React from 'react';
 import {View, Dimensions} from 'react-native';
 import AppIntroSlider from 'react-native-app-intro-slider';
-import {Text, Paragraph} from 'react-native-paper';
-import Button from '../../../components/Button';
+import {Text, Paragraph, Button} from 'react-native-paper';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import TallButton from '../../../components/LargerButton';
 import Colors from '../../../globals/colors';

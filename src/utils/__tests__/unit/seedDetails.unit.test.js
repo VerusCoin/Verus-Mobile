@@ -87,7 +87,7 @@ describe('seed details helpers', () => {
     ).toThrow('Unable to decrypt');
   });
 
-  it('rejects unsupported encrypted seed detail formats', () => {
+  it('rejects unsupported encrypted recovery data formats', () => {
     const spendableKey = new SpendableKeyDetails({
       data: getMnemonicEntropyBuffer(MNEMONIC),
       seedFormat: SpendableKeyDetails.SEED_FORMAT_BIP39,
@@ -104,10 +104,10 @@ describe('seed details helpers', () => {
         ExpectedOrdinalClass: SpendableKeyDetailsOrdinalVDXFObject,
         password: 'claim password',
       }),
-    ).toThrow('Unsupported seed details encryption format');
+    ).toThrow('Unsupported recovery data encryption format');
   });
 
-  it('rejects non-BIP39 seed details', () => {
+  it('rejects non-BIP39 recovery data', () => {
     const spendableKey = new SpendableKeyDetails({
       data: getMnemonicEntropyBuffer(MNEMONIC),
       seedFormat: new BN(2, 10),
@@ -122,7 +122,7 @@ describe('seed details helpers', () => {
         seedDetailsOrdinal: spendableKeyOrdinal,
         ExpectedOrdinalClass: SpendableKeyDetailsOrdinalVDXFObject,
       }),
-    ).toThrow('Only BIP39 seed details are supported');
+    ).toThrow('Only BIP39 recovery data is supported');
   });
 
   it('rejects encryption settings above one million KDF iterations', async () => {

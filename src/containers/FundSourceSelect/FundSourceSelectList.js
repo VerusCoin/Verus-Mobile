@@ -3,7 +3,7 @@ import {
   ScrollView,
   View
 } from "react-native";
-import { List, Card, TextInput } from "react-native-paper";
+import { List, Card } from "react-native-paper";
 import { API_GET_BALANCES, IS_PBAAS } from "../../utils/constants/intervalConstants";
 import { satsToCoins, truncateDecimal } from "../../utils/math";
 import BigNumber from "bignumber.js";
@@ -13,6 +13,7 @@ import { getCoinLogo } from "../../utils/CoinData/CoinData";
 import { coinsList } from "../../utils/CoinData/CoinsList";
 import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
 import AnimatedActivityIndicatorBox from "../../components/AnimatedActivityIndicatorBox";
+import AppSearchField from "../../components/AppSearchField";
 import { useObjectSelector } from "../../hooks/useObjectSelector";
 
 const FundSourceSelectList = ({ 
@@ -30,7 +31,8 @@ const FundSourceSelectList = ({
     excludeVerusBlockchain,
     burnChangePrice = false,
     burnSystemId,
-    onSelect
+    onSelect,
+    renderContent,
   }) => {
 
   const allBalances = useObjectSelector(state => state.ledger.balances);
@@ -41,6 +43,7 @@ const FundSourceSelectList = ({
   const [displayedCoinObjs, setDisplayedCoinObjs] = useState({});
 
   const [displayedCards, setDisplayedCards] = useState([]);
+  const [paymentOptionCount, setPaymentOptionCount] = useState(0);
   const [noValidCards, setNoValidCards] = useState(false);
   const [showLoadingInsteadOfError, setShowLoadingInsteadOfError] = useState(true);
 
@@ -209,6 +212,11 @@ const FundSourceSelectList = ({
 
         if (coinObj && hasEnoughBalance) {
           cards.push({
+            id: `${networkId}.${optionId}`,
+            balanceDisplay,
+            networkLabel: displayedCoinObjs[network]
+              ? displayedCoinObjs[network].display_ticker
+              : network,
             title: `${burnChangePrice ? 'Burn' : 'Pay'} ${
               allowAnyAmount
                 ? 'from'
@@ -241,6 +249,7 @@ const FundSourceSelectList = ({
       setNoValidCards(true);
     } else setNoValidCards(false);
 
+    setPaymentOptionCount(cards.length);
     setDisplayedCards(cards.filter(card => {
       const searchTermLc = searchTerm ? searchTerm.toLowerCase() : '';
 
@@ -253,6 +262,13 @@ const FundSourceSelectList = ({
         })
       }
     }))
+  }
+
+  if (renderContent) {
+    return renderContent({
+      cards: displayedCards,
+      loading: displayedCards.length === 0 && showLoadingInsteadOfError,
+    });
   }
 
   return noValidCards ? 
@@ -270,12 +286,13 @@ const FundSourceSelectList = ({
     )
     :
     <ScrollView>
-      {displayedCards.length > 5 && <TextInput
-        label={`Search ${displayedCards.length} payment ${displayedCards.length === 1 ? 'option' : 'options'}`}
-        value={searchTerm}
-        onChangeText={text => setSearchTerm(text)}
-        mode="outlined"
+      {paymentOptionCount > 5 && <AppSearchField
+        accessibilityLabel={`Search ${paymentOptionCount} payment options`}
+        onChangeText={setSearchTerm}
+        placeholder="Search payment options"
+        resultCount={displayedCards.length}
         style={{ marginHorizontal: 8, marginTop: 2 }}
+        value={searchTerm}
       />}
       {displayedCards.map((card, index) => (
         <View style={{ margin: 8, marginTop: index === 0 ? 8 : 0 }} key={index}>

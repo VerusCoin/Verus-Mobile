@@ -5,7 +5,12 @@
 
 import React, { Component } from "react";
 import { connect } from 'react-redux';
-import { Modal as NativeModal } from 'react-native'
+import {
+  KeyboardAvoidingView,
+  Modal as NativeModal,
+  Platform,
+  View
+} from 'react-native'
 import getUid from '../utils/uid'
 import { PUSH_MODAL, REMOVE_MODAL } from "../utils/constants/storeType";
 
@@ -48,15 +53,37 @@ class Modal extends Component {
   }
 
   render() {
+    const {
+      avoidKeyboard,
+      children,
+      keyboardVerticalOffset,
+      ...modalProps
+    } = this.props;
+    // Android's native dialog already uses adjustResize. A second height
+    // avoider caches a transient dialog frame and can leave actions under the
+    // IME after it resizes. Keep the root flexible and let the dialog resize it.
+    const KeyboardRoot = Platform.OS === 'ios' ? KeyboardAvoidingView : View;
+    const keyboardRootProps = Platform.OS === 'ios'
+      ? {behavior: 'padding', keyboardVerticalOffset: keyboardVerticalOffset || 0}
+      : {};
+    const modalChildren = avoidKeyboard ? (
+      <KeyboardRoot
+        {...keyboardRootProps}
+        style={{ flex: 1 }}
+      >
+        {children}
+      </KeyboardRoot>
+    ) : children;
+
     return (
       <NativeModal
-        {...this.props}
+        {...modalProps}
         visible={
           this.props.visible &&
           this.props.modalStack[this.props.modalStack.length - 1] === this.uid
         }
       >
-        {this.props.children}
+        {modalChildren}
       </NativeModal>
     );
   }

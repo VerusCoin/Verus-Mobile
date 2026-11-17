@@ -11,7 +11,8 @@ import {
   SET_COIN_STATUS,
   SET_COINMENU_FOCUS,
   SET_USER_COINS_COMPLETE,
-  SET_BALANCE_SHOW
+  SET_BALANCE_SHOW,
+  SET_BALANCE_VISIBILITY
 } from '../utils/constants/storeType'
 import {
   PRE_DATA,
@@ -73,6 +74,10 @@ export const coins = (state = {
         ...state,
         showBalance:!state.showBalance
       }
+    case SET_BALANCE_VISIBILITY:
+      return typeof action.showBalance === 'boolean'
+        ? {...state, showBalance: action.showBalance}
+        : state;
     default:
       return state;
   }

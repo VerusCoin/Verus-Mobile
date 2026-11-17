@@ -7,10 +7,11 @@ const ManagementContext = createContext(null);
 // public identity identifiers, never transaction hex or signing material.
 export function IdentityManagementProvider({children}) {
   const context = useMemo(() => captureIdentityUpdateContext(), []);
+  const [sourceModel, setSourceModel] = useState(null);
   const [plan, setPlan] = useState(null);
   const [result, setResult] = useState(null);
   const [reloadVersion, setReloadVersion] = useState(0);
-  return <ManagementContext.Provider value={{context, plan, setPlan, result, setResult, reloadVersion, setReloadVersion}}>
+  return <ManagementContext.Provider value={{context, sourceModel, setSourceModel, plan, setPlan, result, setResult, reloadVersion, setReloadVersion}}>
     {children}
   </ManagementContext.Provider>;
 }

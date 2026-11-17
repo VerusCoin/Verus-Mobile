@@ -1,3 +1,4 @@
+import {INCORRECT_PASSWORD_MESSAGE} from '../../../../../utils/constants/errors';
 import React from "react";
 import { Component } from "react"
 import { connect } from 'react-redux'
@@ -7,11 +8,10 @@ import {
   KeyboardAvoidingView,
   Linking
 } from "react-native";
-import { Text, Portal } from 'react-native-paper'
-import Button from '../../../../../components/Button'
+import { Text, Button, Portal } from 'react-native-paper'
 import { createAlert } from "../../../../../actions/actions/alert/dispatchers/alert";
 import ServiceLogos from '../../../../../images/servicelogo/index'
-import {resetToScreen} from '../../../../../utils/navigation/resetToScreen';
+import {resetToScreen} from "../../../../../utils/navigation/resetToScreen";
 import { requestSeeds } from "../../../../../utils/auth/authBox";
 import { ELECTRUM, WYRE_SERVICE } from "../../../../../utils/constants/intervalConstants";
 import { isSeedPhrase } from "../../../../../utils/keys";
@@ -75,7 +75,6 @@ class WyreServiceIntroSlider extends Component {
     await refreshAccountData(
       this.props.activeAccount.accountHash,
       password,
-      false,
       () => {}
     );
   }
@@ -116,7 +115,7 @@ class WyreServiceIntroSlider extends Component {
           }
         })
       } else {
-        createAlert("Authentication Error", "Incorrect password");
+        createAlert(INCORRECT_PASSWORD_MESSAGE);
       }
     })
   }
@@ -199,11 +198,11 @@ class WyreServiceIntroSlider extends Component {
           }}
         /> */}
         <Text style={{ textAlign: "center", width: "75%", color: "white" }}>
-          {"Import a 24 word seed phrase associated with a Wyre account."}
+          {"Import a 24-word Secret Recovery Phrase associated with a Wyre account."}
         </Text>
         {this.state.hasElectrum24WordSeed && (
           <Button style={{ marginTop: 16 }} mode="contained" onPress={() => this.linkCurrentSeed()}>
-            {"Link current seed"}
+            {"Link current Secret Recovery Phrase"}
           </Button>
         )}
         <Button
@@ -212,8 +211,8 @@ class WyreServiceIntroSlider extends Component {
           onPress={() => this.setState({ setupWyreSeedModalOpen: true })}
         >
           {this.state.hasElectrum24WordSeed
-            ? "Import & link different seed"
-            : "Import & link seed"}
+            ? "Import & link different Secret Recovery Phrase"
+            : "Import & link Secret Recovery Phrase"}
         </Button>
         <Text
           style={{
@@ -225,7 +224,7 @@ class WyreServiceIntroSlider extends Component {
         >
           {"By linking your wallet with Wyre, you agree to Wyre's"}
           <Text
-            style={{ color: Colors.primaryColor, fontWeight: "800" }}
+            style={{ color: Colors.primaryColor, fontWeight: "600" }}
             onPress={() => {
               openUrl(this.WYRE_USER_AGREEMENT);
             }}
@@ -234,7 +233,7 @@ class WyreServiceIntroSlider extends Component {
           </Text>
           {"and"}
           <Text
-            style={{ color: Colors.primaryColor, fontWeight: "800" }}
+            style={{ color: Colors.primaryColor, fontWeight: "600" }}
             onPress={() => {
               openUrl(this.WYRE_PRIVACY_POLICY);
             }}

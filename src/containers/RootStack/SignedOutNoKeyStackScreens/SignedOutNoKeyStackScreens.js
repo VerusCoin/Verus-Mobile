@@ -6,6 +6,7 @@ import WelcomeSlider from '../../Onboard/Welcome/WelcomeSlider';
 import CreateProfile from '../../Onboard/CreateProfile/CreateProfile';
 import {useDispatch, useSelector, useStore} from 'react-redux';
 import {setDeeplinkUrl} from '../../../actions/actionCreators';
+import useSignedOutNetwork from '../../../hooks/useSignedOutNetwork';
 
 const SignedOutNoKeyStack = createStackNavigator();
 
@@ -16,6 +17,7 @@ const SignedOutNoKeyStackScreens = props => {
   const requestId = useSelector(state => state.deeplink.requestId);
   const store = useStore();
   const dispatch = useDispatch();
+  const [testProfile, setTestProfile] = useSignedOutNetwork();
 
   useEffect(() => {
     // A newer URL or close can arrive between this render and its effect.
@@ -31,11 +33,17 @@ const SignedOutNoKeyStackScreens = props => {
     <SignedOutNoKeyStack.Navigator>
       <SignedOutNoKeyStack.Screen
         name="LandingScreen"
-        component={LandingScreen}
         options={{
           headerShown: false,
-        }}
-      />
+        }}>
+        {screenProps => (
+          <LandingScreen
+            {...screenProps}
+            testProfile={testProfile}
+            setTestProfile={setTestProfile}
+          />
+        )}
+      </SignedOutNoKeyStack.Screen>
       <SignedOutNoKeyStack.Screen
         name="WelcomeSlider"
         component={WelcomeSlider}
@@ -45,11 +53,17 @@ const SignedOutNoKeyStackScreens = props => {
       />
       <SignedOutNoKeyStack.Screen
         name="CreateProfile"
-        component={CreateProfile}
         options={{
+          animationEnabled: false,
           headerShown: false,
-        }}
-      />
+        }}>
+        {screenProps => (
+          <CreateProfile
+            {...screenProps}
+            testProfile={testProfile}
+          />
+        )}
+      </SignedOutNoKeyStack.Screen>
       <SignedOutNoKeyStack.Screen
         name="SignIn"
         component={SignUp}

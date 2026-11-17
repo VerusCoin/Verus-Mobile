@@ -1,0 +1,110 @@
+import {Platform, StyleSheet} from 'react-native';
+import {fontStyle} from '../../globals/fonts';
+
+const createRequestCardStyles = theme => StyleSheet.create({
+  group: {marginBottom: 24},
+  detailLabel: {color: theme.colors.textSecondary},
+  identifier: {
+    // Match transaction details so a complete VerusID address fits beside Copy.
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  card: {
+    borderWidth: 1,
+    borderColor: theme.colors.borderStrong,
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: theme.colors.surface,
+  },
+  requester: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingLeft: 16,
+    paddingRight: 12,
+    backgroundColor: theme.colors.surfaceMuted,
+  },
+  requesterCompact: {paddingVertical: 12},
+  rowCompact: {paddingVertical: 8},
+  name: {flexShrink: 1, minWidth: 0, color: theme.colors.textPrimary},
+  nameSecondary: {color: theme.colors.textSecondary},
+  requesterText: {flex: 1, minWidth: 0},
+  verified: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primary,
+  },
+  action: {
+    ...theme.typography.headlineCompact,
+    color: theme.colors.textPrimary,
+    borderTopWidth: 1,
+    borderColor: theme.colors.borderStrong,
+    padding: 16,
+  },
+  responder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingLeft: 16,
+    paddingRight: 12,
+    borderTopWidth: 1,
+    borderColor: theme.colors.borderStrong,
+    backgroundColor: theme.colors.successBackground,
+  },
+  responderText: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  joiningWord: {...theme.typography.bodyMd, color: theme.colors.textSecondary},
+  joiningWordWrapped: {
+    alignSelf: 'flex-start',
+    marginTop: (theme.typography.titleSheet.lineHeight - theme.typography.bodyMd.lineHeight) / 2,
+  },
+  placeholder: {
+    ...theme.typography.titleSheet,
+    ...fontStyle('regular'),
+    color: theme.colors.textSecondary,
+  },
+  caption: {
+    ...theme.typography.bodySm,
+    color: theme.colors.textSecondary,
+    marginTop: 12,
+  },
+  compactActionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+    borderTopWidth: 1,
+    borderColor: theme.colors.borderStrong,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  compactAction: {
+    ...theme.typography.bodySm,
+    ...fontStyle('semiBold'),
+    color: theme.colors.textPrimary,
+  },
+  chip: {
+    maxWidth: '100%',
+    minWidth: 0,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.borderStrong,
+    backgroundColor: theme.colors.successBackground,
+  },
+});
+
+export default createRequestCardStyles;

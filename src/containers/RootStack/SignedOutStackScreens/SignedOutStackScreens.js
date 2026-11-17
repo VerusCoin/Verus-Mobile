@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import DisplaySeed from '../../DisplaySeed/DisplaySeed';
 import RecoverSeed from '../../Settings/ProfileSettings/RecoverSeed/RecoverSeed';
@@ -10,8 +10,8 @@ import {useDispatch, useSelector, useStore} from 'react-redux';
 import {setDeeplinkUrl} from '../../../actions/actionCreators';
 import CreateProfile from '../../Onboard/CreateProfile/CreateProfile';
 import RevokeRecoverStackScreens from '../RevokeRecoverStackScreens/RevokeRecoverStackScreens';
-import RecoverSeedsStackScreens from '../RecoverSeedsStackScreens/RecoverSeedsStackScreens';
 import ProvisioningDeeplinkList from '../../ProvisioningDeeplinkList/ProvisioningDeeplinkList';
+import useSignedOutNetwork from '../../../hooks/useSignedOutNetwork';
 
 const SignedOutStack = createStackNavigator();
 
@@ -22,6 +22,7 @@ const SignedOutStackScreens = props => {
   const requestId = useSelector(state => state.deeplink.requestId);
   const store = useStore();
   const dispatch = useDispatch();
+  const [testProfile, setTestProfile] = useSignedOutNetwork();
 
   useEffect(() => {
     // A newer URL or close can arrive between this render and its effect.
@@ -37,11 +38,17 @@ const SignedOutStackScreens = props => {
     <SignedOutStack.Navigator>
       <SignedOutStack.Screen
         name="Login"
-        component={Login}
         options={{
           headerShown: false,
-        }}
-      />
+        }}>
+        {screenProps => (
+          <Login
+            {...screenProps}
+            testProfile={testProfile}
+            setTestProfile={setTestProfile}
+          />
+        )}
+      </SignedOutStack.Screen>
 
       <SignedOutStack.Screen
         name="SignIn"
@@ -62,8 +69,9 @@ const SignedOutStackScreens = props => {
       <SignedOutStack.Screen
         name="DisplaySeed"
         component={DisplaySeed}
+        initialParams={{showSignedOutHeader: true}}
         options={{
-          title: 'Seed',
+          headerShown: false,
         }}
       />
 
@@ -79,20 +87,25 @@ const SignedOutStackScreens = props => {
         name="SecureLoading"
         component={SecureLoading}
         options={{
-          title: 'Loading',
-          headerRight: () => null,
-          headerLeft: () => null,
+          headerShown: false,
+          gestureEnabled: false,
           drawerLockMode: 'locked-closed',
         }}
       />
 
       <SignedOutStack.Screen
         name="CreateProfile"
-        component={CreateProfile}
         options={{
+          animationEnabled: false,
           headerShown: false,
-        }}
-      />
+        }}>
+        {screenProps => (
+          <CreateProfile
+            {...screenProps}
+            testProfile={testProfile}
+          />
+        )}
+      </SignedOutStack.Screen>
 
       <SignedOutStack.Screen
         name="RevokeRecover"
@@ -103,18 +116,10 @@ const SignedOutStackScreens = props => {
       />
 
       <SignedOutStack.Screen
-        name="RecoverSeeds"
-        component={RecoverSeedsStackScreens}
-        options={{
-          headerShown: false,
-        }}
-      />
-
-      <SignedOutStack.Screen
         name="ProvisioningDeeplinks"
         component={ProvisioningDeeplinkList}
         options={{
-          title: 'Pending Requests',
+          headerShown: false,
         }}
       />
     </SignedOutStack.Navigator>

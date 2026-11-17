@@ -17,6 +17,7 @@ import Colors from "../globals/colors";
 import Styles from "../styles/index";
 import Modal from './Modal'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {useOnboardingTheme} from '../theme/onboarding';
 
 class SemiModal extends Component {
   constructor(props) {
@@ -59,6 +60,16 @@ class SemiModal extends Component {
 
     const closeDisabled = !!this.props.closeDisabled;
     const onRequestClose = this.props.onRequestClose;
+    const modalTheme = this.props.modalTheme;
+    const modalColors = modalTheme ? modalTheme.colors : null;
+    const sheetBackgroundColor = modalColors
+      ? modalColors.sheet
+      : Colors.secondaryColor;
+    const sheetTextColor = modalColors ? modalColors.textPrimary : '#1A1A1A';
+    const closeButtonBackgroundColor = modalColors
+      ? modalColors.surfaceMuted
+      : '#EEF0F3';
+    const closeIconColor = modalColors ? modalColors.textPrimary : '#111';
     const effectiveOnRequestClose = closeDisabled
       ? () => {}
       : onRequestClose;
@@ -68,7 +79,7 @@ class SemiModal extends Component {
 
     return (
       <React.Fragment>
-        {this.props.visible && (
+        {this.props.visible && this.props.showOverlay !== false && (
           <Animated.View
             style={{
               ...Styles.flexBackgroundDark,
@@ -82,22 +93,26 @@ class SemiModal extends Component {
           animationType={this.props.animationType}
           transparent={true}
           visible={this.props.visible}
-          onRequestClose={effectiveOnRequestClose}
-          onDismiss={this.props.onDismiss || effectiveOnRequestClose}
+          // A result may map native Back to Done while keeping outside taps locked.
+          onRequestClose={this.props.onRequestBack || effectiveOnRequestClose}
+          onDismiss={this.props.onDismiss}
+          avoidKeyboard={this.props.avoidKeyboard}
+          keyboardVerticalOffset={this.props.keyboardVerticalOffset}
         >
           <TouchableWithoutFeedback onPress={effectiveOnRequestClose}>
             <View style={{ flex: 1 }} />
           </TouchableWithoutFeedback>
-          <View
-            style={{
-              flex: flexHeight,
-              backgroundColor: Colors.secondaryColor,
-              borderRadius: 10,
-              paddingTop: showHeader ? 0 : 10,
-              ...(this.props.contentContainerStyle
-                ? this.props.contentContainerStyle
-                : {}),
-            }}
+          <Animated.View
+            style={[
+              {
+                flex: flexHeight,
+                backgroundColor: sheetBackgroundColor,
+                borderRadius: 10,
+                paddingTop: showHeader ? 0 : 10,
+              },
+              this.props.contentContainerStyle,
+              this.props.sheetAnimatedStyle,
+            ]}
           >
             {showHeader && (
               <View
@@ -125,7 +140,7 @@ class SemiModal extends Component {
                       style={{
                         fontSize: 16,
                         fontWeight: '600',
-                        color: '#1A1A1A',
+                        color: sheetTextColor,
                       }}
                       numberOfLines={1}
                     >
@@ -157,7 +172,7 @@ class SemiModal extends Component {
                       width: closeButtonSize,
                       height: closeButtonSize,
                       borderRadius: closeButtonSize / 2,
-                      backgroundColor: '#EEF0F3',
+                      backgroundColor: closeButtonBackgroundColor,
                       alignItems: 'center',
                       justifyContent: 'center',
                       opacity: closeDisabled ? 0.5 : 1,
@@ -166,18 +181,24 @@ class SemiModal extends Component {
                     <MaterialCommunityIcons
                       name="close"
                       size={18}
-                      color="#111"
+                      color={closeIconColor}
                     />
                   </TouchableOpacity>
                 </View>
               </View>
             )}
             {this.props.children}
-          </View>
+          </Animated.View>
         </Modal>
       </React.Fragment>
     );
   }
 }
 
-export default SemiModal;
+const ThemedSemiModal = props => {
+  const modalTheme = useOnboardingTheme();
+
+  return <SemiModal {...props} modalTheme={props.modalTheme || modalTheme} />;
+};
+
+export default ThemedSemiModal;

@@ -7,6 +7,10 @@ import {
 } from '@bitgo/utxo-lib';
 import {VRPC} from '../../../../constants/intervalConstants';
 import {sendRawTransaction} from './sendRawTransaction';
+import {
+  BROADCAST_STATUS_UNKNOWN_MESSAGE,
+  VRPC_TRANSPORT_ERROR_CODE,
+} from '../../../../network/connectionErrors';
 const { getFundedTxBuilder } = smarttxs;
 
 export const send = async (
@@ -64,7 +68,16 @@ export const sendCurrencyTransfer = async (
 
     const sendRes = await sendRawTransaction(systemId, signedTxHex);
 
-    if (sendRes.error) {
+    // The request may have reached the node before the connection failed or
+    // timed out, so the transaction may exist. Never report it as not sent.
+    if (sendRes.error?.code === VRPC_TRANSPORT_ERROR_CODE) {
+      console.warn(`VRPC broadcast status unknown: ${sendRes.error.message}`);
+      return {
+        err: true,
+        result: BROADCAST_STATUS_UNKNOWN_MESSAGE,
+        ambiguousBroadcast: true,
+      };
+    } else if (sendRes.error) {
       throw new Error(sendRes.error.message);
     } else {
       return {

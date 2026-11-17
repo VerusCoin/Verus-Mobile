@@ -1,7 +1,6 @@
 import React from "react";
 import {
   LogBox,
-  Alert,
   AppState,
   Platform,
   View,
@@ -18,7 +17,8 @@ import {
   fetchActiveCoins,
   requestSeedData,
   initNotifications,
-  initInstanceKey
+  initInstanceKey,
+  setBalanceVisibility
 } from './actions/actionCreators';
 import {
   initCache,
@@ -32,25 +32,43 @@ import { connect } from 'react-redux';
 import { ENABLE_VERUS_IDENTITIES } from '../env/index'
 import AlertModal from "./components/Alert";
 import { activateKeyboardListener, updateDeeplinkUrl } from "./actions/actionDispatchers";
-import Colors from "./globals/colors";
-import { CoinLogos } from "./utils/CoinData/CoinData";
 import { Portal } from 'react-native-paper';
 import SendModal from "./components/SendModal/SendModal";
 import { NavigationContainer } from "@react-navigation/native";
 import LoadingModal from "./components/LoadingModal/LoadingModal";
+import WalletSetupOverlay from "./components/WalletSetup/WalletSetupOverlay";
+import NfcTapHost from "./components/NfcTap/NfcTapHost";
+import { isNfcSessionActive } from "./utils/walletBackup/walletBackupNfc";
+import { isBiometricPromptOpen } from "./utils/keychain/biometricPrompt";
 import { CoinDirectory } from "./utils/CoinData/CoinDirectory";
 import { removeInactiveCurrencyDefinitions } from "./utils/asyncStore/currencyDefinitionStorage";
 import { removeInactiveContractDefinitions } from "./utils/asyncStore/contractDefinitionStorage";
 import { initInstance } from "./utils/auth/authBox";
 import { SecureStorage } from "./utils/keychain/secureStore";
+import StartupCover from "./components/StartupCover";
+import WalletUnlockCoordinator from "./components/WalletUnlockCoordinator";
+import {useOnboardingTheme} from './theme/onboarding';
+import {createNavigationTheme} from './theme/app/navigationTheme';
 import { recoverPasswordMigration } from "./utils/asyncStore/authDataStorage";
+import { readBalanceVisibility } from "./utils/asyncStore/balancePrivacyStorage";
+
+const ThemedNavigationContainer = ({children}) => {
+  const theme = useOnboardingTheme();
+
+  return (
+    <NavigationContainer theme={createNavigationTheme(theme)}>
+      {children}
+    </NavigationContainer>
+  );
+};
 
 export class VerusMobile extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       loading: true,
-      securityCover: false
+      securityCover: false,
+      startupError: null
     };
   }
 
@@ -62,12 +80,26 @@ export class VerusMobile extends React.Component {
         this.setSecurityCover(false)
       } else if (nextAppState === "inactive" && this.state.securityCover == false) {
         this.handleInactivity()
+      } else if (
+        nextAppState === "background" &&
+        this.state.securityCover == false &&
+        this.props.sendModal.type == null
+      ) {
+        // Leaving the app while a sheet kept the screen uncovered.
+        this.setSecurityCover(true)
       }
     }
   };
 
   handleInactivity() {
-    if (this.props.sendModal.type == null) {
+    // The iOS NFC scan sheet and the app's own Face ID or Touch ID sheet make
+    // the app inactive. The screen behind them must stay visible, so it is not
+    // covered.
+    if (
+      this.props.sendModal.type == null &&
+      !isNfcSessionActive() &&
+      !isBiometricPromptOpen()
+    ) {
       this.setSecurityCover(true)
     }
     
@@ -108,8 +140,13 @@ export class VerusMobile extends React.Component {
       const settingsAction = await initSettings();
       this.props.dispatch(settingsAction);
 
+      // RootStack stays on LoadingStack until initialization finishes, so the
+      // saved privacy choice reaches Redux before signed-in balances mount.
+      this.props.dispatch(setBalanceVisibility(await readBalanceVisibility()));
+
       this.props.dispatch(initInstanceKey(await initInstance()));
 
+      CoinDirectory.setTestnetEnvironment(settingsAction.settings.generalWalletSettings ? settingsAction.settings.generalWalletSettings.testnetEnvironment : null);
       CoinDirectory.setVrpcOverrides(settingsAction.settings.generalWalletSettings ? settingsAction.settings.generalWalletSettings.vrpcOverrides : {});
 
       await clearCachedVrpcResponses()
@@ -151,7 +188,11 @@ export class VerusMobile extends React.Component {
     } catch (err) {
       console.error(err)
 
-      Alert.alert("Error", err.message)
+      // StartupCover shows the error.
+      this.setState({
+        startupError: err.message || 'Startup failed'
+      })
+
       this.setLoading(false)
     }
   }
@@ -167,7 +208,7 @@ export class VerusMobile extends React.Component {
     this.initializeStorage(secureStorageInitialization);
 
     // Handle deeplinks
-    Linking.addEventListener("url", async ({ url }) => {
+    this.linkingSubscription = Linking.addEventListener("url", async ({ url }) => {
       try {
         await secureStorageInitialization;
       } catch (e) {
@@ -196,43 +237,44 @@ export class VerusMobile extends React.Component {
     }
   }
 
-  render() {    
-    const VrscLogo = CoinLogos.VRSC.light
+  componentWillUnmount() {
+    // A remount (for example a development reload) must not add a second
+    // link listener, or each link opens twice.
+    this.linkingSubscription?.remove();
+  }
 
+  render() {    
     return (
       <View style={{ flex: 1 }}>
         <Portal.Host>
           <AlertModal />
           {this.props.sendModal.type != null && <SendModal />}
           {this.props.loadingModal.visible && <LoadingModal />}
-          <NavigationContainer>
+          <NfcTapHost />
+          <WalletUnlockCoordinator />
+          <ThemedNavigationContainer>
             <RootStackScreens
               hasAccount={this.props.accountsLength > 0}
               loading={this.state.loading}
               signedIn={this.props.signedIn}
             />
-          </NavigationContainer>
+          </ThemedNavigationContainer>
+          <WalletSetupOverlay />
         </Portal.Host>
         <Modal
           animationType={this.state.loading ? "fade" : "none"}
           transparent={false}
-          visible={this.state.securityCover || this.state.loading}
+          visible={
+            this.state.securityCover ||
+            this.state.loading ||
+            this.state.startupError != null
+          }
         >
-          <View
-            style={[
-              {
-                width: "100%",
-                height: "100%",
-                backgroundColor: Colors.primaryColor,
-              },
-              {
-                alignItems: "center",
-                justifyContent: "center",
-              },
-            ]}
-          >
-            <VrscLogo height={100} width={100} />
-          </View>
+          <StartupCover
+            loading={this.state.loading}
+            securityCover={this.state.securityCover}
+            startupError={this.state.startupError}
+          />
         </Modal>
       </View>
     );

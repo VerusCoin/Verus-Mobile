@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import BigNumber from "bignumber.js";
 import { Alert, ScrollView, View, TouchableWithoutFeedback, Keyboard, Dimensions } from "react-native";
-import { TextInput, Text } from "react-native-paper";
-import Button from "../../../Button";
+import { TextInput, Button, Text } from "react-native-paper";
 import { useSelector } from 'react-redux';
 import { traditionalCryptoSend, TraditionalCryptoSendFee } from "../../../../actions/actionDispatchers";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
@@ -18,6 +17,7 @@ import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 import { selectAddressBlocklist } from "../../../../selectors/settings";
 import { addressIsBlocked } from "../../../../utils/addressBlocklist";
 import { useObjectSelector } from "../../../../hooks/useObjectSelector";
+import AddressBookPicker from '../../../AddressBookPicker';
 import {showFundRawTransactionErrorAlert} from '../../../../utils/vrpc/fundRawTransactionError';
 
 const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
@@ -149,7 +149,7 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
       createAlert("Required Field", "Address is a required field.");
       return true;
     } else if (addressIsBlocked(toAddress, addressBlocklist)) {
-      createAlert("Blocked Address", "The address you are trying to send to is included in your address blocklist.");
+      createAlert("Blocked Address", "Sending to this address is blocked.");
       return true;
     }
 
@@ -263,6 +263,15 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
           }
         </View>
         <View style={{...Styles.wideBlock, paddingTop: 0}}>
+          <View style={{alignItems: 'flex-end'}}>
+            <AddressBookPicker
+              asset={sendModal.coinObj.display_ticker}
+              network={networkName}
+              onSelect={record =>
+                updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, record.address)
+              }
+            />
+          </View>
           <TextInput
             returnKeyType="done"
             label="Recipient address"

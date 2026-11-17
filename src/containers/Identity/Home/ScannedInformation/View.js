@@ -74,7 +74,7 @@ const ScannedInformation = (props) => {
           <View style={[Styles.alignItemsCenter, Styles.paddingTop]}>
             <StandardButton
               buttonColor={Colors.warningButtonColor}
-              title="Close"
+              title="CLOSE"
               onPress={cancelHandler}
             />
           </View>

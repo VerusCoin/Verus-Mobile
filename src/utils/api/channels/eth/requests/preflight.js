@@ -1,3 +1,4 @@
+import {preflightPlainSend} from '../../../../web3/preflightPlainSend';
 import { ethers } from "ethers"
 import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 import { ETH } from "../../../../constants/intervalConstants"
@@ -13,6 +14,12 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network)
 
     const { minGasPriceGwei } = store.getState().settings.generalWalletSettings;
+    if (params?.networkFee) {
+      return await preflightPlainSend({
+        coinObj, activeUser, address, amount, params, web3: Web3Provider,
+        minGasPriceGwei, isToken: false,
+      });
+    }
     const minGasPrice = minGasPriceGwei != null ? 
           BigInt(minGasPriceGwei) * ONE_GWEI_IN_WEI
           : 

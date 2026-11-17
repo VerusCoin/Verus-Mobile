@@ -11,8 +11,7 @@ import {
   SafeAreaView,
   KeyboardAvoidingView
 } from "react-native";
-import { TextInput, Checkbox, Portal } from "react-native-paper";
-import Button from "../../components/Button";
+import { TextInput, Button, Checkbox, Portal } from "react-native-paper";
 import SetupSeedModal from "../../components/SetupSeedModal/SetupSeedModal";
 import Styles from "../../styles/index";
 import Colors from "../../globals/colors";
@@ -21,7 +20,6 @@ import {
   ELECTRUM,
 } from "../../utils/constants/intervalConstants";
 import { ENABLE_DLIGHT } from "../../../env/index";
-import { canEnableBiometry } from "../../actions/actions/channels/dlight/dispatchers/AlertManager";
 
 const passwordAutofillProps = {
   autoComplete: "off",
@@ -104,7 +102,7 @@ export const SignUpRender = function() {
                 <View style={Styles.wideBlockDense}>
                   <Checkbox.Item
                     color={Colors.primaryColor}
-                    label={"Configure account seed"}
+                    label={"Configure account recovery secret"}
                     status={
                       this.state.seeds[ELECTRUM] != null
                         ? "checked"
@@ -118,7 +116,7 @@ export const SignUpRender = function() {
                   <View style={Styles.wideBlockDense}>
                     <Checkbox.Item
                       color={Colors.primaryColor}
-                      label={"Setup Optional (Z Address) Seed"}
+                      label={"Set Up Optional Z Recovery Secret"}
                       status={
                         this.state.seeds[DLIGHT_PRIVATE] != null
                           ? "checked"
@@ -185,15 +183,10 @@ export const SignUpRender = function() {
                       status={
                         this.state.enableBiometry ? "checked" : "unchecked"
                       }
-                      onPress={async () => {
-                        if (
-                          !this.state.enableBiometry &&
-                          (await canEnableBiometry())
-                        ) {
-                          this.setState({
-                            enableBiometry: true,
-                          });
-                        } else this.setState({ enableBiometry: false });
+                      onPress={() => {
+                        this.setState({
+                          enableBiometry: !this.state.enableBiometry,
+                        });
                       }}
                       mode="android"
                     />
@@ -221,7 +214,7 @@ export const SignUpRender = function() {
               buttonColor={Colors.verusGreenColor}
               textColor={Colors.secondaryColor}
             >
-              {"Add profile"}
+              {"Add Profile"}
             </Button>
           </View>
         </View>

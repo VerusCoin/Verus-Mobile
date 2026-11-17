@@ -1,7 +1,7 @@
+import {INCORRECT_PASSWORD_MESSAGE} from '../../utils/constants/errors';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
-import { Card, List, IconButton } from 'react-native-paper';
-import Button from '../../components/Button';
+import { Card, Button, List, IconButton } from 'react-native-paper';
 import styles from '../../styles';
 import Colors from '../../globals/colors';
 import TallButton from '../../components/LargerButton';
@@ -48,10 +48,10 @@ const RecoverSeedsSelectAccount = ({ navigation }) => {
           routes: [{ name: 'DisplaySeed', params: { data: { seeds, showDerivedKeys: true, keyDerivationVersion: passwordDialogAccount.keyDerivationVersion, completeOnBack: true } } }],
         }));
       } catch(e) {
-        createAlert("Error", "Failed to retrieve seeds");
+        createAlert("Error", "Failed to retrieve recovery secrets");
       }
     } else {
-      createAlert("Authentication Error", "Incorrect password");
+      createAlert(INCORRECT_PASSWORD_MESSAGE);
     }
   }
 
@@ -69,7 +69,7 @@ const RecoverSeedsSelectAccount = ({ navigation }) => {
               color: Colors.secondaryColor,
               fontWeight: '500',
             }}
-            description={`${numSeeds[account.accountHash] ? numSeeds[account.accountHash] : 0} seed${numSeeds[account.accountHash] && numSeeds[account.accountHash] > 1 ? 's' : ''}`}
+            description={`${numSeeds[account.accountHash] ? numSeeds[account.accountHash] : 0} recovery secret${numSeeds[account.accountHash] && numSeeds[account.accountHash] > 1 ? 's' : ''}`}
             left={() => <List.Icon color={Colors.secondaryColor} icon="account-circle" />}
             descriptionStyle={{ color: Colors.secondaryColor }}
             right={() => (
@@ -94,7 +94,7 @@ const RecoverSeedsSelectAccount = ({ navigation }) => {
           allowBiometry={true}
         />
       }
-      <Text style={{ ...styles.centralHeader, marginTop: 16 }}>{'Select a Profile'}</Text>
+      <Text style={{ ...styles.centralHeader, marginTop: 16 }}>{'Select a wallet'}</Text>
       <ScrollView>
         {renderAccountCards()}
       </ScrollView>

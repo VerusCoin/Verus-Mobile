@@ -13,6 +13,7 @@ import { DEFAULT_SEED_PHRASE_LENGTH } from '../../utils/constants/constants'
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import AnimatedActivityIndicator from "../AnimatedActivityIndicator";
 import styles from "../../styles";
+import ZSeedSetupFlow from './ZSeedSetupFlow';
 
 class SetupSeedModal extends Component {
   constructor(props) {
@@ -52,7 +53,10 @@ class SetupSeedModal extends Component {
         }
       })
     } catch(e) {
-      createAlert("Error", "Error generating seed words.")
+      createAlert(
+        "Recovery secret not created",
+        "The wallet could not generate a new recovery secret. Try again."
+      )
       this.cancel()
       console.warn(e)
     }
@@ -112,10 +116,11 @@ class SetupSeedModal extends Component {
   };
 
   render() {
-    const { channel, importOnly } = this.props
+    const {channel, importOnly, redesigned} = this.props;
     const parentProps = {
       cancel: this.cancel,
       beginSeedSubmission: this.beginSeedSubmission,
+      seedSubmissionIsCurrent: this.seedSubmissionIsCurrent,
       failSeedSubmission: this.failSeedSubmission,
       completeSeedSubmission: this.completeSeedSubmission,
       submittingSeed: this.state.submittingSeed,
@@ -128,7 +133,19 @@ class SetupSeedModal extends Component {
         visible={this.props.visible}
         onRequestClose={this.cancel}
       >
-        {this.state.firstTimeSeed ? (
+        {redesigned ? (
+          this.state.createSeedState.newSeed == null ? (
+            <View style={styles.focalCenter}>
+              <AnimatedActivityIndicator style={{width: 128}} />
+            </View>
+          ) : (
+            <ZSeedSetupFlow
+              {...parentProps}
+              resetSeedSubmission={this.resetSeedSubmission}
+              seed={this.state.createSeedState.newSeed}
+            />
+          )
+        ) : this.state.firstTimeSeed ? (
           this.state.createSeedState.newSeed == null ? (
             <View style={styles.focalCenter}>
               <AnimatedActivityIndicator style={{ width: 128 }} />

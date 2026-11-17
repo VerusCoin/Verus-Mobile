@@ -32,13 +32,17 @@ import { keyboard } from './keyboard'
 import identity from './identity';
 import { sendModal } from './sendModal';
 import { loadingModal } from './loadingModal';
+import { nfcTap } from './nfcTap';
 import { secureLoading } from './secureLoading';
 import { deeplink } from './deeplink';
+import { walletUnlock } from './walletUnlock';
 import { shouldRejectSessionAction } from './sessionScope';
+import {assetManagement} from './assetManagement';
 
 
 const combinedReducer = combineReducers({
   authentication,
+  assetManagement,
   coins,
   ledger,
   settings,
@@ -71,8 +75,10 @@ const combinedReducer = combineReducers({
   services,
   sendModal,
   loadingModal,
+  nfcTap,
   secureLoading,
-  deeplink
+  deeplink,
+  walletUnlock
 });
 
 export default (state, action) => {

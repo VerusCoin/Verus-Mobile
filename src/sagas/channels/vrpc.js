@@ -4,10 +4,12 @@ import {
   CLOSE_VRPC_CHANNEL,
   SIGN_OUT_COMPLETE,
   INIT_VRPC_CHANNEL_FINISH,
+  SET_USER_COINS,
   SET_WATCHED_VRPC_ADDRESSES,
 } from '../../utils/constants/storeType';
 import VrpcProvider from '../../utils/vrpc/vrpcInterface';
-import {signOutCompletionWasAccepted} from '../../actions/actions/updates/sessionRequests';
+import {activateChainLifecycle} from '../../actions/actions/intervals/dispatchers/lifecycleManager';
+import {sessionActionIsCurrent, signOutCompletionWasAccepted} from '../../actions/actions/updates/sessionRequests';
 import {awaitSagaResourceSettlements, clearSagaResources} from './resourceOwnership';
 import {createEndpointLifecycle} from './endpointLifecycle';
 
@@ -54,4 +56,30 @@ function* handleSignOutSafely(action) {
 function * handleFinishVrpcInit(action) {
   yield put({type: SET_WATCHED_VRPC_ADDRESSES, payload: action.payload, meta: action.meta})
   yield put({type: INIT_VRPC_CHANNEL_FINISH, payload: action.payload, meta: action.meta})
+  yield call(refreshVrpcDependentState, action)
+}
+
+function * refreshVrpcDependentState(action) {
+  if (!sessionActionIsCurrent(yield select(), action)) return;
+  const {activeAccount, activeCoinsForUser} = yield select(state => ({
+    activeAccount: state.authentication.activeAccount,
+    activeCoinsForUser: state.coins.activeCoinsForUser,
+  }));
+
+  if (activeAccount == null || !Array.isArray(activeCoinsForUser)) return;
+
+  const chainTicker = action.payload.chainTicker;
+  const coinObj = activeCoinsForUser.find(coin => coin.id === chainTicker);
+
+  if (coinObj == null) return;
+
+  yield put({
+    type: SET_USER_COINS,
+    payload: {
+      activeCoinsForUser,
+    },
+    meta: action.meta,
+  })
+  if (!sessionActionIsCurrent(yield select(), action)) return;
+  yield call(activateChainLifecycle, coinObj, activeCoinsForUser)
 }

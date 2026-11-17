@@ -42,6 +42,10 @@ import TBTC_LIGHT from './tbtc/tbtc_light.svg'
 import TBTC_DARK from './tbtc/tbtc_dark.svg'
 import EURC_LIGHT from './eurc/eurc_light.svg'
 import EURC_DARK from './eurc/eurc_dark.svg'
+import SCRVUSD_LIGHT from './scrvusd/scrvusd_light.svg'
+import SCRVUSD_DARK from './scrvusd/scrvusd_dark.svg'
+import CRVUSD_LIGHT from './crvusd/crvusd_light.svg'
+import CRVUSD_DARK from './crvusd/crvusd_dark.svg'
 
 export default {
   ETH: { light: ETH_LIGHT, dark: ETH_DARK },
@@ -66,4 +70,6 @@ export default {
   WBTC: { light: WBTC_LIGHT, dark: WBTC_DARK },
   TBTC: { light: TBTC_LIGHT, dark: TBTC_DARK },
   EURC: { light: EURC_LIGHT, dark: EURC_DARK },
+  SCRVUSD: { light: SCRVUSD_LIGHT, dark: SCRVUSD_DARK },
+  CRVUSD: { light: CRVUSD_LIGHT, dark: CRVUSD_DARK },
 }

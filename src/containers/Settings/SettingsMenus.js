@@ -55,7 +55,7 @@ class SettingsMenus extends Component {
         key: "settings-info",
         focusedIcon: "information",
         unfocusedIcon: "account-settings",
-        title: "App Info",
+        title: "App info",
         screen: "AppInfo"
       },
     ]
@@ -125,4 +125,3 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps)(SettingsMenus);
-

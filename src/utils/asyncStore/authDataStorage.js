@@ -32,9 +32,11 @@ import {
   PASSWORD_MIGRATION_STORAGE_INTERNAL_KEY,
   SecureStorage,
 } from '../keychain/secureStore';
-import { Alert } from 'react-native';
+import { createAlert } from '../../actions/actions/alert/dispatchers/alert';
 import { SUSPICIOUS_UNICODE_CHARACTER_TEST } from '../constants/regex';
-import { INCORRECT_PASSWORD_DELAY_ERROR_MS } from '../constants/errors';
+import { INCORRECT_PASSWORD_DELAY_ERROR_MS, INCORRECT_PASSWORD_MESSAGE } from '../constants/errors';
+import { normalizeWalletAvatar } from '../walletAvatar';
+import { PROFILE_SECURITY_SETTINGS_LABEL } from '../settings/settingsLabels';
 import { setPersonalData } from '../../actions/actions/personal/creators/personal';
 import { setServiceStored } from '../../actions/actions/services/creators/services';
 import {
@@ -83,6 +85,8 @@ export const storeUser = (authData, users) =>
       }
     }
 
+    const walletAvatar = normalizeWalletAvatar(authData.walletAvatar);
+
     let userObj = {
       id: authData.userName,
       accountHash,
@@ -102,6 +106,9 @@ export const storeUser = (authData, users) =>
       testnetOverrides: authData.testnetOverrides
     };
 
+    if (walletAvatar != null) {
+      userObj.walletAvatar = walletAvatar;
+    }
     _users.push(userObj);
     let _toStore = {...storedUsersRecord, users: _users};
 
@@ -124,7 +131,7 @@ const addEncryptedKeyToUserUnlocked = async (accountHash, channel, seed, passwor
     const userObj = users[userObjIndex]
 
     if (userObj.encryptedKeys[channel] != null && !overwrite) {
-      throw new Error(`User with hash ${accountHash} already has as ${channel} seed, cannot overwrite.`)
+      throw new Error(`User with hash ${accountHash} already has a ${channel} recovery secret and it cannot be overwritten.`)
     } else {
       let newUserObj = {...userObj}
       newUserObj.encryptedKeys[channel] = await encryptkey(password, seed)
@@ -298,8 +305,8 @@ export const deleteUser = accountHash =>
       : [];
     const userIndex = users.findIndex(user => user.accountHash === accountHash);
 
+    // The caller reports the failure.
     if (accountHash == null || userIndex === -1) {
-      Alert.alert("Error", `User with hash ${accountHash} not found`);
       throw new Error(`User with hash ${accountHash} not found`);
     }
 
@@ -423,8 +430,9 @@ const resetUserPwdTransaction = async (
     : [];
   const userIndex = users.findIndex(user => user.accountHash === accountHash);
 
+  // A false result means "not changed"; ResetPwd reports it.
   if (accountHash == null || userIndex === -1) {
-    Alert.alert("Error", `User with ID ${accountHash} not found`);
+    console.warn(`User with ID ${accountHash} not found`);
     return false;
   }
 
@@ -451,7 +459,7 @@ const resetUserPwdTransaction = async (
   if (oldSessionKey != null && typeof oldSessionCredential === "string") {
     const sessionPassword = decryptkey(oldSessionKey, oldSessionCredential);
     if (sessionPassword === false || sessionPassword !== oldPwd) {
-      Alert.alert("Authentication Error", "Incorrect password");
+      console.warn("Password reset: incorrect password");
       return false;
     }
   }
@@ -483,7 +491,7 @@ const resetUserPwdTransaction = async (
     }
   } catch (encryptionError) {
     if (encryptionError.code === "INCORRECT_PASSWORD") {
-      Alert.alert("Authentication Error", "Incorrect password");
+      console.warn("Password reset: incorrect password");
       return false;
     }
 
@@ -676,6 +684,28 @@ export const setUserTestnetOverrides = (accountHash, testnetOverrides) => {
   return setUserSetting(accountHash, "testnetOverrides", testnetOverrides)
 }
 
+export const setUserWalletAvatar = (accountHash, walletAvatar) => {
+  const normalizedAvatar = normalizeWalletAvatar(walletAvatar);
+
+  if (normalizedAvatar == null) {
+    throw new Error('Invalid wallet appearance');
+  }
+
+  return updateUsers(users => {
+    const userIndex = users.findIndex(user => user.accountHash === accountHash);
+
+    if (accountHash == null || userIndex === -1) {
+      throw new Error(`User with hash ${accountHash} not found`);
+    }
+
+    return users.map((user, index) =>
+      index === userIndex
+        ? {...user, walletAvatar: normalizedAvatar}
+        : user,
+    );
+  });
+};
+
 //TODO: Stop using wifKey to encrypt payment methods before using them in production
 export const putUserPaymentMethods = async (user, paymentMethods) => {
   //const encryptedPaymentMethods = encryptkey(user.wifKey, JSON.stringify(paymentMethods))
@@ -733,7 +763,7 @@ export const getUsers = () => {
 };
 
 // Check user password
-export const checkPinForUser = (pin, userName, alertOnFail = true, alertOnCorruptedSeed = false) =>
+export const checkPinForUser = (pin, userName, alertOnFail = true, alertOnCorruptedSeed = false, alertOnInternalError = true) =>
   queueUserStorageWrite(() => new Promise((resolve, reject) => {
     SecureStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(async res => {
@@ -764,16 +794,20 @@ export const checkPinForUser = (pin, userName, alertOnFail = true, alertOnCorrup
                       seedPotentiallyCorrupted = (SUSPICIOUS_UNICODE_CHARACTER_TEST).test(_decryptedSeeds[channel])
                     }
                   } catch (e) {
-                    Alert.alert("Authentication Error", "Internal authentication error.");
+                    if (alertOnInternalError) {
+                      createAlert("Wallet not unlocked", "Try again.");
+                    } else {
+                      throw new Error("Internal authentication error.");
+                    }
                   }
                 }
               }
 
               if (seedPotentiallyCorrupted) {
                 if (!user.hideSeedWarnings) {
-                  Alert.alert(
-                    "Possible Seed Corruption Detected",
-                    "Non-standard characters were detected in your profile seed.\n\nIf your seed is a standard word-based phrase, or a WIF key, this could indicate that your seed data was corrupted, and may not match your seed backup.\n\nCheck your seed by going into Settings > Profile > Recover Seed. If it does not match your backup, create a new profile from your backup and send any funds on this profile to that new profile.\n\nYou can disable this warning in Profile > Settings."
+                  createAlert(
+                    "Recovery data may be damaged",
+                    `The stored recovery data has unusual characters and may not match your backup. Compare it under Settings > ${PROFILE_SECURITY_SETTINGS_LABEL} > View recovery secrets. If it does not match, restore a new wallet from your backup and move the funds to it. This warning can be turned off on the same screen.`
                   );
                 }
 
@@ -783,19 +817,21 @@ export const checkPinForUser = (pin, userName, alertOnFail = true, alertOnCorrup
               resolve(_decryptedSeeds);
             } else {
               setTimeout(() => {
-                if (alertOnFail) Alert.alert("Authentication Error", "Incorrect password");
+                if (alertOnFail) {
+                  createAlert(INCORRECT_PASSWORD_MESSAGE);
+                }
 
                 reject(new Error("Incorrect password"));
               }, INCORRECT_PASSWORD_DELAY_ERROR_MS);
             }
           }
           else {
-            if (alertOnFail) Alert.alert("Authentication Error", "Please select an existing user")
+            if (alertOnFail) createAlert("Wallet not found", "Choose a wallet and try again.")
             throw new Error("Please select an existing user");
           }
         }
         else {
-          if (alertOnFail) Alert.alert("Authentication Error", "Please enter a password")
+          if (alertOnFail) createAlert("Password needed", "Enter the wallet password.")
           throw new Error("Please enter a password");
         }
       })

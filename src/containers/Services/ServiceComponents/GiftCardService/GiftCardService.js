@@ -1,19 +1,14 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {SafeAreaView, ScrollView} from 'react-native';
-import {ActivityIndicator} from 'react-native-paper';
 import {useDispatch, useSelector} from 'react-redux';
 import {setServiceLoading} from '../../../../actions/actionCreators';
-import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {modifyServiceStoredDataForUser} from '../../../../actions/actions/services/dispatchers/services';
 import {requestServiceStoredData} from '../../../../utils/auth/authBox';
 import {GIFT_CARD_SERVICE_ID} from '../../../../utils/constants/services';
-import {
-  normalizeGiftCardServiceData,
-} from '../../../../utils/giftCard/giftCard';
-import Colors from '../../../../globals/colors';
-import Styles from '../../../../styles';
-import GiftCardServiceIntroSlider from './GiftCardServiceIntroSlider/GiftCardServiceIntroSlider';
-import GiftCardServiceOverview from './GiftCardServiceOverview/GiftCardServiceOverview';
+import {normalizeGiftCardServiceData} from '../../../../utils/giftCard/giftCard';
+import GiftCardServiceOverview, {
+  GiftCardServiceOverviewLoadError,
+  GiftCardServiceOverviewSkeleton,
+} from './GiftCardServiceOverview/GiftCardServiceOverview';
 
 const GiftCardService = props => {
   const dispatch = useDispatch();
@@ -21,6 +16,8 @@ const GiftCardService = props => {
   const encryptedCards = useSelector(state => state.services.stored[GIFT_CARD_SERVICE_ID]);
   const activeAccount = useSelector(state => state.authentication.activeAccount);
   const [serviceData, setServiceData] = useState(null);
+  // Only the first load shows an error; later reloads keep the old behavior.
+  const [loadError, setLoadError] = useState(false);
   const initialLoadCompleteRef = useRef(false);
 
   useEffect(() => {
@@ -36,13 +33,11 @@ const GiftCardService = props => {
       const storedData = normalizeGiftCardServiceData(
         await requestServiceStoredData(GIFT_CARD_SERVICE_ID),
       );
+      setLoadError(false);
       setServiceData(storedData);
     } catch (e) {
-      if (showLoading) {
-        createAlert('Error Loading Gift Cards', e.message);
-      } else {
-        console.warn(e.message);
-      }
+      console.warn(e.message);
+      if (showLoading) setLoadError(true);
       setServiceData(normalizeGiftCardServiceData({}));
     } finally {
       initialLoadCompleteRef.current = true;
@@ -79,41 +74,39 @@ const GiftCardService = props => {
     [activeAccount],
   );
 
-  const markIntroSeen = useCallback(async () => {
+  // The stored flag keeps its old name: it was set by the intro screen that
+  // the first-create warning replaced.
+  const markSecretWarningSeen = useCallback(async () => {
     await saveServiceData(currentData => ({
       ...currentData,
       introSeen: true,
     }));
   }, [saveServiceData]);
 
-  if (serviceData == null || (loading && !initialLoadCompleteRef.current)) {
+  const retryLoad = () => {
+    setLoadError(false);
+    setServiceData(null);
+    loadCards({showLoading: true});
+  };
+
+  if (loadError) {
     return (
-      <SafeAreaView style={Styles.defaultRoot}>
-        <ScrollView
-          contentContainerStyle={{
-            ...Styles.centerContainer,
-            flexGrow: 1,
-          }}
-          style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}>
-        <ActivityIndicator animating color={Colors.primaryColor} size="large" />
-        </ScrollView>
-      </SafeAreaView>
+      <GiftCardServiceOverviewLoadError
+        navigation={props.navigation}
+        onRetry={retryLoad}
+      />
     );
   }
 
-  const cardCount = Object.keys(serviceData.cards || {}).length;
-
-  if (!serviceData.introSeen && cardCount === 0) {
-    return (
-      <GiftCardServiceIntroSlider
-        onDone={markIntroSeen}
-      />
-    );
+  if (serviceData == null || (loading && !initialLoadCompleteRef.current)) {
+    return <GiftCardServiceOverviewSkeleton navigation={props.navigation} />;
   }
 
   return (
     <GiftCardServiceOverview
       navigation={props.navigation}
+      onSecretWarningSeen={markSecretWarningSeen}
+      secretWarningSeen={Boolean(serviceData.introSeen)}
       serviceData={serviceData}
       saveServiceData={saveServiceData}
       reload={loadCards}

@@ -1,17 +1,28 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
-  Alert,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import {ActivityIndicator, IconButton, Text} from 'react-native-paper';
+import {IconButton, Text} from 'react-native-paper';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useDispatch} from 'react-redux';
 import {GENERIC_REQUEST_DEEPLINK_VDXF_KEY} from 'verus-typescript-primitives';
 import {setDeeplinkData} from '../../actions/actionCreators';
-import Colors from '../../globals/colors';
+import {
+  createAlert,
+  resolveAlert,
+} from '../../actions/actions/alert/dispatchers/alert';
+import AppButton from '../../components/AppButton';
+import ServiceManagerHeader from '../../components/ServiceManagerHeader';
+import SkeletonLoader, {
+  SkeletonBlock,
+  SkeletonText,
+} from '../../components/SkeletonLoader';
+import {fontStyle} from '../../globals/fonts';
+import {useOnboardingTheme} from '../../theme/onboarding';
 import {
   getPendingDeeplinkPassthrough,
   loadPendingDeeplinkRequests,
@@ -23,32 +34,66 @@ const formatDate = timestamp => {
   if (!timestamp) return null;
 
   try {
-    return new Date(timestamp).toLocaleString();
+    return new Date(timestamp).toLocaleString(undefined, {
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
   } catch (_) {
     return null;
   }
 };
 
 const getRequestTitle = request => {
-  if (request.title) return request.title;
+  if (request.title && request.title !== 'Pending request') {
+    return request.title;
+  }
 
   if (request.requestKind === PENDING_REQUEST_KIND_SPENDABLE_KEY) {
     return 'Spendable key claim';
   }
 
-  return 'Pending request';
+  return 'Saved request';
+};
+
+const getRequestIcon = request => {
+  if (request.requestKind === PENDING_REQUEST_KIND_SPENDABLE_KEY) {
+    return 'key-outline';
+  }
+
+  return 'file-clock-outline';
+};
+
+const getRequestActivityLabel = request => {
+  if (request.completed) {
+    const completedDate = formatDate(request.completedAt);
+    return completedDate ? `Completed ${completedDate}` : 'Completed request';
+  }
+
+  const savedDate = formatDate(request.createdAt);
+  return savedDate ? `Saved ${savedDate}` : 'Saved on this device';
 };
 
 const ProvisioningDeeplinkList = props => {
   const dispatch = useDispatch();
+  const insets = useSafeAreaInsets();
+  const theme = useOnboardingTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [showHeaderDivider, setShowHeaderDivider] = useState(false);
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
+    setLoadError(false);
 
     try {
       setRequests(await loadPendingDeeplinkRequests());
+    } catch (_) {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -89,171 +134,271 @@ const ProvisioningDeeplinkList = props => {
     }
   };
 
-  const confirmRemoveRequest = request => {
-    Alert.alert(
-      'Remove pending request?',
-      'You may lose the ability to resume this request if you remove it.',
+  const confirmRemoveRequest = async request => {
+    const confirmed = await createAlert(
+      'Remove saved request?',
+      'It cannot be opened again after removal.',
       [
-        {text: 'Cancel', style: 'cancel'},
         {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            await removePendingDeeplinkRequest(request.id);
-            await loadRequests();
-          },
+          text: 'Not now',
+          style: 'cancel',
+          onPress: () => resolveAlert(false),
         },
+        {text: 'Remove', style: 'destructive', onPress: () => resolveAlert(true)},
       ],
-      {cancelable: true},
+    );
+
+    if (!confirmed) return;
+
+    await removePendingDeeplinkRequest(request.id);
+    await loadRequests();
+  };
+
+  const renderRequest = request => {
+    const requestTitle = getRequestTitle(request);
+    const activityLabel = getRequestActivityLabel(request);
+    const requestContent = (
+      <>
+        <View style={styles.itemIcon}>
+          <MaterialCommunityIcons
+            color={theme.colors.textSecondary}
+            name={getRequestIcon(request)}
+            size={22}
+          />
+        </View>
+        <View style={styles.itemText}>
+          <Text numberOfLines={1} style={styles.itemTitle}>
+            {requestTitle}
+          </Text>
+          <Text numberOfLines={1} style={styles.itemSubtitle}>
+            {activityLabel}
+          </Text>
+        </View>
+        {!request.completed && (
+          <MaterialCommunityIcons
+            color={theme.colors.textSubtle}
+            name="chevron-right"
+            size={22}
+          />
+        )}
+      </>
+    );
+
+    return (
+      <View key={request.id} style={styles.itemRow}>
+        {request.completed ? (
+          <View
+            accessible
+            accessibilityLabel={`${requestTitle}. ${activityLabel}`}
+            style={styles.itemContent}>
+            {requestContent}
+          </View>
+        ) : (
+          <TouchableOpacity
+            accessibilityLabel={`${requestTitle}. ${activityLabel}`}
+            accessibilityRole="button"
+            style={styles.itemContent}
+            onPress={() => openRequest(request)}
+            activeOpacity={0.74}>
+            {requestContent}
+          </TouchableOpacity>
+        )}
+        <IconButton
+          accessibilityLabel={`Remove ${requestTitle}, ${activityLabel}`}
+          icon="trash-can-outline"
+          size={20}
+          iconColor={theme.colors.textSecondary}
+          onPress={() => confirmRemoveRequest(request)}
+        />
+      </View>
     );
   };
 
+  const openRequests = requests.filter(request => !request.completed);
+  const completedRequests = requests.filter(request => request.completed);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.container}>
+      <ServiceManagerHeader
+        onBack={() => props.navigation.goBack()}
+        showDivider={showHeaderDivider}
+        title="Saved requests"
+      />
       {loading ? (
+        <SkeletonLoader
+          accessibilityLabel="Loading saved requests"
+          style={styles.skeletonLoader}>
+          {[0, 1, 2, 3].map(index => (
+            <View key={index} style={styles.skeletonRow}>
+              <SkeletonBlock height={42} radius={14} width={42} />
+              <View style={styles.skeletonText}>
+                <SkeletonText height={16} width="56%" />
+                <SkeletonText
+                  height={13}
+                  style={styles.skeletonSubtitle}
+                  width="40%"
+                />
+              </View>
+            </View>
+          ))}
+        </SkeletonLoader>
+      ) : loadError ? (
         <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={Colors.primaryColor} />
+          <Text style={styles.emptyTitle}>Saved requests unavailable</Text>
+          <Text style={styles.emptySubtitle}>
+            Try loading your saved requests again.
+          </Text>
+          <AppButton onPress={loadRequests} style={styles.retryButton}>
+            Retry
+          </AppButton>
         </View>
       ) : requests.length === 0 ? (
         <View style={styles.centerContent}>
-          <Text style={styles.emptyTitle}>No pending requests</Text>
+          <Text style={styles.emptyTitle}>No saved requests</Text>
           <Text style={styles.emptySubtitle}>
-            Saved spendable keys will appear here after they are opened.
+            Requests you can return to later will appear here.
           </Text>
         </View>
       ) : (
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}>
-          {requests.map(request => {
-            const savedDate = formatDate(request.createdAt);
-            const completedDate = formatDate(request.completedAt);
-
-            return (
-              <View key={request.id} style={styles.itemRow}>
-                <TouchableOpacity
-                  style={styles.itemContent}
-                  onPress={() => openRequest(request)}
-                  activeOpacity={0.75}>
-                  <View style={styles.itemHeader}>
-                    <Text style={styles.itemTitle} numberOfLines={1}>
-                      {getRequestTitle(request)}
-                    </Text>
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        request.completed && styles.completedBadge,
-                      ]}>
-                      <Text
-                        style={[
-                          styles.statusText,
-                          request.completed && styles.completedText,
-                        ]}>
-                        {request.completed ? 'Completed' : 'Pending'}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.itemSubtitle} numberOfLines={1}>
-                    {request.completed && completedDate
-                      ? `Completed ${completedDate}`
-                      : savedDate
-                      ? `Saved ${savedDate}`
-                      : 'Saved pending request'}
-                  </Text>
-                </TouchableOpacity>
-                <IconButton
-                  icon="close"
-                  size={22}
-                  iconColor={Colors.verusDarkGray}
-                  onPress={() => confirmRemoveRequest(request)}
-                />
-              </View>
-            );
-          })}
+          onScroll={event =>
+            setShowHeaderDivider(event.nativeEvent.contentOffset.y > 1)
+          }
+          scrollEventThrottle={16}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {paddingBottom: insets.bottom + 32},
+          ]}>
+          <Text style={styles.intro}>
+            Requests are saved on this device so you can return to them later.
+          </Text>
+          {openRequests.length > 0 && (
+            <View style={styles.section}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>
+                To continue
+              </Text>
+              {openRequests.map(renderRequest)}
+            </View>
+          )}
+          {completedRequests.length > 0 && (
+            <View style={styles.section}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>
+                Completed
+              </Text>
+              {completedRequests.map(renderRequest)}
+            </View>
+          )}
         </ScrollView>
       )}
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.secondaryColor,
-  },
-  centerContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 28,
-  },
-  emptyTitle: {
-    color: Colors.primaryColor,
-    fontSize: 19,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    color: Colors.verusDarkGray,
-    fontSize: 14,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.secondaryColor,
-    borderColor: '#DCE3EC',
-    borderRadius: 8,
-    borderWidth: 1,
-    marginBottom: 10,
-    minHeight: 78,
-  },
-  itemContent: {
-    flex: 1,
-    paddingLeft: 14,
-    paddingVertical: 12,
-  },
-  itemHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  itemTitle: {
-    color: Colors.primaryColor,
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    marginRight: 10,
-  },
-  itemSubtitle: {
-    color: Colors.verusDarkGray,
-    fontSize: 13,
-    marginTop: 6,
-  },
-  statusBadge: {
-    backgroundColor: '#FFF5DD',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  completedBadge: {
-    backgroundColor: '#E7F6EF',
-  },
-  statusText: {
-    color: '#8A5B00',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  completedText: {
-    color: Colors.verusGreenColor,
-  },
-});
+const createStyles = theme =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: theme.colors.background,
+      flex: 1,
+    },
+    centerContent: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 28,
+    },
+    emptyTitle: {
+      ...theme.typography.titleSheet,
+      color: theme.colors.textPrimary,
+      textAlign: 'center',
+    },
+    emptySubtitle: {
+      ...theme.typography.bodyMd,
+      color: theme.colors.textSecondary,
+      marginTop: 8,
+      maxWidth: 300,
+      textAlign: 'center',
+    },
+    retryButton: {
+      marginTop: 24,
+      minWidth: 132,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingTop: 4,
+    },
+    intro: {
+      ...theme.typography.bodyMd,
+      color: theme.colors.textSecondary,
+      maxWidth: 420,
+      paddingBottom: 26,
+    },
+    section: {
+      paddingBottom: 26,
+    },
+    sectionTitle: {
+      ...theme.typography.labelMd,
+      color: theme.colors.textPrimary,
+      paddingBottom: 8,
+    },
+    itemRow: {
+      alignItems: 'center',
+      borderBottomColor: theme.colors.border,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      flexDirection: 'row',
+      minHeight: 74,
+    },
+    itemContent: {
+      alignItems: 'center',
+      flex: 1,
+      flexDirection: 'row',
+      minHeight: 74,
+      paddingVertical: 10,
+    },
+    itemIcon: {
+      alignItems: 'center',
+      backgroundColor: theme.colors.surfaceMuted,
+      borderRadius: 14,
+      height: 42,
+      justifyContent: 'center',
+      width: 42,
+    },
+    itemText: {
+      flex: 1,
+      minWidth: 0,
+      paddingHorizontal: 12,
+    },
+    itemTitle: {
+      ...theme.typography.bodyMd,
+      ...fontStyle('semiBold'),
+      color: theme.colors.textPrimary,
+    },
+    itemSubtitle: {
+      ...theme.typography.caption,
+      color: theme.colors.textSecondary,
+      marginTop: 2,
+    },
+    skeletonLoader: {
+      paddingHorizontal: 20,
+      paddingTop: 62,
+    },
+    skeletonRow: {
+      alignItems: 'center',
+      borderBottomColor: theme.colors.border,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      flexDirection: 'row',
+      minHeight: 74,
+    },
+    skeletonText: {
+      flex: 1,
+      paddingLeft: 12,
+    },
+    skeletonSubtitle: {
+      marginTop: 7,
+    },
+  });
 
 export default ProvisioningDeeplinkList;

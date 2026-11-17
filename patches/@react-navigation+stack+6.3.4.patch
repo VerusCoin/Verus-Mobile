@@ -1,0 +1,368 @@
+diff --git a/node_modules/@react-navigation/stack/lib/commonjs/views/Stack/CardStack.js b/node_modules/@react-navigation/stack/lib/commonjs/views/Stack/CardStack.js
+--- a/node_modules/@react-navigation/stack/lib/commonjs/views/Stack/CardStack.js
++++ b/node_modules/@react-navigation/stack/lib/commonjs/views/Stack/CardStack.js
+@@ -202,6 +202,7 @@ class CardStack extends React.Component {
+       scenes,
+       gestures,
+       descriptors: props.descriptors,
++      transitioningRouteKeys: state.transitioningRouteKeys.filter(key => props.routes.some(route => route.key === key)),
+       headerHeights: getHeaderHeights(scenes, props.insets, props.isParentHeaderShown, props.isParentModal, state.layout, state.headerHeights)
+     };
+   }
+@@ -253,6 +254,29 @@ class CardStack extends React.Component {
+       });
+     });
+ 
++    _defineProperty(this, "markTransitioning", props => {
++      this.setState(({ transitioningRouteKeys }) => transitioningRouteKeys.includes(props.route.key) ? null : {
++        transitioningRouteKeys: [...transitioningRouteKeys, props.route.key]
++      });
++    });
++
++    _defineProperty(this, "handleTransitionStart", (props, closing) => {
++      this.markTransitioning(props);
++      this.props.onTransitionStart(props, closing);
++    });
++
++    _defineProperty(this, "handleTransitionEnd", (props, closing) => {
++      this.setState(({ transitioningRouteKeys }) => ({
++        transitioningRouteKeys: transitioningRouteKeys.filter(key => key !== props.route.key)
++      }));
++      this.props.onTransitionEnd(props, closing);
++    });
++
++    _defineProperty(this, "handleGestureStart", props => {
++      this.markTransitioning(props);
++      this.props.onGestureStart(props);
++    });
++
+     _defineProperty(this, "getFocusedRoute", () => {
+       const {
+         state
+@@ -293,7 +317,8 @@ class CardStack extends React.Component {
+       // This is not a great heuristic here. We don't know synchronously
+       // on mount what the header height is so we have just used the most
+       // common cases here.
+-      headerHeights: {}
++      headerHeights: {},
++      transitioningRouteKeys: []
+     };
+   }
+ 
+@@ -309,9 +334,6 @@ class CardStack extends React.Component {
+       renderScene,
+       isParentHeaderShown,
+       isParentModal,
+-      onTransitionStart,
+-      onTransitionEnd,
+-      onGestureStart,
+       onGestureEnd,
+       onGestureCancel,
+       detachInactiveScreens = _reactNative.Platform.OS === 'web' || _reactNative.Platform.OS === 'android' || _reactNative.Platform.OS === 'ios'
+@@ -322,6 +344,11 @@ class CardStack extends React.Component {
+       gestures,
+       headerHeights
+     } = this.state;
++    // Route keys also cover the render before Card starts its animation.
++    // Keep overlapping pushes and a cancelled gesture live until they settle.
++    // StackView can keep opening/closing keys of routes a reset removed.
++    const hasRoute = key => this.props.routes.some(route => route.key === key);
++    const isTransitioning = this.state.transitioningRouteKeys.length > 0 || this.props.openingRouteKeys.some(hasRoute) || closingRouteKeys.some(hasRoute);
+     const focusedRoute = state.routes[state.index];
+     const focusedHeaderHeight = headerHeights[focusedRoute.key];
+     const isFloatHeaderAbsolute = this.state.scenes.slice(-2).some(scene => {
+@@ -446,6 +473,7 @@ class CardStack extends React.Component {
+         enabled: detachInactiveScreens,
+         active: isScreenActive,
+         freezeOnBlur: freezeOnBlur,
++        shouldFreeze: !focused && index !== self.length - 1 && (isScreenActive === STATE_INACTIVE || detachInactiveScreens && index < self.length - activeScreensLimit && !isTransitioning),
+         pointerEvents: "box-none"
+       }, /*#__PURE__*/React.createElement(_CardContainer.default, {
+         index: index,
+@@ -461,7 +489,7 @@ class CardStack extends React.Component {
+         safeAreaInsetRight: safeAreaInsetRight,
+         safeAreaInsetBottom: safeAreaInsetBottom,
+         safeAreaInsetLeft: safeAreaInsetLeft,
+-        onGestureStart: onGestureStart,
++        onGestureStart: this.handleGestureStart,
+         onGestureCancel: onGestureCancel,
+         onGestureEnd: onGestureEnd,
+         headerHeight: headerHeight,
+@@ -475,8 +503,8 @@ class CardStack extends React.Component {
+         renderScene: renderScene,
+         onOpenRoute: onOpenRoute,
+         onCloseRoute: onCloseRoute,
+-        onTransitionStart: onTransitionStart,
+-        onTransitionEnd: onTransitionEnd,
++        onTransitionStart: this.handleTransitionStart,
++        onTransitionEnd: this.handleTransitionEnd,
+         isNextScreenTransparent: isNextScreenTransparent,
+         detachCurrentScreen: detachCurrentScreen
+       }));
+diff --git a/node_modules/@react-navigation/stack/lib/module/views/Stack/CardStack.js b/node_modules/@react-navigation/stack/lib/module/views/Stack/CardStack.js
+--- a/node_modules/@react-navigation/stack/lib/module/views/Stack/CardStack.js
++++ b/node_modules/@react-navigation/stack/lib/module/views/Stack/CardStack.js
+@@ -177,6 +177,7 @@ export default class CardStack extends React.Component {
+       scenes,
+       gestures,
+       descriptors: props.descriptors,
++      transitioningRouteKeys: state.transitioningRouteKeys.filter(key => props.routes.some(route => route.key === key)),
+       headerHeights: getHeaderHeights(scenes, props.insets, props.isParentHeaderShown, props.isParentModal, state.layout, state.headerHeights)
+     };
+   }
+@@ -228,6 +229,29 @@ export default class CardStack extends React.Component {
+       });
+     });
+ 
++    _defineProperty(this, "markTransitioning", props => {
++      this.setState(({ transitioningRouteKeys }) => transitioningRouteKeys.includes(props.route.key) ? null : {
++        transitioningRouteKeys: [...transitioningRouteKeys, props.route.key]
++      });
++    });
++
++    _defineProperty(this, "handleTransitionStart", (props, closing) => {
++      this.markTransitioning(props);
++      this.props.onTransitionStart(props, closing);
++    });
++
++    _defineProperty(this, "handleTransitionEnd", (props, closing) => {
++      this.setState(({ transitioningRouteKeys }) => ({
++        transitioningRouteKeys: transitioningRouteKeys.filter(key => key !== props.route.key)
++      }));
++      this.props.onTransitionEnd(props, closing);
++    });
++
++    _defineProperty(this, "handleGestureStart", props => {
++      this.markTransitioning(props);
++      this.props.onGestureStart(props);
++    });
++
+     _defineProperty(this, "getFocusedRoute", () => {
+       const {
+         state
+@@ -268,7 +292,8 @@ export default class CardStack extends React.Component {
+       // This is not a great heuristic here. We don't know synchronously
+       // on mount what the header height is so we have just used the most
+       // common cases here.
+-      headerHeights: {}
++      headerHeights: {},
++      transitioningRouteKeys: []
+     };
+   }
+ 
+@@ -284,9 +309,6 @@ export default class CardStack extends React.Component {
+       renderScene,
+       isParentHeaderShown,
+       isParentModal,
+-      onTransitionStart,
+-      onTransitionEnd,
+-      onGestureStart,
+       onGestureEnd,
+       onGestureCancel,
+       detachInactiveScreens = Platform.OS === 'web' || Platform.OS === 'android' || Platform.OS === 'ios'
+@@ -297,6 +319,11 @@ export default class CardStack extends React.Component {
+       gestures,
+       headerHeights
+     } = this.state;
++    // Route keys also cover the render before Card starts its animation.
++    // Keep overlapping pushes and a cancelled gesture live until they settle.
++    // StackView can keep opening/closing keys of routes a reset removed.
++    const hasRoute = key => this.props.routes.some(route => route.key === key);
++    const isTransitioning = this.state.transitioningRouteKeys.length > 0 || this.props.openingRouteKeys.some(hasRoute) || closingRouteKeys.some(hasRoute);
+     const focusedRoute = state.routes[state.index];
+     const focusedHeaderHeight = headerHeights[focusedRoute.key];
+     const isFloatHeaderAbsolute = this.state.scenes.slice(-2).some(scene => {
+@@ -421,6 +448,7 @@ export default class CardStack extends React.Component {
+         enabled: detachInactiveScreens,
+         active: isScreenActive,
+         freezeOnBlur: freezeOnBlur,
++        shouldFreeze: !focused && index !== self.length - 1 && (isScreenActive === STATE_INACTIVE || detachInactiveScreens && index < self.length - activeScreensLimit && !isTransitioning),
+         pointerEvents: "box-none"
+       }, /*#__PURE__*/React.createElement(CardContainer, {
+         index: index,
+@@ -436,7 +464,7 @@ export default class CardStack extends React.Component {
+         safeAreaInsetRight: safeAreaInsetRight,
+         safeAreaInsetBottom: safeAreaInsetBottom,
+         safeAreaInsetLeft: safeAreaInsetLeft,
+-        onGestureStart: onGestureStart,
++        onGestureStart: this.handleGestureStart,
+         onGestureCancel: onGestureCancel,
+         onGestureEnd: onGestureEnd,
+         headerHeight: headerHeight,
+@@ -450,8 +478,8 @@ export default class CardStack extends React.Component {
+         renderScene: renderScene,
+         onOpenRoute: onOpenRoute,
+         onCloseRoute: onCloseRoute,
+-        onTransitionStart: onTransitionStart,
+-        onTransitionEnd: onTransitionEnd,
++        onTransitionStart: this.handleTransitionStart,
++        onTransitionEnd: this.handleTransitionEnd,
+         isNextScreenTransparent: isNextScreenTransparent,
+         detachCurrentScreen: detachCurrentScreen
+       }));
+diff --git a/node_modules/@react-navigation/stack/lib/typescript/src/views/Screens.d.ts b/node_modules/@react-navigation/stack/lib/typescript/src/views/Screens.d.ts
+--- a/node_modules/@react-navigation/stack/lib/typescript/src/views/Screens.d.ts
++++ b/node_modules/@react-navigation/stack/lib/typescript/src/views/Screens.d.ts
+@@ -9,4 +9,5 @@ export declare const MaybeScreen: ({ enabled, active, ...rest }: ViewProps & {
+     active: 0 | 1 | Animated.AnimatedInterpolation;
+     children: React.ReactNode;
+     freezeOnBlur?: boolean | undefined;
++    shouldFreeze?: boolean | undefined;
+ }) => JSX.Element;
+diff --git a/node_modules/@react-navigation/stack/lib/typescript/src/views/Stack/CardStack.d.ts b/node_modules/@react-navigation/stack/lib/typescript/src/views/Stack/CardStack.d.ts
+--- a/node_modules/@react-navigation/stack/lib/typescript/src/views/Stack/CardStack.d.ts
++++ b/node_modules/@react-navigation/stack/lib/typescript/src/views/Stack/CardStack.d.ts
+@@ -53,12 +53,17 @@ declare type State = {
+     gestures: GestureValues;
+     layout: Layout;
+     headerHeights: Record<string, number>;
++    transitioningRouteKeys: string[];
+ };
+ export default class CardStack extends React.Component<Props, State> {
+     static getDerivedStateFromProps(props: Props, state: State): Partial<State> | null;
+     constructor(props: Props);
+     private handleLayout;
+     private handleHeaderLayout;
++    private markTransitioning;
++    private handleTransitionStart;
++    private handleTransitionEnd;
++    private handleGestureStart;
+     private getFocusedRoute;
+     private getPreviousScene;
+     render(): JSX.Element;
+diff --git a/node_modules/@react-navigation/stack/src/views/Screens.tsx b/node_modules/@react-navigation/stack/src/views/Screens.tsx
+--- a/node_modules/@react-navigation/stack/src/views/Screens.tsx
++++ b/node_modules/@react-navigation/stack/src/views/Screens.tsx
+@@ -32,6 +32,7 @@ export const MaybeScreen = ({
+   active: 0 | 1 | Animated.AnimatedInterpolation;
+   children: React.ReactNode;
+   freezeOnBlur?: boolean;
++  shouldFreeze?: boolean;
+ }) => {
+   if (Screens != null) {
+     return (
+diff --git a/node_modules/@react-navigation/stack/src/views/Stack/CardStack.tsx b/node_modules/@react-navigation/stack/src/views/Stack/CardStack.tsx
+--- a/node_modules/@react-navigation/stack/src/views/Stack/CardStack.tsx
++++ b/node_modules/@react-navigation/stack/src/views/Stack/CardStack.tsx
+@@ -79,6 +79,7 @@ type State = {
+   gestures: GestureValues;
+   layout: Layout;
+   headerHeights: Record<string, number>;
++  transitioningRouteKeys: string[];
+ };
+ 
+ const EPSILON = 1e-5;
+@@ -370,6 +371,9 @@ export default class CardStack extends React.Component<Props, State> {
+       scenes,
+       gestures,
+       descriptors: props.descriptors,
++      transitioningRouteKeys: state.transitioningRouteKeys.filter((key) =>
++        props.routes.some((route) => route.key === key)
++      ),
+       headerHeights: getHeaderHeights(
+         scenes,
+         props.insets,
+@@ -396,6 +400,7 @@ export default class CardStack extends React.Component<Props, State> {
+       // on mount what the header height is so we have just used the most
+       // common cases here.
+       headerHeights: {},
++      transitioningRouteKeys: [],
+     };
+   }
+ 
+@@ -446,6 +451,33 @@ export default class CardStack extends React.Component<Props, State> {
+     });
+   };
+ 
++  private markTransitioning = ({ route }: { route: Route<string> }) => {
++    this.setState(({ transitioningRouteKeys }) =>
++      transitioningRouteKeys.includes(route.key)
++        ? null
++        : { transitioningRouteKeys: [...transitioningRouteKeys, route.key] }
++    );
++  };
++
++  private handleTransitionStart: Props['onTransitionStart'] = (props, closing) => {
++    this.markTransitioning(props);
++    this.props.onTransitionStart(props, closing);
++  };
++
++  private handleTransitionEnd: Props['onTransitionEnd'] = (props, closing) => {
++    this.setState(({ transitioningRouteKeys }) => ({
++      transitioningRouteKeys: transitioningRouteKeys.filter(
++        (key) => key !== props.route.key
++      ),
++    }));
++    this.props.onTransitionEnd(props, closing);
++  };
++
++  private handleGestureStart: Props['onGestureStart'] = (props) => {
++    this.markTransitioning(props);
++    this.props.onGestureStart(props);
++  };
++
+   private getFocusedRoute = () => {
+     const { state } = this.props;
+ 
+@@ -481,9 +513,6 @@ export default class CardStack extends React.Component<Props, State> {
+       renderScene,
+       isParentHeaderShown,
+       isParentModal,
+-      onTransitionStart,
+-      onTransitionEnd,
+-      onGestureStart,
+       onGestureEnd,
+       onGestureCancel,
+       detachInactiveScreens = Platform.OS === 'web' ||
+@@ -493,6 +522,16 @@ export default class CardStack extends React.Component<Props, State> {
+ 
+     const { scenes, layout, gestures, headerHeights } = this.state;
+ 
++    // Route keys also cover the render before Card starts its animation.
++    // Keep overlapping pushes and a cancelled gesture live until they settle.
++    // StackView can keep opening/closing keys of routes a reset removed.
++    const hasRoute = (key: string) =>
++      this.props.routes.some((route) => route.key === key);
++    const isTransitioning =
++      this.state.transitioningRouteKeys.length > 0 ||
++      this.props.openingRouteKeys.some(hasRoute) ||
++      closingRouteKeys.some(hasRoute);
++
+     const focusedRoute = state.routes[state.index];
+     const focusedHeaderHeight = headerHeights[focusedRoute.key];
+ 
+@@ -658,6 +697,14 @@ export default class CardStack extends React.Component<Props, State> {
+                 enabled={detachInactiveScreens}
+                 active={isScreenActive}
+                 freezeOnBlur={freezeOnBlur}
++                shouldFreeze={
++                  !focused &&
++                  index !== self.length - 1 &&
++                  (isScreenActive === STATE_INACTIVE ||
++                    (detachInactiveScreens &&
++                      index < self.length - activeScreensLimit &&
++                      !isTransitioning))
++                }
+                 pointerEvents="box-none"
+               >
+                 <CardContainer
+@@ -674,7 +721,7 @@ export default class CardStack extends React.Component<Props, State> {
+                   safeAreaInsetRight={safeAreaInsetRight}
+                   safeAreaInsetBottom={safeAreaInsetBottom}
+                   safeAreaInsetLeft={safeAreaInsetLeft}
+-                  onGestureStart={onGestureStart}
++                  onGestureStart={this.handleGestureStart}
+                   onGestureCancel={onGestureCancel}
+                   onGestureEnd={onGestureEnd}
+                   headerHeight={headerHeight}
+@@ -690,8 +737,8 @@ export default class CardStack extends React.Component<Props, State> {
+                   renderScene={renderScene}
+                   onOpenRoute={onOpenRoute}
+                   onCloseRoute={onCloseRoute}
+-                  onTransitionStart={onTransitionStart}
+-                  onTransitionEnd={onTransitionEnd}
++                  onTransitionStart={this.handleTransitionStart}
++                  onTransitionEnd={this.handleTransitionEnd}
+                   isNextScreenTransparent={isNextScreenTransparent}
+                   detachCurrentScreen={detachCurrentScreen}
+                 />

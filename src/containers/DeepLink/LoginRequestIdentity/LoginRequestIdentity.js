@@ -3,7 +3,7 @@ import { ScrollView } from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { openLinkIdentityModal, openProvisionIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { requestServiceStoredData } from '../../../utils/auth/authBox';
@@ -13,30 +13,39 @@ import { signLoginConsentResponse } from '../../../utils/api/channels/vrpc/reque
 import BigNumber from 'bignumber.js';
 import { VERUSID_NETWORK_DEFAULT } from "../../../../env/index";
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
-import { CommonActions } from '@react-navigation/native';
+import { exitRequestToStack } from '../exitRequest';
 import { SEND_MODAL_IDENTITY_TO_LINK_FIELD } from '../../../utils/constants/sendModal';
-import { ELECTRUM } from '../../../utils/constants/intervalConstants';
-import { coinsList } from '../../../utils/CoinData/CoinsList';
-import { requestSeeds } from '../../../utils/auth/authBox';
-import { deriveKeyPair } from '../../../utils/keys';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
-import { convertFqnToDisplayFormat } from '../../../utils/fullyqualifiedname';
+import {
+  getLoginConsentProvisioningRequestKey,
+  getProvisioningRequestState,
+  PROVISIONING_REQUEST_STATUSES,
+  shouldBlockProvisioningRequest,
+} from '../../../utils/verusid/provisioningRequestState';
 
 const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
   const [loading, setLoading] = useState(false)
   const [linkedIds, setLinkedIds] = useState({})
+  const [pendingIds, setPendingIds] = useState({})
+  const [completedProvisioningRequests, setCompletedProvisioningRequests] = useState({})
   const [sortedIds, setSortedIds] = useState({});
   const [idProvisionSuccess, setIdProvisionSuccess] = useState(false)
-  const [canProvision, setCanProvision] = useState(false)
   const req = new primitives.LoginConsentRequest(deeplinkData)
+  const provisioningRequestKey = getLoginConsentProvisioningRequestKey(req);
+  const provisioningRequestState = getProvisioningRequestState({
+    completedProvisioningRequests,
+    linkedIds,
+    pendingIds,
+    requestKey: provisioningRequestKey,
+  });
   const encryptedIds = useObjectSelector(state => state.services.stored[VERUSID_SERVICE_ID])
   const sendModal = useObjectSelector((state) => state.sendModal);
 
   const fromService = useSelector((state) => state.deeplink.fromService);
   const passthrough = useSelector((state) => state.deeplink.passthrough);
 
-  useEffect(() => {
+  const canProvision = (() => {
     let canProvision = req.challenge.provisioning_info && req.challenge.provisioning_info.some(x => {
       return (
         x.vdxfkey ===
@@ -44,6 +53,10 @@ const LoginRequestIdentity = props => {
           .vdxfid
       );
     })
+
+    if (shouldBlockProvisioningRequest(provisioningRequestState)) {
+      canProvision = false;
+    }
 
     if (Object.keys(linkedIds).length > 0) {
       for (const chainId of Object.keys(linkedIds)) {
@@ -54,8 +67,9 @@ const LoginRequestIdentity = props => {
         }
       }
     }
-    setCanProvision(canProvision)
-  }, [linkedIds])
+
+    return canProvision;
+  })();
 
   const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser)
   const testnetOverrides = useObjectSelector(state => state.authentication.activeAccount.testnetOverrides)
@@ -81,7 +95,21 @@ const LoginRequestIdentity = props => {
         setLinkedIds({})
       }
 
+      if (verusIdServiceData.pending_ids) {
+        setPendingIds(verusIdServiceData.pending_ids)
+      } else {
+        setPendingIds({})
+      }
+
+      if (verusIdServiceData.completed_provisioning_requests) {
+        setCompletedProvisioningRequests(verusIdServiceData.completed_provisioning_requests)
+      } else {
+        setCompletedProvisioningRequests({})
+      }
+
     } catch (e) {
+      setPendingIds({})
+      setCompletedProvisioningRequests({})
       createAlert('Error Loading Linked VerusIDs', e.message);
     }
 
@@ -115,22 +143,12 @@ const LoginRequestIdentity = props => {
     }
 
     if (idProvisionSuccess && !sendModal.visible) {
-      props.navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [
-            {
-              name: 'SignedInStack',
-              params: {
-                screen: 'Home',
-                params: {
-                  screen: 'IdentityTab',
-                },
-              },
-            },
-          ],
-        }),
-      );
+      exitRequestToStack(props.navigation, 'SignedInStack', {
+        screen: 'Home',
+        params: {
+          screen: 'IdentityTab',
+        },
+      });
     }
   }, [idProvisionSuccess, sendModal.data?.success, sendModal.visible, props.navigation])
 
@@ -154,8 +172,12 @@ const LoginRequestIdentity = props => {
     setSortedIds(sortedIdKeysPerChain)
   }, [linkedIds])
 
-  const openLinkIdentityModalFromChain = () => {
-    return openLinkIdentityModal(CoinDirectory.findCoinObj(system_id, null, true));
+  const openLinkIdentityModalFromChain = (identityAddress = null) => {
+    const data = identityAddress
+      ? {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: identityAddress, noLogin: false}
+      : undefined;
+
+    return openLinkIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), data);
   }
 
   const openProvisionIdentityModalFromChain = () => {
@@ -203,8 +225,7 @@ const LoginRequestIdentity = props => {
                 <React.Fragment key={iAddr}>
                   <Divider />
                   <List.Item
-                    title={linkedIds[chainId][iAddr] && linkedIds[chainId][iAddr] !== iAddr
-                      ? convertFqnToDisplayFormat(linkedIds[chainId][iAddr]) : iAddr}
+                    title={linkedIds[chainId][iAddr]}
                     description={iAddr}
                     descriptionNumberOfLines={1}
                     titleNumberOfLines={1}
@@ -223,13 +244,37 @@ const LoginRequestIdentity = props => {
             <List.Item
               title={'Link VerusID'}
               right={props => <List.Icon {...props} icon={'plus'} size={20} />}
-              onPress={() => openLinkIdentityModalFromChain(chainId)}
+              onPress={() => openLinkIdentityModalFromChain()}
             />
             <Divider />
+            {provisioningRequestState.status === PROVISIONING_REQUEST_STATUSES.PENDING && (
+              <React.Fragment>
+                <List.Item
+                  title={'VerusID request in progress'}
+                  description={'A VerusID request is already in progress for this sign-in request. A notification will appear when it is ready.'}
+                  left={props => <List.Icon {...props} icon={'progress-clock'} />}
+                />
+                <Divider />
+              </React.Fragment>
+            )}
+            {provisioningRequestState.status === PROVISIONING_REQUEST_STATUSES.READY && (
+              <React.Fragment>
+                <List.Item
+                  title={'Use'}
+                  description={`${provisioningRequestState.displayName || 'VerusID'} is ready. Use it to select this VerusID, then continue signing in.`}
+                  left={props => <List.Icon {...props} icon={'check'} />}
+                  right={props => (
+                    <List.Icon {...props} icon={'chevron-right'} size={20} />
+                  )}
+                  onPress={() => openLinkIdentityModalFromChain(provisioningRequestState.iAddress)}
+                />
+                <Divider />
+              </React.Fragment>
+            )}
             {canProvision && (
               <React.Fragment>
                 <List.Item
-                  title={'Request VerusID'}
+                  title={provisioningRequestState.status === PROVISIONING_REQUEST_STATUSES.FAILED ? 'Retry request' : 'Request VerusID'}
                   right={props => (
                     <List.Icon {...props} icon={'plus'} size={20} />
                   )}

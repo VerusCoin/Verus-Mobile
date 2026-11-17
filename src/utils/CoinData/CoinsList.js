@@ -27,6 +27,15 @@ import {
   WALLET_APP_SEND,
 } from '../constants/apps';
 import Colors from "../../globals/colors";
+import { VRPC_API_KEYS } from '../../../env/index';
+import { getUrlKey } from '../url';
+
+const V2_TESTNET_RPC_ENDPOINT = 'https://v2api.verustest.net';
+const v2TestnetKey = VRPC_API_KEYS?.[getUrlKey(V2_TESTNET_RPC_ENDPOINT)];
+const hasV2TestnetKey =
+  typeof v2TestnetKey === 'string' &&
+  v2TestnetKey.length > 0 &&
+  v2TestnetKey !== 'V2API_API_KEY';
 
 export const VERUS_APPS = {
   wallet: {
@@ -102,7 +111,8 @@ export const coinsList = {
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
     proto: 'vrsc',
     dlight_endpoints: dlightServers.vrsctest,
-    vrpc_endpoints: ['https://v2api.verustest.net'],
+    // V2 requires a signing key. Keep builds with no key or the placeholder on V1.
+    vrpc_endpoints: [hasV2TestnetKey ? V2_TESTNET_RPC_ENDPOINT : 'https://api.verustest.net'],
     decimals: DEFAULT_DECIMALS,
     seconds_per_block: 60,
     default_app: 'wallet',
@@ -213,6 +223,69 @@ export const coinsList = {
     website: 'https://www.circle.com/en/usdc',
     mapped_to: '0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c'
   },
+  ["i9nLSK4S1U5sVMq4eJUHR1gbFALz56J9Lj"]: {
+    pbaas_options: 32,
+    id: "i9nLSK4S1U5sVMq4eJUHR1gbFALz56J9Lj",
+    currency_id: "i9nLSK4S1U5sVMq4eJUHR1gbFALz56J9Lj",
+    system_id: "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X",
+    launch_system_id: "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
+    bitgojs_network_key: "verus",
+    display_ticker: "scrvUSD.vETH",
+    display_name: "Savings crvUSD on Verus",
+    alt_names: [],
+    theme_color: '#29233b',
+    compatible_channels: [VERUSID, VRPC, GENERAL],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
+    proto: "vrsc",
+    decimals: 8,
+    default_app: "wallet",
+    apps: VERUS_APPS,
+    rate_url_params: {coin_paprika: 'scrvusd-savings-crvusd'},
+    website: 'https://crvusd.curve.fi',
+    mapped_to: '0x0655977FEb2f289A4aB78af67BAB0d17aAb84367'
+  },
+  ["iQ1mX2VtESKfJ3PoWVcYKfnDEpYkWW59ZB"]: {
+    pbaas_options: 32,
+    id: "iQ1mX2VtESKfJ3PoWVcYKfnDEpYkWW59ZB",
+    currency_id: "iQ1mX2VtESKfJ3PoWVcYKfnDEpYkWW59ZB",
+    system_id: "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X",
+    launch_system_id: "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
+    bitgojs_network_key: "verus",
+    display_ticker: "crvUSD.vETH",
+    display_name: "crvUSD on Verus",
+    alt_names: [],
+    theme_color: '#29233b',
+    compatible_channels: [VERUSID, VRPC, GENERAL],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
+    proto: "vrsc",
+    decimals: 8,
+    default_app: "wallet",
+    apps: VERUS_APPS,
+    rate_url_params: {coin_paprika: 'crvusd-crvusd'},
+    website: 'https://crvusd.curve.fi',
+    mapped_to: '0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E'
+  },
+  ["i9oCSqKALwJtcv49xUKS2U2i79h1kX6NEY"]: {
+    pbaas_options: 32,
+    id: "i9oCSqKALwJtcv49xUKS2U2i79h1kX6NEY",
+    currency_id: "i9oCSqKALwJtcv49xUKS2U2i79h1kX6NEY",
+    system_id: "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X",
+    launch_system_id: "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
+    bitgojs_network_key: "verus",
+    display_ticker: "vUSDT.vETH",
+    display_name: "Tether on Verus",
+    alt_names: [],
+    theme_color: '#50AF95',
+    compatible_channels: [VERUSID, VRPC, GENERAL],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
+    proto: "vrsc",
+    decimals: 8,
+    default_app: "wallet",
+    apps: VERUS_APPS,
+    rate_url_params: {coin_paprika: 'usdt-tether'},
+    website: 'https://tether.to',
+    mapped_to: 'USDT'
+  },
   ["i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X"]: {
     pbaas_options: 128,
     system_options: 264,
@@ -248,7 +321,8 @@ export const coinsList = {
     display_name: "Bridge.vETH",
     alt_names: [],
     theme_color: "#081C45",
-    compatible_channels: [VERUSID, VRPC],
+    icon_badge: null,
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: "vrsc",
     decimals: 8,
@@ -268,7 +342,7 @@ export const coinsList = {
     display_name: "Pure",
     alt_names: [],
     theme_color: "#484C52",
-    compatible_channels: [VERUSID, VRPC],
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
     proto: "vrsc",
     decimals: 8,
@@ -286,7 +360,7 @@ export const coinsList = {
     display_name: "Kaiju",
     alt_names: [],
     theme_color: "#030a17",
-    compatible_channels: [VERUSID, VRPC],
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
     proto: "vrsc",
     decimals: 8,
@@ -304,7 +378,7 @@ export const coinsList = {
     display_name: "Switch",
     alt_names: [],
     theme_color: "#132618",
-    compatible_channels: [VERUSID, VRPC],
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
     proto: "vrsc",
     decimals: 8,
@@ -323,7 +397,7 @@ export const coinsList = {
     display_name: "Pirate Chain (PBaaS)",
     alt_names: [],
     theme_color: "#1d1d2c",
-    compatible_channels: [VERUSID, VRPC],
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
     proto: "vrsc",
     vrpc_endpoints: ["https://vapi.piratechain.com/"],
@@ -345,7 +419,7 @@ export const coinsList = {
     display_name: "CHIPS",
     alt_names: [],
     theme_color: "#1f095e",
-    compatible_channels: [VERUSID, VRPC],
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
     proto: "vrsc",
     vrpc_endpoints: ["https://api.chips.cash/"],
@@ -367,7 +441,7 @@ export const coinsList = {
     display_name: "vDEX",
     alt_names: [],
     theme_color: "#1d1d2c",
-    compatible_channels: [VERUSID, VRPC],
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
     proto: "vrsc",
     vrpc_endpoints: ["https://api.vdex.to/"],
@@ -387,7 +461,7 @@ export const coinsList = {
     display_name: "Bridge.vARRR",
     alt_names: [],
     theme_color: "#1d1d2c",
-    compatible_channels: [VERUSID, VRPC],
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
     proto: "vrsc",
     decimals: 8,
@@ -456,7 +530,7 @@ export const coinsList = {
     tags: [],
     proto: 'eth',
     decimals: ETHERS,
-    network: "goerli",
+    network: "sepolia",
     testnet: true
   },
   BAT: {
@@ -931,6 +1005,7 @@ export const coinsList = {
     rate_url_params: {coin_paprika: 'sushi-sushi'},
   },
   ["0xBc2738BA63882891094C99E59a02141Ca1A1C36a"]: {
+    price_currency_id: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
     id: '0xBc2738BA63882891094C99E59a02141Ca1A1C36a',
     currency_id: '0xBc2738BA63882891094C99E59a02141Ca1A1C36a',
     system_id: '.eth',
@@ -947,6 +1022,7 @@ export const coinsList = {
     proto: 'erc20',
   },
   ["0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2"]: {
+    price_currency_id: 'i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx',
     id: '0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2',
     currency_id: '0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2',
     system_id: '.eth',

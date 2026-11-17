@@ -14,12 +14,11 @@ import {
 import { CoinLogos, getCoinLogo } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { Text } from "react-native-paper"
-import Button from "../Button"
+import { Button, Text } from "react-native-paper"
 import SemiModal from "../SemiModal";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { addCoin, addKeypairs, removeExistingCoin, setUserCoins } from "../../actions/actionCreators";
-import { refreshActiveChainLifecycles } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
+import { refreshLifecyclesAfterAssetChange } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import { connect } from 'react-redux';
 import { CommonActions } from '@react-navigation/native';
 import { openUrl } from "../../utils/linking";
@@ -49,7 +48,7 @@ class CoinDetailsModal extends Component {
       ],
     })
 
-    this.props.navigation.closeDrawer();
+    if (this.props.navigation.closeDrawer) this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction)
   }
 
@@ -141,7 +140,7 @@ class CoinDetailsModal extends Component {
           scopeSessionAction(setUserCoinsAction, sessionScope),
         );
 
-        refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser)
+        refreshLifecyclesAfterAssetChange(this.props.data, setUserCoinsAction.payload.activeCoinsForUser)
 
         this.setState({ loading: false });
         this.props.cancel()
@@ -244,7 +243,7 @@ class CoinDetailsModal extends Component {
                     marginTop: 32,
                   }}
                 >
-                  {added ? "Remove currency" : "Add currency"}
+                  {added ? "Remove Currency" : "Add Currency"}
                 </Button>
               </TouchableOpacity>
             )}

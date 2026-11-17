@@ -1,459 +1,228 @@
-import { useEffect, useMemo, useState } from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Checkbox, Text } from 'react-native-paper';
-import Button from '../../../components/Button';
-import { useSelector } from 'react-redux';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {useRequestBackHandler} from '../useRequestNavigation';
+import React, {useMemo, useRef, useState, useEffect} from 'react';
+import {Text} from 'react-native-paper';
+import {View} from 'react-native';
+import {dataApprovalListStyles} from '../../../styles';
 import {GenericResponse} from 'verus-typescript-primitives';
-import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import Colors from '../../../globals/colors';
-import { dataRequestInfoStyles as styles } from '../../../styles';
-import { useObjectSelector } from '../../../hooks/useObjectSelector';
-import { requestServiceStoredData } from '../../../utils/auth/authBox';
-import { VERUSID_SERVICE_ID } from '../../../utils/constants/services';
-import { VERUSID_NETWORK_DEFAULT } from '../../../../env/index';
-import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
-import { SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
-import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { unixToDate } from '../../../utils/math';
-import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
-import IdentityPickerSheet from '../AuthenticationRequestInfo/components/IdentityPickerSheet';
-import { buildDataPacketResponse } from '../../../utils/deeplink/dataPacket/signDataPacket';
+import {
+  OnboardingThemeProvider,
+  useOnboardingTheme,
+} from '../../../theme/onboarding';
+import {buildDataPacketResponse} from '../../../utils/deeplink/dataPacket/signDataPacket';
 import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
-import {getMatchingRequestAccounts} from '../../../utils/deeplink/requestAccounts';
-import {convertFqnToDisplayFormat} from '../../../utils/fullyqualifiedname';
+import {createRequestSessionGuard} from '../../../utils/deeplink/requestSessionGuard';
+import {assertAuthenticationRequestsNotExpired} from '../../../utils/deeplink/validator/authenticationRequestValidator';
+import useDataRequestIdentity from '../components/RequestReview/useDataRequestIdentity';
+import useDataReviewConsent from '../components/RequestReview/useDataReviewConsent';
+import DataRequestReview, {
+  DataReviewNotice,
+  DataReviewValue,
+} from '../components/RequestReview/DataRequestReview';
 
-const truncateAddress = addr => {
-  if (!addr || addr.length <= 14) return addr;
-  return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
+const readableValue = item => {
+  const json =
+    item.descriptorVersion != null ? item.objectDataJson : item.signedJson;
+  if (json != null) {
+    try {
+      return JSON.parse(json);
+    } catch (_) {}
+  }
+  return item.descriptorVersion != null ? item.objectDataText : item.signedText;
 };
 
-const DetailRow = ({ title, subtitle, showBorder, icon }) => (
-  <View style={[styles.detailRow, showBorder && styles.detailRowBorder]}>
-    <View style={styles.detailLeft}>
-      <Text style={styles.detailTitle}>{title}</Text>
-      {subtitle ? <Text style={styles.detailSubtitle}>{subtitle}</Text> : null}
-    </View>
-    {icon ? <MaterialCommunityIcons name={icon} size={18} color="#888" /> : null}
-  </View>
-);
+const packetDetails = item => [
+  {
+    label: 'SHA-256 of signed bytes',
+    value: item.sha256,
+    technical: true,
+    copy: true,
+  },
+  {
+    label: 'Signed bytes (hex)',
+    value: item.signedBytesHex,
+    technical: true,
+    copy: true,
+  },
+  {
+    label: 'Signed size',
+    value: item.size != null ? `${item.size} bytes` : null,
+  },
+  {label: 'Descriptor version', value: item.descriptorVersion},
+  {label: 'Descriptor flags', value: item.descriptorFlags},
+  {label: 'Descriptor label', value: item.descriptorLabel},
+  {label: 'MIME type', value: item.descriptorMimeType},
+  {
+    label: 'Object bytes (hex)',
+    value: item.objectDataBytesHex,
+    technical: true,
+    copy: true,
+  },
+  {label: 'Full descriptor', value: item.descriptorJson},
+];
 
-const formatHex = value => {
-  if (!value) return '';
-  return value.match(/.{1,64}/g)?.join('\n') || value;
-};
-
-const ReviewCheckbox = ({ checked, onPress, title, subtitle, showBorder }) => (
-  <TouchableOpacity
-    accessibilityRole="checkbox"
-    accessibilityState={{ checked }}
-    activeOpacity={0.75}
-    onPress={onPress}
-    style={[styles.reviewCheckRow, showBorder && styles.detailRowBorder]}
-  >
-    <View pointerEvents="none">
-      <Checkbox.Android
-        status={checked ? 'checked' : 'unchecked'}
-        color={Colors.verusGreenColor}
-        uncheckedColor="#888"
-      />
-    </View>
-    <View style={styles.reviewCheckTextContainer}>
-      <Text style={styles.reviewCheckTitle}>{title}</Text>
-      {subtitle ? <Text style={styles.reviewCheckSubtitle}>{subtitle}</Text> : null}
-    </View>
-  </TouchableOpacity>
-);
-
-const PayloadField = ({ label, value, monospace }) => {
-  if (value == null || value === '') return null;
-
-  return (
-    <View style={styles.payloadField}>
-      <Text style={styles.payloadLabel}>{label}</Text>
-      <Text style={monospace ? styles.payloadCodeText : styles.payloadText}>
-        {value}
-      </Text>
-    </View>
-  );
-};
-
-const SignableObjectReview = ({ item, index, checked, onToggle, showBorder }) => (
-  <View style={[styles.signableItem, showBorder && styles.detailRowBorder]}>
-    <View style={styles.signableHeader}>
-      <View style={styles.detailLeft}>
-        <Text style={styles.detailTitle}>{item.type}</Text>
-        <Text style={styles.detailSubtitle}>
-          {item.label}{item.size != null ? ` - ${item.size} bytes` : ''}
-        </Text>
-      </View>
-      <MaterialCommunityIcons name="signature-freehand" size={18} color="#888" />
-    </View>
-
-    <PayloadField label="SHA-256 hash being signed" value={item.sha256} monospace />
-    <PayloadField label="Text being signed" value={item.signedText} />
-    <PayloadField label="JSON being signed" value={item.signedJson} monospace />
-    <PayloadField label="Signed bytes" value={formatHex(item.signedBytesHex)} monospace />
-
-    {item.descriptorVersion != null ? (
-      <View style={styles.payloadMetaGrid}>
-        <PayloadField label="Descriptor version" value={item.descriptorVersion} />
-        <PayloadField label="Descriptor flags" value={item.descriptorFlags} />
-        <PayloadField label="Descriptor label" value={item.descriptorLabel} />
-        <PayloadField label="Descriptor MIME type" value={item.descriptorMimeType} />
-      </View>
-    ) : null}
-    <PayloadField label="Descriptor object text" value={item.objectDataText} />
-    <PayloadField label="Descriptor object JSON" value={item.objectDataJson} monospace />
-    <PayloadField label="Descriptor object bytes" value={formatHex(item.objectDataBytesHex)} monospace />
-    <PayloadField label="Descriptor JSON" value={item.descriptorJson} monospace />
-
-    <ReviewCheckbox
-      checked={checked}
-      onPress={onToggle}
-      title={`I reviewed data item ${index + 1} and agree to sign it`}
-      showBorder
-    />
-  </View>
-);
-
-const DataPacketRequestInfo = props => {
+const DataPacketRequestInfoContent = props => {
   const {
-    signerFqn,
-    signerSystemID,
-    signerSystemName,
-    signerIdentityID,
-    sigtime,
     statements = [],
     signableObjectSummaries = [],
-    cancel,
-    next,
-    response,
     request,
+    response,
     detailIndex,
+    next,
   } = props;
-
-  const signedIn = useSelector(state => state.authentication.signedIn);
-  const sendModalType = useSelector(state => state.sendModal.type);
-  const accounts = useObjectSelector(state => state.authentication.accounts);
-  const encryptedIds = useObjectSelector(state => state.services.stored[VERUSID_SERVICE_ID]);
-  const testnetOverrides = useObjectSelector(
-    state => state.authentication.activeAccount?.testnetOverrides || {},
+  const theme = useOnboardingTheme();
+  const approvalStyles = useMemo(() => dataApprovalListStyles(theme), [theme]);
+  const identity = useDataRequestIdentity(props);
+  const [processing, setProcessing] = useState(false);
+  useRequestBackHandler(props.cancel, processing);
+  const [error, setError] = useState(null);
+  const inFlight = useRef(false);
+  const payloadKey = JSON.stringify([statements, signableObjectSummaries]);
+  const context = useMemo(
+    () => ({}),
+    [identity.context, identity.selectedIdentity?.iAddress, payloadKey],
   );
-  const identityNetwork = testnetOverrides[VERUSID_NETWORK_DEFAULT]
-    ? testnetOverrides[VERUSID_NETWORK_DEFAULT]
-    : VERUSID_NETWORK_DEFAULT;
-
-  const [linkedIds, setLinkedIds] = useState({});
-  const [linkedIdsLoaded, setLinkedIdsLoaded] = useState(false);
-  const [sortedIds, setSortedIds] = useState({});
-  const [selectedIdentity, setSelectedIdentity] = useState(null);
-  const [identitySheetVisible, setIdentitySheetVisible] = useState(false);
-  const [waitingForSignin, setWaitingForSignin] = useState(false);
-  const [signing, setSigning] = useState(false);
-  const [acknowledgedStatements, setAcknowledgedStatements] = useState({});
-  const [acknowledgedSignableObjects, setAcknowledgedSignableObjects] = useState({});
-
-  const requestIsTestnet = request != null ? request.isTestnet() : false;
-  const identityChain = requestIsTestnet ? 'VRSCTEST' : identityNetwork;
-  const matchingAccounts = useMemo(
-    () => getMatchingRequestAccounts(accounts, requestIsTestnet),
-    [accounts, requestIsTestnet],
+  const currentContext = useRef(context);
+  currentContext.current = context;
+  useEffect(
+    () => () => {
+      currentContext.current = null;
+    },
+    [],
   );
-  const requesterLabel = signerFqn || signerIdentityID || 'Requester';
-  const sigDateString = sigtime ? unixToDate(sigtime) : null;
-  const statementsReviewed = useMemo(
-    () => !statements.length || statements.every((_, index) => acknowledgedStatements[index]),
-    [acknowledgedStatements, statements],
-  );
-  const signableObjectsReviewed = useMemo(
-    () => signableObjectSummaries.length > 0 &&
-      signableObjectSummaries.every((_, index) => acknowledgedSignableObjects[index]),
-    [acknowledgedSignableObjects, signableObjectSummaries],
-  );
-  const reviewComplete = statementsReviewed && signableObjectsReviewed;
+  const consent = useDataReviewConsent(context);
+  const reviewComplete =
+    signableObjectSummaries.length > 0 &&
+    signableObjectSummaries.every(
+      (_, index) => consent.checked[`data-${index}`],
+    ) &&
+    statements.every((_, index) => consent.checked[`statement-${index}`]);
 
-  useEffect(() => {
-    const loadLinkedIds = async () => {
-      try {
-        const verusIdServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
-        setLinkedIds(verusIdServiceData.linked_ids || {});
-      } catch (_) {
-        setLinkedIds({});
-      } finally {
-        setLinkedIdsLoaded(true);
-      }
-    };
-
-    if (signedIn) {
-      setLinkedIdsLoaded(false);
-      loadLinkedIds();
-    } else {
-      setLinkedIdsLoaded(false);
-    }
-  }, [encryptedIds, signedIn]);
-
-  useEffect(() => {
-    const sorted = {};
-    for (const chainId of Object.keys(linkedIds)) {
-      sorted[chainId] = linkedIds[chainId]
-        ? Object.keys(linkedIds[chainId]).sort((a, b) => {
-            const nameA = linkedIds[chainId][a] || '';
-            const nameB = linkedIds[chainId][b] || '';
-            return nameA.localeCompare(nameB);
-          })
-        : [];
-    }
-    setSortedIds(sorted);
-  }, [linkedIds]);
-
-  useEffect(() => {
-    if (!selectedIdentity && linkedIdsLoaded) {
-      const chainIds = linkedIds[identityChain];
-      if (chainIds && Object.keys(chainIds).length > 0) {
-        const firstIAddress = Object.keys(chainIds)[0];
-        setSelectedIdentity({
-          chainId: identityChain,
-          iAddress: firstIAddress,
-          friendlyName: chainIds[firstIAddress] || firstIAddress,
-        });
-      }
-    }
-  }, [identityChain, linkedIds, linkedIdsLoaded, selectedIdentity]);
-
-  useEffect(() => {
-    if (waitingForSignin && signedIn && sendModalType == null) {
-      setWaitingForSignin(false);
-    }
-  }, [signedIn, sendModalType, waitingForSignin]);
-
-  const isIdentityAllowed = chainId => chainId === identityChain;
-
-  const handleSelectIdentity = (chainId, iAddress, friendlyName) => {
-    setSelectedIdentity({ chainId, iAddress, friendlyName });
-    setIdentitySheetVisible(false);
-  };
-
-  const handleSignin = () => {
-    if (matchingAccounts.length === 0) {
-      createAlert(
-        'No profile found',
-        `No ${requestIsTestnet ? 'testnet' : 'mainnet'} profile is available for this request.`,
-      );
-      return;
-    }
-
-    openAuthenticateUserModal({
-      [SEND_MODAL_USER_ALLOWLIST]: matchingAccounts,
-    });
-    setWaitingForSignin(true);
-  };
-
-  const toggleStatementAcknowledgement = index => {
-    setAcknowledgedStatements(current => ({
-      ...current,
-      [index]: !current[index],
-    }));
-  };
-
-  const toggleSignableObjectAcknowledgement = index => {
-    setAcknowledgedSignableObjects(current => ({
-      ...current,
-      [index]: !current[index],
-    }));
-  };
+  const approvalItems = [
+    ...statements.map((statement, index) => ({
+      key: `statement-${index}`,
+      title: statements.length === 1 ? 'Statement' : `Statement ${index + 1}`,
+      content: <DataReviewValue value={statement} />,
+    })),
+    ...signableObjectSummaries.map((item, index) => {
+      const value = readableValue(item);
+      const unreadable = value == null || value === '';
+      const bytes = item.objectDataBytesHex ?? item.signedBytesHex ?? '';
+      return {
+        key: `data-${index}`,
+        title: unreadable
+          ? 'Unreadable data'
+          : item.descriptorLabel || (item.type === 'Message' ? 'Message' : 'Data item'),
+        details: packetDetails(item),
+        unreadable,
+        bytes,
+        descriptorLabel: item.descriptorLabel,
+        content: unreadable ? (
+          <View>
+            <Text selectable style={approvalStyles.bytes}>
+              {bytes}
+            </Text>
+            <Text style={approvalStyles.size}>{`${item.size || 0} bytes`}</Text>
+          </View>
+        ) : (
+          <>
+            <DataReviewValue value={value} />
+            {item.descriptorVersion != null ? (
+              <View style={approvalStyles.itemNotice}>
+                <DataReviewNotice title="Includes descriptor metadata">
+                  Your signature covers this content and its descriptor. Both
+                  are available in details.
+                </DataReviewNotice>
+              </View>
+            ) : null}
+          </>
+        ),
+      };
+    }),
+  ];
 
   const handleContinue = async () => {
-    if (!reviewComplete) {
-      createAlert('Review required', 'Review and agree to every statement and data item before continuing.');
+    if (
+      inFlight.current ||
+      !identity.walletReady ||
+      !identity.selectedIdentity ||
+      !reviewComplete ||
+      identity.signerConflict
+    )
       return;
-    }
-
-    if (!signedIn) {
-      handleSignin();
-      return;
-    }
-
-    if (!selectedIdentity) {
-      setIdentitySheetVisible(true);
-      return;
-    }
-
-    setSigning(true);
-
+    inFlight.current = true;
+    setProcessing(true);
+    setError(null);
     try {
-      const detail = request.getDetails(detailIndex);
-      const coinObj = CoinDirectory.findCoinObj(selectedIdentity.chainId);
-      if (!coinObj) throw new Error("Unsupported signing chain.");
-
-      const updatedResponse = response || new GenericResponse();
+      const updatedResponse = new GenericResponse();
+      if (response?.details?.length)
+        updatedResponse.fromBuffer(response.toBuffer(), 0);
+      else if (response)
+        Object.assign(updatedResponse, response, {details: []});
       ensureGenericResponseSigner({
         response: updatedResponse,
-        systemID: coinObj.system_id,
-        identityID: selectedIdentity.iAddress,
+        systemID: identity.coinObj.system_id,
+        identityID: identity.selectedIdentity.iAddress,
       });
-
+      const sessionGuard = createRequestSessionGuard(() => {
+        if (currentContext.current !== context)
+          throw new Error('Review changed');
+        assertAuthenticationRequestsNotExpired(request);
+      }, identity.sessionScope);
+      sessionGuard.assertCurrent();
       const responseDetail = await buildDataPacketResponse({
-        coinObj,
-        identityAddress: selectedIdentity.iAddress,
-        dataPacketDetail: detail.data,
+        coinObj: identity.coinObj,
+        identityAddress: identity.selectedIdentity.iAddress,
+        dataPacketDetail: request.getDetails(detailIndex).data,
+        assertReviewCurrent: sessionGuard.assertCurrent,
+        sessionScope: sessionGuard.sessionScope,
       });
-
-      updatedResponse.details = updatedResponse.details || [];
-      updatedResponse.details.push(responseDetail);
-
+      sessionGuard.assertCurrent();
+      updatedResponse.details = [
+        ...(updatedResponse.details || []),
+        responseDetail,
+      ];
       updatedResponse.setFlags();
-
-      next(updatedResponse, [detailIndex]);
-    } catch (e) {
-      createAlert('Error', e.message || 'Failed to sign data packet.');
-      setSigning(false);
+      await next(updatedResponse, [detailIndex], {
+        autoDeliverOnComplete: true,
+        dataPacketSigned: true,
+        responseIdentityName: identity.selectedIdentity.friendlyName,
+      });
+    } catch (_) {
+      inFlight.current = false;
+      setProcessing(false);
+      setError(
+        'Unable to sign this data. Check your VerusID and connection, then try again.',
+      );
     }
   };
 
-  if (signing) {
-    return <AnimatedActivityIndicatorBox />;
-  }
-
   return (
-    <SafeAreaView style={styles.root}>
-      <IdentityPickerSheet
-        visible={identitySheetVisible}
-        linkedIds={linkedIds}
-        sortedIds={sortedIds}
-        isIdentityAllowed={isIdentityAllowed}
-        selectedIdentity={selectedIdentity}
-        onClose={() => setIdentitySheetVisible(false)}
-        onSelect={handleSelectIdentity}
-      />
-
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <MaterialCommunityIcons name="text-box-check-outline" size={48} color={Colors.primaryColor} />
-          <Text style={styles.headerTitle}>Data Signature Request</Text>
-          <Text style={styles.headerSubtitle}>
-            {requesterLabel} is requesting signatures over data shown below.
-          </Text>
-        </View>
-
-        <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Requester</Text>
-          </View>
-          <DetailRow title={requesterLabel} subtitle={signerIdentityID} />
-          <DetailRow
-            title={signerSystemName || signerSystemID}
-            subtitle={sigDateString ? `Signed ${sigDateString}` : 'Signed request'}
-            showBorder
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.identitySelectCard,
-            selectedIdentity && styles.identitySelectCardSelected,
-          ]}
-          onPress={() => signedIn ? setIdentitySheetVisible(true) : handleSignin()}
-          activeOpacity={0.7}
-        >
-          <View style={styles.identitySelectIconContainer}>
-            <MaterialCommunityIcons
-              name={selectedIdentity ? 'account-check' : 'account-question'}
-              size={28}
-              color={selectedIdentity ? Colors.verusGreenColor : Colors.primaryColor}
-            />
-          </View>
-          <View style={styles.identitySelectTextContainer}>
-            <Text style={styles.identitySelectLabel}>Sign With</Text>
-            <Text
-              style={[
-                styles.identitySelectName,
-                selectedIdentity && styles.identitySelectNameSelected,
-              ]}
-              numberOfLines={1}
-            >
-              {selectedIdentity
-                ? selectedIdentity.friendlyName && selectedIdentity.friendlyName !== selectedIdentity.iAddress
-                  ? convertFqnToDisplayFormat(selectedIdentity.friendlyName)
-                  : selectedIdentity.iAddress
-                : 'Select identity'}
-            </Text>
-            {selectedIdentity ? (
-              <Text style={styles.identitySelectAddress}>
-                {truncateAddress(selectedIdentity.iAddress)}
-              </Text>
-            ) : null}
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={22} color="#AAA" />
-        </TouchableOpacity>
-
-        {statements && statements.length > 0 ? (
-          <View style={styles.card}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Statements to Sign</Text>
-            </View>
-            {statements.map((statement, index) => (
-              <ReviewCheckbox
-                key={`${statement}-${index}`}
-                checked={!!acknowledgedStatements[index]}
-                onPress={() => toggleStatementAcknowledgement(index)}
-                title={`Statement ${index + 1}`}
-                subtitle={statement}
-                showBorder={index > 0}
-              />
-            ))}
-          </View>
-        ) : null}
-
-        <View style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Data to Sign</Text>
-          </View>
-          {signableObjectSummaries.map((item, index) => (
-            <SignableObjectReview
-              key={`${item.type}-${index}`}
-              item={item}
-              index={index}
-              checked={!!acknowledgedSignableObjects[index]}
-              onToggle={() => toggleSignableObjectAcknowledgement(index)}
-              showBorder={index > 0}
-            />
-          ))}
-        </View>
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <View style={styles.ctaCol}>
-          <Button
-            mode="contained"
-            onPress={cancel}
-            style={styles.secondaryCta}
-            contentStyle={styles.secondaryCtaContent}
-            labelStyle={styles.secondaryCtaLabel}
-          >
-            Deny
-          </Button>
-        </View>
-        <View style={styles.ctaCol}>
-          <Button
-            mode="contained"
-            onPress={handleContinue}
-            disabled={waitingForSignin || !reviewComplete}
-            style={styles.primaryCta}
-            contentStyle={styles.primaryCtaContent}
-            labelStyle={styles.primaryCtaLabel}
-          >
-            Continue
-          </Button>
-        </View>
-      </View>
-    </SafeAreaView>
+    <DataRequestReview
+      requestAction={`wants you to sign ${statements.length + signableObjectSummaries.length} ${statements.length + signableObjectSummaries.length === 1 ? 'item' : 'items'}`}
+      responseCaption={host => `The wallet sends the signatures to ${host}.`}
+      props={props}
+      identity={identity}
+      onContinue={handleContinue}
+      primaryLabel="Sign data"
+      disabled={
+        signableObjectSummaries.length === 0 &&
+        !approvalItems.some(item => !consent.checked[item.key])
+      }
+      approvalItems={approvalItems}
+      consent={consent}
+      processing={processing}
+      error={error}
+    />
   );
 };
 
-export default DataPacketRequestInfo;
+export default function DataPacketRequestInfo(props) {
+  return (
+    <OnboardingThemeProvider>
+      <DataPacketRequestInfoContent
+        key={`${props.detailIndex}:${props.detailsBufferString}`}
+        {...props}
+      />
+    </OnboardingThemeProvider>
+  );
+}

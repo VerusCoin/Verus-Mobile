@@ -16,8 +16,7 @@ import {
 import Styles from '../../../styles/index'
 import StandardButton from "../../StandardButton";
 import { Input } from 'react-native-elements'
-import { TextInput, Text } from 'react-native-paper'
-import Button from '../../Button'
+import { Button, TextInput, Text } from 'react-native-paper'
 import Colors from "../../../globals/colors";
 import ScanSeed from "../../ScanSeed";
 import { DLIGHT_PRIVATE, WYRE_SERVICE } from "../../../utils/constants/intervalConstants";
@@ -47,7 +46,7 @@ class ImportSeed extends Component {
 
     if (!seed || seed.length < 1) {
       if (this.props.failSeedSubmission(submission)) {
-        Alert.alert("Error", "Please enter a seed, WIF key or spending key.");
+        Alert.alert("Error", "Please enter a Secret Recovery Phrase, WIF key, or spending key.");
       }
       return;
     }
@@ -58,8 +57,8 @@ class ImportSeed extends Component {
       } catch (e) {
         if (this.props.failSeedSubmission(submission)) {
           Alert.alert(
-            "Invalid Seed",
-            "Please enter a valid 24 word seed phrase, or an extended spending key belonging to a Z address."
+            "Invalid Recovery Secret",
+            "Please enter a valid 24-word BIP39 Secret Recovery Phrase or an extended spending key belonging to a Z address."
           );
         }
         return;
@@ -87,23 +86,23 @@ class ImportSeed extends Component {
           >
             <View style={Styles.headerContainer}>
               <Text style={Styles.centralHeader}>
-                {"Import Existing WIF/Seed"}
+                {"Import Secret Recovery Phrase or Key"}
               </Text>
             </View>
             <View style={Styles.fullWidthFlexGrowCenterBlock}>
               <View style={Styles.wideCenterBlock}>
                 <Text style={[Styles.textWithGreyColor, Styles.centeredText]}>
                   {this.props.channel === WYRE_SERVICE
-                    ? "Enter or scan a 24 word seed phrase."
+                    ? "Enter or scan a 24-word Secret Recovery Phrase."
                     : this.props.channel === DLIGHT_PRIVATE
-                    ? "Enter or scan a 24 word seed phrase, or Z spending key."
-                    : "Enter or scan an existing spending key, WIF key, or seed phrase."}
+                    ? "Enter or scan a Secret Recovery Phrase or Z spending key."
+                    : "Enter or scan an existing spending key, WIF key, or Secret Recovery Phrase."}
                 </Text>
               </View>
               <View style={Styles.wideCenterBlock}>
                 <TextInput
                   onChangeText={(text) => this.setState({ seed: text })}
-                  label={"Seed"}
+                  label={"Recovery secret or key"}
                   underlineColor={Colors.primaryColor}
                   selectionColor={Colors.primaryColor}
                   value={this.state.seed}
@@ -135,7 +134,7 @@ class ImportSeed extends Component {
                   onPress={() =>
                     this.setState({ showSeed: !this.state.showSeed })
                   }
-                >{`${this.state.showSeed ? "Hide" : "Show"} seed`}</Button>
+                >{`${this.state.showSeed ? "Hide" : "Show"} Recovery Secret`}</Button>
               </View>
             </View>
             <View style={Styles.footerContainer}>

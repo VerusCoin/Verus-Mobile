@@ -20,6 +20,7 @@ import {coinsToSats, satsToCoins} from '../math';
 import {
   getAddressDeltas,
   getAddressUtxos,
+  getMempoolUnspentUtxos,
   getInfo,
 } from '../api/channels/vrpc/callCreators';
 import {
@@ -761,20 +762,46 @@ export const spendableKeyDetailsRequiresPassword = spendableKeyOrdinal => {
   return seedDetailsRequiresPassword(spendableKeyOrdinal);
 };
 
+export const SPENDABLE_KEY_DECRYPTION_FAILED =
+  'SPENDABLE_KEY_DECRYPTION_FAILED';
+
+const SPENDABLE_KEY_DECRYPTION_FAILED_MESSAGE =
+  'Unable to decrypt spendable key. Check the password and try again.';
+const SPENDABLE_KEY_ENCRYPTED_BIP39_PAYLOAD_LENGTHS = [60, 64, 68, 72, 76];
+
 export const spendableKeyDetailsOrdinalToMnemonic = ({
   spendableKeyOrdinal,
   password,
 }) => {
-  return seedDetailsOrdinalToMnemonic({
-    seedDetailsOrdinal: spendableKeyOrdinal,
-    ExpectedOrdinalClass: SpendableKeyDetailsOrdinalVDXFObject,
-    password,
-    invalidMessage: 'Request does not contain valid spendable key details.',
-    passwordRequiredMessage:
-      'This spendable key is encrypted. Enter the claim password.',
-    decryptErrorMessage:
-      'Unable to decrypt spendable key. Check the password and try again.',
-  });
+  const spendableKeyDetails = spendableKeyOrdinal?.data;
+
+  if (
+    spendableKeyOrdinal instanceof SpendableKeyDetailsOrdinalVDXFObject &&
+    spendableKeyDetails?.usesSaltedTaggedAes256Gcm() &&
+    !SPENDABLE_KEY_ENCRYPTED_BIP39_PAYLOAD_LENGTHS.includes(
+      spendableKeyDetails.data?.length,
+    )
+  ) {
+    throw new Error('Encrypted spendable key data is malformed.');
+  }
+
+  try {
+    return seedDetailsOrdinalToMnemonic({
+      seedDetailsOrdinal: spendableKeyOrdinal,
+      ExpectedOrdinalClass: SpendableKeyDetailsOrdinalVDXFObject,
+      password,
+      invalidMessage: 'Request does not contain valid spendable key details.',
+      passwordRequiredMessage:
+        'This spendable key is encrypted. Enter the claim password.',
+      decryptErrorMessage: SPENDABLE_KEY_DECRYPTION_FAILED_MESSAGE,
+    });
+  } catch (error) {
+    if (error?.message === SPENDABLE_KEY_DECRYPTION_FAILED_MESSAGE) {
+      error.code = SPENDABLE_KEY_DECRYPTION_FAILED;
+    }
+
+    throw error;
+  }
 };
 
 export const discoverSpendableKeyClaims = async ({
@@ -876,15 +903,13 @@ export const discoverSpendableKeyClaims = async ({
       );
     }
 
-    subtractBalanceMap(
-      balanceMap,
-      coinObj.system_id,
-      getDisplayFeeSats({
-        systemId: coinObj.system_id,
-        spendableUtxos,
-        identities,
-      }),
-    );
+    const displayFeeSats = getDisplayFeeSats({
+      systemId: coinObj.system_id,
+      spendableUtxos,
+      identities,
+    });
+
+    subtractBalanceMap(balanceMap, coinObj.system_id, displayFeeSats);
 
     const currencies = [];
 
@@ -909,6 +934,8 @@ export const discoverSpendableKeyClaims = async ({
       observedUtxos: utxosRes.result || [],
       utxos: spendableUtxos,
       currencies,
+      // The balances above are already net of this fee.
+      feeAmount: satsToCoins(displayFeeSats).toString(),
       identities,
       identityLookupError,
       identityLookupSucceeded,
@@ -1468,7 +1495,29 @@ export const preflightSpendableKeyClaim = async ({
     throw new Error(unsupportedIdentities[0].unsupportedReason);
   }
 
-  for (const system of claimPlan.systems) {
+  for (const plannedSystem of claimPlan.systems) {
+    // Recheck discovery inputs at funding time without changing observed balances.
+    const addresses = [
+      plannedSystem.claimAddress,
+      ...plannedSystem.identities.map(identity => identity.identityAddress),
+    ];
+    const unspentUtxos = await getMempoolUnspentUtxos(
+      plannedSystem.systemId,
+      addresses,
+      [
+        ...plannedSystem.utxos,
+        ...plannedSystem.identities.flatMap(identity => identity.utxos || []),
+      ],
+    );
+    const unspentKeys = new Set(unspentUtxos.map(utxoKey));
+    const system = {
+      ...plannedSystem,
+      utxos: plannedSystem.utxos.filter(utxo => unspentKeys.has(utxoKey(utxo))),
+      identities: plannedSystem.identities.map(identity => ({
+        ...identity,
+        utxos: (identity.utxos || []).filter(utxo => unspentKeys.has(utxoKey(utxo))),
+      })),
+    };
     const destinationAddress = destinationBySystem[system.systemId];
     const privateAddress = privateAddressBySystem[system.systemId];
     // Missing means the user opted out; explicit null means the wallet has no

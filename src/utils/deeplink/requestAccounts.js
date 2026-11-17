@@ -1,12 +1,14 @@
-export const isTestProfile = account => {
-  return Object.keys(account?.testnetOverrides || {}).length > 0;
-};
+import {accountIsTestnet} from '../account/accountNetwork';
+import {
+  createGenericRequestRejectionError,
+  GENERIC_REQUEST_REJECTION_CODES,
+} from './genericRequestRejection';
 
 export const getMatchingRequestAccounts = (accounts, requestIsTestnet) => {
   if (!Array.isArray(accounts)) return [];
 
   return accounts.filter(
-    account => isTestProfile(account) === requestIsTestnet,
+    account => accountIsTestnet(account) === requestIsTestnet,
   );
 };
 
@@ -16,15 +18,17 @@ export const assertRequestNetworkMatchesAccount = (
 ) => {
   if (account == null) return;
 
-  const accountIsTestnet = isTestProfile(account);
+  const testnetAccount = accountIsTestnet(account);
 
-  if (accountIsTestnet !== requestIsTestnet) {
-    throw new Error(
+  if (testnetAccount !== requestIsTestnet) {
+    throw createGenericRequestRejectionError(
+      GENERIC_REQUEST_REJECTION_CODES.NETWORK_MISMATCH,
       `This request was created for ${
         requestIsTestnet ? 'testnet' : 'mainnet'
       }, but the active profile uses ${
-        accountIsTestnet ? 'testnet' : 'mainnet'
+        testnetAccount ? 'testnet' : 'mainnet'
       }. Switch profiles and scan the request again.`,
+      {requestIsTestnet},
     );
   }
 };

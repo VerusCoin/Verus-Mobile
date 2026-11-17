@@ -3,10 +3,12 @@ import React from 'react';
 import {Text, TouchableOpacity, View} from 'react-native';
 import {Icon} from 'react-native-elements';
 import Colors from '../../globals/colors';
+import {fontStyle} from '../../globals/fonts';
 import styles from '../../styles';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
+import OnboardingBackButton from '../../components/OnboardingBackButton';
 
 const Header = () => {
   const navigation = useNavigation(); // Use the hook here
@@ -79,11 +81,60 @@ export const defaultHeaderOptions = ({navigation, params, route}) => ({
     backgroundColor: Colors.primaryColor,
   },
   headerTitleStyle: {
-    fontFamily: 'Avenir-Black',
-    fontWeight: 'normal',
+    ...fontStyle('black'),
     fontSize: 22,
     color: Colors.secondaryColor,
   },
   headerRight: () => <Header />,
   headerTintColor: Colors.secondaryColor,
+});
+
+const RedesignedHeaderRight = ({color}) => {
+  const dispatch = useDispatch();
+  const showBalance = useSelector(state => state.coins.showBalance);
+
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={showBalance ? 'Hide balances' : 'Show balances'}
+      onPress={() => dispatch({type: 'SET_BALANCE_SHOW'})}
+      style={{width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center'}}>
+      <MaterialCommunityIcons
+        name={showBalance ? 'eye-off-outline' : 'eye-outline'}
+        size={24}
+        color={color}
+      />
+    </TouchableOpacity>
+  );
+};
+
+// Every redesigned stack header goes back with the arrow button, never the iOS
+// "‹ Back" chevron and title.
+export const createRedesignedHeaderOptions = theme => ({
+  headerShown: true,
+  headerMode: 'screen',
+  headerStyle: {
+    backgroundColor: theme.colors.background,
+    shadowColor: 'transparent',
+    elevation: 0,
+  },
+  headerTitleStyle: {
+    ...fontStyle('semiBold'),
+    fontSize: 20,
+    color: theme.colors.textPrimary,
+  },
+  headerTintColor: theme.colors.textPrimary,
+  headerBackTitleVisible: false,
+  headerLeft: ({onPress}) =>
+    onPress ? <OnboardingBackButton onPress={onPress} /> : null,
+  headerLeftContainerStyle: {
+    paddingLeft: 16,
+  },
+  headerRightContainerStyle: {paddingRight: 16},
+  headerRight: () => <RedesignedHeaderRight color={theme.colors.textPrimary} />,
+});
+
+export const createSettingsHeaderOptions = theme => ({
+  ...createRedesignedHeaderOptions(theme),
+  headerRight: () => null,
 });

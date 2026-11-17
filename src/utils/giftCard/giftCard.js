@@ -2,6 +2,7 @@ import BigNumber from 'bignumber.js';
 import {captureIdentityUpdateContext, assertIdentityUpdateContext, validateIdentityUpdateContext, assertIdentityUpdateSigningAuthority} from '../identityUpdate/verifiedSubmission';
 import {Buffer} from 'buffer';
 import {entropyToMnemonic} from 'bip39';
+import {v4 as uuidv4} from 'uuid';
 import {
   CreateWalletBackupDetails,
   CreateWalletBackupDetailsOrdinalVDXFObject,
@@ -36,6 +37,7 @@ import {
   getBlockHash,
   getAddressMempool,
   getAddressUtxos,
+  getMempoolUnspentUtxos,
   getInfo,
   getSpendableUtxos,
   getTransaction,
@@ -75,6 +77,11 @@ export const GIFT_CARD_FUNDING_IDENTITY = 'identity';
 export const GIFT_CARD_FUNDING_BOTH = 'both';
 export const GIFT_CARD_FUNDING_STATUS_PENDING = 'pending';
 export const GIFT_CARD_FUNDING_STATUS_CONFIRMED = 'confirmed';
+export const GIFT_CARD_SHARE_ATTEMPT_TIMEOUT_MS = 10 * 60 * 1000;
+export const GIFT_CARD_SHARE_IN_PROGRESS_MESSAGE =
+  'Gift card sharing is in progress. Wait for it to finish before funding.';
+export const GIFT_CARD_REDEEMED_SHARE_MESSAGE =
+  'Claimed gift cards cannot be shared.';
 
 const DEFAULT_LABEL = 'Gift Card';
 const getUtxoKey = utxo => `${utxo.txid}:${utxo.outputIndex}`;
@@ -485,9 +492,11 @@ export const createGiftCard = async ({
   kdfIters = SEED_DETAILS_ENCRYPTION_ITERS_LOW,
   requestIsTestnet,
   activeCoinsForUser,
+  onProgress,
 }) => {
   const entropy = Buffer.from(await randomBytes(32));
   const mnemonic = entropyToMnemonic(entropy.toString('hex'));
+  onProgress?.({phase: 'protecting'});
   const spendableKey = await buildSeedDetails({
     SeedDetailsClass: SpendableKeyDetails,
     mnemonic,
@@ -503,6 +512,7 @@ export const createGiftCard = async ({
   });
   const requestBufferString = request.toBuffer().toString('hex');
   const requestUri = request.toWalletDeeplinkUri();
+  onProgress?.({phase: 'deriving-addresses'});
   const derived = await deriveSpendableKeyAddresses({
     mnemonic,
     requestIsTestnet,
@@ -521,6 +531,7 @@ export const createGiftCard = async ({
     encrypted,
     kdfIters: encrypted ? Number(kdfIters) : 0,
     sharedAt: null,
+    shareAttempt: null,
     requestUri,
     requestBufferString,
     addressesBySystem: derived.addressesBySystem,
@@ -645,6 +656,97 @@ export const hasGiftCardBeenShared = card => {
   return Number.isFinite(sharedAt) && sharedAt > 0;
 };
 
+export const getGiftCardShareAttempt = card => {
+  if (hasGiftCardBeenShared(card)) return null;
+
+  const attemptId = card?.shareAttempt?.id;
+  const startedAt = Number(card?.shareAttempt?.startedAt);
+
+  if (
+    typeof attemptId !== 'string' ||
+    attemptId.length === 0 ||
+    !Number.isFinite(startedAt) ||
+    startedAt <= 0
+  ) {
+    return null;
+  }
+
+  return {
+    id: attemptId,
+    startedAt,
+  };
+};
+
+export const hasGiftCardShareReservation = card => {
+  return getGiftCardShareAttempt(card) != null;
+};
+
+export const hasGiftCardShareInProgress = (card, now = Date.now()) => {
+  const attempt = getGiftCardShareAttempt(card);
+  const currentTime = Number(now);
+
+  if (attempt == null || !Number.isFinite(currentTime)) return false;
+  if (attempt.startedAt > currentTime) return true;
+
+  return (
+    currentTime - attempt.startedAt < GIFT_CARD_SHARE_ATTEMPT_TIMEOUT_MS
+  );
+};
+
+export const getGiftCardCapabilities = (card, now = Date.now()) => {
+  const isRedeemed =
+    card?.status?.state === GIFT_CARD_STATUS_REDEEMED ||
+    card?.status?.redeemed === true;
+  const isShared = hasGiftCardBeenShared(card);
+  const hasClaims = hasGiftCardClaims(card);
+  const hasPendingFunding = hasPendingGiftCardFunding(card);
+  const sharingInProgress = hasGiftCardShareInProgress(card, now);
+
+  return {
+    isRedeemed,
+    canShare:
+      !isRedeemed &&
+      !sharingInProgress &&
+      (isShared || !hasPendingFunding),
+    canFund:
+      canStartGiftCardFunding(card) &&
+      !hasGiftCardShareReservation(card) &&
+      !hasPendingFunding,
+    canCancel: !isRedeemed && hasClaims && !hasPendingFunding,
+    showFundingAddresses: canStartGiftCardFunding(card),
+  };
+};
+
+export const beginGiftCardShare = (
+  card,
+  attemptId = uuidv4(),
+  startedAt = Date.now(),
+) => {
+  if (hasGiftCardBeenShared(card)) return card;
+  if (hasGiftCardShareInProgress(card, startedAt)) {
+    throw new Error(GIFT_CARD_SHARE_IN_PROGRESS_MESSAGE);
+  }
+
+  if (typeof attemptId !== 'string' || attemptId.length === 0) {
+    throw new Error('Gift card share attempt must have an id.');
+  }
+
+  const normalizedStartedAt = Number(startedAt);
+
+  if (!Number.isFinite(normalizedStartedAt) || normalizedStartedAt <= 0) {
+    throw new Error('Gift card share attempt must have a valid start time.');
+  }
+
+  return {
+    ...card,
+    shareAttempt: {
+      id: attemptId,
+      startedAt: normalizedStartedAt,
+    },
+    updatedAt: normalizedStartedAt,
+  };
+};
+
 export const canStartGiftCardFunding = card => {
   if (
     card?.status?.state === GIFT_CARD_STATUS_REDEEMED ||
@@ -673,6 +775,40 @@ export const markGiftCardShared = (card, sharedAt = Date.now()) => {
   return {
     ...card,
     sharedAt: normalizedSharedAt,
+    updatedAt: Date.now(),
+  };
+};
+
+export const completeGiftCardShare = (
+  card,
+  attemptId,
+  sharedAt = Date.now(),
+) => {
+  if (hasGiftCardBeenShared(card)) {
+    return card?.shareAttempt == null
+      ? card
+      : {
+          ...card,
+          shareAttempt: null,
+        };
+  }
+
+  if (card?.shareAttempt?.id !== attemptId) {
+    throw new Error('Gift card share attempt is no longer active.');
+  }
+
+  return {
+    ...markGiftCardShared(card, sharedAt),
+    shareAttempt: null,
+  };
+};
+
+export const cancelGiftCardShare = (card, attemptId) => {
+  if (card?.shareAttempt?.id !== attemptId) return card;
+
+  return {
+    ...card,
+    shareAttempt: null,
     updatedAt: Date.now(),
   };
 };
@@ -1916,9 +2052,15 @@ const getIdentityFundingInputPlan = async ({
     );
   }
 
+  const identityFunding = getIdentityFunding(identity, identityFundingByKey);
+  const identityUtxos = await getMempoolUnspentUtxos(
+    group.systemId,
+    [identity.identityAddress],
+    identityFunding.utxos || [],
+  );
   const identityFeeUtxos = getIdentityFeeUtxos(
     group.systemId,
-    getIdentityFunding(identity, identityFundingByKey),
+    {...identityFunding, utxos: identityUtxos},
     requiredFeeSats.plus(SPENDABLE_KEY_CLAIM_FEE_SATS),
     BigNumber(0),
     excludedUtxos,
@@ -2020,12 +2162,17 @@ export const preflightGiftCardFunding = async ({
   identityFunding,
   activeCoinsForUser,
   activeAccount,
+  onProgress,
 }) => {
   const reviewContext = captureIdentityUpdateContext();
   if (!canStartGiftCardFunding(card) && hasGiftCardBeenShared(card)) {
     throw new Error(
       'Shared gift cards are single-use and cannot be funded after funds or a funding attempt have been recorded. Create a new gift card instead.',
     );
+  }
+
+  if (hasGiftCardShareReservation(card)) {
+    throw new Error(GIFT_CARD_SHARE_IN_PROGRESS_MESSAGE);
   }
 
   if (card?.status?.state === GIFT_CARD_STATUS_REDEEMED || card?.status?.redeemed) {
@@ -2048,6 +2195,7 @@ export const preflightGiftCardFunding = async ({
   );
   const requestedSystems = groups.map(group => group.systemId);
 
+  onProgress?.({phase: 'checking-protected-card'});
   await verifyGiftCardAddresses({
     card,
     password,
@@ -2057,7 +2205,12 @@ export const preflightGiftCardFunding = async ({
 
   const transactions = [];
 
-  for (const group of groups) {
+  for (const [groupIndex, group] of groups.entries()) {
+    onProgress?.({
+      phase: 'calculating-fees',
+      current: groupIndex + 1,
+      total: groups.length,
+    });
     let reservedFundingUtxos = [];
     const cardAddress = card.addressesBySystem[group.systemId];
     const sourceCoin =
@@ -2323,6 +2476,7 @@ const normalizeGiftCardCards = cards => {
       ...card,
       id: cardId,
       sharedAt: hasGiftCardBeenShared(card) ? Number(card.sharedAt) : null,
+      shareAttempt: getGiftCardShareAttempt(card),
     };
 
     return normalizedCards;
@@ -2371,6 +2525,7 @@ const getGiftCardPersistenceSnapshot = card => {
     createdAt: card.createdAt,
     updatedAt: card.updatedAt,
     sharedAt: hasGiftCardBeenShared(card) ? Number(card.sharedAt) : null,
+    shareAttempt: getGiftCardShareAttempt(card),
     requestIsTestnet: card.requestIsTestnet,
     encrypted: card.encrypted,
     kdfIters: card.kdfIters,

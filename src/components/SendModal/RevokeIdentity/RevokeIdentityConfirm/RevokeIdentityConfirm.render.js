@@ -1,52 +1,91 @@
 import React from 'react';
-import {Text} from 'react-native-paper';
-import { ScrollView, View, SafeAreaView } from 'react-native';
-import Button from '../../../Button';
-import Colors from '../../../../globals/colors';
-import Styles from '../../../../styles';
-import VerusIdObjectData from '../../../VerusIdObjectData';
+import AppButton from '../../../AppButton';
+import RevokeRecoverFlowScaffold, {
+  RevokeRecoverStepCopy,
+} from '../../../../containers/RevokeRecover/RevokeRecoverFlowScaffold';
+import {
+  RevokeRecoverAcknowledgement,
+  RevokeRecoverLoadingState,
+  RevokeRecoverNotice,
+} from '../../../../containers/RevokeRecover/RevokeRecoverFlowParts';
+import {
+  IdentityContext,
+  RecoveryValue,
+  identityName,
+} from '../../../../containers/RevokeRecover/RecoveryValues';
 
-export const RevokeIdentityConfirmRender = ({ fee, feeCurrency, targetId, friendlyNames, goBack, submitData, ownedByUser, ownedAddress }) => {
+export const RevokeIdentityConfirmRender = ({
+  acknowledged,
+  fee,
+  feeCurrency,
+  goBack,
+  loading,
+  networkName,
+  onAcknowledgedChange,
+  revocationId,
+  submitData,
+  submitError,
+  targetId,
+}) => {
+  if (loading)
+    return (
+      <RevokeRecoverFlowScaffold
+        backDisabled
+        showBack={false}
+        showProgress={false}
+        headerTitle="Submitting revocation"
+        keyboardAvoiding={false}>
+        <RevokeRecoverLoadingState body="Keep Verus Mobile open while the transaction is submitted." />
+      </RevokeRecoverFlowScaffold>
+    );
+
   return (
-    <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite, height: '100%' }}>
-      <VerusIdObjectData
-        verusId={targetId}
-        friendlyNames={friendlyNames}
-        ownedByUser={false}
-        ownedAddress={ownedAddress}
-        updates={{
-          ["Status"]: {
-            data: "Revoked"
-          }
-        }}
-        StickyFooterComponent={
-          <View
-            style={{
-              backgroundColor: 'white',
-              width: '100%',
-              flexDirection: 'column',
-              justifyContent: 'space-evenly',
-              paddingVertical: 20
-            }}>
-            <Text style={{textAlign: 'center', marginBottom: 12}}>Network fee: {fee} {feeCurrency}</Text>
-            <View style={{flexDirection: 'row', justifyContent: 'space-evenly'}}>
-            <Button
-              textColor={Colors.warningButtonColor}
-              style={{ width: 148 }}
-              onPress={goBack}>
-              Back
-            </Button>
-            <Button
-              buttonColor={Colors.verusGreenColor}
-              textColor={Colors.secondaryColor}
-              style={{ width: 148 }}
-              onPress={submitData}>
-              Revoke
-            </Button>
-            </View>
-          </View>
-        }
+    <RevokeRecoverFlowScaffold
+      headerTitle="Review revocation"
+      error={submitError}
+      onBack={goBack}
+      progress={0.85}
+      actions={submitError ? (
+        <AppButton onPress={goBack} testID="revokeRecover.reviewAgain">
+          Review again
+        </AppButton>
+      ) : (
+        <>
+          <RevokeRecoverAcknowledgement
+            label="I understand this VerusID will be disabled until it is recovered."
+            onValueChange={onAcknowledgedChange}
+            value={acknowledged}
+          />
+          <AppButton
+            disabled={!acknowledged}
+            onPress={submitData}
+            testID="revokeRecover.submit"
+            variant="destructive">
+            Submit revocation
+          </AppButton>
+        </>
+      )}>
+      <IdentityContext
+        name={identityName(targetId)}
+        networkName={networkName}
+        status="Active → Revoked"
       />
-    </SafeAreaView>
+      <RevokeRecoverStepCopy body="This disables the VerusID until its recovery authority restores it. Check the identity before signing." />
+      <RecoveryValue
+        label="Revocation authority"
+        value={identityName(revocationId)}
+      />
+      <RevokeRecoverStepCopy />
+      <RecoveryValue
+        label="Identity address"
+        value={targetId?.identity?.identityaddress}
+        technical
+      />
+      <RevokeRecoverStepCopy />
+      <RecoveryValue label="Network fee" value={`${fee} ${feeCurrency}`} />
+      {submitError ? (
+        <RevokeRecoverNotice tone="danger">{submitError}</RevokeRecoverNotice>
+      ) : null}
+    </RevokeRecoverFlowScaffold>
   );
 };

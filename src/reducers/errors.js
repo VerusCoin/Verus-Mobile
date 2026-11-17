@@ -95,7 +95,7 @@ export const errors = (state = {
         for (const newChannel of action.payload.channels) {
           if (!_state[errorKey][newChannel]) {
             _state[errorKey] = {
-              ...state[errorKey],
+              ..._state[errorKey],
               [newChannel]: {},
             };
           }

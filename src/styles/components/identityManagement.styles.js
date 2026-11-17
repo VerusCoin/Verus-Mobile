@@ -1,0 +1,25 @@
+import {Platform, StyleSheet} from 'react-native';
+
+export const identityManagementStyles = StyleSheet.create({
+  screen: {flex: 1},
+  scroll: {flex: 1, minHeight: 0, overflow: 'hidden'},
+  content: {flexGrow: 1, paddingHorizontal: 20, paddingTop: 24, paddingBottom: 28},
+  footer: {paddingTop: 16},
+  footerCompact: {paddingTop: 8},
+  section: {gap: 12},
+  group: {marginTop: 24},
+  heading: {marginBottom: 24, gap: 4},
+  flexible: {flex: 1, minWidth: 0},
+  fact: {minHeight: 52, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 10, flexDirection: 'row', alignItems: 'center'},
+  factValue: {flex: 1, textAlign: 'right'},
+  stackedFact: {paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 4},
+  identifier: {fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 12, lineHeight: 17},
+  infoButton: {width: 44, height: 44, alignItems: 'center', justifyContent: 'center'},
+  checkbox: {minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8},
+  returnAddress: {paddingLeft: 34, gap: 4},
+  feeSource: {borderTopWidth: StyleSheet.hairlineWidth},
+  warning: {marginTop: 16, borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 8},
+  changePanel: {borderRadius: 18, padding: 16, gap: 8, marginTop: 8},
+  changeLabel: {marginTop: 4},
+  skeleton: {gap: 12},
+});

@@ -39,6 +39,8 @@ import {validateLookupBinding} from '../api/channels/verusid/requests/lookupBind
 import {identityOutputAmounts} from '../identityManagement/identityFunds';
 import {validatePrivateAddress} from '../identityManagement/identityDefinition';
 import {convertFqnToDisplayFormat} from '../fullyqualifiedname';
+import {withRegistrationChainContextRetry} from './chainContext';
+import {registrationBroadcastRefusal} from './progress';
 
 const inFlight = new Map();
 const verifiedReceipts = new Map();
@@ -153,11 +155,15 @@ export const registrationReview = job => {
     displayName: job.displayName,
     identityAddress: job.identityAddress,
     identity: copy(job.identity),
+    parentName: job.request.parentName || null,
+    initialQuote: copy(job.commitment.prepared.quote),
+    registrationProblem: job.registrationProblem || null,
     quote: copy(job[stage].prepared.quote),
     commitmentTxid: job.commitment.txid,
     commitmentFee: registrationCommitmentFee(job),
     registrationTxid: job.registration?.txid,
     commitmentHeight: job.commitment.height,
+    commitmentBroadcastAt: job.commitment.broadcastAt || (job.status === 'commitment_broadcast' ? job.updatedAt : null),
     lastError: job.lastError || null,
     createdAt: job.createdAt,
   };
@@ -308,9 +314,15 @@ const normalizeIdentityChoices = async (request, context) => {
 
     const expectedAddress = toIAddress(value, request.rootSystemName);
     const client = VrpcProvider.getVerusIdInterface(request.systemId);
-    const result = registrationRpcResult(await guarded(context,
-      () => client.interface.getIdentity(value)), 'Find identity');
-    responseIdentityName(request, expectedAddress, result);
+    let result;
+    try {
+      result = registrationRpcResult(await guarded(context,
+        () => client.interface.getIdentity(value)), 'Find identity');
+      responseIdentityName(request, expectedAddress, result);
+    } catch (error) {
+      error.field = field;
+      throw error;
+    }
     request[field] = expectedAddress;
   }
   return request;
@@ -429,13 +441,17 @@ const checkIdentityAuthorities = async (request, identityAddress, context, respo
   const rpc = VrpcProvider.getVerusIdInterface(request.systemId).interface;
   for (const id of new Set([request.recoveryAuthority, request.revocationAuthority].filter(Boolean))) {
     if (id === identityAddress) continue;
-    const response = responses[id] || registrationRpcResult(
-      await guarded(context, () => rpc.getIdentity(id)), 'Get identity authority',
-    );
+    const field = request.recoveryAuthority === id ? 'recoveryAuthority' : 'revocationAuthority';
+    let response;
+    try {
+      response = responses[id] || registrationRpcResult(
+        await guarded(context, () => rpc.getIdentity(id)), 'Get identity authority',
+      );
+    } catch (error) { error.field = field; throw error; }
     responses[id] = response;
     const identity = response?.identity;
     if (identity?.identityaddress !== id || (identity.flags & 0x8000)) {
-      throw new Error('Recovery and revocation authorities must be existing, unrevoked identity i-addresses.');
+      throw Object.assign(new Error('Recovery and revocation authorities must be existing, unrevoked identity i-addresses.'), {field, code: 'INVALID_AUTHORITY'});
     }
   }
 };
@@ -444,7 +460,8 @@ export const resolveRegistration = async (request, requestContext) => {
   const context = createRegistrationContext(requestContext);
   request = await normalizeRegistrationRequest(request, context);
   const client = VrpcProvider.getVerusIdInterface(request.systemId);
-  const result = await guarded(context, () => client.resolveIdentityRegistration(sdkRequest(request)));
+  const result = await withRegistrationChainContextRetry(() =>
+    guarded(context, () => client.resolveIdentityRegistration(sdkRequest(request))));
   validateRegistrationQuote(result.quote);
   const signingAddress = request.signingAddress;
   assertPolicyCanBeSigned(result.policy, signingAddress);
@@ -523,14 +540,14 @@ const buildCommitment = async (request, saltHex, approvedCosts, context, replace
 
   let built;
   try {
-    built = await guarded(context, () => client.createNameReservationTransaction({
+    built = await withRegistrationChainContextRetry(() => guarded(context, () => client.createNameReservationTransaction({
       ...sdkRequest(request),
       controller: request.signingAddress,
       salt: Buffer.from(saltHex, 'hex'),
       funding,
       changeAddress: request.fundingAddress,
       approvedCosts: copy(approvedCosts),
-    }));
+    })));
   } catch (error) {
     if (error.code === 'INSUFFICIENT_FUNDS') {
       throw errorWithCode('INSUFFICIENT_FUNDS',
@@ -640,10 +657,20 @@ export const getRegistrationReview = async (jobId, requestContext) => {
   return registrationReview({...job, identityNames});
 };
 
+// Read-only second-payment price, including when this fixed payer cannot fund
+// a transaction yet. It creates no plan, approval, signature, or payment.
+export const getRegistrationEstimate = async (jobId, requestContext) => {
+  const context = createRegistrationContext(requestContext);
+  const job = await readJob(jobId, context);
+  const resolved = await resolveRegistration(job.request, context);
+  return {...registrationReview(job), quote: copy(resolved.quote),
+    currencyNames: resolved.currencyNames, identityNames: resolved.identityNames};
+};
+
 const buildRegistration = async (job, identity, approvedCosts, context) => {
   const funding = await guarded(context, () => getIdentityRegistrationFunding(job.systemId, job.fundingAddress));
   const client = VrpcProvider.getVerusIdInterface(job.systemId);
-  const prepared = await withCalculatedFee(costs => guarded(context, () => client.createIdentityRegistrationTransaction({
+  const prepared = await withCalculatedFee(costs => withRegistrationChainContextRetry(() => guarded(context, () => client.createIdentityRegistrationTransaction({
     reservation: copy(job.reservation),
     commitment: {
       txid: job.commitment.txid,
@@ -662,7 +689,7 @@ const buildRegistration = async (job, identity, approvedCosts, context) => {
     changeAddress: job.fundingAddress,
     commitmentFee: job.commitment.prepared.quote.commitmentFee,
     approvedCosts: copy(costs),
-  })), approvedCosts);
+  }))), approvedCosts);
   validateRegistrationQuote(prepared.quote);
   assertPreparedCanBeSigned(prepared, job.signingAddress);
   verifyRegistrationFundingSource(prepared, job);
@@ -959,7 +986,7 @@ const transactionEvidence = async (job, stage, context) => {
   if (!Number.isSafeInteger(result.confirmations) || result.confirmations < 1 || !result.blockhash) {
     return {found: true, confirmed: false};
   }
-  const block = registrationRpcResult(await guarded(context, () => rpc.getBlock(result.blockhash, 1)), 'Check registration block');
+  const block = registrationRpcResult(await guarded(context, () => rpc.getBlock(result.blockhash, true)), 'Check registration block');
   if (
     block.hash !== result.blockhash ||
     !Number.isSafeInteger(block.height) ||
@@ -969,7 +996,7 @@ const transactionEvidence = async (job, stage, context) => {
   ) {
     return {found: true, confirmed: false};
   }
-  const activeBlock = registrationRpcResult(await guarded(context, () => rpc.getBlock(String(block.height), 1)), 'Check active registration block');
+  const activeBlock = registrationRpcResult(await guarded(context, () => rpc.getBlock(String(block.height), true)), 'Check active registration block');
   const includesTransaction = Array.isArray(block.tx) && block.tx.some(tx =>
     (typeof tx === 'string' ? tx : tx?.txid) === transaction.txid
   );
@@ -1009,7 +1036,7 @@ const checkedTip = (info, response) => {
 const currentTip = async (job, context) => {
   const rpc = VrpcProvider.getVerusIdInterface(job.systemId).interface;
   const info = await currentChainInfo(job, context);
-  return checkedTip(info, await guarded(context, () => rpc.getBlock(String(info.blocks), 1)));
+  return checkedTip(info, await guarded(context, () => rpc.getBlock(String(info.blocks), true)));
 };
 
 const reconcileJob = async (job, context) => {
@@ -1089,14 +1116,18 @@ const reconcileJob = async (job, context) => {
       }, context);
     }
 
+    if (unspent.scriptPubKey?.hex !== job.commitment.prepared.outputPlan[job.commitment.vout].scriptHex) {
+      throw new Error('Name commitment is not confirmed on the current active chain.');
+    }
+    // A new block can arrive between the tip read and the output read, and a
+    // server index can lag one block. Keep waiting; the next check reads again.
     if (
       unspent.bestblock !== tip.hash ||
       !Number.isSafeInteger(unspent.confirmations) ||
       unspent.confirmations < 1 ||
-      tip.height - unspent.confirmations + 1 !== commitment.height ||
-      unspent.scriptPubKey?.hex !== job.commitment.prepared.outputPlan[job.commitment.vout].scriptHex
+      tip.height - unspent.confirmations + 1 !== commitment.height
     ) {
-      throw new Error('Name commitment is not confirmed on the current active chain.');
+      return job;
     }
     const status = job.registration?.signedHex
       ? (job.status === 'registration_expired' ? 'registration_expired' : 'registration_signed')
@@ -1109,7 +1140,7 @@ const reconcileJob = async (job, context) => {
         height: commitment.height,
         blockHash: commitment.blockHash,
       },
-      lastError: status === 'registration_expired' ? job.lastError : null,
+      lastError: job.registration?.signedHex ? job.lastError : null,
     }, context);
   }
 
@@ -1121,7 +1152,7 @@ const reconcileJob = async (job, context) => {
     commitment: {...job.commitment, height: undefined, blockHash: undefined},
     lastError: expired
       ? 'The commitment transaction expired before confirmation. Its saved recovery data has been retained.'
-      : null,
+      : commitment?.found ? null : job.lastError,
   }, context);
 };
 
@@ -1234,7 +1265,7 @@ const broadcastSaved = async (job, stage, context) => {
   // Send them together and bind every unspent result to that verified tip.
   const prevouts = transaction.prepared.prevouts;
   const [blockResponse, ...responses] = await guarded(context, () => client.interface.requestMany([
-    new GetBlockRequest(job.systemId, String(info.blocks), 1),
+    new GetBlockRequest(job.systemId, String(info.blocks), true),
     ...prevouts.map(prevout => new GetTxOutRequest(job.systemId, prevout.txid, prevout.vout, true)),
   ]));
   const tip = checkedTip(info, blockResponse);
@@ -1255,6 +1286,10 @@ const broadcastSaved = async (job, stage, context) => {
   assertRegistrationContext(context);
   verifyRegistrationFundingSource(transaction.prepared, job, transaction.signedHex);
 
+  // Persist the first send time before contacting the network. Retries keep it.
+  const broadcastAt = transaction.broadcastAt || Date.now();
+  job = await patchJob(job, {[stage]: {...transaction, broadcastAt}}, context);
+
   try {
     const response = await guarded(context, () => client.sendIdentityRegistrationTransaction(transaction.prepared, transaction.signedHex, job.fundingAddress));
     const txid = registrationRpcResult(response, 'Send registration transaction');
@@ -1273,9 +1308,10 @@ const broadcastSaved = async (job, stage, context) => {
     // retries; never regenerate the salt or sign a replacement on this path.
     // The locally persisted txid is authoritative even if error details differ.
     assertRegistrationContext(context);
-    const lastError = 'Broadcast could not be confirmed. Check status, then retry the same saved transaction if needed.';
+    const lastError = registrationBroadcastRefusal(error) ||
+      'Broadcast could not be confirmed. Check status, then retry the same saved transaction if needed.';
     job = await patchJob(job, {
-      [stage]: {...transaction, broadcastStatus: 'unknown'},
+      [stage]: {...transaction, broadcastAt, broadcastStatus: 'unknown'},
       lastError,
     }, context);
 

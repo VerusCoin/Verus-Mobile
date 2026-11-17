@@ -1,20 +1,38 @@
 const mockHandleAuthentication = jest.fn();
+const mockDeliverResponse = jest.fn();
 const mockHandleEncryption = jest.fn();
 let mockState;
 
-jest.mock('react-native', () => ({View: 'View', TouchableOpacity: 'TouchableOpacity'}));
-jest.mock('react-native-paper', () => ({Portal: 'Portal', Text: 'Text'}));
-jest.mock('react-redux', () => ({
-  useSelector: selector => selector(mockState),
+jest.mock('react-native', () => require('../../../tests/helpers/mockReactNative')({
+  StyleSheet: {create: styles => styles},
+  View: 'View',
+  TouchableOpacity: 'TouchableOpacity',
 }));
+jest.mock('react-native-paper', () => ({Portal: 'Portal', Text: 'Text'}));
+jest.mock('react-redux', () => {
+  const dispatch = jest.fn();
+  return {useDispatch: () => dispatch, useSelector: selector => selector(mockState)};
+});
 jest.mock('../../../store', () => ({getState: () => mockState}));
-jest.mock('react-native-safe-area-context', () => ({useSafeAreaInsets: () => ({top: 0})}));
+jest.mock('react-native-safe-area-context', () => ({SafeAreaProvider: 'SafeAreaProvider', useSafeAreaInsets: () => ({top: 0})}));
 jest.mock('verusid-ts-client', () => ({primitives: require('verus-typescript-primitives')}));
 jest.mock('../../../styles', () => ({}));
 jest.mock('../../../globals/colors', () => ({}));
 jest.mock('../../../components/AnimatedActivityIndicatorBox', () => 'ActivityIndicator');
-jest.mock('../../../components/ListSelectionModal/ListSelectionModal', () => 'SelectionModal');
-jest.mock('../../../components/VerusIdDetailsModal/VerusIdDetailsModal', () => 'IdentityModal');
+jest.mock('../../../components/AnimatedSuccessCheckmark', () => 'SuccessCheckmark');
+jest.mock('../../../components/AppButton', () => 'AppButton');
+jest.mock('../../../components/BottomSheetModal', () => 'BottomSheetModal');
+jest.mock('../../../components/NeutralCheckMark', () => 'NeutralCheckMark');
+jest.mock('../../../components/SheetScrollView', () => 'SheetScrollView');
+jest.mock('../../../theme/onboarding', () => ({useOnboardingTheme: () => ({typography: {}, colors: {}})}));
+jest.mock('../../../components/SelectionSheet', () => ({__esModule: true, default: 'SelectionSheet', SelectionRow: 'SelectionRow'}));
+jest.mock('../../../components/useSheetDismissal', () => () => ({close: jest.fn(), dismiss: jest.fn(), onClosed: jest.fn()}));
+jest.mock('../../../containers/DeepLink/components/RequestReview/DeepLinkVerusIdDetailsSheet', () => 'VerusIdDetailsSheet');
+jest.mock('../../../containers/DeepLink/GenericRequestLoading', () => ({
+  __esModule: true,
+  default: 'GenericRequestLoading',
+  GENERIC_REQUEST_LOADING_STEPS: {},
+}));
 jest.mock('../../../containers/DeepLink/InvoiceInfo/InvoiceInfo', () => 'InvoiceInfo');
 jest.mock('../../../containers/DeepLink/AuthenticationRequestInfo/AuthenticationRequestInfo', () => 'AuthenticationRequestInfo');
 jest.mock('../../../containers/DeepLink/IdentityUpdateRequestInfo/IdentityUpdateRequestInfo', () => 'IdentityUpdateRequestInfo');
@@ -29,18 +47,23 @@ jest.mock('../../deeplink/handlers/authenticationRequestDetailsHandler', () => (
 jest.mock('../../deeplink/handlers/verusPayInvoiceDetailsHandler', () => ({}));
 jest.mock('../../deeplink/handlers/identityUpdateRequestDetailsHandler', () => ({}));
 jest.mock('../../deeplink/handlers/provisionIdentityDetailsHandler', () => ({}));
-jest.mock('../../deeplink/handlers/appEncryptionRequestHandler', () => ({
-  handleAppEncryptionRequestVDXFObject: mockHandleEncryption,
-}));
+jest.mock('../../deeplink/handlers/appEncryptionRequestHandler', () => ({handleAppEncryptionRequestVDXFObject: mockHandleEncryption}));
 jest.mock('../../deeplink/handlers/createWalletBackupDetailsHandler', () => ({}));
 jest.mock('../../deeplink/handlers/spendableKeyDetailsHandler', () => ({}));
 jest.mock('../../deeplink/handlers/userDataRequestHandler', () => ({}));
 jest.mock('../../deeplink/handlers/dataPacketRequestHandler', () => ({}));
+jest.mock('../../deeplink/genericRequestDelivery', () => ({
+  GENERIC_REQUEST_DELIVERY_TYPES: {NONE: 'none', POST: 'post', REDIRECT: 'redirect'},
+  createGenericResponseDelivery: () => mockDeliverResponse,
+  getGenericRequestDeliveryInfo: () => ({type: 'none'}),
+}));
+jest.mock('../../deeplink/pendingDeeplinkStorage', () => ({markPendingDeeplinkComplete: jest.fn()}));
 jest.mock('../../deeplink/isDeeplinkHandlerInstalled', () => ({
   isDeeplinkHandlerInstalled: async () => false,
 }));
 jest.mock('../../api/channels/verusid/callCreators', () => ({}));
 jest.mock('../../../actions/actions/alert/dispatchers/alert', () => ({createAlert: jest.fn()}));
+jest.mock('../../../actions/actionCreators', () => ({resetDeeplinkData: jest.fn()}));
 
 const React = require('react');
 const {act, create} = require('react-test-renderer');
@@ -71,24 +94,24 @@ describe('generic response network context during request handling', () => {
     jest.clearAllMocks();
     mockState = {
       deeplink: {passthrough: {}, requestId: 1},
-      authentication: {signedIn: true, activeAccount: {accountHash: 'profile'}, sessionEpoch: 1},
+      authentication: {signedIn: true, activeAccount: {accountHash: 'profile'}, accounts: [{accountHash: 'profile'}], sessionEpoch: 1},
       settings: {generalWalletSettings: {enableExperimentalGenericRequests: true}},
     };
+
     mockHandleAuthentication.mockImplementation(async (_request, response) => ({
       response,
       displayProps: {},
       handledIndices: [],
     }));
-    mockHandleEncryption.mockImplementation(async (_request, response) => ({
-      response, displayProps: {}, handledIndices: [],
-    }));
+    mockDeliverResponse.mockResolvedValue({type: 'none'});
+    mockHandleEncryption.mockImplementation(async (_request, response) => ({response, displayProps: {}, handledIndices: []}));
   });
 
   afterEach(() => {
     if (renderer) act(() => renderer.unmount());
   });
 
-  it('stops processing later request details after a failed handler cancels the flow', async () => {
+  it('stops processing later request details after a failed handler ends the flow on the error screen', async () => {
     mockHandleAuthentication.mockRejectedValueOnce(new Error('Invalid first detail'));
     const cancel = jest.fn();
     const warning = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -96,8 +119,12 @@ describe('generic response network context during request handling', () => {
       renderer = create(<GenericRequestHome deeplinkData={requestHex('original', 2)} navigation={{navigate: jest.fn()}} cancel={cancel} />);
     });
     expect(mockHandleAuthentication).toHaveBeenCalledTimes(1);
+    expect(createAlert).not.toHaveBeenCalled();
+    const loading = renderer.root.findByType('GenericRequestLoading');
+    expect(loading.props.error).toMatchObject({title: 'Cannot open request', canRetry: true});
+    expect(cancel).not.toHaveBeenCalled();
+    act(() => loading.props.onCancel());
     expect(cancel).toHaveBeenCalledTimes(1);
-    expect(createAlert).toHaveBeenCalledWith('Error', 'Invalid first detail');
     warning.mockRestore();
   });
 
@@ -162,7 +189,7 @@ describe('generic response network context during request handling', () => {
     expect(mockHandleEncryption).toHaveBeenCalledTimes(2);
   });
 
-  it('carries the originating encryption approval session into the completion route', async () => {
+  it('delivers the approved encryption response once its request is complete', async () => {
     const request = new GenericRequest({details: [
       new AppEncryptionRequestOrdinalVDXFObject({data: new AppEncryptionRequestDetails()}),
     ]});
@@ -173,9 +200,13 @@ describe('generic response network context during request handling', () => {
       data: new AuthenticationResponseDetails(),
     })]});
     await act(async () => screen.props.next(response, [0]));
-    expect(props.navigation.navigate).toHaveBeenCalledWith('GenericRequestComplete', expect.objectContaining({
-      appEncryptionSessionKey: getAppEncryptionSessionKey(mockState),
-    }));
+    expect(mockDeliverResponse).toHaveBeenCalledTimes(1);
+    const [{requestBufferString, responseBufferString}] = mockDeliverResponse.mock.calls[0];
+    expect(requestBufferString).toBe(props.deeplinkData);
+    const received = new GenericResponse();
+    received.fromBuffer(Buffer.from(responseBufferString, 'hex'));
+    expect(received.details).toHaveLength(1);
+    expect(props.navigation.navigate).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -194,12 +225,11 @@ describe('generic response network context during request handling', () => {
       })],
     });
     if (isTestnet) request.setIsTestnet();
-    const navigation = {navigate: jest.fn()};
 
     await act(async () => {
       renderer = create(<GenericRequestHome
         deeplinkData={request.toBuffer().toString('hex')}
-        navigation={navigation}
+        navigation={{}}
         cancel={jest.fn()}
       />);
     });
@@ -226,11 +256,10 @@ describe('generic response network context during request handling', () => {
       await screen.props.next(response, [0]);
     });
 
-    expect(navigation.navigate).toHaveBeenCalledTimes(1);
-    const [destination, params] = navigation.navigate.mock.calls[0];
-    expect(destination).toBe('GenericRequestComplete');
+    expect(mockDeliverResponse).toHaveBeenCalledTimes(1);
+    const [{responseBufferString}] = mockDeliverResponse.mock.calls[0];
     const received = new GenericResponse();
-    received.fromBuffer(Buffer.from(params.responseBufferString, 'hex'));
+    received.fromBuffer(Buffer.from(responseBufferString, 'hex'));
     expect(received.isTestnet()).toBe(isTestnet);
     expect(received.details[0].data.requestID.rootSystemName).toBe(rootSystemName);
     expect(received.details[0].data.requestID.toIAddress()).toBe(requestID.toIAddress());

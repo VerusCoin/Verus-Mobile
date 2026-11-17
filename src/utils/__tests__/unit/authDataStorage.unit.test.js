@@ -1,5 +1,11 @@
 jest.setTimeout(60000)
 
+// Wrong-password checks open the app alert sheet, which needs the real store.
+jest.mock('../../../actions/actions/alert/dispatchers/alert', () => ({
+  createAlert: jest.fn(() => Promise.resolve()),
+  resolveAlert: jest.fn(),
+}))
+
 import {
   MOCK_USER_OBJ, MOCK_PIN, MOCK_PIN_TWO, MOCK_SEED, MOCK_LEGACY_ENCRYPTEDKEY
 } from '../../../tests/helpers/MockAuthData'

@@ -26,6 +26,8 @@ import {sha256} from '../crypto/hash';
 // A password migration can touch several independently persisted records. Keep
 // its recovery journal under the same device-level encryption as those records.
 export const PASSWORD_MIGRATION_STORAGE_INTERNAL_KEY = `${USER_DATA_STORAGE_INTERNAL_KEY}:passwordMigration:v1`;
+// A new feature key: account-keyed JSON, with no legacy plaintext to migrate.
+export const PORTFOLIO_RECORD_STORAGE_INTERNAL_KEY = `${USER_DATA_STORAGE_INTERNAL_KEY}:portfolioRecord:v1`;
 export const SECURE_STORE_FLAG_KEY = 'secureStoreFlags';
 export const BIOMETRIC_VAULT_STORAGE_KEY = 'biometricVaultEnrollmentBoundV2';
 export const PRE_CURRENT_SET_BIOMETRIC_VAULT_STORAGE_KEY = 'biometricVault';
@@ -840,7 +842,7 @@ class SecureStore {
 
   isEncrypted() {
     if (this.encryptedFlagSet()) {
-      if (this.credential == null) throw new Error("CRITICAL ERROR! Unable to decrypt wallet data because of missing keychain credential! Try restarting wallet, or clearing wallet data and restoring your wallet from the seed you have backed up (this action will clear all wallet/account data from this device).");
+      if (this.credential == null) throw new Error("CRITICAL ERROR! Unable to decrypt wallet data because of a missing keychain credential! Try restarting the wallet, or clear wallet data and restore your wallet using the Secret Recovery Phrase or private key you backed up (this action will clear all wallet and account data from this device).");
 
       return true;
     } else return false
@@ -1048,7 +1050,7 @@ class SecureStore {
           if (e?.code === SECURE_STORE_ENCRYPTION_STATE_ERROR) {
             throw e;
           }
-          throw new Error("CRITICAL ERROR! Unable to decrypt encrypted wallet data. Try restarting your wallet, or clearing wallet data and restoring your wallet from the seed you have backed up (this action will clear all wallet/account data from this device).");
+          throw new Error("CRITICAL ERROR! Unable to decrypt encrypted wallet data. Try restarting your wallet, or clear wallet data and restore your wallet using the Secret Recovery Phrase or private key you backed up (this action will clear all wallet and account data from this device).");
         }
       }
 
@@ -1269,6 +1271,7 @@ export const SecureStorage = new SecureStore(
     SERVICE_STORAGE_INTERNAL_KEY,
     DEEPLINK_STORAGE_INTERNAL_KEY,
     NOTIFICATIONS_STORAGE_INTERNAL_KEY,
-    PASSWORD_MIGRATION_STORAGE_INTERNAL_KEY
+    PASSWORD_MIGRATION_STORAGE_INTERNAL_KEY,
+    PORTFOLIO_RECORD_STORAGE_INTERNAL_KEY
   ]
 );
