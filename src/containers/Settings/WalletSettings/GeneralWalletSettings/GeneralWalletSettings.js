@@ -16,6 +16,7 @@ import {useOnboardingTheme} from '../../../../theme/onboarding';
 import {MINIMUM_GAS_PRICE_GWEI} from '../../../../utils/constants/web3Constants';
 import {
   getTestnetEnvironment,
+  hasPrivateTestnetEnvironment,
   TESTNET_ENVIRONMENT_PRIVATE,
   TESTNET_ENVIRONMENT_PUBLIC,
 } from '../../../../utils/testnetEnvironment';
@@ -276,30 +277,32 @@ const GeneralWalletSettings = () => {
 
         {__DEV__ && (
           <SettingsSection title="Developer">
-            <SettingsSwitchRow
-              accessibilityLabel="Private testnet"
-              busy={isSaving('testnetEnvironment')}
-              description="Use the private Verus API and bridge contract"
-              icon="flask-outline"
-              onValueChange={toggleTestnetEnvironment}
-              error={rowErrors.testnetEnvironment}
-              testID="settings.general.testnetEnvironment"
-              title={
-                getTestnetEnvironment() === TESTNET_ENVIRONMENT_PRIVATE ? (
-                  <StatusBadge
-                    label="Private testnet"
-                    tone="warning"
-                    style={styles.privateBadge}
-                  />
-                ) : (
-                  'Private testnet'
-                )
-              }
-              value={
-                displayedSetting('testnetEnvironment') ===
-                TESTNET_ENVIRONMENT_PRIVATE
-              }
-            />
+            {hasPrivateTestnetEnvironment() && (
+              <SettingsSwitchRow
+                accessibilityLabel="Private testnet"
+                busy={isSaving('testnetEnvironment')}
+                description="Use the private Verus API and bridge contract"
+                icon="flask-outline"
+                onValueChange={toggleTestnetEnvironment}
+                error={rowErrors.testnetEnvironment}
+                testID="settings.general.testnetEnvironment"
+                title={
+                  getTestnetEnvironment() === TESTNET_ENVIRONMENT_PRIVATE ? (
+                    <StatusBadge
+                      label="Private testnet"
+                      tone="warning"
+                      style={styles.privateBadge}
+                    />
+                  ) : (
+                    'Private testnet'
+                  )
+                }
+                value={
+                  displayedSetting('testnetEnvironment') ===
+                  TESTNET_ENVIRONMENT_PRIVATE
+                }
+              />
+            )}
             <SettingsSwitchRow
               busy={isSaving('testnetPrices')}
               description="Show on-chain prices for testnet coins"
