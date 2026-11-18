@@ -151,7 +151,7 @@ const explorerList = {
   HODLC: 'http://www.fuzzbawls.pw/explore/HOdlcoin/tx.php?tx=',
   SUQA: 'http://suqaexplorer.com',
   SIB: 'https://chain.sibcoin.net/en/tx/',
-  ZEC: 'https://explorer.zcha.in/transactions/',
+  ZEC: 'https://zecblock.com/tx/',
   BLK: 'https://explorer.coinpayments.net/transaction.php?chain=4&hash=',
   ARG: 'https://prohashing.com/explorer/Argentum/',
   FAIR: 'https://chain.fair.to/transaction?transaction=',
